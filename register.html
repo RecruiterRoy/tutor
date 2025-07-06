@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - TUTOR.AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        .step-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .step-completed {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .form-container {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .form-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .form-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .form-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+    <!-- Navigation -->
+    <nav class="p-4">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">T</span>
+                </div>
+                <span class="text-white font-bold text-xl">TUTOR.AI</span>
+            </div>
+            <a href="login.html" class="text-white hover:text-blue-300 transition-colors">Already have an account?</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Step Indicator -->
+            <div class="flex justify-center mb-8">
+                <div class="flex space-x-4">
+                    <div class="step-indicator step-active w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold">1</div>
+                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">2</div>
+                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">3</div>
+                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">4</div>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <div class="glass-effect rounded-2xl p-8 shadow-2xl">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-white mb-2">Create Your Account</h1>
+                    <p class="text-gray-300">Join thousands of students learning with AI</p>
+                </div>
+
+                <!-- Step 1: Basic Information -->
+                <div id="step1" class="step-content">
+                    <h2 class="text-xl font-semibold text-white mb-6">Basic Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Student Name *</label>
+                            <input type="text" id="studentName" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter student's full name" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
+                            <input type="email" id="email" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter email address" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Phone Number *</label>
+                            <input type="tel" id="phone" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="+91 9876543210" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Password *</label>
+                            <input type="password" id="password" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Create a strong password" required>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-6">
+                        <button onclick="nextStep()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                            Next Step →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Academic Information -->
+                <div id="step2" class="step-content hidden">
+                    <h2 class="text-xl font-semibold text-white mb-6">Academic Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Select Class *</label>
+                            <select id="class" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Choose class</option>
+                                <option value="1">Class 1</option>
+                                <option value="2">Class 2</option>
+                                <option value="3">Class 3</option>
+                                <option value="4">Class 4</option>
+                                <option value="5">Class 5</option>
+                                <option value="6">Class 6</option>
+                                <option value="7">Class 7</option>
+                                <option value="8">Class 8</option>
+                                <option value="9">Class 9</option>
+                                <option value="10">Class 10</option>
+                                <option value="11">Class 11</option>
+                                <option value="12">Class 12</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Board of Education *</label>
+                            <select id="board" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Choose board</option>
+                                <option value="CBSE">CBSE</option>
+                                <option value="ICSE">ICSE</option>
+                                <option value="State Board">State Board</option>
+                                <option value="IGCSE">IGCSE</option>
+                                <option value="IB">IB</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">State *</label>
+                            <select id="state" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Choose state</option>
+                                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                <option value="Assam">Assam</option>
+                                <option value="Bihar">Bihar</option>
+                                <option value="Chhattisgarh">Chhattisgarh</option>
+                                <option value="Goa">Goa</option>
+                                <option value="Gujarat">Gujarat</option>
+                                <option value="Haryana">Haryana</option>
+                                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                <option value="Jharkhand">Jharkhand</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Kerala">Kerala</option>
+                                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Manipur">Manipur</option>
+                                <option value="Meghalaya">Meghalaya</option>
+                                <option value="Mizoram">Mizoram</option>
+                                <option value="Nagaland">Nagaland</option>
+                                <option value="Odisha">Odisha</option>
+                                <option value="Punjab">Punjab</option>
+                                <option value="Rajasthan">Rajasthan</option>
+                                <option value="Sikkim">Sikkim</option>
+                                <option value="Tamil Nadu">Tamil Nadu</option>
+                                <option value="Telangana">Telangana</option>
+                                <option value="Tripura">Tripura</option>
+                                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                <option value="Uttarakhand">Uttarakhand</option>
+                                <option value="West Bengal">West Bengal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">City *</label>
+                            <input type="text" id="city" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter city name" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Address Line 1 *</label>
+                            <input type="text" id="addressLine1" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter full address (Village/Town/Area)" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Preferred Language</label>
+                            <select id="language" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                                <option value="Both">Both</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
+                            ← Previous
+                        </button>
+                        <button onclick="nextStep()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                            Next Step →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Economic Status -->
+                <div id="step3" class="step-content hidden">
+                    <h2 class="text-xl font-semibold text-white mb-6">Economic Status Verification</h2>
+                    <div class="mb-6">
+                        <p class="text-gray-300 mb-4">To provide free access to eligible students, please select your economic status:</p>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" id="bpl" name="economicStatus" value="BPL" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                <label for="bpl" class="text-white">Below Poverty Line (BPL) - Free Access</label>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" id="apl" name="economicStatus" value="APL" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                <label for="apl" class="text-white">Above Poverty Line (APL) - Free Access</label>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" id="premium" name="economicStatus" value="Premium" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                <label for="premium" class="text-white">Premium Plan (₹99/month) - Full Access</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BPL/APL Card Details -->
+                    <div id="cardDetails" class="hidden">
+                        <div class="bg-blue-900/30 p-4 rounded-lg mb-4">
+                            <h3 class="text-white font-semibold mb-2">Ration Card Verification</h3>
+                            <p class="text-gray-300 text-sm">Please provide your ration card details for verification</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Ration Card Number *</label>
+                                <input type="text" id="cardNumber" maxlength="10" pattern="[A-Za-z0-9]{10}" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 10-character card number" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Upload Card Image *</label>
+                                <input type="file" id="cardPic" accept="image/*" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premium Plan Details -->
+                    <div id="premiumDetails" class="hidden">
+                        <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 p-6 rounded-lg">
+                            <h3 class="text-white font-semibold mb-2">Premium Plan Benefits</h3>
+                            <ul class="text-gray-300 space-y-2">
+                                <li>• Unlimited AI tutoring sessions</li>
+                                <li>• Advanced homework help with step-by-step solutions</li>
+                                <li>• Personalized study plans</li>
+                                <li>• Progress tracking and analytics</li>
+                                <li>• Priority support</li>
+                                <li>• Access to premium content library</li>
+                            </ul>
+                            <p class="text-yellow-400 mt-4 font-semibold">Only ₹99/month - Cancel anytime</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between mt-6">
+                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
+                            ← Previous
+                        </button>
+                        <button onclick="nextStep()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                            Next Step →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Confirmation -->
+                <div id="step4" class="step-content hidden">
+                    <h2 class="text-xl font-semibold text-white mb-6">Confirm Your Details</h2>
+                    <div id="confirmationDetails" class="space-y-4 mb-6">
+                        <!-- Details will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 mb-6">
+                        <input type="checkbox" id="termsAgree" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <label for="termsAgree" class="text-gray-300">I agree to the <a href="#" class="text-blue-400 hover:underline">Terms of Service</a> and <a href="#" class="text-blue-400 hover:underline">Privacy Policy</a></label>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
+                            ← Previous
+                        </button>
+                        <button onclick="registerUser()" class="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg hover:from-green-600 hover:to-blue-700 transition-all duration-300 font-semibold">
+                            Create Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="glass-effect p-8 rounded-2xl text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p class="text-white">Creating your account...</p>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        // Step navigation
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    document.getElementById(`step${currentStep}`).classList.add('hidden');
+                    currentStep++;
+                    document.getElementById(`step${currentStep}`).classList.remove('hidden');
+                    updateStepIndicator();
+                    
+                    if (currentStep === 4) {
+                        showConfirmation();
+                    }
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                document.getElementById(`step${currentStep}`).classList.add('hidden');
+                currentStep--;
+                document.getElementById(`step${currentStep}`).classList.remove('hidden');
+                updateStepIndicator();
+            }
+        }
+
+        function updateStepIndicator() {
+            for (let i = 1; i <= totalSteps; i++) {
+                const indicator = document.getElementsByClassName('step-indicator')[i-1];
+                if (i < currentStep) {
+                    indicator.className = 'step-indicator step-completed w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold';
+                } else if (i === currentStep) {
+                    indicator.className = 'step-indicator step-active w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold';
+                } else {
+                    indicator.className = 'step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white';
+                }
+            }
+        }
+
+        // Validation
+        function validateCurrentStep() {
+            switch(currentStep) {
+                case 1:
+                    return validateStep1();
+                case 2:
+                    return validateStep2();
+                case 3:
+                    return validateStep3();
+                case 4:
+                    return validateStep4();
+                default:
+                    return true;
+            }
+        }
+
+        function validateStep1() {
+            const name = document.getElementById('studentName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!name || !email || !phone || !password) {
+                alert('Please fill in all required fields');
+                return false;
+            }
+
+            if (!isValidEmail(email)) {
+                alert('Please enter a valid email address');
+                return false;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long');
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateStep2() {
+            const classValue = document.getElementById('class').value;
+            const board = document.getElementById('board').value;
+            const state = document.getElementById('state').value;
+            const city = document.getElementById('city').value.trim();
+            const address = document.getElementById('addressLine1').value.trim();
+
+            if (!classValue || !board || !state || !city || !address) {
+                alert('Please fill in all required fields');
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateStep3() {
+            const economicStatus = document.querySelector('input[name="economicStatus"]:checked');
+            
+            if (!economicStatus) {
+                alert('Please select your economic status');
+                return false;
+            }
+
+            if (economicStatus.value === 'BPL' || economicStatus.value === 'APL') {
+                const cardNumber = document.getElementById('cardNumber').value.trim();
+                const headName = document.getElementById('headName').value.trim();
+                
+                if (!cardNumber || !headName) {
+                    alert('Please fill in ration card details');
+                    return false;
+                }
+
+                if (cardNumber.length !== 10 || !/^\d{10}$/.test(cardNumber)) {
+                    alert('Please enter a valid 10-digit ration card number');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function validateStep4() {
+            const termsAgree = document.getElementById('termsAgree').checked;
+            
+            if (!termsAgree) {
+                alert('Please agree to the Terms of Service and Privacy Policy');
+                return false;
+            }
+
+            return true;
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Economic status handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const economicStatusRadios = document.querySelectorAll('input[name="economicStatus"]');
+            const cardDetails = document.getElementById('cardDetails');
+            const premiumDetails = document.getElementById('premiumDetails');
+
+            economicStatusRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'BPL' || this.value === 'APL') {
+                        cardDetails.classList.remove('hidden');
+                        premiumDetails.classList.add('hidden');
+                    } else if (this.value === 'Premium') {
+                        cardDetails.classList.add('hidden');
+                        premiumDetails.classList.remove('hidden');
+                    }
+                });
+            });
+        });
+
+        // Confirmation display
+        function showConfirmation() {
+            const confirmationDiv = document.getElementById('confirmationDetails');
+            const economicStatus = document.querySelector('input[name="economicStatus"]:checked');
+            
+            const details = `
+                <div class="bg-white/10 p-4 rounded-lg">
+                    <h3 class="text-white font-semibold mb-2">Personal Information</h3>
+                    <p class="text-gray-300">Name: ${document.getElementById('studentName').value}</p>
+                    <p class="text-gray-300">Email: ${document.getElementById('email').value}</p>
+                    <p class="text-gray-300">Phone: ${document.getElementById('phone').value}</p>
+                </div>
+                <div class="bg-white/10 p-4 rounded-lg">
+                    <h3 class="text-white font-semibold mb-2">Academic Information</h3>
+                    <p class="text-gray-300">Class: ${document.getElementById('class').value}</p>
+                    <p class="text-gray-300">Board: ${document.getElementById('board').value}</p>
+                    <p class="text-gray-300">State: ${document.getElementById('state').value}</p>
+                    <p class="text-gray-300">City: ${document.getElementById('city').value}</p>
+                    <p class="text-gray-300">Address: ${document.getElementById('addressLine1').value}</p>
+                </div>
+                <div class="bg-white/10 p-4 rounded-lg">
+                    <h3 class="text-white font-semibold mb-2">Plan Information</h3>
+                    <p class="text-gray-300">Selected Plan: ${economicStatus ? economicStatus.value : 'Not selected'}</p>
+                    ${economicStatus && (economicStatus.value === 'BPL' || economicStatus.value === 'APL') ? 
+                        `<p class="text-gray-300">Card Number: ${document.getElementById('cardNumber').value}</p>` : ''}
+                    ${economicStatus && economicStatus.value === 'Premium' ? 
+                        `<p class="text-yellow-400">Monthly Fee: ₹99</p>` : 
+                        `<p class="text-green-400">Monthly Fee: Free</p>`}
+                </div>
+            `;
+            
+            confirmationDiv.innerHTML = details;
+        }
+
+        // Registration function
+        async function registerUser() {
+            if (!validateCurrentStep()) return;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            try {
+                // 1. Register user with Supabase Auth
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const full_name = document.getElementById('studentName').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                let { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { full_name, phone } }
+                });
+                if (error) throw error;
+                const user = data.user;
+                // 2. Insert into users table (handled by trigger, but update with phone if needed)
+                await supabase.from('users').update({ phone }).eq('id', user.id);
+                // 3. Insert or update student_profiles
+                const grade = parseInt(document.getElementById('class').value);
+                const board = document.getElementById('board').value;
+                const city = document.getElementById('city').value.trim();
+                const state = document.getElementById('state').value;
+                const preferred_language = document.getElementById('language').value.toLowerCase();
+                const { data: existingProfile } = await supabase
+                    .from('student_profiles')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .single();
+                if (existingProfile) {
+                    // Update existing profile
+                    await supabase.from('student_profiles').update({
+                        grade,
+                        board,
+                        city,
+                        state,
+                        preferred_language
+                    }).eq('user_id', user.id);
+                } else {
+                    // Insert new profile
+                    await supabase.from('student_profiles').insert({
+                        user_id: user.id,
+                        grade,
+                        board,
+                        city,
+                        state,
+                        preferred_language
+                    });
+                }
+                // 4. Economic status
+                const economicStatus = document.querySelector('input[name="economicStatus"]:checked');
+                if (economicStatus) {
+                    if (economicStatus.value === 'BPL' || economicStatus.value === 'APL') {
+                        const document_type = economicStatus.value === 'BPL' ? 'bpl_card' : 'apl_card';
+                        const cardNumber = document.getElementById('cardNumber').value.trim();
+                        // Upload card image if provided
+                        let document_url = '';
+                        const cardPic = document.getElementById('cardPic').files[0];
+                        if (cardPic) {
+                            const { data: uploadData, error: uploadError } = await supabase.storage.from('verification-docs').upload(`${user.id}/card_${Date.now()}`, cardPic);
+                            if (uploadError) throw uploadError;
+                            document_url = supabase.storage.from('verification-docs').getPublicUrl(uploadData.path).data.publicUrl;
+                        }
+                        await supabase.from('bpl_apl_verifications').insert({
+                            user_id: user.id,
+                            document_type,
+                            document_url,
+                            verification_status: 'pending',
+                            admin_notes: '',
+                            verified_by: null,
+                            card_number: cardNumber
+                        });
+                    } else if (economicStatus.value === 'Premium') {
+                        // After payment, insert into user_subscriptions and payment_transactions
+                        // This is a placeholder: you should call this after payment is successful
+                        // Example:
+                        // await supabase.from('user_subscriptions').insert({
+                        //     user_id: user.id,
+                        //     plan_id: 'PREMIUM_PLAN_UUID',
+                        //     status: 'active',
+                        //     billing_cycle: 'monthly',
+                        //     start_date: new Date().toISOString(),
+                        //     auto_renew: true
+                        // });
+                        // await supabase.from('payment_transactions').insert({
+                        //     user_id: user.id,
+                        //     subscription_id: 'NEW_SUBSCRIPTION_UUID',
+                        //     amount: 99.00,
+                        //     currency: 'INR',
+                        //     status: 'completed',
+                        //     payment_method: 'razorpay',
+                        //     razorpay_payment_id: 'RAZORPAY_PAYMENT_ID',
+                        //     razorpay_order_id: 'RAZORPAY_ORDER_ID'
+                        // });
+                    }
+                }
+                // 5. Success
+                alert('Registration successful! Please check your email to verify your account.');
+                window.location.href = 'login.html';
+            } catch (err) {
+                alert('Registration failed: ' + (err.message || err));
+            } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
+        }
+
+        // Handle Enter key navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (currentStep < totalSteps) {
+                    nextStep();
+                } else if (currentStep === totalSteps) {
+                    registerUser();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
