@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - TUTOR.AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-border {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2px;
+            border-radius: 12px;
+        }
+        .gradient-border-content {
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .chat-container {
+            height: 60vh;
+            overflow-y: auto;
+        }
+        .chat-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        .message-user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-left: auto;
+            max-width: 80%;
+        }
+        .message-ai {
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: auto;
+            max-width: 80%;
+        }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin-right: auto;
+            max-width: 80px;
+        }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+        .sidebar {
+            transition: transform 0.3s ease;
+        }
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff3a;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .message-content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 50;
+                width: 280px;
+            }
+            .chat-container {
+                height: 50vh;
+            }
+            .message-user, .message-ai {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar sidebar-hidden md:sidebar-hidden md:translate-x-0 md:relative w-80 bg-slate-800/90 backdrop-blur-md border-r border-white/10">
+        <div class="p-6">
+            <!-- User Profile -->
+            <div class="glass-effect p-4 rounded-xl mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span id="userInitials" class="text-white font-bold text-lg">S</span>
+                    </div>
+                    <div>
+                        <h3 id="userName" class="text-white font-semibold">Student</h3>
+                        <p id="userClass" class="text-gray-400 text-sm">Class 10</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span id="planStatus" class="text-gray-300 text-sm">Free Plan</span>
+                    </div>
+                    <button onclick="togglePlan()" class="text-blue-400 hover:text-blue-300 text-sm">
+                        <span id="planAction">Upgrade</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="#" onclick="showSection('chat')" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
+                    <span>💬</span>
+                    <span>AI Tutor</span>
+                </a>
+                <a href="#" onclick="showSection('homework')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
+                    <span>📚</span>
+                    <span>Homework Help</span>
+                </a>
+                <a href="#" onclick="showSection('progress')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
+                    <span>📊</span>
+                    <span>Progress</span>
+                </a>
+                <a href="#" onclick="showSection('tests')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
+                    <span>📝</span>
+                    <span>Practice Tests</span>
+                </a>
+                <a href="#" onclick="showSection('schedule')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
+                    <span>📅</span>
+                    <span>Study Schedule</span>
+                </a>
+                <a href="#" onclick="showSection('profile')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
+                    <span>⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <!-- Quick Stats -->
+            <div class="mt-6 glass-effect p-4 rounded-xl">
+                <h4 class="text-white font-semibold mb-3">Today's Progress</h4>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-300">Study Time</span>
+                        <span id="studyTime" class="text-white">0 min</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-300">Questions Asked</span>
+                        <span id="questionsCount" class="text-white">0</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-300">Streak</span>
+                        <span id="streak" class="text-white">0 days</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logout -->
+            <div class="mt-6">
+                <button onclick="logout()" class="w-full flex items-center space-x-3 p-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200">
+                    <span>🚪</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 md:ml-80">
+        <!-- Top Bar -->
+        <div class="bg-slate-800/90 backdrop-blur-md border-b border-white/10 p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="md:hidden text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">T</span>
+                        </div>
+                        <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-white text-sm font-medium" id="topBarUserName">Student</p>
+                        <p class="text-gray-400 text-xs" id="topBarUserClass">Class 10</p>
+                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span id="topBarInitials" class="text-white font-bold text-sm">S</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="p-4 md:p-6">
+            <!-- AI Chat Section -->
+            <div id="chatSection" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <div class="glass-effect rounded-2xl p-6 mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-4">AI Tutor Chat</h2>
+                        <p class="text-gray-300">Ask me anything about your studies! I can help with Math, Science, English, and more.</p>
+                    </div>
+
+                    <!-- Chat Container -->
+                    <div class="gradient-border mb-6">
+                        <div class="gradient-border-content">
+                            <div id="chatMessages" class="chat-container space-y-4 mb-4">
+                                <!-- Messages will be dynamically inserted here -->
+                            </div>
+
+                            <!-- Chat Input -->
+                            <div class="flex space-x-3">
+                                <input 
+                                    type="text" 
+                                    id="chatInput" 
+                                    placeholder="Type your question here..." 
+                                    class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    onkeypress="handleChatKeyPress(event)"
+                                >
+                                <button id="sendButton" onclick="sendMessage()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                                    Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="sendQuickMessage('Help me with Math problems')" class="glass-effect p-4 rounded-lg text-center hover:bg-white/20 transition-all duration-200">
+                            <div class="text-2xl mb-2">🔢</div>
+                            <p class="text-white text-sm">Math Help</p>
+                        </button>
+                        <button onclick="sendQuickMessage('Explain this Science concept')" class="glass-effect p-4 rounded-lg text-center hover:bg-white/20 transition-all duration-200">
+                            <div class="text-2xl mb-2">🧪</div>
+                            <p class="text-white text-sm">Science</p>
+                        </button>
+                        <button onclick="sendQuickMessage('Help with English grammar')" class="glass-effect p-4 rounded-lg text-center hover:bg-white/20 transition-all duration-200">
+                            <div class="text-2xl mb-2">📝</div>
+                            <p class="text-white text-sm">English</p>
+                        </button>
+                        <button onclick="sendQuickMessage('Create a study plan for me')" class="glass-effect p-4 rounded-lg text-center hover:bg-white/20 transition-all duration-200">
+                            <div class="text-2xl mb-2">📅</div>
+                            <p class="text-white text-sm">Study Plan</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Homework Section -->
+            <div id="homeworkSection" class="section hidden">
+                <div class="max-w-4xl mx-auto">
+                    <div class="glass-effect rounded-2xl p-6 mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-4">Homework Help</h2>
+                        <p class="text-gray-300">Upload your homework questions and get detailed explanations!</p>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="gradient-border mb-6">
+                        <div class="gradient-border-content">
+                            <div class="text-center py-8">
+                                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span class="text-white text-2xl">📁</span>
+                                </div>
+                                <h3 class="text-white font-semibold mb-2">Upload Homework</h3>
+                                <p class="text-gray-400 mb-4">Upload images of your homework questions</p>
+                                <input type="file" id="homeworkFile" class="hidden" accept="image/*" onchange="handleFileUpload(event)">
+                                <button onclick="document.getElementById('homeworkFile').click()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                                    Choose Image
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Homework Chat -->
+                    <div class="gradient-border">
+                        <div class="gradient-border-content">
+                            <div id="homeworkChat" class="chat-container space-y-4 mb-4">
+                                <div class="message-ai p-4 rounded-lg">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span class="text-white font-bold text-sm">AI</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-white message-content">Upload an image of your homework question, and I'll help you solve it step by step!</p>
+                                            <p class="text-gray-400 text-xs mt-1">Just now</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="progressSection" class="section hidden">
+                <div class="max-w-6xl mx-auto">
+                    <div class="glass-effect rounded-2xl p-6 mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-4">Your Progress</h2>
+                        <p class="text-gray-300">Track your learning journey and achievements</p>
+                    </div>
+
+                    <!-- Progress Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        <div class="glass-effect p-6 rounded-2xl text-center">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <h3 class="text-white font-semibold">Study Streak</h3>
+                            <p class="text-2xl font-bold text-blue-400" id="streakDisplay">0 days</p>
+                        </div>
+                        <div class="glass-effect p-6 rounded-2xl text-center">
+                            <div class="text-3xl mb-2">⏰</div>
+                            <h3 class="text-white font-semibold">Total Time</h3>
+                            <p class="text-2xl font-bold text-green-400" id="totalTimeDisplay">0 min</p>
+                        </div>
+                        <div class="glass-effect p-6 rounded-2xl text-center">
+                            <div class="text-3xl mb-2">❓</div>
+                            <h3 class="text-white font-semibold">Questions</h3>
+                            <p class="text-2xl font-bold text-purple-400" id="questionsDisplay">0</p>
+                        </div>
+                        <div class="glass-effect p-6 rounded-2xl text-center">
+                            <div class="text-3xl mb-2">🏆</div>
+                            <h3 class="text-white font-semibold">Solved</h3>
+                            <p class="text-2xl font-bold text-yellow-400" id="solvedDisplay">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Subject Progress -->
+                    <div class="glass-effect rounded-2xl p-6">
+                        <h3 class="text-white font-semibold mb-4">Subject Progress</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🔢</span>
+                                    <span class="text-white">Mathematics</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-32 bg-gray-700 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 70%"></div>
+                                    </div>
+                                    <span class="text-gray-400 text-sm">70%</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🧪</span>
+                                    <span class="text-white">Science</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-32 bg-gray-700 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
+                                    </div>
+                                    <span class="text-gray-400 text-sm">85%</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">📝</span>
+                                    <span class="text-white">English</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-32 bg-gray-700 rounded-full h-2">
+                                        <div class="bg-purple-500 h-2 rounded-full" style="width: 60%"></div>
+                                    </div>
+                                    <span class="text-gray-400 text-sm">60%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tests Section -->
+            <div id="testsSection" class="section hidden">
+                <div class="max-w-4xl mx-auto">
+                    <div class="glass-effect rounded-2xl p-6 mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-4">Practice Tests</h2>
+                        <p class="text-gray-300">Test your knowledge with AI-generated quizzes and practice tests</p>
+                    </div>
+
+                    <!-- Test Categories -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="glass-effect p-6 rounded-2xl text-center hover:bg-white/20 transition-all duration-200 cursor-pointer">
+                            <div class="text-4xl mb-4">🔢</div>
+                            <h3 class="text-white font-semibold mb-2">Math Quiz</h3>
+                            <p class="text-gray-400 text-sm mb-4">Test your mathematical skills</p>
+                            <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200">
+                                Start Quiz
+                            </button>
+                        </div>
+                        <div class="glass-effect p-6 rounded-2xl text-center hover:bg-white/20 transition-all duration-200 cursor-pointer">
+                            <div class="text-4xl mb-4">🧪</div>
+                            <h3 class="text-white font-semibold mb-2">Science Quiz</h3>
+                            <p class="text-gray-400 text-sm mb-4">Physics, Chemistry, Biology</p>
+                            <button class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200">
+                                Start Quiz
+                            </button>
+                        </div>
+                        <div class="glass-effect p-6 rounded-2xl text-center hover:bg-white/20 transition-all duration-200 cursor-pointer">
+                            <div class="text-4xl mb-4">📝</div>
+                            <h3 class="text-white font-semibold mb-2">English Quiz</h3>
+                            <p class="text-gray-400 text-sm mb-4">Grammar and Literature</p>
+                            <button class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all duration-200">
+                                Start Quiz
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule Section -->
+            <div id="scheduleSection" class="section hidden">
+                <div class="max-w-4xl mx-auto">
+                    <div class="glass-effect rounded-2xl p-6 mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-4">Study Schedule</h2>
+                        <p class="text-gray-300">Your personalized AI-powered study schedule</p>
+                    </div>
+
+                    <!-- Schedule Generator -->
+                    <div class="glass-effect rounded-2xl p-6 mb-6">
+                        <h3 class="text-white font-semibold mb-4">Generate Study Schedule</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="text-gray-300 text-sm mb-2 block">Available Study Hours/Day</label>
+                                <input type="number" id="studyHours" min="1" max="12" value="2" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+                            </div>
+                            <div>
+                                <label class="text-gray-300 text-sm mb-2 block">Priority Subject</label>
+                                <select id="prioritySubject" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+                                    <option value="math">Mathematics</option>
+                                    <option value="science">Science</option>
+                                    <option value="english">English</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="generateSchedule()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                            Generate Schedule
+                        </button>
+                    </div>
+
+                    <!-- Schedule Display -->
+                    <div id="scheduleDisplay" class="glass-effect rounded-2xl p-6">
+                        <h3 class="text-white font-semibold mb-4">Today's Schedule</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-white/10 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🔢</span>
+                                    <div>
+                                        <h4 class="text-white font-medium">Mathematics</h4>
+                                        <p class="text-gray-400 text-sm">Algebra & Geometry</p>
+                                    </div>
+                                </div>
+                                <span class="text-gray-300 text-sm">9:00 - 10:00 AM</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-white/10 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🧪</span>
+                                    <div>
+                                        <h4 class="text-white font-medium">Science</h4>
+                                        <p class="text-gray-400 text-sm">Physics concepts</p>
+                                    </div>
+                                </div>
+                                <span class="text-gray-300 text-sm">2:00 - 3:00 PM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="profileSection" class="section hidden">
+                <div class="max-w-4xl mx-auto">
+                    <div class="glass-effect rounded-2xl p-6 mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-4">Settings & Profile</h2>
+                        <form id="profileForm" class="space-y-6">
+                            <div>
+                                <label class="block text-gray-300 mb-2">Full Name</label>
+                                <input type="text" id="profileName" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-2">Class</label>
+                                <input type="text" id="profileClass" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-2">Email</label>
+                                <input type="email" id="profileEmail" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" disabled>
+                            </div>
+                            <div>
+                                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold">Update Profile</button>
+                            </div>
+                        </form>
+                        <div class="mt-8">
+                            <h3 class="text-white font-semibold mb-2">Change Password</h3>
+                            <form id="passwordForm" class="space-y-4">
+                                <input type="password" id="oldPassword" placeholder="Old Password" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+                                <input type="password" id="newPassword" placeholder="New Password" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+                                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold">Change Password</button>
+                            </form>
+                        </div>
+                        <div class="mt-8">
+                            <h3 class="text-white font-semibold mb-2">Subscription</h3>
+                            <div id="subscriptionInfo" class="text-gray-300"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // --- Dashboard Auth, Profile, Subscription, Feature Gating ---
+    let userProfile = null;
+    let userSubscription = null;
+    let chatSessionId = null;
+
+    async function initDashboard() {
+        // 1. Check session
+        const isAuthed = await window.tutorAuth.protectRoute();
+        if (!isAuthed) return;
+
+        // 2. Fetch user profile
+        userProfile = await window.tutorAuth.getUserProfile();
+        if (userProfile) {
+            document.getElementById('userName').textContent = userProfile.full_name || 'Student';
+            document.getElementById('topBarUserName').textContent = userProfile.full_name || 'Student';
+            document.getElementById('userClass').textContent = userProfile.class || '';
+            document.getElementById('topBarUserClass').textContent = userProfile.class || '';
+            document.getElementById('userInitials').textContent = (userProfile.full_name||'S')[0];
+            document.getElementById('topBarInitials').textContent = (userProfile.full_name||'S')[0];
+            document.getElementById('profileName').value = userProfile.full_name || '';
+            document.getElementById('profileClass').value = userProfile.class || '';
+            document.getElementById('profileEmail').value = userProfile.email || '';
+        }
+        // 3. Fetch subscription
+        userSubscription = await window.tutorAuth.getSubscriptionStatus();
+        let plan = 'Free';
+        if (userSubscription && userSubscription.subscription_plans) {
+            plan = userSubscription.subscription_plans.name;
+        }
+        document.getElementById('planStatus').textContent = plan;
+        document.getElementById('subscriptionInfo').textContent = plan + (userSubscription ? ' (Active)' : ' (No active subscription)');
+        // Feature gating example:
+        if (plan === 'Free') {
+            // Disable premium features (example)
+            document.querySelectorAll('.premium-feature').forEach(el => el.classList.add('opacity-50','pointer-events-none'));
+        }
+        // 4. Load or create chat session
+        if (!chatSessionId) {
+            const session = await window.tutorAuth.createChatSession('AI Tutor Chat');
+            if (session && session.session) chatSessionId = session.session.id;
+        }
+        // 5. Load chat history
+        loadChatHistory();
+    }
+
+    async function loadChatHistory() {
+        if (!chatSessionId) return;
+        const { data, error } = await window.tutorAuth.supabase
+            .from('ai_chat_messages')
+            .select('*')
+            .eq('session_id', chatSessionId)
+            .order('created_at', { ascending: true });
+        if (data && Array.isArray(data)) {
+            chatHistory = data.map(msg => ({ role: msg.message_type === 'user' ? 'user' : 'assistant', content: msg.content }));
+            renderMessages();
+        }
+    }
+
+    // Save chat messages to DB
+    async function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        chatHistory.push({ role: 'user', content: text });
+        renderMessages();
+        input.value = '';
+        showTypingIndicator();
+        // Save user message
+        if (chatSessionId) await window.tutorAuth.saveChatMessage(chatSessionId, text, 'user');
+        try {
+            const response = await fetch('http://localhost:3001/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: chatHistory.map(m => ({ role: m.role, content: m.content })) })
+            });
+            const data = await response.json();
+            removeTypingIndicator();
+            if (data.reply) {
+                chatHistory.push({ role: 'assistant', content: data.reply });
+                renderMessages();
+                // Save AI message
+                if (chatSessionId) await window.tutorAuth.saveChatMessage(chatSessionId, data.reply, 'assistant');
+            } else {
+                chatHistory.push({ role: 'assistant', content: 'Sorry, I could not get a response from the AI.' });
+                renderMessages();
+            }
+        } catch (err) {
+            removeTypingIndicator();
+            chatHistory.push({ role: 'assistant', content: 'Error connecting to AI server.' });
+            renderMessages();
+        }
+    }
+
+    // Profile update
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const full_name = document.getElementById('profileName').value;
+            const user_class = document.getElementById('profileClass').value;
+            await window.tutorAuth.supabase
+                .from('users')
+                .update({ full_name, class: user_class })
+                .eq('id', window.tutorAuth.currentUser.id);
+            alert('Profile updated!');
+            await initDashboard();
+        });
+    }
+    // Password change
+    const passwordForm = document.getElementById('passwordForm');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPassword').value;
+            if (!newPassword) return alert('Enter new password');
+            const { error } = await window.tutorAuth.supabase.auth.updateUser({ password: newPassword });
+            if (error) return alert('Error: ' + error.message);
+            alert('Password changed!');
+            passwordForm.reset();
+        });
+    }
+    // On load
+    window.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>

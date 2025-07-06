@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TUTOR.AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="glass-effect rounded-2xl p-8 w-full max-w-md shadow-2xl" x-data="authApp()">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">Welcome Back!</h1>
+            <p class="text-gray-200">Sign in to continue your learning journey</p>
+        </div>
+
+        <!-- Auth Method Tabs -->
+        <div class="flex mb-6 bg-white/10 rounded-lg p-1">
+            <button @click="currentTab = 'email'" 
+                    :class="currentTab === 'email' ? 'bg-white/20 text-white' : 'text-gray-300'"
+                    class="flex-1 py-2 px-4 rounded-md transition-all duration-200 text-sm font-medium">
+                Email
+            </button>
+            <button @click="currentTab = 'phone'" 
+                    :class="currentTab === 'phone' ? 'bg-white/20 text-white' : 'text-gray-300'"
+                    class="flex-1 py-2 px-4 rounded-md transition-all duration-200 text-sm font-medium">
+                Phone
+            </button>
+        </div>
+
+        <!-- Email/Password Login -->
+        <div x-show="currentTab === 'email'" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-200 mb-2">Email</label>
+                <input x-model="email" 
+                       type="email" 
+                       placeholder="Enter your email"
+                       class="w-full px-4 py-3 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+            </div>
+            
+            <div x-show="!isMagicLink">
+                <label class="block text-sm font-medium text-gray-200 mb-2">Password</label>
+                <input x-model="password" 
+                       type="password" 
+                       placeholder="Enter your password"
+                       class="w-full px-4 py-3 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+            </div>
+
+            <div class="flex items-center justify-between">
+                <label class="flex items-center text-sm text-gray-200">
+                    <input x-model="isMagicLink" type="checkbox" class="mr-2">
+                    Use Magic Link (No Password)
+                </label>
+                <button @click="resetPassword" class="text-sm text-purple-300 hover:text-purple-100">
+                    Forgot Password?
+                </button>
+            </div>
+
+            <button @click="signInWithEmail" 
+                    :disabled="loading"
+                    class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200 disabled:opacity-50">
+                <span x-show="!loading" x-text="isMagicLink ? 'Send Magic Link' : 'Sign In'"></span>
+                <span x-show="loading">Processing...</span>
+            </button>
+        </div>
+
+        <!-- Phone/OTP Login -->
+        <div x-show="currentTab === 'phone'" class="space-y-4">
+            <div x-show="!otpSent">
+                <label class="block text-sm font-medium text-gray-200 mb-2">Phone Number</label>
+                <div class="flex">
+                    <select x-model="countryCode" class="px-3 py-3 rounded-l-lg glass-effect text-white">
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                    </select>
+                    <input x-model="phone" 
+                           type="tel" 
+                           placeholder="Enter phone number"
+                           class="flex-1 px-4 py-3 rounded-r-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+                </div>
+            </div>
+
+            <div x-show="otpSent">
+                <label class="block text-sm font-medium text-gray-200 mb-2">OTP Code</label>
+                <input x-model="otp" 
+                       type="text" 
+                       placeholder="Enter 6-digit OTP"
+                       maxlength="6"
+                       class="w-full px-4 py-3 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+                <p class="text-sm text-gray-300 mt-2">
+                    OTP sent to <span x-text="countryCode + phone"></span>
+                    <button @click="resendOTP" class="text-purple-300 hover:text-purple-100 ml-2">Resend</button>
+                </p>
+            </div>
+
+            <button @click="otpSent ? verifyOTP() : sendOTP()" 
+                    :disabled="loading"
+                    class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-3 rounded-lg font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-200 disabled:opacity-50">
+                <span x-show="!loading" x-text="otpSent ? 'Verify OTP' : 'Send OTP'"></span>
+                <span x-show="loading">Processing...</span>
+            </button>
+        </div>
+
+        <!-- Social Login -->
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300/30"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-transparent text-gray-300">Or continue with</span>
+                </div>
+            </div>
+
+            <button @click="signInWithGoogle" 
+                    :disabled="loading"
+                    class="w-full mt-4 bg-white text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 flex items-center justify-center disabled:opacity-50">
+                <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+            </button>
+        </div>
+
+        <!-- Sign Up Link -->
+        <div class="mt-6 text-center">
+            <p class="text-gray-300">
+                Don't have an account? 
+                <a href="register.html" class="text-purple-300 hover:text-purple-100 font-medium">Sign up</a>
+            </p>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div x-show="message" 
+             :class="messageType === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'"
+             class="mt-4 p-3 rounded-lg text-sm" 
+             x-text="message"></div>
+    </div>
+
+    <script>
+        // Initialize Supabase client
+        const supabaseUrl = 'https://xhuljxuxnlwtocfmwiid.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU'
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+
+        function authApp() {
+            return {
+                currentTab: 'email',
+                email: '',
+                password: '',
+                phone: '',
+                countryCode: '+91',
+                otp: '',
+                isMagicLink: false,
+                otpSent: false,
+                loading: false,
+                message: '',
+                messageType: 'error',
+
+                async signInWithEmail() {
+                    this.loading = true
+                    this.message = ''
+                    
+                    try {
+                        let result
+                        if (this.isMagicLink) {
+                            result = await supabase.auth.signInWithOtp({
+                                email: this.email,
+                                options: {
+                                    shouldCreateUser: false
+                                }
+                            })
+                            this.showMessage('Magic link sent to your email!', 'success')
+                        } else {
+                            result = await supabase.auth.signInWithPassword({
+                                email: this.email,
+                                password: this.password
+                            })
+                            
+                            if (result.data.user) {
+                                window.location.href = 'dashboard.html'
+                            }
+                        }
+                        
+                        if (result.error) {
+                            this.showMessage(result.error.message, 'error')
+                        }
+                    } catch (error) {
+                        this.showMessage('An error occurred. Please try again.', 'error')
+                    } finally {
+                        this.loading = false
+                    }
+                },
+
+                async sendOTP() {
+                    this.loading = true
+                    this.message = ''
+                    
+                    try {
+                        const result = await supabase.auth.signInWithOtp({
+                            phone: this.countryCode + this.phone,
+                            options: {
+                                shouldCreateUser: true
+                            }
+                        })
+                        
+                        if (result.error) {
+                            this.showMessage(result.error.message, 'error')
+                        } else {
+                            this.otpSent = true
+                            this.showMessage('OTP sent successfully!', 'success')
+                        }
+                    } catch (error) {
+                        this.showMessage('Failed to send OTP. Please try again.', 'error')
+                    } finally {
+                        this.loading = false
+                    }
+                },
+
+                async verifyOTP() {
+                    this.loading = true
+                    this.message = ''
+                    
+                    try {
+                        const result = await supabase.auth.verifyOtp({
+                            phone: this.countryCode + this.phone,
+                            token: this.otp,
+                            type: 'sms'
+                        })
+                        
+                        if (result.error) {
+                            this.showMessage(result.error.message, 'error')
+                        } else {
+                            window.location.href = 'dashboard.html'
+                        }
+                    } catch (error) {
+                        this.showMessage('Invalid OTP. Please try again.', 'error')
+                    } finally {
+                        this.loading = false
+                    }
+                },
+
+                async resendOTP() {
+                    this.otpSent = false
+                    await this.sendOTP()
+                },
+
+                async signInWithGoogle() {
+                    this.loading = true
+                    this.message = ''
+                    
+                    try {
+                        const result = await supabase.auth.signInWithOAuth({
+                            provider: 'google',
+                            options: {
+                                redirectTo: window.location.origin + '/dashboard.html'
+                            }
+                        })
+                        
+                        if (result.error) {
+                            this.showMessage(result.error.message, 'error')
+                        }
+                    } catch (error) {
+                        this.showMessage('Google sign-in failed. Please try again.', 'error')
+                    } finally {
+                        this.loading = false
+                    }
+                },
+
+                async resetPassword() {
+                    if (!this.email) {
+                        this.showMessage('Please enter your email first', 'error')
+                        return
+                    }
+                    
+                    this.loading = true
+                    try {
+                        const result = await supabase.auth.resetPasswordForEmail(this.email)
+                        if (result.error) {
+                            this.showMessage(result.error.message, 'error')
+                        } else {
+                            this.showMessage('Password reset email sent!', 'success')
+                        }
+                    } catch (error) {
+                        this.showMessage('Failed to send reset email', 'error')
+                    } finally {
+                        this.loading = false
+                    }
+                },
+
+                showMessage(text, type) {
+                    this.message = text
+                    this.messageType = type
+                    setTimeout(() => {
+                        this.message = ''
+                    }, 5000)
+                }
+            }
+        }
+
+        // Check if user is already logged in
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                window.location.href = 'dashboard.html'
+            }
+        })
+    </script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
