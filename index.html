@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tutor.AI - Your Personal AI Teacher</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Tutor.AI">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="AI-powered tutoring for Indian students. NCERT books, homework help, career guidance in Hindi, English & regional languages. Free for BPL families.">
+    <meta name="keywords" content="AI tutor, NCERT, Indian education, homework help, career guidance, Hindi, English, CBSE">
+    
     <style>
         * {
             margin: 0;
@@ -112,6 +124,7 @@
             padding: 4rem 0;
             text-align: center;
             position: relative;
+            overflow: hidden;
         }
 
         .hero-content {
@@ -145,6 +158,7 @@
             justify-content: center;
             flex-wrap: wrap;
             animation: fadeIn 1s ease 0.4s both;
+            margin-bottom: 3rem;
         }
 
         .btn-primary {
@@ -179,6 +193,186 @@
         .btn-primary:hover, .btn-secondary:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Demo Section */
+        .demo-section {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .demo-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .demo-content h3 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .demo-content p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .demo-avatar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .ai-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            animation: pulse 2s infinite;
+        }
+
+        .speech-bubble {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 1rem;
+            border-radius: 15px;
+            position: relative;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .voice-btn {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .voice-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding: 3rem 0;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4ecdc4;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Testimonials Section */
+        .testimonials {
+            padding: 4rem 0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .testimonials h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 3rem;
+            font-weight: 700;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .testimonial-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            color: #4ecdc4;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .testimonial-location {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
         }
 
         /* Features Section */
@@ -426,6 +620,15 @@
             }
         }
 
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .header-content {
@@ -449,6 +652,11 @@
                 align-items: center;
             }
 
+            .demo-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
             .features-grid {
                 grid-template-columns: 1fr;
             }
@@ -459,6 +667,14 @@
 
             .pricing-card.featured {
                 transform: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -475,6 +691,33 @@
         @media (max-width: 768px) {
             .mobile-menu-toggle {
                 display: block;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4ecdc4;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Ripple Animation */
+        @keyframes ripple {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
             }
         }
     </style>
@@ -494,7 +737,7 @@
                     <li><a href="dashboard.html" class="dashboard-btn">Dashboard</a></li>
                 </ul>
             </nav>
-            <a href="#register" class="cta-button">Get Started</a>
+            <a href="register.html" class="cta-button">Get Started</a>
             <button class="mobile-menu-toggle">☰</button>
         </div>
     </header>
@@ -508,6 +751,84 @@
                 <div class="hero-buttons">
                     <a href="register.html" class="btn-primary">Start Free Trial</a>
                     <a href="register.html" class="btn-secondary">Get Started - ₹99/month</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo-section">
+        <div class="container">
+            <div class="demo-container">
+                <div class="demo-content">
+                    <h3>Meet Your AI Teacher</h3>
+                    <p>Experience interactive learning with our AI teacher who speaks your language. Get personalized explanations, ask questions, and learn at your own pace.</p>
+                    <button class="btn-primary" onclick="startDemo()">Try Demo</button>
+                </div>
+                <div class="demo-avatar">
+                    <div class="ai-avatar">👩‍🏫</div>
+                    <div class="speech-bubble" id="demo-speech">
+                        नमस्ते! मैं आपकी AI शिक्षिका हूँ। आज हम क्या सीखेंगे?
+                    </div>
+                    <div class="voice-controls">
+                        <button class="voice-btn" onclick="playDemo('hindi')">🗣️ Hindi</button>
+                        <button class="voice-btn" onclick="playDemo('english')">🗣️ English</button>
+                        <button class="voice-btn" onclick="playDemo('hinglish')">🗣️ Hinglish</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number">50,000+</span>
+                    <span class="stat-label">Students Learning</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">1,000+</span>
+                    <span class="stat-label">NCERT Chapters</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">15+</span>
+                    <span class="stat-label">Languages Supported</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">98%</span>
+                    <span class="stat-label">Success Rate</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <h2>What Students Say</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        "Tutor.AI ने मेरी गणित की समस्या हल कर दी। अब मैं अपने दोस्तों से आगे हूँ!"
+                    </div>
+                    <div class="testimonial-author">Priya Sharma</div>
+                    <div class="testimonial-location">Class 10, Delhi</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        "The AI teacher explains everything in simple Hindi. My daughter's grades improved significantly!"
+                    </div>
+                    <div class="testimonial-author">Rajesh Kumar</div>
+                    <div class="testimonial-location">Parent, Mumbai</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        "Free education for BPL families is amazing. This is changing lives in our village."
+                    </div>
+                    <div class="testimonial-author">Sunita Devi</div>
+                    <div class="testimonial-location">Village Teacher, Bihar</div>
                 </div>
             </div>
         </div>
@@ -570,7 +891,7 @@
                         <li>Up to 2 children per family</li>
                         <li>Offline access</li>
                     </ul>
-                    <a href="#register" class="btn-primary">Register Free</a>
+                    <a href="register.html" class="btn-primary">Register Free</a>
                 </div>
                 <div class="pricing-card">
                     <h3>General Students</h3>
@@ -584,7 +905,7 @@
                         <li>Priority support</li>
                         <li>Advanced features</li>
                     </ul>
-                    <a href="#register" class="btn-primary">Start Learning</a>
+                    <a href="register.html" class="btn-primary">Start Learning</a>
                 </div>
             </div>
         </div>
@@ -592,12 +913,14 @@
 
     <!-- Modi Quote Section -->
     <section class="modi-quote-section" style="background: rgba(255,255,255,0.08); padding: 3rem 0; display: flex; justify-content: center; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 2rem; max-width: 900px; margin: 0 auto; flex-wrap: wrap;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/PM_Modi_2022.jpg" alt="Narendra Modi" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 16px rgba(0,0,0,0.15); border: 4px solid #fff;">
-            <div style="flex: 1; min-width: 250px;">
-                <p style="font-size: 1.2rem; color: #fff; font-weight: 500; margin-bottom: 1rem;">"Let us pledge to create an India where no child is left behind in the pursuit of education. A educated youth is the foundation of a developed nation."</p>
-                <p style="font-size: 1.2rem; color: #fff; font-weight: 500; margin-bottom: 1rem;">"Education is not just about acquiring knowledge; it is about empowering the future. Every child, irrespective of their background, deserves quality education because education is the greatest tool to break the chains of poverty and inequality."</p>
-                <p style="color: #4ecdc4; font-weight: bold; font-size: 1rem; margin-top: 0.5rem;">— PM Narendra Modi</p>
+        <div class="container">
+            <div style="display: flex; align-items: center; gap: 2rem; max-width: 900px; margin: 0 auto; flex-wrap: wrap;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/PM_Modi_2022.jpg" alt="Narendra Modi" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 16px rgba(0,0,0,0.15); border: 4px solid #fff;">
+                <div style="flex: 1; min-width: 300px;">
+                    <p style="font-size: 1.2rem; color: #fff; font-weight: 500; margin-bottom: 1rem; line-height: 1.5;">"Let us pledge to create an India where no child is left behind in the pursuit of education. An educated youth is the foundation of a developed nation."</p>
+                    <p style="font-size: 1.1rem; color: rgba(255,255,255,0.9); font-weight: 400; margin-bottom: 1rem; line-height: 1.5;">"Education is not just about acquiring knowledge; it is about empowering the future. Every child, irrespective of their background, deserves quality education because education is the greatest tool to break the chains of poverty and inequality."</p>
+                    <p style="color: #4ecdc4; font-weight: bold; font-size: 1rem; margin-top: 1rem;">— PM Narendra Modi</p>
+                </div>
             </div>
         </div>
     </section>
@@ -626,9 +949,9 @@
                 </div>
             </div>
             <div class="social-links">
-                <a href="#">📱</a>
-                <a href="#">📧</a>
-                <a href="#">🌐</a>
+                <a href="#" aria-label="Mobile App">📱</a>
+                <a href="#" aria-label="Email">📧</a>
+                <a href="#" aria-label="Website">🌐</a>
             </div>
             <p style="margin-top: 2rem; color: rgba(255, 255, 255, 0.5);">
                 © 2024 Tutor.AI - Empowering Indian Education
@@ -637,6 +960,40 @@
     </footer>
 
     <script>
+        // Demo functionality
+        function startDemo() {
+            const demoSpeech = document.getElementById('demo-speech');
+            const messages = [
+                "नमस्ते! मैं आपकी AI शिक्षिका हूँ। आज हम क्या सीखेंगे?",
+                "Hello! I'm your AI teacher. What would you like to learn today?",
+                "Kya haal hai? Main aapki AI teacher hun. Aaj kya padhna hai?"
+            ];
+            
+            let currentIndex = 0;
+            setInterval(() => {
+                demoSpeech.textContent = messages[currentIndex];
+                currentIndex = (currentIndex + 1) % messages.length;
+            }, 3000);
+        }
+
+        function playDemo(language) {
+            const demoSpeech = document.getElementById('demo-speech');
+            const messages = {
+                hindi: "नमस्ते! मैं आपकी AI शिक्षिका हूँ। आज हम गणित सीखेंगे।",
+                english: "Hello! I'm your AI teacher. Today we'll learn Mathematics.",
+                hinglish: "Hi! Main aapki AI teacher hun. Aaj hum Math padhenge, okay?"
+            };
+            
+            demoSpeech.textContent = messages[language];
+            
+            // Simulate text-to-speech (you can integrate actual TTS here)
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(messages[language]);
+                utterance.lang = language === 'hindi' ? 'hi-IN' : 'en-IN';
+                speechSynthesis.speak(utterance);
+            }
+        }
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -677,15 +1034,43 @@
         }, observerOptions);
 
         // Observe all cards
-        document.querySelectorAll('.feature-card, .pricing-card').forEach(card => {
+        document.querySelectorAll('.feature-card, .pricing-card, .testimonial-card').forEach(card => {
             card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
             card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             observer.observe(card);
         });
 
-        // Button click effects
-        document.querySelectorAll('.btn-primary, .btn-secondary, .cta-button').forEach(button => {
+        // Animate stats on scroll
+        const statsObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumber = entry.target.querySelector('.stat-number');
+                    const finalNumber = statNumber.textContent;
+                    const numericValue = parseInt(finalNumber.replace(/[^\d]/g, ''));
+                    
+                    let currentNumber = 0;
+                    const increment = numericValue / 50;
+                    
+                    const timer = setInterval(() => {
+                        currentNumber += increment;
+                        if (currentNumber >= numericValue) {
+                            statNumber.textContent = finalNumber;
+                            clearInterval(timer);
+                        } else {
+                            statNumber.textContent = Math.floor(currentNumber).toLocaleString() + (finalNumber.includes('+') ? '+' : '') + (finalNumber.includes('%') ? '%' : '');
+                        }
+                    }, 30);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.stat-item').forEach(stat => {
+            statsObserver.observe(stat);
+        });
+
+        // Button click effects with ripple animation
+        document.querySelectorAll('.btn-primary, .btn-secondary, .cta-button, .voice-btn').forEach(button => {
             button.addEventListener('click', function(e) {
                 // Create ripple effect
                 const ripple = document.createElement('span');
@@ -713,34 +1098,45 @@
             });
         });
 
-        // Add ripple animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes ripple {
-                0% {
-                    transform: scale(0);
-                    opacity: 1;
-                }
-                100% {
-                    transform: scale(2);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
-    <script src="js/auth.js"></script>
-    <script>
-        // Redirect to dashboard if already logged in
+        // Mobile menu toggle
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        
+        mobileMenuToggle.addEventListener('click', function() {
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+            navLinks.style.position = 'absolute';
+            navLinks.style.top = '100%';
+            navLinks.style.left = '0';
+            navLinks.style.right = '0';
+            navLinks.style.background = 'rgba(0, 0, 0, 0.9)';
+            navLinks.style.flexDirection = 'column';
+            navLinks.style.padding = '1rem';
+            navLinks.style.gap = '1rem';
+        });
+
+        // Initialize demo on page load
         document.addEventListener('DOMContentLoaded', function() {
+            startDemo();
+            
+            // Check if user is already logged in and redirect if needed
             if (window.TutorAuth && TutorAuth.prototype.handleAuthRedirect) {
                 if (!window.tutorAuthInstance) {
                     window.tutorAuthInstance = new TutorAuth();
                 }
-                // handleAuthRedirect will redirect if authenticated
                 window.tutorAuthInstance.handleAuthRedirect();
             }
         });
+
+        // Preload images for better performance
+        const preloadImages = [
+            'https://upload.wikimedia.org/wikipedia/commons/6/6e/PM_Modi_2022.jpg'
+        ];
+        
+        preloadImages.forEach(src => {
+            const img = new Image();
+            img.src = src;
+        });
     </script>
+    <script src="js/auth.js"></script>
 </body>
 </html>
