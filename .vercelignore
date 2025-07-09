@@ -28,4 +28,9 @@ node_modules/
 
 # Build artifacts
 dist/
-build/ 
+build/
+
+# Large files that cause deployment issues
+processed_books.json
+books/
+extracted_images/ 
