@@ -1,18 +1,62 @@
 import fs from 'fs';
 import path from 'path';
-import pdf from 'pdf-parse';
+
+// Use pdfjs-dist for reliable PDF parsing with Node.js polyfills
+let pdfjsLib = null;
+const loadPdfJs = async () => {
+  if (!pdfjsLib) {
+    try {
+      // Set up Node.js environment for pdfjs-dist
+      const { createCanvas } = await import('canvas');
+      global.DOMMatrix = class DOMMatrix {
+        constructor(matrix) {
+          this.a = matrix?.[0] || 1;
+          this.b = matrix?.[1] || 0;
+          this.c = matrix?.[2] || 0;
+          this.d = matrix?.[3] || 1;
+          this.e = matrix?.[4] || 0;
+          this.f = matrix?.[5] || 0;
+        }
+      };
+      
+      pdfjsLib = await import('pdfjs-dist');
+      // Use Node.js worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc = false;
+      console.log('PDF.js loaded successfully with Node.js polyfills');
+    } catch (error) {
+      console.error('Failed to load PDF.js:', error);
+      throw new Error('PDF parsing is not available in this environment');
+    }
+  }
+  return pdfjsLib;
+};
 
 export class PDFProcessor {
     constructor() {
         this.bookContent = new Map();
     }
 
-    // Extract text from PDF
+    // Extract text from PDF using pdfjs-dist
     async extractPDFText(pdfPath) {
         try {
             const dataBuffer = fs.readFileSync(pdfPath);
-            const data = await pdf(dataBuffer);
-            return data.text;
+            const pdfjs = await loadPdfJs();
+            
+            // Load the PDF document
+            const loadingTask = pdfjs.getDocument({ data: dataBuffer });
+            const pdf = await loadingTask.promise;
+            
+            let fullText = '';
+            
+            // Extract text from each page
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                fullText += pageText + '\n';
+            }
+            
+            return fullText.trim();
         } catch (error) {
             console.error('Error extracting PDF:', error);
             return null;
