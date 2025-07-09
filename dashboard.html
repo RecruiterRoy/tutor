@@ -771,9 +771,9 @@
         });
 
         // Initialize Supabase
-        const config = window.appConfig || {};
-        const supabaseUrl = config.supabaseUrl || 'https://your-project-ref.supabase.co';
-        const supabaseKey = config.supabaseAnonKey || 'your-anon-key-here';
+        const supabaseConfig = window.appConfig || {};
+        const supabaseUrl = supabaseConfig.supabaseUrl || 'https://your-project-ref.supabase.co';
+        const supabaseKey = supabaseConfig.supabaseAnonKey || 'your-anon-key-here';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         // Global variables
