@@ -68,6 +68,129 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// PDF Handler integration
+let pdfHandler = null;
+
+async function getPDFHandler() {
+    if (!pdfHandler) {
+        try {
+            const { default: handler } = await import('./lib/pdfHandler.js');
+            pdfHandler = handler;
+        } catch (error) {
+            console.warn('PDF Handler initialization failed:', error.message);
+            pdfHandler = {
+                getStatus: () => ({ available: false, timestamp: new Date().toISOString() }),
+                parsePDFBuffer: () => { throw new Error('PDF parsing not available'); },
+                parsePDFFile: () => { throw new Error('PDF parsing not available'); }
+            };
+        }
+    }
+    return pdfHandler;
+}
+
+// PDF Status API
+app.get('/api/pdf/status', async (req, res) => {
+    try {
+        const handler = await getPDFHandler();
+        const status = handler.getStatus();
+        
+        res.status(200).json({
+            service: 'PDF Handler',
+            status: status.available ? 'available' : 'unavailable',
+            timestamp: status.timestamp,
+            environment: process.env.NODE_ENV || 'development',
+            platform: process.platform,
+            nodeVersion: process.version,
+            capabilities: {
+                pdfParsing: status.available,
+                fileUpload: true,
+                textProcessing: true
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            service: 'PDF Handler',
+            status: 'error',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// PDF Parse API
+app.post('/api/pdf/parse', async (req, res) => {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
+    try {
+        const { buffer, filePath, text } = req.body;
+
+        // Check if PDF handler is available
+        const handler = await getPDFHandler();
+        const status = handler.getStatus();
+        if (!status.available) {
+            return res.status(503).json({
+                error: 'PDF parsing unavailable',
+                message: 'PDF parsing service is not available in this environment',
+                fallback: 'Please try uploading a text file instead'
+            });
+        }
+
+        let result;
+
+        if (buffer) {
+            // Parse from buffer (uploaded file)
+            const bufferData = Buffer.from(buffer, 'base64');
+            result = await handler.parsePDFBuffer(bufferData);
+        } else if (filePath) {
+            // Parse from file path (server-side file)
+            result = await handler.parsePDFFile(filePath);
+        } else if (text) {
+            // Fallback: just return the text as-is
+            result = { text, numPages: 1, source: 'text-input' };
+        } else {
+            return res.status(400).json({
+                error: 'Invalid request',
+                message: 'Please provide buffer, filePath, or text'
+            });
+        }
+
+        // Return parsed result
+        res.status(200).json({
+            success: true,
+            data: {
+                text: result.text,
+                numPages: result.numPages,
+                wordCount: result.text.split(/\s+/).length,
+                charCount: result.text.length,
+                processed: true,
+                timestamp: new Date().toISOString()
+            },
+            metadata: {
+                info: result.info,
+                version: result.version
+            }
+        });
+
+    } catch (error) {
+        console.error('PDF parsing API error:', error);
+        
+        res.status(500).json({
+            error: 'PDF parsing failed',
+            message: error.message,
+            fallback: 'Please try uploading a text file or try again later',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // API Routes (must come before static file serving)
 app.get('/api/supabase-config', (req, res) => {
     res.json({
