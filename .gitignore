@@ -92,4 +92,4 @@ processed_books.json
 *.json.bak
 
 # Large image files
-images/teacher-avatar*.png
+images/teacher-avatar*.pngbooks/
