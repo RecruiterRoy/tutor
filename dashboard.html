@@ -6,59 +6,92 @@
     <title>Dashboard - TUTOR.AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Inter', sans-serif; }
+        
         .glass-effect {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
+        
         .gradient-border {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 2px;
-            border-radius: 12px;
+            border-radius: 16px;
         }
+        
         .gradient-border-content {
-            background: rgba(15, 23, 42, 0.9);
-            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 14px;
             padding: 1.5rem;
         }
+        
         .chat-container {
             height: 60vh;
             overflow-y: auto;
+            scroll-behavior: smooth;
         }
+        
         .chat-container::-webkit-scrollbar {
-            width: 4px;
+            width: 8px;
         }
+        
         .chat-container::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
         }
+        
         .chat-container::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             border-radius: 10px;
         }
+        
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a6fd1, #6a4299);
+        }
+        
         .message-user {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             margin-left: auto;
-            max-width: 80%;
+            max-width: 85%;
+            animation: slideInRight 0.3s ease-out;
         }
+        
         .message-ai {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             margin-right: auto;
-            max-width: 80%;
+            max-width: 85%;
+            animation: slideInLeft 0.3s ease-out;
         }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
         .typing-indicator {
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            gap: 6px;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
             margin-right: auto;
-            max-width: 80px;
+            max-width: 100px;
         }
+        
         .typing-dot {
             width: 8px;
             height: 8px;
@@ -66,485 +99,656 @@
             background: #667eea;
             animation: typing 1.4s infinite;
         }
+        
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
         @keyframes typing {
             0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-6px); opacity: 1; }
+            30% { transform: translateY(-8px); opacity: 1; }
         }
-        .sidebar {
-            transition: transform 0.3s ease;
+        
+        .nav-item {
+            transition: all 0.3s ease;
+            position: relative;
         }
-        .sidebar-hidden {
-            transform: translateX(-100%);
-        }
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #ffffff3a;
-            border-radius: 50%;
-            border-top-color: #667eea;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        
         .nav-item.active {
-            background: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            transform: translateX(4px);
         }
-        .message-content {
+        
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .voice-recording {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: pulse 1s infinite;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+        
+        /* Markdown Content Styles */
+        .prose {
             white-space: pre-wrap;
             word-wrap: break-word;
+            color: white;
+            line-height: 1.6;
         }
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
+        .prose p {
+            margin-bottom: 1em;
         }
+        .prose ul, .prose ol {
+            margin-bottom: 1em;
+            padding-left: 1.5em;
+        }
+        .prose li {
+            margin-bottom: 0.5em;
+        }
+        .prose img {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        .prose code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2em 0.4em;
+            border-radius: 0.3em;
+            font-family: monospace;
+        }
+        .prose pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1em;
+            border-radius: 0.5em;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+        .prose blockquote {
+            border-left: 3px solid rgba(255, 255, 255, 0.3);
+            padding-left: 1em;
+            margin-left: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-style: italic;
+            margin: 1em 0;
+        }
+        .prose h1, .prose h2, .prose h3, .prose h4 {
+            margin: 1em 0 0.5em 0;
+            font-weight: 600;
+        }
+        .prose h1 { font-size: 1.5em; }
+        .prose h2 { font-size: 1.3em; }
+        .prose h3 { font-size: 1.1em; }
+        
+        /* Mermaid Diagram Styles */
+        .mermaid-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow: auto;
+        }
+        .mermaid {
+            background: transparent !important;
+            display: flex;
+            justify-content: center;
+        }
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            background: transparent !important;
+        }
+        .mermaid .label {
+            color: white !important;
+        }
+        
+        /* Avatar Animation Styles */
+        .talking-animation {
+            animation: talking 0.8s infinite alternate ease-in-out;
+        }
+
+        .blinking-animation {
+            animation: blink 4s infinite ease-in-out;
+        }
+
+        @keyframes talking {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-5px) scale(1.05); }
+        }
+
+        @keyframes blink {
+            0%, 96%, 100% { transform: scaleY(1); }
+            98% { transform: scaleY(0.1); }
+        }
+
+        .avatar-eyes {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            top: 30%;
+        }
+
+        .avatar-mouth {
+            position: absolute;
+            width: 20px;
+            height: 8px;
+            background: #ff6b6b;
+            border-radius: 0 0 10px 10px;
+            top: 60%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.2s ease;
+        }
+
+        .talking .avatar-mouth {
+            animation: mouthTalk 0.3s infinite alternate;
+        }
+
+        @keyframes mouthTalk {
+            0% { height: 8px; border-radius: 0 0 10px 10px; }
+            100% { height: 4px; border-radius: 10px; }
+        }
+
+        /* Avatar Container */
+        .avatar-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin-right: 15px;
+        }
+
+        .avatar-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.3);
+            object-fit: cover;
+            position: relative;
+        }
+
+        .avatar-eyes-container {
+            position: absolute;
+            width: 100%;
+            top: 30%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .avatar-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Settings Page Avatar Styles */
+        .avatar-selection-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .avatar-selection-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .avatar-selection-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .avatar-container-settings {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 10px;
+            position: relative;
+        }
+
+        .avatar-image-settings {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            border: 3px solid rgba(255,255,255,0.3);
+            object-fit: cover;
+        }
+
+        /* Media Controls */
+        .media-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .media-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+        }
+
+        .media-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .media-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Chat Avatar Styles */
+        .avatar-container-chat {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .avatar-image-chat {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            object-fit: cover;
+        }
+
+        /* Chat Avatar Animation Elements */
+        .avatar-eyes-container-chat {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .avatar-eyes-chat {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            top: 25%;
+            animation: blink-chat 4s infinite ease-in-out;
+            display: none; /* Hide the white dots */
+        }
+
+        .avatar-eyes-chat:first-child {
+            left: 25%;
+        }
+
+        .avatar-eyes-chat:last-child {
+            right: 25%;
+        }
+
+        .avatar-mouth-chat {
+            position: absolute;
+            width: 16px;
+            height: 6px;
+            background: #ff6b6b;
+            border-radius: 0 0 8px 8px;
+            top: 55%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.2s ease;
+            display: none; /* Hide the mouth dot */
+        }
+
+        .talking-chat .avatar-mouth-chat {
+            animation: mouthTalk-chat 0.3s infinite alternate;
+        }
+
+        @keyframes blink-chat {
+            0%, 96%, 100% { transform: scaleY(1); }
+            98% { transform: scaleY(0.1); }
+        }
+
+        @keyframes mouthTalk-chat {
+            0% { height: 6px; border-radius: 0 0 8px 8px; }
+            100% { height: 3px; border-radius: 8px; }
+        }
+
+        /* Chat Media Controls */
+        .media-controls-chat {
+            display: flex;
+            gap: 6px;
+        }
+
+        .media-btn-chat {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 10px;
+        }
+
+        .media-btn-chat:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .media-btn-chat:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100vh;
-                z-index: 50;
-                width: 280px;
-            }
             .chat-container {
                 height: 50vh;
             }
             .message-user, .message-ai {
-                max-width: 85%;
+                max-width: 90%;
             }
         }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-    <!-- Mobile Menu Overlay -->
-    <div id="mobileOverlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
-    
-    <!-- Sidebar -->
-    <div id="sidebar" class="sidebar sidebar-hidden md:sidebar-hidden md:translate-x-0 md:relative w-80 bg-slate-800/90 backdrop-blur-md border-r border-white/10">
-        <div class="p-6">
-            <!-- User Profile -->
-            <div class="glass-effect p-4 rounded-xl mb-6">
-                <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span id="userInitials" class="text-white font-bold text-lg">S</span>
-                    </div>
-                    <div>
-                        <h3 id="userName" class="text-white font-semibold">Student</h3>
-                        <p id="userClass" class="text-gray-400 text-sm">Class 10</p>
-                    </div>
-                </div>
-                <div class="mt-3 flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span id="planStatus" class="text-gray-300 text-sm">Free Plan</span>
-                    </div>
-                    <button onclick="togglePlan()" class="text-blue-400 hover:text-blue-300 text-sm">
-                        <span id="planAction">Upgrade</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Navigation -->
-            <nav class="space-y-2">
-                <a href="#" onclick="showSection('chat')" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
-                    <span>💬</span>
-                    <span>AI Tutor</span>
-                </a>
-                <a href="#" onclick="showSection('homework')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
-                    <span>📚</span>
-                    <span>Homework Help</span>
-                </a>
-                <a href="#" onclick="showSection('progress')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
-                    <span>📊</span>
-                    <span>Progress</span>
-                </a>
-                <a href="#" onclick="showSection('tests')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
-                    <span>📝</span>
-                    <span>Practice Tests</span>
-                </a>
-                <a href="#" onclick="showSection('schedule')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
-                    <span>📅</span>
-                    <span>Study Schedule</span>
-                </a>
-                <a href="#" onclick="showSection('profile')" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200">
-                    <span>⚙️</span>
-                    <span>Settings</span>
-                </a>
-            </nav>
-
-            <!-- Quick Stats -->
-            <div class="mt-6 glass-effect p-4 rounded-xl">
-                <h4 class="text-white font-semibold mb-3">Today's Progress</h4>
-                <div class="space-y-2">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-300">Study Time</span>
-                        <span id="studyTime" class="text-white">0 min</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-300">Questions Asked</span>
-                        <span id="questionsCount" class="text-white">0</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-300">Streak</span>
-                        <span id="streak" class="text-white">0 days</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Logout -->
-            <div class="mt-6">
-                <button onclick="logout()" class="w-full flex items-center space-x-3 p-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200">
-                    <span>🚪</span>
-                    <span>Logout</span>
-                </button>
-            </div>
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-20 md:w-56 bg-slate-800/90 flex flex-col items-center py-6 space-y-4">
+            <button class="nav-item active w-full py-3 px-2 text-white text-left font-semibold rounded-lg mb-2" onclick="showSection('dashboard')" id="navDashboard">🏠 <span class="hidden md:inline">Dashboard</span></button>
+            <button class="nav-item w-full py-3 px-2 text-white text-left font-semibold rounded-lg mb-2" onclick="showSection('progress')" id="navProgress">📈 <span class="hidden md:inline">Progress</span></button>
+            <button class="nav-item w-full py-3 px-2 text-white text-left font-semibold rounded-lg mb-2" onclick="showSection('settings')" id="navSettings">⚙️ <span class="hidden md:inline">Settings</span></button>
         </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="flex-1 md:ml-80">
-        <!-- Top Bar -->
-        <div class="bg-slate-800/90 backdrop-blur-md border-b border-white/10 p-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <button onclick="toggleSidebar()" class="md:hidden text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <span class="text-white font-bold text-sm">T</span>
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col h-full overflow-y-auto">
+            <!-- Top Bar -->
+            <div class="bg-slate-800/90 backdrop-blur-lg border-b border-white/10 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <span class="text-white font-bold text-lg">T</span>
                         </div>
-                        <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
+                        <h1 class="text-white text-2xl font-bold">TUTOR.AI</h1>
                     </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="text-right">
-                        <p class="text-white text-sm font-medium" id="topBarUserName">Student</p>
-                        <p class="text-gray-400 text-xs" id="topBarUserClass">Class 10</p>
-                    </div>
-                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span id="topBarInitials" class="text-white font-bold text-sm">S</span>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <p class="text-white text-sm font-medium" id="topBarUserName">Loading...</p>
+                            <p class="text-gray-400 text-xs" id="topBarUserClass">Loading...</p>
+                        </div>
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <span id="topBarInitials" class="text-white font-bold text-sm">L</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Content Area -->
-        <div class="p-4 md:p-6">
-            <!-- AI Chat Section -->
-            <div id="chatSection" class="section">
-                <div class="max-w-4xl mx-auto">
-                    <div class="glass-effect rounded-2xl p-6 mb-6">
-                        <h2 class="text-2xl font-bold text-white mb-4">AI Tutor Chat</h2>
-                        <p class="text-gray-300">Ask me anything about your studies! I can help with Math, Science, English, and more.</p>
-                    </div>
-
-                    <!-- Chat Container -->
-                    <div class="gradient-border mb-6">
-                        <div class="gradient-border-content">
-                            <div id="chatMessages" class="chat-container space-y-4 mb-4">
-                                <!-- Messages will be dynamically inserted here -->
-                            </div>
-
-                            <!-- Chat Input -->
-                            <div class="flex space-x-3">
-                                <input 
-                                    type="text" 
-                                    id="chatInput" 
-                                    placeholder="Type your question here..." 
-                                    class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    onkeypress="handleChatKeyPress(event)"
-                                >
-                                <button id="sendButton" onclick="sendMessage()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
-                                    Send
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button onclick="sendQuickMessage('Help me with Math problems')" class="glass-effect p-4 rounded-lg text-center hover:bg-white/20 transition-all duration-200">
-                            <div class="text-2xl mb-2">🔢</div>
-                            <p class="text-white text-sm">Math Help</p>
-                        </button>
-                        <button onclick="sendQuickMessage('Explain this Science concept')" class="glass-effect p-4 rounded-lg text-center hover:bg-white/20 transition-all duration-200">
-                            <div class="text-2xl mb-2">🧪</div>
-                            <p class="text-white text-sm">Science</p>
-                        </button>
-                        <button onclick="sendQuickMessage('Help with English grammar')" class="glass-effect p-4 rounded-lg text-center hover:bg-white/20 transition-all duration-200">
-                            <div class="text-2xl mb-2">📝</div>
-                            <p class="text-white text-sm">English</p>
-                        </button>
-                        <button onclick="sendQuickMessage('Create a study plan for me')" class="glass-effect p-4 rounded-lg text-center hover:bg-white/20 transition-all duration-200">
-                            <div class="text-2xl mb-2">📅</div>
-                            <p class="text-white text-sm">Study Plan</p>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Homework Section -->
-            <div id="homeworkSection" class="section hidden">
-                <div class="max-w-4xl mx-auto">
-                    <div class="glass-effect rounded-2xl p-6 mb-6">
-                        <h2 class="text-2xl font-bold text-white mb-4">Homework Help</h2>
-                        <p class="text-gray-300">Upload your homework questions and get detailed explanations!</p>
-                    </div>
-
-                    <!-- File Upload -->
-                    <div class="gradient-border mb-6">
-                        <div class="gradient-border-content">
-                            <div class="text-center py-8">
-                                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span class="text-white text-2xl">📁</span>
-                                </div>
-                                <h3 class="text-white font-semibold mb-2">Upload Homework</h3>
-                                <p class="text-gray-400 mb-4">Upload images of your homework questions</p>
-                                <input type="file" id="homeworkFile" class="hidden" accept="image/*" onchange="handleFileUpload(event)">
-                                <button onclick="document.getElementById('homeworkFile').click()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
-                                    Choose Image
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Homework Chat -->
-                    <div class="gradient-border">
-                        <div class="gradient-border-content">
-                            <div id="homeworkChat" class="chat-container space-y-4 mb-4">
-                                <div class="message-ai p-4 rounded-lg">
-                                    <div class="flex items-start space-x-3">
-                                        <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                                            <span class="text-white font-bold text-sm">AI</span>
+            <!-- Section Content -->
+            <div class="flex-1 flex flex-col overflow-y-auto">
+                <!-- Dashboard Section -->
+                <div id="dashboardSection" class="section-content flex-1 flex flex-col p-4 md:p-6 overflow-y-auto">
+                    <!-- Chat Section -->
+                    <div id="chatSection">
+                        <div class="max-w-6xl mx-auto">
+                            <div class="glass-effect rounded-2xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="avatar-container-chat">
+                                            <img id="teacher-avatar-chat" class="avatar-image-chat" 
+                                                 src="images/teacher-avatar2.png" alt="Teacher Avatar">
+                                            <div class="avatar-eyes-container-chat">
+                                                <div class="avatar-eyes-chat"></div>
+                                                <div class="avatar-eyes-chat"></div>
+                                            </div>
+                                            <div class="avatar-mouth-chat"></div>
                                         </div>
                                         <div>
-                                            <p class="text-white message-content">Upload an image of your homework question, and I'll help you solve it step by step!</p>
-                                            <p class="text-gray-400 text-xs mt-1">Just now</p>
+                                            <h2 id="teacher-name-chat" class="text-xl font-bold text-white">Roy Sir</h2>
+                                            <p class="text-gray-300 text-sm">Ask me anything about your studies!</p>
+                                            <div class="media-controls-chat mt-2">
+                                                <button class="media-btn-chat" onclick="playCurrentAnswer()">▶️</button>
+                                                <button class="media-btn-chat" onclick="pauseCurrentAnswer()">⏸️</button>
+                                                <button class="media-btn-chat" onclick="resumeCurrentAnswer()">⏯️</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full pulse-animation"></div>
+                                        <span class="text-green-400 text-sm font-medium">AI Online</span>
+                                    </div>
+                                </div>
+
+                                <!-- Chat Container -->
+                                <div class="gradient-border mb-6">
+                                    <div class="gradient-border-content">
+                                        <div id="chatMessages" class="chat-container space-y-4 mb-4">
+                                            <!-- Messages will be inserted here -->
+                </div>
+                                        <!-- Chat Input -->
+                                        <div class="flex space-x-3">
+                                            <input 
+                                                type="text" 
+                                                id="chatInput" 
+                                                placeholder="Type your question here..." 
+                                                class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                onkeypress="handleChatKeyPress(event)"
+                                            >
+                                            <button id="voiceButton" class="px-4 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 transition-all duration-300 font-semibold relative" title="Voice Input">
+                                                <span id="voiceIcon">🎤</span>
+                                                <span id="voiceStatus" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full opacity-0 transition-opacity duration-300"></span>
+                                            </button>
+                                            <button id="sendButton" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                                                Send
+                                            </button>
+                                        </div>
+                    </div>
+                </div>
+
+                                <!-- Quick Actions -->
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <button onclick="sendQuickMessage('Help me with Math problems', 'Math')" class="glass-effect p-4 rounded-2xl text-center hover:bg-white/20 transition-all duration-300 group">
+                                        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">🔢</div>
+                                        <p class="text-white font-medium text-sm">Math Help</p>
+                                    </button>
+                                    <button onclick="sendQuickMessage('Explain this Science concept', 'Science')" class="glass-effect p-4 rounded-2xl text-center hover:bg-white/20 transition-all duration-300 group">
+                                        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">🧪</div>
+                                        <p class="text-white font-medium text-sm">Science</p>
+                                    </button>
+                                    <button onclick="sendQuickMessage('Help with English grammar', 'English')" class="glass-effect p-4 rounded-2xl text-center hover:bg-white/20 transition-all duration-300 group">
+                                        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">📝</div>
+                                        <p class="text-white font-medium text-sm">English</p>
+                    </button>
+                                    <button onclick="sendQuickMessage('Create a study plan for me')" class="glass-effect p-4 rounded-2xl text-center hover:bg-white/20 transition-all duration-300 group">
+                                        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">📅</div>
+                                        <p class="text-white font-medium text-sm">Study Plan</p>
+                    </button>
+                </div>
+
+
+
+                                <!-- Study Materials Panel -->
+                                <div class="glass-effect rounded-2xl p-4 mt-4">
+                                    <h3 class="text-white font-bold mb-2">Study Materials</h3>
+                                    <div id="bookList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
+                                        <!-- Books will be loaded here -->
+                                        <p class="text-gray-400 col-span-full">Loading books for your class...</p>
+                                    </div>
+                                </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Section -->
+                <div id="progressSection" class="section-content flex-1 flex-col p-4 md:p-6 hidden overflow-y-auto">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="glass-effect rounded-2xl p-6">
+                            <h2 class="text-2xl font-bold text-white mb-4">Learning Progress</h2>
+                            <div class="mb-4 flex items-center space-x-4">
+                                <label class="text-white text-sm">Final Exam in:</label>
+                                <select id="examMonth" class="bg-purple-700 text-white rounded px-2 py-1">
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3">March</option>
+                                    <option value="4" selected>April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <select id="examYear" class="bg-purple-700 text-white rounded px-2 py-1"></select>
+                            </div>
+                            <div class="mb-2 text-white text-sm" id="monthsTillExam">Months till final exam: </div>
+                            <div class="mb-4 text-white text-sm" id="progressTillDate">Progress made till date: 0%</div>
+                            <div class="mb-4">
+                                <label class="text-white text-sm">Subjects:</label>
+                                <div id="subjectsList" class="flex flex-col space-y-2 mt-2"></div>
+                                <button id="addSubjectBtn" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded">Add Subject</button>
+                        </div>
+                            <div id="learning-progress"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settingsSection" class="section-content flex-1 flex-col p-4 md:p-6 hidden overflow-y-auto">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="glass-effect rounded-2xl p-6">
+                            <h2 class="text-2xl font-bold text-white mb-4">Settings</h2>
+                            
+                            <!-- Teacher Avatars -->
+                            <div class="mb-6">
+                                <label class="text-white text-sm font-medium mb-3 block">Choose Your Teacher:</label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="avatar-selection-card" data-teacher="english">
+                                        <div class="avatar-container-settings">
+                                            <img class="avatar-image-settings" src="images/teacher-avatar2.png" alt="Roy Sir">
+                                        </div>
+                                        <h3 class="text-white text-center mt-2 font-medium">Roy Sir</h3>
+                                        <div class="media-controls mt-2">
+                                            <button class="media-btn" id="playBtn-english" onclick="playCurrentAnswer()">▶️</button>
+                                            <button class="media-btn" id="pauseBtn-english" onclick="pauseCurrentAnswer()">⏸️</button>
+                                            <button class="media-btn" id="resumeBtn-english" onclick="resumeCurrentAnswer()">⏯️</button>
+                                        </div>
+                                    </div>
+                                    <div class="avatar-selection-card" data-teacher="hindi">
+                                        <div class="avatar-container-settings">
+                                            <img class="avatar-image-settings" src="images/teacher-avatar1.png" alt="Ms. Sapana">
+                                        </div>
+                                        <h3 class="text-white text-center mt-2 font-medium">Ms. Sapana</h3>
+                                        <div class="media-controls mt-2">
+                                            <button class="media-btn" id="playBtn-hindi" onclick="playCurrentAnswer()">▶️</button>
+                                            <button class="media-btn" id="pauseBtn-hindi" onclick="pauseCurrentAnswer()">⏸️</button>
+                                            <button class="media-btn" id="resumeBtn-hindi" onclick="resumeCurrentAnswer()">⏯️</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Progress Section -->
-            <div id="progressSection" class="section hidden">
-                <div class="max-w-6xl mx-auto">
-                    <div class="glass-effect rounded-2xl p-6 mb-6">
-                        <h2 class="text-2xl font-bold text-white mb-4">Your Progress</h2>
-                        <p class="text-gray-300">Track your learning journey and achievements</p>
-                    </div>
-
-                    <!-- Progress Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        <div class="glass-effect p-6 rounded-2xl text-center">
-                            <div class="text-3xl mb-2">🎯</div>
-                            <h3 class="text-white font-semibold">Study Streak</h3>
-                            <p class="text-2xl font-bold text-blue-400" id="streakDisplay">0 days</p>
-                        </div>
-                        <div class="glass-effect p-6 rounded-2xl text-center">
-                            <div class="text-3xl mb-2">⏰</div>
-                            <h3 class="text-white font-semibold">Total Time</h3>
-                            <p class="text-2xl font-bold text-green-400" id="totalTimeDisplay">0 min</p>
-                        </div>
-                        <div class="glass-effect p-6 rounded-2xl text-center">
-                            <div class="text-3xl mb-2">❓</div>
-                            <h3 class="text-white font-semibold">Questions</h3>
-                            <p class="text-2xl font-bold text-purple-400" id="questionsDisplay">0</p>
-                        </div>
-                        <div class="glass-effect p-6 rounded-2xl text-center">
-                            <div class="text-3xl mb-2">🏆</div>
-                            <h3 class="text-white font-semibold">Solved</h3>
-                            <p class="text-2xl font-bold text-yellow-400" id="solvedDisplay">0</p>
-                        </div>
-                    </div>
-
-                    <!-- Subject Progress -->
-                    <div class="glass-effect rounded-2xl p-6">
-                        <h3 class="text-white font-semibold mb-4">Subject Progress</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-2xl">🔢</span>
-                                    <span class="text-white">Mathematics</span>
-                                </div>
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-32 bg-gray-700 rounded-full h-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 70%"></div>
-                                    </div>
-                                    <span class="text-gray-400 text-sm">70%</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-2xl">🧪</span>
-                                    <span class="text-white">Science</span>
-                                </div>
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-32 bg-gray-700 rounded-full h-2">
-                                        <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
-                                    </div>
-                                    <span class="text-gray-400 text-sm">85%</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-2xl">📝</span>
-                                    <span class="text-white">English</span>
-                                </div>
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-32 bg-gray-700 rounded-full h-2">
-                                        <div class="bg-purple-500 h-2 rounded-full" style="width: 60%"></div>
-                                    </div>
-                                    <span class="text-gray-400 text-sm">60%</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tests Section -->
-            <div id="testsSection" class="section hidden">
-                <div class="max-w-4xl mx-auto">
-                    <div class="glass-effect rounded-2xl p-6 mb-6">
-                        <h2 class="text-2xl font-bold text-white mb-4">Practice Tests</h2>
-                        <p class="text-gray-300">Test your knowledge with AI-generated quizzes and practice tests</p>
-                    </div>
-
-                    <!-- Test Categories -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="glass-effect p-6 rounded-2xl text-center hover:bg-white/20 transition-all duration-200 cursor-pointer">
-                            <div class="text-4xl mb-4">🔢</div>
-                            <h3 class="text-white font-semibold mb-2">Math Quiz</h3>
-                            <p class="text-gray-400 text-sm mb-4">Test your mathematical skills</p>
-                            <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200">
-                                Start Quiz
-                            </button>
-                        </div>
-                        <div class="glass-effect p-6 rounded-2xl text-center hover:bg-white/20 transition-all duration-200 cursor-pointer">
-                            <div class="text-4xl mb-4">🧪</div>
-                            <h3 class="text-white font-semibold mb-2">Science Quiz</h3>
-                            <p class="text-gray-400 text-sm mb-4">Physics, Chemistry, Biology</p>
-                            <button class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200">
-                                Start Quiz
-                            </button>
-                        </div>
-                        <div class="glass-effect p-6 rounded-2xl text-center hover:bg-white/20 transition-all duration-200 cursor-pointer">
-                            <div class="text-4xl mb-4">📝</div>
-                            <h3 class="text-white font-semibold mb-2">English Quiz</h3>
-                            <p class="text-gray-400 text-sm mb-4">Grammar and Literature</p>
-                            <button class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all duration-200">
-                                Start Quiz
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Schedule Section -->
-            <div id="scheduleSection" class="section hidden">
-                <div class="max-w-4xl mx-auto">
-                    <div class="glass-effect rounded-2xl p-6 mb-6">
-                        <h2 class="text-2xl font-bold text-white mb-4">Study Schedule</h2>
-                        <p class="text-gray-300">Your personalized AI-powered study schedule</p>
-                    </div>
-
-                    <!-- Schedule Generator -->
-                    <div class="glass-effect rounded-2xl p-6 mb-6">
-                        <h3 class="text-white font-semibold mb-4">Generate Study Schedule</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="text-gray-300 text-sm mb-2 block">Available Study Hours/Day</label>
-                                <input type="number" id="studyHours" min="1" max="12" value="2" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
-                            </div>
-                            <div>
-                                <label class="text-gray-300 text-sm mb-2 block">Priority Subject</label>
-                                <select id="prioritySubject" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
-                                    <option value="math">Mathematics</option>
-                                    <option value="science">Science</option>
-                                    <option value="english">English</option>
+                            <!-- Language Selection -->
+                            <div class="mb-4">
+                                <label for="preferredLanguage" class="text-white text-sm">Preferred Language:</label>
+                                <select id="preferredLanguage" class="bg-purple-700 text-white rounded px-2 py-1">
+                                    <option value="en" selected>English</option>
+                                    <option value="hi">हिंदी (Hindi)</option>
+                                    <option value="hi-en">Hinglish</option>
                                 </select>
                             </div>
-                        </div>
-                        <button onclick="generateSchedule()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
-                            Generate Schedule
-                        </button>
-                    </div>
 
-                    <!-- Schedule Display -->
-                    <div id="scheduleDisplay" class="glass-effect rounded-2xl p-6">
-                        <h3 class="text-white font-semibold mb-4">Today's Schedule</h3>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between p-3 bg-white/10 rounded-lg">
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-2xl">🔢</span>
-                                    <div>
-                                        <h4 class="text-white font-medium">Mathematics</h4>
-                                        <p class="text-gray-400 text-sm">Algebra & Geometry</p>
+                            <!-- Voice Settings -->
+                            <div class="mb-4 flex items-center space-x-2">
+                                <label for="voiceSelect" class="text-white text-sm">Voice:</label>
+                                <select id="voiceSelect" class="bg-purple-700 text-white rounded px-2 py-1"></select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="text-white text-sm">Voice Settings:</label>
+                                <div class="flex flex-col space-y-2 mt-2">
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-white text-sm">Speed:</label>
+                                        <input type="range" id="voiceRate" min="0.5" max="2" step="0.1" value="1.0" class="w-32">
+                                        <span id="rateValue" class="text-white text-sm">1.0x</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-white text-sm">Pitch:</label>
+                                        <input type="range" id="voicePitch" min="0.5" max="2" step="0.1" value="1.0" class="w-32">
+                                        <span id="pitchValue" class="text-white text-sm">1.0</span>
                                     </div>
                                 </div>
-                                <span class="text-gray-300 text-sm">9:00 - 10:00 AM</span>
                             </div>
-                            <div class="flex items-center justify-between p-3 bg-white/10 rounded-lg">
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-2xl">🧪</span>
-                                    <div>
-                                        <h4 class="text-white font-medium">Science</h4>
-                                        <p class="text-gray-400 text-sm">Physics concepts</p>
-                                    </div>
-                                </div>
-                                <span class="text-gray-300 text-sm">2:00 - 3:00 PM</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Settings Section -->
-            <div id="profileSection" class="section hidden">
-                <div class="max-w-4xl mx-auto">
-                    <div class="glass-effect rounded-2xl p-6 mb-6">
-                        <h2 class="text-2xl font-bold text-white mb-4">Settings & Profile</h2>
-                        <form id="profileForm" class="space-y-6">
-                            <div>
-                                <label class="block text-gray-300 mb-2">Full Name</label>
-                                <input type="text" id="profileName" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" required>
+                            <!-- Learning Style -->
+                            <div class="mb-4">
+                                <label for="learningStyle" class="text-white text-sm">Learning Style:</label>
+                                <select id="learningStyle" class="bg-purple-700 text-white rounded px-2 py-1">
+                                    <option value="visual">Visual</option>
+                                    <option value="auditory">Auditory</option>
+                                    <option value="reading">Reading/Writing</option>
+                                    <option value="kinesthetic">Kinesthetic</option>
+                                </select>
                             </div>
-                            <div>
-                                <label class="block text-gray-300 mb-2">Class</label>
-                                <input type="text" id="profileClass" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" required>
+
+                            <!-- Accessibility -->
+                            <div class="mb-4">
+                                <label class="text-white text-sm">Accessibility:</label>
+                                <div class="flex flex-col space-y-2 mt-2">
+                                    <label class="flex items-center gap-2 text-white text-sm">
+                                        <input type="checkbox" id="dyslexicFont" class="rounded text-blue-500"> Dyslexia-friendly font
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm">
+                                        <input type="checkbox" id="highContrast" class="rounded text-blue-500"> High contrast mode
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm">
+                                        <input type="checkbox" id="screenReader" class="rounded text-blue-500"> Screen reader support
+                                    </label>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-gray-300 mb-2">Email</label>
-                                <input type="email" id="profileEmail" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" disabled>
+
+                            <!-- STT Test -->
+                            <div class="mb-4">
+                                <label class="text-white text-sm">Voice Input Test:</label>
+                                <div class="flex flex-col space-y-2 mt-2">
+                                    <button onclick="testSTT()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                        Test Microphone
+                                    </button>
+                                    <button onclick="toggleVoiceRecording()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                                        Toggle Voice Recording
+                                    </button>
+                                    <button onclick="testMicButton()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">
+                                        Test Mic Button
+                                    </button>
+                                    <button onclick="makeMicVisible()" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors">
+                                        Make Mic Visible
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold">Update Profile</button>
-                            </div>
-                        </form>
-                        <div class="mt-8">
-                            <h3 class="text-white font-semibold mb-2">Change Password</h3>
-                            <form id="passwordForm" class="space-y-4">
-                                <input type="password" id="oldPassword" placeholder="Old Password" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
-                                <input type="password" id="newPassword" placeholder="New Password" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
-                                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold">Change Password</button>
-                            </form>
-                        </div>
-                        <div class="mt-8">
-                            <h3 class="text-white font-semibold mb-2">Subscription</h3>
-                            <div id="subscriptionInfo" class="text-gray-300"></div>
                         </div>
                     </div>
                 </div>
@@ -553,129 +757,1409 @@
     </div>
 
     <script>
-    // --- Dashboard Auth, Profile, Subscription, Feature Gating ---
-    let userProfile = null;
-    let userSubscription = null;
-    let chatSessionId = null;
+        // Initialize Mermaid before any other scripts
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            flowchart: { 
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            securityLevel: 'loose',
+            fontFamily: '"Inter", sans-serif'
+        });
 
-    async function initDashboard() {
-        // 1. Check session
-        const isAuthed = await window.tutorAuth.protectRoute();
-        if (!isAuthed) return;
+        // Initialize Supabase
+        const config = window.appConfig || {};
+        const supabaseUrl = config.supabaseUrl || 'https://your-project-ref.supabase.co';
+        const supabaseKey = config.supabaseAnonKey || 'your-anon-key-here';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 2. Fetch user profile
-        userProfile = await window.tutorAuth.getUserProfile();
-        if (userProfile) {
-            document.getElementById('userName').textContent = userProfile.full_name || 'Student';
-            document.getElementById('topBarUserName').textContent = userProfile.full_name || 'Student';
-            document.getElementById('userClass').textContent = userProfile.class || '';
-            document.getElementById('topBarUserClass').textContent = userProfile.class || '';
-            document.getElementById('userInitials').textContent = (userProfile.full_name||'S')[0];
-            document.getElementById('topBarInitials').textContent = (userProfile.full_name||'S')[0];
-            document.getElementById('profileName').value = userProfile.full_name || '';
-            document.getElementById('profileClass').value = userProfile.class || '';
-            document.getElementById('profileEmail').value = userProfile.email || '';
-        }
-        // 3. Fetch subscription
-        userSubscription = await window.tutorAuth.getSubscriptionStatus();
-        let plan = 'Free';
-        if (userSubscription && userSubscription.subscription_plans) {
-            plan = userSubscription.subscription_plans.name;
-        }
-        document.getElementById('planStatus').textContent = plan;
-        document.getElementById('subscriptionInfo').textContent = plan + (userSubscription ? ' (Active)' : ' (No active subscription)');
-        // Feature gating example:
-        if (plan === 'Free') {
-            // Disable premium features (example)
-            document.querySelectorAll('.premium-feature').forEach(el => el.classList.add('opacity-50','pointer-events-none'));
-        }
-        // 4. Load or create chat session
-        if (!chatSessionId) {
-            const session = await window.tutorAuth.createChatSession('AI Tutor Chat');
-            if (session && session.session) chatSessionId = session.session.id;
-        }
-        // 5. Load chat history
-        loadChatHistory();
-    }
+        // Global variables
+        let currentUser = null;
+        let userData = null; // Add global userData variable
+        let chatHistory = [];
+        let isRecording = false;
+        let recognition = null;
+        let recognitionTimeout;
+        let speechSynthesis = window.speechSynthesis;
 
-    async function loadChatHistory() {
-        if (!chatSessionId) return;
-        const { data, error } = await window.tutorAuth.supabase
-            .from('ai_chat_messages')
-            .select('*')
-            .eq('session_id', chatSessionId)
-            .order('created_at', { ascending: true });
-        if (data && Array.isArray(data)) {
-            chatHistory = data.map(msg => ({ role: msg.message_type === 'user' ? 'user' : 'assistant', content: msg.content }));
-            renderMessages();
-        }
-    }
-
-    // Save chat messages to DB
-    async function sendMessage() {
-        const input = document.getElementById('chatInput');
-        const text = input.value.trim();
-        if (!text) return;
-        chatHistory.push({ role: 'user', content: text });
-        renderMessages();
-        input.value = '';
-        showTypingIndicator();
-        // Save user message
-        if (chatSessionId) await window.tutorAuth.saveChatMessage(chatSessionId, text, 'user');
-        try {
-            const response = await fetch('http://localhost:3001/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: chatHistory.map(m => ({ role: m.role, content: m.content })) })
-            });
-            const data = await response.json();
-            removeTypingIndicator();
-            if (data.reply) {
-                chatHistory.push({ role: 'assistant', content: data.reply });
-                renderMessages();
-                // Save AI message
-                if (chatSessionId) await window.tutorAuth.saveChatMessage(chatSessionId, data.reply, 'assistant');
-            } else {
-                chatHistory.push({ role: 'assistant', content: 'Sorry, I could not get a response from the AI.' });
-                renderMessages();
+        // --- Enhanced GPT Service ---
+        class GPTService {
+            constructor() {
+                this.currentGrade = null;
+                this.currentSubject = null;
+                this.chatHistory = [];
+                this.baseUrl = '/api/chat'; // Ensure this matches your endpoint
             }
-        } catch (err) {
-            removeTypingIndicator();
-            chatHistory.push({ role: 'assistant', content: 'Error connecting to AI server.' });
-            renderMessages();
-        }
-    }
+            
+            setContext(grade, subject) {
+                if (grade) this.currentGrade = grade;
+                if (subject) this.currentSubject = subject;
+            }
+            
+            async sendMessage(userMessage) {
+                try {
+                    this.chatHistory.push({ role: 'user', content: userMessage });
+                    
+                    const requestBody = {
+                        messages: this.chatHistory,
+                        grade: this.currentGrade || 'Class 2', // Default value
+                        subject: this.currentSubject || 'General', // Default value
+                        response_format: 'markdown',
+                        language: document.getElementById('preferredLanguage')?.value || 'en'
+                    };
 
-    // Profile update
-    const profileForm = document.getElementById('profileForm');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const full_name = document.getElementById('profileName').value;
-            const user_class = document.getElementById('profileClass').value;
-            await window.tutorAuth.supabase
-                .from('users')
-                .update({ full_name, class: user_class })
-                .eq('id', window.tutorAuth.currentUser.id);
-            alert('Profile updated!');
-            await initDashboard();
+                    console.log('Sending request:', JSON.stringify(requestBody, null, 2));
+
+                    const response = await fetch(this.baseUrl, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || `API request failed with status ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    if (!data.response) {
+                        throw new Error('Invalid response format from API');
+                    }
+                    
+                    this.chatHistory.push({ role: 'assistant', content: data.response });
+                    return data.response;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    return `I'm having trouble connecting right now. ${error.message}`;
+                }
+            }
+        }
+        
+        const gptService = new GPTService();
+
+        // Teacher Profiles
+        const teachers = {
+            hindi: {
+                name: "Ms. Sapana",
+                image: "images/teacher-avatar1.png", // Ms. Sapana's avatar
+                description: "Sweet and empathetic storyteller",
+                style: "gentle",
+                behaviors: {
+                    intro: "नमस्ते! मैं आपकी हिंदी शिक्षिका सपना हूं। आपका नाम क्या है? आज कहानियों के साथ सीखते हैं।",
+                    outro: "याद रखो, हर समस्या का समाधान होता है, बिल्कुल हमारी कहानियों की तरह!",
+                    storyFrequency: 30 // minutes
+                }
+            },
+            english: {
+                name: "Roy Sir",
+                image: "images/teacher-avatar2.png", // Roy Sir's avatar
+                description: "Detailed explainer with health tips",
+                style: "direct",
+                behaviors: {
+                    intro: "Hello! I'm your English teacher Roy Sir. What's your name? Let's break this down step by step.",
+                    outro: "Don't forget to drink water and stretch between study sessions!",
+                    storyFrequency: 45 // minutes
+                }
+            }
+        };
+
+        // Current teacher - Roy Sir (English) is default
+        let currentTeacher = teachers.english;
+        let lastStoryTime = 0;
+        
+        // Media control variables
+        let currentSpeech = null;
+        let currentText = '';
+        let pausedPosition = 0;
+        let isPlaying = false;
+        let autoPlayEnabled = true; // Auto-play TTS by default
+
+        // --- Enhanced Message Handling ---
+        async function addMessage(role, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-${role} p-4 rounded-2xl mb-4`;
+            
+            // Process Mermaid diagrams first
+            let processedContent = content;
+            const mermaidDiagrams = [];
+            
+            // Extract and replace Mermaid blocks
+            processedContent = processedContent.replace(/```mermaid([\s\S]*?)```/g, (match, diagram) => {
+                const id = 'mermaid-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+                mermaidDiagrams.push({ id, diagram: diagram.trim() });
+                return `<div class="mermaid-container" id="${id}">Loading diagram...</div>`;
+            });
+            
+            // Process other markdown with marked.js
+            processedContent = marked.parse(processedContent);
+            
+                messageDiv.innerHTML = `
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 ${role === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gradient-to-r from-green-500 to-blue-600'} rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-white font-bold text-sm">${role === 'user' ? 'You' : 'AI'}</span>
+                    </div>
+                    <div class="flex-1 overflow-x-auto">
+                        <div class="text-white message-content prose prose-invert max-w-none">${processedContent}</div>
+                        <p class="text-gray-400 text-xs mt-2">Just now</p>
+                    </div>
+                    </div>
+                `;
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Render Mermaid diagrams after DOM insertion
+            if (mermaidDiagrams.length > 0) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                mermaidDiagrams.forEach(({id, diagram}) => {
+                    const container = document.getElementById(id);
+                    if (container) {
+                        try {
+                            container.innerHTML = `<div class="mermaid">${diagram}</div>`;
+                            mermaid.init(undefined, container.querySelector('.mermaid'));
+                        } catch (err) {
+                            console.error('Mermaid render error:', err);
+                            container.innerHTML = `<div class="text-red-400 p-2">Failed to render diagram: ${err.message}</div>`;
+                        }
+                    }
+                });
+            }
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Auto-play TTS for AI responses unless paused
+            if (role === 'ai' && autoPlayEnabled) {
+                setTimeout(() => {
+                    currentText = cleanTextForTTS(content);
+                    pausedPosition = 0;
+                    playFromPosition();
+                }, 500); // Small delay to ensure DOM is ready
+            }
+        }
+
+        // --- Speech Synthesis (TTS) ---
+        function populateVoices() {
+            const voiceSelect = document.getElementById('voiceSelect');
+            const voices = speechSynthesis.getVoices();
+            
+            voiceSelect.innerHTML = '';
+            
+            // Filter to only include Microsoft Ravi (English) and Google Hindi
+            const allowedVoices = voices.filter(voice => {
+                const name = voice.name.toLowerCase();
+                const lang = voice.lang.toLowerCase();
+                
+                // Microsoft Ravi - English (India)
+                if (name.includes('ravi') && name.includes('english') && lang.includes('en')) {
+                    return true;
+                }
+                
+                // Google Hindi
+                if (name.includes('google') && (name.includes('hindi') || lang.includes('hi'))) {
+                    return true;
+                }
+                
+                return false;
+            });
+            
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select a voice';
+            voiceSelect.appendChild(defaultOption);
+            
+            // Add filtered voices
+            allowedVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+            
+            // Auto-select Microsoft Ravi as default for Roy Sir
+            const raviVoice = allowedVoices.find(v => v.name.toLowerCase().includes('ravi'));
+            if (raviVoice) {
+                voiceSelect.value = raviVoice.name;
+            }
+        }
+
+        // Update avatar based on language
+        function updateTeacher(language) {
+            currentTeacher = language === 'hi' ? teachers.hindi : teachers.english;
+            
+            // Update chat avatar
+            const avatarImgChat = document.getElementById('teacher-avatar-chat');
+            const teacherNameChat = document.getElementById('teacher-name-chat');
+            
+            if (avatarImgChat) {
+                avatarImgChat.src = currentTeacher.image;
+            }
+            if (teacherNameChat) {
+                teacherNameChat.textContent = currentTeacher.name;
+            }
+            
+            // Auto-select appropriate voice based on teacher
+            const voiceSelect = document.getElementById('voiceSelect');
+            const voices = speechSynthesis.getVoices();
+            
+            if (language === 'hi') {
+                // Ms. Sapana - select Google Hindi
+                const hindiVoice = voices.find(v => v.name.toLowerCase().includes('google') && 
+                    (v.name.toLowerCase().includes('hindi') || v.lang.toLowerCase().includes('hi')));
+                if (hindiVoice && voiceSelect) {
+                    voiceSelect.value = hindiVoice.name;
+                }
+            } else {
+                // Roy Sir - select Microsoft Ravi
+                const raviVoice = voices.find(v => v.name.toLowerCase().includes('ravi'));
+                if (raviVoice && voiceSelect) {
+                    voiceSelect.value = raviVoice.name;
+                }
+            }
+            
+            // Add teacher-specific intro if it's a new session
+            if(chatHistory.length === 0) {
+                addMessage('ai', currentTeacher.behaviors.intro);
+            }
+        }
+
+        // Enhanced speakText function with avatar animation
+        async function speakText(text) {
+            if (!speechSynthesis) return;
+            
+            const avatarImg = document.getElementById('teacher-avatar');
+            const mouth = document.querySelector('.avatar-mouth');
+            
+            // Start talking animation
+            avatarImg.classList.add('talking-animation');
+            mouth.classList.add('talking');
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Select voice based on teacher
+            const voices = speechSynthesis.getVoices();
+            if(currentTeacher === teachers.hindi) {
+                const hindiVoice = voices.find(v => v.name.includes('Hindi') || v.lang.includes('hi-IN'));
+                if(hindiVoice) utterance.voice = hindiVoice;
+            } else {
+                const englishVoice = voices.find(v => v.name.includes('English') || v.lang.includes('en-'));
+                if(englishVoice) utterance.voice = englishVoice;
+            }
+            
+            utterance.rate = 0.9;
+            utterance.pitch = currentTeacher === teachers.hindi ? 1.1 : 1.0;
+            
+            // Add teacher personality quirks
+            if(currentTeacher === teachers.hindi) {
+                // Ms. Sapana's gentle style
+                utterance.rate = 0.85;
+                if(text.length > 100) {
+                    // Add pauses for longer explanations
+                    const sentences = text.split('. ');
+                    text = sentences.join('. \n\n');
+                }
+            } else {
+                // Roy Sir's direct style
+                if(!text.endsWith('!') && !text.endsWith('?')) {
+                    text += '.';
+                }
+            }
+            
+            // Check if it's time for a story
+            const now = new Date();
+            if((now.getTime() - lastStoryTime) > currentTeacher.behaviors.storyFrequency * 60 * 1000) {
+                text += `\n\n<em>${getPanchatantraStory()}</em>`;
+                lastStoryTime = now.getTime();
+            }
+            
+            utterance.text = text;
+            
+            utterance.onend = () => {
+                avatarImg.classList.remove('talking-animation');
+                mouth.classList.remove('talking');
+                
+                // Add teacher-specific outro
+                if(Math.random() > 0.7) { // 30% chance
+                    setTimeout(() => {
+                        speakText(currentTeacher.behaviors.outro);
+                    }, 1000);
+                }
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        // Panchatantra stories database
+        function getPanchatantraStory() {
+            const stories = [
+                "The Monkey and the Crocodile: Teaching us about trust and cleverness...",
+                "The Lion and the Rabbit: Showing how wisdom beats strength...",
+                "The Tortoise and the Geese: A lesson about holding your tongue...",
+                "The Elephants and the Mice: Proving even the small can help the big...",
+                "The Blue Jackal: Teaching the importance of being true to yourself..."
+            ];
+            return stories[Math.floor(Math.random() * stories.length)];
+        }
+
+        // --- Speech Recognition (STT) ---
+        function initSpeechRecognition() {
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    console.warn('Speech recognition not supported');
+                    document.getElementById('voiceButton').style.display = 'none';
+                    return;
+                }
+
+                recognition = new SpeechRecognition();
+                
+                // Optimized settings for better performance
+                recognition.continuous = false; // Changed to false for better accuracy
+                recognition.interimResults = true; // Keep interim results for immediate feedback
+                recognition.maxAlternatives = 3; // Increased for better accuracy
+                recognition.lang = document.getElementById('preferredLanguage')?.value || 'en-US';
+                
+                // Additional settings for better performance (optional grammar)
+                if (recognition.grammars && window.SpeechGrammarList) {
+                    try {
+                        // Add grammar for better recognition if supported
+                        const grammar = new SpeechGrammarList();
+                        grammar.addFromString('#JSGF V1.0; grammar commands; public <command> = help | explain | what is | how to | tell me about;', 1);
+                        recognition.grammars = grammar;
+                    } catch (grammarError) {
+                        console.log('Grammar not supported, continuing without it:', grammarError);
+                    }
+                }
+
+                recognition.onstart = () => {
+                    console.log('Speech recognition started');
+                    isRecording = true;
+                    document.getElementById('voiceIcon').textContent = '🔴';
+                    document.getElementById('voiceButton').classList.add('voice-recording');
+                    document.getElementById('voiceStatus').style.opacity = '1';
+                    
+                    // Show immediate feedback
+                    showSTTFeedback("Listening... Speak now!", 'info');
+                    
+                    // Set a timeout for single recognition session
+                    recognitionTimeout = setTimeout(() => {
+                        if (isRecording) {
+                            recognition.stop();
+                        }
+                    }, 10000); // 10 second timeout per session
+                };
+
+                recognition.onresult = (event) => {
+                    // Clear timeout since we got results
+                    if (recognitionTimeout) {
+                        clearTimeout(recognitionTimeout);
+                    }
+                    
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    let highestConfidence = 0;
+                    let bestTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const result = event.results[i];
+                        const transcript = result[0].transcript;
+                        const confidence = result[0].confidence || 0;
+                        
+                        if (result.isFinal) {
+                            finalTranscript += transcript;
+                            // Track the highest confidence result
+                            if (confidence > highestConfidence) {
+                                highestConfidence = confidence;
+                                bestTranscript = transcript;
+                            }
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    const chatInput = document.getElementById('chatInput');
+                    
+                    if (finalTranscript) {
+                        // Use the best transcript if we have multiple alternatives
+                        const finalText = bestTranscript || finalTranscript;
+                        
+                        // Only process if confidence is above threshold
+                        if (highestConfidence > 0.6) {
+                            chatInput.value = finalText;
+                            console.log('Final transcript:', finalText, 'Confidence:', highestConfidence);
+                            showSTTFeedback("Voice input received - processing...", 'success');
+                            
+                            // Auto-send after a short delay
+                            setTimeout(() => {
+                                handleSendMessage();
+                            }, 500);
+                            
+                            // Restart recognition for next input
+                            setTimeout(() => {
+                                if (isRecording) {
+                                    restartRecognition();
+                                }
+                            }, 1000);
+                        } else {
+                            console.log('Low confidence result:', highestConfidence);
+                            showSTTFeedback("Couldn't understand clearly. Please try again.", 'error');
+                            // Restart recognition immediately
+                            setTimeout(() => {
+                                if (isRecording) {
+                                    restartRecognition();
+                                }
+                            }, 500);
+                        }
+                        
+                    } else if (interimTranscript) {
+                        chatInput.value = interimTranscript;
+                        console.log('Interim transcript:', interimTranscript);
+                        // Show interim feedback
+                        chatInput.style.borderColor = '#10b981';
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    
+                    // Clear timeout on error
+                    if (recognitionTimeout) {
+                        clearTimeout(recognitionTimeout);
+                    }
+                    
+                    // Handle specific errors
+                    switch(event.error) {
+                        case 'no-speech':
+                            console.log('No speech detected');
+                            // Restart recognition after a short delay
+                            setTimeout(() => {
+                                if (isRecording) {
+                                    restartRecognition();
+                                }
+                            }, 500);
+                            return;
+                            
+                        case 'audio-capture':
+                            showSTTFeedback('No microphone found. Please check your audio settings.', 'error');
+                            stopRecording();
+                            break;
+                            
+                        case 'not-allowed':
+                            showSTTFeedback('Microphone access denied. Please allow microphone access in your browser settings.', 'error');
+                            stopRecording();
+                            break;
+                            
+                        case 'network':
+                            showSTTFeedback('Network error. Please check your internet connection.', 'error');
+                            setTimeout(() => {
+                                if (isRecording) {
+                                    restartRecognition();
+                                }
+                            }, 1000);
+                            break;
+                            
+                        default:
+                            console.log('Recognition error:', event.error);
+                            // Restart recognition for other errors
+                            setTimeout(() => {
+                                if (isRecording) {
+                                    restartRecognition();
+                                }
+                            }, 1000);
+                    }
+                };
+
+                recognition.onend = () => {
+                    // Clear timeout
+                    if (recognitionTimeout) {
+                        clearTimeout(recognitionTimeout);
+                    }
+                    // Only stop recording, do not restart recognition automatically
+                    stopRecording();
+                    // Reset input field styling
+                    const chatInput = document.getElementById('chatInput');
+                    chatInput.style.borderColor = '';
+                };
+
+            } catch (error) {
+                console.error('Failed to initialize speech recognition:', error);
+                // Don't hide the button, just show an error
+                showSTTFeedback('Voice input may not work properly in this browser', 'error');
+            }
+        }
+
+        // Helper function to restart recognition safely
+        function restartRecognition() {
+            try {
+                if (recognition && isRecording) {
+                    recognition.start();
+                }
+            } catch (e) {
+                console.log('Recognition restart failed:', e);
+                // Try again after a longer delay
+                setTimeout(() => {
+                    if (isRecording) {
+                        try {
+                            recognition.start();
+                        } catch (e2) {
+                            console.log('Recognition restart failed again:', e2);
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        function startRecording() {
+            if (!recognition) {
+                showSTTFeedback('Voice input not available', 'error');
+                return;
+            }
+            
+            navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 44100
+                }
+            })
+            .then(() => {
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Error starting recognition:', error);
+                    showSTTFeedback('Failed to start voice input', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Microphone permission denied:', error);
+                showSTTFeedback('Microphone access is required for voice input', 'error');
+            });
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            if (recognitionTimeout) {
+                clearTimeout(recognitionTimeout);
+            }
+            document.getElementById('voiceIcon').textContent = '🎤';
+            document.getElementById('voiceButton').classList.remove('voice-recording');
+            document.getElementById('voiceStatus').style.opacity = '0';
+        }
+
+        async function toggleVoiceRecording() {
+            console.log('🎤 Voice button clicked!');
+            
+            if (isRecording) {
+                console.log('Stopping voice recording...');
+                isRecording = false;
+                if (recognition) {
+                    recognition.stop();
+                }
+                stopRecording();
+                showSuccess("Voice recording stopped");
+                return;
+            }
+
+            try {
+                console.log('Starting voice recording...');
+                // Initialize recognition if not already done
+                if (!recognition) {
+                    initSpeechRecognition();
+                }
+                
+                // Start recording
+                startRecording();
+                
+            } catch (error) {
+                console.error('Microphone error:', error);
+                if (error.name === 'NotAllowedError') {
+                    showSTTFeedback('Microphone access denied. Please allow microphone access in your browser settings.', 'error');
+                } else if (error.name === 'NotFoundError') {
+                    showSTTFeedback('No microphone found. Please check your audio settings.', 'error');
+                } else {
+                    showSTTFeedback('Could not access microphone. Please check permissions.', 'error');
+                }
+            }
+        }
+
+        // Health tips for Roy Sir
+        function getHealthTip() {
+            const tips = [
+                "take a 5-minute stretch break every hour.",
+                "drink at least 8 glasses of water daily.",
+                "maintain good posture while studying.",
+                "eat nuts for better concentration.",
+                "get 8 hours of sleep for optimal learning."
+            ];
+            return tips[Math.floor(Math.random() * tips.length)];
+        }
+
+        // --- Media Control Functions ---
+        function playCurrentAnswer() {
+            console.log('Play button clicked');
+            const lastAIMessage = document.querySelector('.message-ai:last-child .message-content');
+            if (lastAIMessage) {
+                currentText = lastAIMessage.textContent || lastAIMessage.innerText;
+                pausedPosition = 0;
+                playFromPosition();
+            } else {
+                showError('No message to play');
+            }
+        }
+
+        function pauseCurrentAnswer() {
+            console.log('Pause button clicked');
+            if (currentSpeech) {
+                speechSynthesis.pause();
+                isPlaying = false;
+                autoPlayEnabled = false; // Disable auto-play when user manually pauses
+                // Store current position (approximate)
+                const elapsed = currentSpeech.elapsedTime || 0;
+                pausedPosition = Math.floor(elapsed * 10); // rough character position
+            }
+        }
+
+        function resumeCurrentAnswer() {
+            console.log('Resume button clicked');
+            if (speechSynthesis.paused) {
+                speechSynthesis.resume();
+                isPlaying = true;
+            } else if (currentText && pausedPosition > 0) {
+                // Resume from where we left off
+                playFromPosition();
+            } else {
+                showError('Nothing to resume');
+            }
+        }
+
+        // Clean text for TTS - remove markdown formatting
+        function cleanTextForTTS(text) {
+            return text
+                // Remove markdown formatting
+                .replace(/\*\*(.*?)\*\*/g, '$1')  // Bold **text**
+                .replace(/\*(.*?)\*/g, '$1')     // Italic *text*
+                .replace(/#{1,6}\s*/g, '')       // Headers # ## ###
+                .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // Code blocks
+                .replace(/\[(.*?)\]\(.*?\)/g, '$1')  // Links [text](url)
+                .replace(/!\[.*?\]\(.*?\)/g, '')     // Images ![alt](url)
+                .replace(/^\s*[-*+]\s+/gm, '')       // List bullets
+                .replace(/^\s*\d+\.\s+/gm, '')       // Numbered lists
+                .replace(/^\s*>\s+/gm, '')           // Blockquotes
+                .replace(/\n{3,}/g, '\n\n')          // Multiple newlines
+                .replace(/\s+/g, ' ')                // Multiple spaces
+                .trim();
+        }
+
+        function playFromPosition() {
+            if (currentSpeech) {
+                speechSynthesis.cancel();
+            }
+            
+            const textToPlay = cleanTextForTTS(currentText.substring(pausedPosition));
+            if (!textToPlay.trim()) return;
+            
+            currentSpeech = new SpeechSynthesisUtterance(textToPlay);
+            
+            // Apply voice settings
+            const voices = speechSynthesis.getVoices();
+            const selectedVoice = voices.find(v => v.name === document.getElementById('voiceSelect').value);
+            if (selectedVoice) {
+                currentSpeech.voice = selectedVoice;
+            }
+            
+            currentSpeech.rate = parseFloat(document.getElementById('voiceRate').value) || 1.0;
+            currentSpeech.pitch = parseFloat(document.getElementById('voicePitch').value) || 1.0;
+            
+            currentSpeech.onstart = () => {
+                isPlaying = true;
+                autoPlayEnabled = true; // Re-enable auto-play when speech starts
+                // Animate chat avatar
+                const avatarImgChat = document.getElementById('teacher-avatar-chat');
+                const mouthChat = document.querySelector('.avatar-mouth-chat');
+                if (avatarImgChat) {
+                    avatarImgChat.classList.add('talking-animation');
+                }
+                if (mouthChat) {
+                    mouthChat.classList.add('talking-chat');
+                }
+            };
+            
+            currentSpeech.onend = () => {
+                isPlaying = false;
+                pausedPosition = 0;
+                const avatarImgChat = document.getElementById('teacher-avatar-chat');
+                const mouthChat = document.querySelector('.avatar-mouth-chat');
+                if (avatarImgChat) {
+                    avatarImgChat.classList.remove('talking-animation');
+                }
+                if (mouthChat) {
+                    mouthChat.classList.remove('talking-chat');
+                }
+            };
+            
+            speechSynthesis.speak(currentSpeech);
+        }
+
+        // --- Chat Functions ---
+        async function handleSendMessage() {
+            const input = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage('user', message);
+            input.value = '';
+            sendButton.disabled = true;
+            
+            try {
+                showTypingIndicator();
+                
+                // Get response with teacher personality
+                let aiResponse = await gptService.sendMessage(message);
+                
+                // Add teacher-specific formatting
+                const firstName = (userData?.full_name || currentUser?.user_metadata?.full_name || 'Student').split(' ')[0];
+                if(currentTeacher === teachers.hindi) {
+                    aiResponse = `${firstName} जी, ${aiResponse}\n\nक्या आप समझ गए?`;
+                } else {
+                    if(!aiResponse.endsWith('.')) aiResponse += '.';
+                    aiResponse = `${firstName}, ${aiResponse}\n\nRemember: ${getHealthTip()}`;
+                }
+                
+                removeTypingIndicator();
+                await addMessage('ai', aiResponse);
+                // TTS is now handled automatically in addMessage function
+            } catch (err) {
+                removeTypingIndicator();
+                console.error('Chat error:', err);
+                
+                // Provide more specific error messages
+                let errorMessage = 'Sorry, I encountered an error. Please try again.';
+                if (err.message.includes('API request failed')) {
+                    errorMessage = 'Connection error. Please check your internet connection and try again.';
+                } else if (err.message.includes('Invalid response format')) {
+                    errorMessage = 'Service temporarily unavailable. Please try again in a moment.';
+                } else if (err.message.includes('timeout')) {
+                    errorMessage = 'Request timed out. Please try again.';
+                }
+                
+                addMessage('ai', errorMessage);
+            } finally {
+                sendButton.disabled = false;
+            }
+        }
+
+        function sendQuickMessage(message, subject = null) {
+            if (subject) gptService.setContext(null, subject);
+            document.getElementById('chatInput').value = message;
+            handleSendMessage();
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                handleSendMessage();
+            }
+        }
+
+        // --- UI Functions ---
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `<div class='typing-dot'></div><div class='typing-dot'></div><div class='typing-dot'></div>`;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingDiv = document.getElementById('typingIndicator');
+            if (typingDiv && typingDiv.parentNode) {
+                typingDiv.parentNode.removeChild(typingDiv);
+            }
+        }
+
+        // Enhanced error handling
+        function showError(message, duration = 5000) {
+            const existing = document.querySelector('.error-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 glass-effect p-4 rounded-xl text-red-400 font-medium flex items-center space-x-2 z-50 error-toast';
+            toast.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function showSuccess(message, duration = 3000) {
+            const existing = document.querySelector('.success-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 glass-effect p-4 rounded-xl text-green-400 font-medium flex items-center space-x-2 z-50 success-toast';
+            toast.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(section + 'Section').classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('nav' + section.charAt(0).toUpperCase() + section.slice(1)).classList.add('active');
+        }
+
+        // --- User Management ---
+        async function loadUserProfile() {
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    updateUserInterface(data);
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                const fallbackData = {
+                    full_name: currentUser.user_metadata?.full_name || 'Student',
+                    class: currentUser.user_metadata?.class || 'Class 2',
+                    email: currentUser.email
+                };
+                updateUserInterface(fallbackData);
+            }
+        }
+
+        function updateUserInterface(userDataParam) {
+            // Store userData globally
+            userData = userDataParam;
+            
+            const name = userData.full_name || 'Student';
+            const className = userData.class || 'Class 2';
+            const initials = name.charAt(0).toUpperCase();
+
+            document.getElementById('topBarUserName').textContent = name;
+            document.getElementById('topBarUserClass').textContent = className;
+            document.getElementById('topBarInitials').textContent = initials;
+            
+            // Set initial context for GPT
+            gptService.setContext(className, null);
+            
+            // Load class-specific books
+            loadClassBooks(className);
+        }
+
+        // --- Initialization ---
+        async function initDashboard() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                currentUser = session.user;
+                await loadUserProfile();
+                
+                // Debug the system after initialization
+                setTimeout(() => {
+                    debugChatSystem();
+                    testSTT(); // Test STT functionality
+                    makeMicVisible(); // Ensure microphone button is visible
+                    testMicButton(); // Test microphone button specifically
+                }, 1000);
+                
+                // Initialize voice services
+                if (speechSynthesis) {
+                    speechSynthesis.onvoiceschanged = populateVoices;
+                    setTimeout(populateVoices, 500);
+                }
+                
+                initSpeechRecognition();
+                
+                // Setup event listeners
+                document.getElementById('sendButton').addEventListener('click', handleSendMessage);
+                document.getElementById('voiceButton').addEventListener('click', toggleVoiceRecording);
+                
+                // Voice settings controls
+                document.getElementById('voiceRate').addEventListener('input', (e) => {
+                    document.getElementById('rateValue').textContent = `${e.target.value}x`;
+                });
+                
+                document.getElementById('voicePitch').addEventListener('input', (e) => {
+                    document.getElementById('pitchValue').textContent = e.target.value;
+                });
+                
+
+                
+                // Initialize teacher avatar - Roy Sir (English) is default
+                updateTeacher('en');
+                
+                // Add avatar selection functionality
+                document.querySelectorAll('.avatar-selection-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const teacher = this.getAttribute('data-teacher');
+                        
+                        // Update selection UI
+                        document.querySelectorAll('.avatar-selection-card').forEach(c => c.classList.remove('selected'));
+                        this.classList.add('selected');
+                        
+                        // Update teacher
+                        const language = teacher === 'english' ? 'en' : 'hi';
+                        updateTeacher(language);
+                        
+                        // Update language dropdown
+                        const langSelect = document.getElementById('preferredLanguage');
+                        if (langSelect) {
+                            langSelect.value = language;
+                        }
+                    });
+                });
+                
+                // Set Roy Sir as selected by default
+                document.querySelector('.avatar-selection-card[data-teacher="english"]')?.classList.add('selected');
+                
+                // Update when language changes
+                const langSelect = document.getElementById('preferredLanguage');
+                if (langSelect) {
+                    langSelect.addEventListener('change', (e) => {
+                        updateTeacher(e.target.value);
+                        
+                        // Update avatar selection in settings
+                        const teacher = e.target.value === 'hi' ? 'hindi' : 'english';
+                        document.querySelectorAll('.avatar-selection-card').forEach(c => c.classList.remove('selected'));
+                        document.querySelector(`.avatar-selection-card[data-teacher="${teacher}"]`)?.classList.add('selected');
+                    });
+                }
+                
+                console.log('Dashboard initialized successfully');
+                
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                showError('Failed to initialize dashboard');
+            }
+        }
+
+        // --- Progress Section Logic ---
+        function updateExamYearDropdown() {
+            const examYear = document.getElementById('examYear');
+            const now = new Date();
+            const nextYear = now.getMonth() >= 3 ? now.getFullYear() + 1 : now.getFullYear();
+            examYear.innerHTML = '';
+            for (let y = nextYear; y <= nextYear + 5; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                if (y === nextYear) opt.selected = true;
+                examYear.appendChild(opt);
+            }
+        }
+        
+        function updateMonthsTillExam() {
+            const month = parseInt(document.getElementById('examMonth').value) - 1;
+            const year = parseInt(document.getElementById('examYear').value);
+            const now = new Date();
+            const examDate = new Date(year, month, 1);
+            let months = (examDate.getFullYear() - now.getFullYear()) * 12 + (examDate.getMonth() - now.getMonth());
+            if (months < 0) months = 0;
+            document.getElementById('monthsTillExam').textContent = `Months till final exam: ${months}`;
+        }
+        
+        function renderSubjects() {
+            const subjectsList = document.getElementById('subjectsList');
+            subjectsList.innerHTML = '';
+            window.progressSubjects = window.progressSubjects || [
+                { name: 'Math', progress: 0 },
+                { name: 'Science', progress: 0 },
+                { name: 'English', progress: 0 }
+            ];
+            window.progressSubjects.forEach((subj, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center space-x-2';
+                row.innerHTML = `<input type='text' value='${subj.name}' class='bg-white/10 text-white rounded px-2 py-1 w-32' onchange='window.progressSubjects[${idx}].name=this.value'>
+                    <input type='number' min='0' max='100' value='${subj.progress}' class='bg-white/10 text-white rounded px-2 py-1 w-20' onchange='window.progressSubjects[${idx}].progress=parseInt(this.value)'>
+                    <span class='text-white text-sm'>% Complete</span>
+                    <button onclick='window.progressSubjects.splice(${idx},1);renderSubjects();' class='text-red-400 ml-2'>&times;</button>`;
+                subjectsList.appendChild(row);
+            });
+        }
+        
+        document.getElementById('addSubjectBtn').onclick = function() {
+            window.progressSubjects = window.progressSubjects || [];
+            window.progressSubjects.push({ name: '', progress: 0 });
+            renderSubjects();
+        };
+        
+        document.getElementById('examMonth').onchange = updateMonthsTillExam;
+        document.getElementById('examYear').onchange = updateMonthsTillExam;
+        
+        // Initialize progress section
+        updateExamYearDropdown();
+        updateMonthsTillExam();
+        renderSubjects();
+
+        // --- Study Materials Functions ---
+        async function loadClassBooks(userClass) {
+            try {
+                const bookList = document.getElementById('bookList');
+                bookList.innerHTML = '<p class="text-gray-400 col-span-full">Loading books for your class...</p>';
+                
+                // Extract class number from userClass (e.g., "Class 10" -> "10")
+                const classNumber = userClass.toLowerCase().replace('class', '').trim();
+                
+                // Fetch processed books from the API
+                const response = await fetch(`/api/processed-books?grade=${classNumber}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch books');
+                }
+                
+                const data = await response.json();
+                const books = data.books || [];
+                
+                if (books.length === 0) {
+                    bookList.innerHTML = '<p class="text-gray-400 col-span-full">No books available for your class yet. More books will be added soon!</p>';
+                    return;
+                }
+                
+                bookList.innerHTML = '';
+                
+                // Group books by subject
+                const booksBySubject = {};
+                books.forEach(book => {
+                    if (!booksBySubject[book.subject]) {
+                        booksBySubject[book.subject] = [];
+                    }
+                    booksBySubject[book.subject].push(book);
+                });
+                
+                // Create book cards for each subject
+                Object.entries(booksBySubject).forEach(([subject, subjectBooks]) => {
+                    const bookCard = document.createElement('div');
+                    bookCard.className = 'bg-indigo-600/50 hover:bg-indigo-600/70 p-3 rounded-lg text-white text-sm cursor-pointer transition-all duration-300 flex flex-col';
+                    
+                    const bookNames = subjectBooks.map(book => book.bookName).join(', ');
+                    const totalChunks = subjectBooks.reduce((sum, book) => sum + book.chunkCount, 0);
+                    
+                    bookCard.innerHTML = `
+                        <div class="flex items-center mb-2">
+                            <span class="mr-2">${getSubjectIcon(subject)}</span>
+                            <span class="font-medium">${subject}</span>
+                        </div>
+                        <div class="text-xs text-gray-300 mb-2 flex-1">${bookNames}</div>
+                        <div class="text-xs text-gray-400 mb-2">${subjectBooks.length} books • ${totalChunks} chapters</div>
+                        <button class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs transition-colors" onclick="downloadSubjectBooks('${subject}', ${classNumber})">
+                            📥 Download All
+                        </button>
+                    `;
+                    bookList.appendChild(bookCard);
+                });
+                
+            } catch (error) {
+                console.error('Error loading books:', error);
+                document.getElementById('bookList').innerHTML = '<p class="text-red-400 col-span-full">Error loading books. Please try again later.</p>';
+            }
+        }
+        
+        async function downloadSubjectBooks(subject, classNumber) {
+            try {
+                showSuccess(`Preparing download for ${subject} books...`);
+                
+                // Get all books for this subject and class
+                const response = await fetch(`/api/processed-books?grade=${classNumber}&subject=${subject}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch books');
+                }
+                
+                const data = await response.json();
+                const books = data.books || [];
+                
+                if (books.length === 0) {
+                    showError('No books found for this subject');
+                    return;
+                }
+                
+                // Download each book
+                books.forEach((book, index) => {
+                    setTimeout(() => {
+                        const downloadUrl = `/api/fs/books/${encodeURIComponent(book.filePath)}`;
+                        const link = document.createElement('a');
+                        link.href = downloadUrl;
+                        link.download = `${book.bookName}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }, index * 1000); // Stagger downloads by 1 second
+                });
+                
+                showSuccess(`Downloading ${books.length} ${subject} books...`);
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                showError('Failed to download books. Please try again.');
+            }
+        }
+        
+        function getSubjectIcon(subject) {
+            const icons = {
+                'English': '📝',
+                'Hindi': '🇮🇳',
+                'Maths': '🔢',
+                'Science': '🧪',
+                'Physics': '⚛️',
+                'Chemistry': '🧬',
+                'Biology': '🌱',
+                'History': '🏛️',
+                'Geography': '🌍',
+                'Economics': '💰',
+                'Accountancy': '📊',
+                'Business Studies': '💼',
+                'Computer': '💻',
+                'Sanskrit': '🕉️',
+                'Physical Education': '🏃‍♂️',
+                'Informatics Practices': '💻',
+                'Home Science': '🏠'
+            };
+            return icons[subject] || '📚';
+        }
+        
+        async function downloadBook(bookPath, bookName) {
+            try {
+                showSuccess(`Preparing download for ${bookName}...`);
+                
+                // Try to fetch the book directory to get PDF files
+                const response = await fetch(`/api/books/${encodeURIComponent(bookPath)}`);
+                if (!response.ok) {
+                    throw new Error('Book not found');
+                }
+                
+                const files = await response.json();
+                const pdfFiles = files.filter(file => file.toLowerCase().endsWith('.pdf'));
+                
+                if (pdfFiles.length === 0) {
+                    showError('No PDF files found in this book');
+                    return;
+                }
+                
+                // If only one PDF, download directly
+                if (pdfFiles.length === 1) {
+                    const downloadUrl = `${bookPath}${pdfFiles[0]}`;
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = pdfFiles[0];
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showSuccess(`Downloaded ${pdfFiles[0]}`);
+                } else {
+                    // Multiple PDFs - show selection modal
+                    showPDFSelectionModal(bookPath, pdfFiles, bookName);
+                }
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                showError('Failed to download book. Please try again.');
+            }
+        }
+        
+        function showPDFSelectionModal(bookPath, pdfFiles, bookName) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="glass-effect rounded-2xl p-6 max-w-md w-full mx-4">
+                    <h3 class="text-white text-lg font-bold mb-4">${bookName}</h3>
+                    <p class="text-gray-300 text-sm mb-4">Select which chapter to download:</p>
+                    <div class="max-h-60 overflow-y-auto space-y-2 mb-4">
+                        ${pdfFiles.map(file => `
+                            <button class="w-full text-left bg-indigo-600/50 hover:bg-indigo-600/70 p-2 rounded text-white text-sm transition-colors" onclick="downloadSinglePDF('${bookPath}', '${file}')">
+                                📄 ${file}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors" onclick="downloadAllPDFs('${bookPath}', ${JSON.stringify(pdfFiles).replace(/"/g, '&quot;')})">
+                            📥 Download All
+                        </button>
+                        <button class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors" onclick="this.closest('.fixed').remove()">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function downloadSinglePDF(bookPath, fileName) {
+            const downloadUrl = `${bookPath}${fileName}`;
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showSuccess(`Downloaded ${fileName}`);
+            
+            // Close modal
+            document.querySelector('.fixed.inset-0').remove();
+        }
+        
+        function downloadAllPDFs(bookPath, pdfFiles) {
+            pdfFiles.forEach((file, index) => {
+                setTimeout(() => {
+                    downloadSinglePDF(bookPath, file);
+                }, index * 500); // Stagger downloads
+            });
+            
+            showSuccess(`Downloading all ${pdfFiles.length} files...`);
+            
+            // Close modal
+            document.querySelector('.fixed.inset-0').remove();
+        }
+
+        // Add visual feedback for STT processing
+        function showSTTFeedback(message, type = 'info') {
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.id = 'sttFeedback';
+            feedbackDiv.className = `fixed top-4 right-4 glass-effect p-3 rounded-xl text-sm font-medium z-50 ${
+                type === 'success' ? 'text-green-400' : 
+                type === 'error' ? 'text-red-400' : 
+                'text-blue-400'
+            }`;
+            feedbackDiv.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : '🎤'}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            // Remove existing feedback
+            const existing = document.getElementById('sttFeedback');
+            if (existing) existing.remove();
+            
+            document.body.appendChild(feedbackDiv);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (feedbackDiv.parentNode) {
+                    feedbackDiv.remove();
+                }
+            }, 3000);
+        }
+
+        // Debug function to test the system
+        function debugChatSystem() {
+            console.log('=== Chat System Debug Info ===');
+            console.log('Current User:', currentUser);
+            console.log('User Data:', userData);
+            console.log('Current Teacher:', currentTeacher);
+            console.log('GPT Service Context:', {
+                grade: gptService.currentGrade,
+                subject: gptService.currentSubject
+            });
+            console.log('Chat History Length:', gptService.chatHistory.length);
+            console.log('==============================');
+        }
+
+        // Test STT functionality
+        function testSTT() {
+            console.log('=== Testing STT System ===');
+            console.log('Speech Recognition available:', !!(window.SpeechRecognition || window.webkitSpeechRecognition));
+            console.log('Microphone available:', !!navigator.mediaDevices);
+            console.log('Current recording state:', isRecording);
+            console.log('Recognition object:', recognition);
+            
+            // Test microphone access
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(() => {
+                    console.log('✅ Microphone access granted');
+                    showSTTFeedback('Microphone test successful!', 'success');
+                })
+                .catch(error => {
+                    console.log('❌ Microphone access failed:', error);
+                    showSTTFeedback('Microphone test failed: ' + error.message, 'error');
+                });
+        }
+
+        // Test microphone button visibility and functionality
+        function testMicButton() {
+            console.log('=== Testing Microphone Button ===');
+            const voiceButton = document.getElementById('voiceButton');
+            const voiceIcon = document.getElementById('voiceIcon');
+            
+            if (voiceButton) {
+                console.log('✅ Voice button found in DOM');
+                console.log('Button display:', voiceButton.style.display);
+                console.log('Button visibility:', voiceButton.style.visibility);
+                console.log('Button opacity:', voiceButton.style.opacity);
+                console.log('Button text content:', voiceButton.textContent);
+                
+                // Make it more visible
+                makeMicVisible();
+                
+                // Test click
+                voiceButton.click();
+                console.log('🎤 Voice button clicked programmatically');
+            } else {
+                console.error('❌ Voice button NOT found in DOM');
+            }
+            
+            if (voiceIcon) {
+                console.log('✅ Voice icon found:', voiceIcon.textContent);
+            } else {
+                console.error('❌ Voice icon NOT found');
+            }
+        }
+
+        // Make microphone button more visible
+        function makeMicVisible() {
+            const voiceButton = document.getElementById('voiceButton');
+            if (voiceButton) {
+                voiceButton.style.display = 'block';
+                voiceButton.style.visibility = 'visible';
+                voiceButton.style.opacity = '1';
+                voiceButton.style.border = '2px solid #10b981';
+                voiceButton.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.5)';
+                console.log('✅ Microphone button made visible');
+            } else {
+                console.error('❌ Voice button not found in DOM');
+            }
+        }
+
+        // Start the application
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('dashboard');
+            initDashboard();
         });
-    }
-    // Password change
-    const passwordForm = document.getElementById('passwordForm');
-    if (passwordForm) {
-        passwordForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const newPassword = document.getElementById('newPassword').value;
-            if (!newPassword) return alert('Enter new password');
-            const { error } = await window.tutorAuth.supabase.auth.updateUser({ password: newPassword });
-            if (error) return alert('Error: ' + error.message);
-            alert('Password changed!');
-            passwordForm.reset();
-        });
-    }
-    // On load
-    window.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
 </html>
