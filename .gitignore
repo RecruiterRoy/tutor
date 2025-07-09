@@ -86,3 +86,10 @@ build/
 # Large content folders
 books/
 extracted_images/
+
+# Large generated files
+processed_books.json
+*.json.bak
+
+# Large image files
+images/teacher-avatar*.png
