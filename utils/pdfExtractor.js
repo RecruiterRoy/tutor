@@ -19,7 +19,7 @@ const loadPdfJs = async () => {
         }
       };
       
-      pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
       // Use Node.js worker
       pdfjsLib.GlobalWorkerOptions.workerSrc = false;
       console.log('PDF.js loaded successfully with Node.js polyfills');
