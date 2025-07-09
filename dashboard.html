@@ -791,7 +791,7 @@
                 this.currentGrade = null;
                 this.currentSubject = null;
                 this.chatHistory = [];
-                this.baseUrl = '/api/chat'; // Ensure this matches your endpoint
+                this.baseUrl = (window.appConfig?.apiBaseUrl || 'http://localhost:3000') + '/api/chat';
             }
             
             setContext(grade, subject) {
