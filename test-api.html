@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Tutor.AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-section {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .result {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success { border-left: 4px solid #4ecdc4; }
+        .error { border-left: 4px solid #ff6b6b; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Tutor.AI API Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Supabase Configuration Test</h2>
+        <button onclick="testSupabaseConfig()">Test Supabase Config</button>
+        <div id="supabase-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. API Endpoint Test</h2>
+        <button onclick="testAPIEndpoint()">Test API Endpoint</button>
+        <div id="api-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Chat API Test</h2>
+        <button onclick="testChatAPI()">Test Chat API</button>
+        <div id="chat-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Environment Check</h2>
+        <button onclick="checkEnvironment()">Check Environment</button>
+        <div id="env-result" class="result"></div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        async function testSupabaseConfig() {
+            const result = document.getElementById('supabase-result');
+            result.textContent = 'Testing...';
+            result.className = 'result';
+            
+            try {
+                const response = await fetch('https://tutor-eight-dusky.vercel.app/api/supabase-config');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.textContent = `✅ Supabase Config OK\n${JSON.stringify(data, null, 2)}`;
+                    result.className = 'result success';
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                result.textContent = `❌ Supabase Config Failed\n${error.message}`;
+                result.className = 'result error';
+            }
+        }
+
+        async function testAPIEndpoint() {
+            const result = document.getElementById('api-result');
+            result.textContent = 'Testing...';
+            result.className = 'result';
+            
+            try {
+                const response = await fetch('https://tutor-eight-dusky.vercel.app/api/fs/books?grade=10');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.textContent = `✅ API Endpoint OK\nFound ${data.length} books for Class 10`;
+                    result.className = 'result success';
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                result.textContent = `❌ API Endpoint Failed\n${error.message}`;
+                result.className = 'result error';
+            }
+        }
+
+        async function testChatAPI() {
+            const result = document.getElementById('chat-result');
+            result.textContent = 'Testing...';
+            result.className = 'result';
+            
+            try {
+                const response = await fetch('https://tutor-eight-dusky.vercel.app/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: 'user', content: 'Hello! Can you help me with math?' }
+                        ],
+                        grade: 'Class 10',
+                        subject: 'Mathematics',
+                        language: 'en'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.textContent = `✅ Chat API OK\nResponse: ${data.response.substring(0, 200)}...`;
+                    result.className = 'result success';
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                result.textContent = `❌ Chat API Failed\n${error.message}`;
+                result.className = 'result error';
+            }
+        }
+
+        function checkEnvironment() {
+            const result = document.getElementById('env-result');
+            const config = window.appConfig || {};
+            
+            const envInfo = {
+                'Current Hostname': window.location.hostname,
+                'Environment': config.environment || 'unknown',
+                'API Base URL': config.apiBaseUrl || 'not set',
+                'Supabase URL': config.supabaseUrl || 'not set',
+                'Has Supabase Key': !!config.supabaseAnonKey,
+                'User Agent': navigator.userAgent.substring(0, 50) + '...'
+            };
+            
+            result.textContent = `🔍 Environment Info\n${JSON.stringify(envInfo, null, 2)}`;
+            result.className = 'result';
+        }
+
+        // Auto-run environment check on load
+        window.addEventListener('load', checkEnvironment);
+    </script>
+</body>
+</html> 
