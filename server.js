@@ -18,6 +18,10 @@ const BOOKS_DIR = path.join(__dirname, 'books');
 
 const app = express();
 
+// Force rebuild timestamp
+const REBUILD_TIMESTAMP = process.env.REBUILD_TIMESTAMP || Date.now();
+console.log(`Server starting with rebuild timestamp: ${REBUILD_TIMESTAMP}`);
+
 // Initialize OpenAI
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
