@@ -26,8 +26,23 @@ const supabase = createClient(
     process.env.SUPABASE_ANON_KEY
 );
 
-// Initialize PDF Processor
-const pdfProcessor = new PDFProcessor();
+// Initialize PDF Processor lazily to avoid Vercel deployment issues
+let pdfProcessor = null;
+
+async function getPDFProcessor() {
+    if (!pdfProcessor) {
+        try {
+            const { PDFProcessor } = await import('./utils/pdfExtractor.js');
+            pdfProcessor = new PDFProcessor();
+        } catch (error) {
+            console.warn('PDF Processor initialization failed:', error.message);
+            pdfProcessor = {
+                findRelevantContent: () => []
+            };
+        }
+    }
+    return pdfProcessor;
+}
 
 // Middleware
 app.use(cors());
@@ -47,6 +62,11 @@ const limiter = rateLimit({
   max: 100 // limit each IP to 100 requests per windowMs
 });
 app.use('/api', limiter);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // API Routes (must come before static file serving)
 app.get('/api/supabase-config', (req, res) => {
@@ -74,13 +94,19 @@ app.post('/api/chat', async (req, res) => {
     // Get relevant book content for context
     let bookContext = '';
     if (grade && subject) {
-      const relevantContent = pdfProcessor.findRelevantContent(
-        filteredMessages[filteredMessages.length - 1]?.content || '', 
-        subject, 
-        grade
-      );
-      if (relevantContent.length > 0) {
-        bookContext = `\n\nRelevant textbook content:\n${relevantContent.join('\n\n')}`;
+      try {
+        const pdfProc = await getPDFProcessor();
+        const relevantContent = pdfProc.findRelevantContent(
+          filteredMessages[filteredMessages.length - 1]?.content || '', 
+          subject, 
+          grade
+        );
+        if (relevantContent.length > 0) {
+          bookContext = `\n\nRelevant textbook content:\n${relevantContent.join('\n\n')}`;
+        }
+      } catch (error) {
+        console.warn('Failed to get book context:', error.message);
+        // Continue without book context
       }
     }
 
@@ -232,7 +258,8 @@ app.get('/api/books', async (req, res) => {
 app.post('/api/search', async (req, res) => {
     try {
         const { query, subject, grade } = req.body;
-        const relevantContent = pdfProcessor.findRelevantContent(query, subject, grade);
+        const pdfProc = await getPDFProcessor();
+        const relevantContent = pdfProc.findRelevantContent(query, subject, grade);
         
         res.json({ content: relevantContent });
     } catch (error) {
@@ -247,13 +274,15 @@ app.get('/api/processed-books', async (req, res) => {
         const { grade, subject } = req.query;
         let books = [];
         
+        const pdfProc = await getPDFProcessor();
+        
         if (grade && subject) {
-            books = pdfProcessor.getBooksByClassAndSubject(grade, subject);
+            books = pdfProc.getBooksByClassAndSubject(grade, subject);
         } else if (grade) {
-            books = pdfProcessor.getBooksByClassAndSubject(grade);
+            books = pdfProc.getBooksByClassAndSubject(grade);
         } else {
             // Return all books
-            for (const [filePath, content] of pdfProcessor.bookContent) {
+            for (const [filePath, content] of pdfProc.bookContent) {
                 books.push({
                     filePath,
                     bookName: content.bookName,
@@ -369,22 +398,27 @@ const regionalAvatars = [
 // Static file serving (must come after API routes)
 app.use(express.static(path.join(__dirname)));
 
-// Load books on startup
+// Load books on startup (only in development)
 async function loadBooks() {
     try {
-        await pdfProcessor.loadFromFile('./processed_books.json');
-        if (pdfProcessor.bookContent.size === 0) {
+        const pdfProc = await getPDFProcessor();
+        await pdfProc.loadFromFile('./processed_books.json');
+        if (pdfProc.bookContent.size === 0) {
             console.log('Processing PDFs from books directory...');
-            await pdfProcessor.processAllPDFs('./books');
-            await pdfProcessor.saveToFile('./processed_books.json');
+            await pdfProc.processAllPDFs('./books');
+            await pdfProc.saveToFile('./processed_books.json');
         }
-        console.log(`Loaded ${pdfProcessor.bookContent.size} books`);
+        console.log(`Loaded ${pdfProc.bookContent.size} books`);
     } catch (error) {
         console.error('Error loading books:', error);
+        // Don't fail the server startup for book loading issues
     }
 }
 
-loadBooks();
+// Only load books in development environment
+if (process.env.NODE_ENV !== 'production') {
+    loadBooks();
+}
 
 // Page routes (must come after static file serving)
 app.get('/', (req, res) => {
