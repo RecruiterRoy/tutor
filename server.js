@@ -5,7 +5,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { OpenAI } from 'openai';
 import { createClient } from '@supabase/supabase-js';
-import { PDFProcessor } from './utils/pdfExtractor.js';
+// Import PDFProcessor lazily to avoid Vercel deployment issues
+// import { PDFProcessor } from './utils/pdfExtractor.js';
 import rateLimit from 'express-rate-limit';
 import fs from 'fs';
 
@@ -36,8 +37,12 @@ async function getPDFProcessor() {
             pdfProcessor = new PDFProcessor();
         } catch (error) {
             console.warn('PDF Processor initialization failed:', error.message);
+            // Create a fallback processor that doesn't use PDF parsing
             pdfProcessor = {
-                findRelevantContent: () => []
+                findRelevantContent: () => [],
+                extractPDFText: async () => null,
+                processAllPDFs: async () => console.log('PDF processing not available'),
+                getBooksByClassAndSubject: () => []
             };
         }
     }
