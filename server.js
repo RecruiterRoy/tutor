@@ -74,7 +74,21 @@ app.use('/api', limiter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        version: '1.0.0'
+    });
+});
+
+// Root health check
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        message: 'Tutor.AI server is running',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // PDF Handler integration
@@ -534,15 +548,28 @@ app.use(express.static(path.join(__dirname)));
 async function loadBooks() {
     try {
         const pdfProc = await getPDFProcessor();
-        await pdfProc.loadFromFile('./processed_books.json');
-        if (pdfProc.bookContent.size === 0) {
+        
+        // Check if processed_books.json exists before trying to load it
+        const processedBooksPath = './processed_books.json';
+        if (fs.existsSync(processedBooksPath)) {
+            await pdfProc.loadFromFile(processedBooksPath);
+            console.log(`Loaded ${pdfProc.bookContent.size} books from file`);
+        } else {
+            console.log('No processed_books.json found, skipping book loading');
+        }
+        
+        // Only process PDFs if we have a books directory and no existing content
+        if (pdfProc.bookContent.size === 0 && fs.existsSync('./books')) {
             console.log('Processing PDFs from books directory...');
             await pdfProc.processAllPDFs('./books');
             await pdfProc.saveToFile('./processed_books.json');
+            console.log(`Processed and saved ${pdfProc.bookContent.size} books`);
         }
-        console.log(`Loaded ${pdfProc.bookContent.size} books`);
+        
+        console.log(`Total books loaded: ${pdfProc.bookContent.size}`);
     } catch (error) {
         console.error('Error loading books:', error);
+        console.log('Continuing without book data...');
         // Don't fail the server startup for book loading issues
     }
 }
