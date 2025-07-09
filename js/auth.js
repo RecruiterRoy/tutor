@@ -4,9 +4,10 @@
 class TutorAuth {
     constructor() {
         // Initialize Supabase client
+        const config = window.appConfig || {};
         this.supabase = window.supabase.createClient(
-            'YOUR_SUPABASE_URL', // Replace with your actual Supabase URL
-            'YOUR_SUPABASE_ANON_KEY' // Replace with your actual Supabase anon key
+            config.supabaseUrl || 'https://your-project-ref.supabase.co',
+            config.supabaseAnonKey || 'your-anon-key-here'
         );
         
         // Initialize auth state

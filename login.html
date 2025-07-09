@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
     <style>
         .glass-effect {
             backdrop-filter: blur(20px);
@@ -157,10 +158,31 @@
     </div>
 
     <script>
-        // Initialize Supabase client
-        const supabaseUrl = 'https://xhuljxuxnlwtocfmwiid.supabase.co'
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU'
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+        // Initialize Supabase client - will be set by server
+        let supabase = null;
+        
+        // Initialize Supabase when page loads
+        async function initializeSupabase() {
+            try {
+                // Use config from config.js file
+                const config = window.appConfig || {};
+                
+                if (config.supabaseUrl && config.supabaseAnonKey) {
+                    supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                    console.log('Supabase initialized successfully');
+                } else {
+                    throw new Error('Supabase configuration not available. Please check config.js file.');
+                }
+            } catch (error) {
+                console.error('Failed to initialize Supabase:', error);
+                alert('Failed to initialize database connection. Please check the configuration.');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSupabase();
+        });
 
         function authApp() {
             return {
@@ -177,6 +199,11 @@
                 messageType: 'error',
 
                 async signInWithEmail() {
+                    if (!supabase) {
+                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                        return;
+                    }
+                    
                     this.loading = true
                     this.message = ''
                     
@@ -197,7 +224,7 @@
                             })
                             
                             if (result.data.user) {
-                                window.location.href = 'dashboard.html'
+                                window.location.href = '/dashboard'
                             }
                         }
                         
@@ -205,6 +232,7 @@
                             this.showMessage(result.error.message, 'error')
                         }
                     } catch (error) {
+                        console.error('Login error:', error);
                         this.showMessage('An error occurred. Please try again.', 'error')
                     } finally {
                         this.loading = false
@@ -212,12 +240,26 @@
                 },
 
                 async sendOTP() {
+                    if (!supabase) {
+                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                        return;
+                    }
+                    
                     this.loading = true
                     this.message = ''
                     
                     try {
+                        // Clean phone number and add country code
+                        const cleanPhone = this.phone.replace(/\D/g, '');
+                        if (cleanPhone.length !== 10) {
+                            this.showMessage('Please enter a valid 10-digit phone number', 'error');
+                            return;
+                        }
+                        
+                        const fullPhoneNumber = this.countryCode + cleanPhone;
+                        
                         const result = await supabase.auth.signInWithOtp({
-                            phone: this.countryCode + this.phone,
+                            phone: fullPhoneNumber,
                             options: {
                                 shouldCreateUser: true
                             }
@@ -230,6 +272,7 @@
                             this.showMessage('OTP sent successfully!', 'success')
                         }
                     } catch (error) {
+                        console.error('OTP error:', error);
                         this.showMessage('Failed to send OTP. Please try again.', 'error')
                     } finally {
                         this.loading = false
@@ -237,12 +280,20 @@
                 },
 
                 async verifyOTP() {
+                    if (!supabase) {
+                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                        return;
+                    }
+                    
                     this.loading = true
                     this.message = ''
                     
                     try {
+                        const cleanPhone = this.phone.replace(/\D/g, '');
+                        const fullPhoneNumber = this.countryCode + cleanPhone;
+                        
                         const result = await supabase.auth.verifyOtp({
-                            phone: this.countryCode + this.phone,
+                            phone: fullPhoneNumber,
                             token: this.otp,
                             type: 'sms'
                         })
@@ -250,9 +301,10 @@
                         if (result.error) {
                             this.showMessage(result.error.message, 'error')
                         } else {
-                            window.location.href = 'dashboard.html'
+                            window.location.href = '/dashboard'
                         }
                     } catch (error) {
+                        console.error('OTP verification error:', error);
                         this.showMessage('Invalid OTP. Please try again.', 'error')
                     } finally {
                         this.loading = false
@@ -265,6 +317,11 @@
                 },
 
                 async signInWithGoogle() {
+                    if (!supabase) {
+                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                        return;
+                    }
+                    
                     this.loading = true
                     this.message = ''
                     
@@ -272,7 +329,7 @@
                         const result = await supabase.auth.signInWithOAuth({
                             provider: 'google',
                             options: {
-                                redirectTo: window.location.origin + '/dashboard.html'
+                                redirectTo: window.location.origin + '/dashboard'
                             }
                         })
                         
@@ -280,6 +337,7 @@
                             this.showMessage(result.error.message, 'error')
                         }
                     } catch (error) {
+                        console.error('Google OAuth error:', error);
                         this.showMessage('Google sign-in failed. Please try again.', 'error')
                     } finally {
                         this.loading = false
@@ -287,6 +345,11 @@
                 },
 
                 async resetPassword() {
+                    if (!supabase) {
+                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                        return;
+                    }
+                    
                     if (!this.email) {
                         this.showMessage('Please enter your email first', 'error')
                         return
@@ -301,6 +364,7 @@
                             this.showMessage('Password reset email sent!', 'success')
                         }
                     } catch (error) {
+                        console.error('Password reset error:', error);
                         this.showMessage('Failed to send reset email', 'error')
                     } finally {
                         this.loading = false
@@ -318,9 +382,13 @@
         }
 
         // Check if user is already logged in
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                window.location.href = 'dashboard.html'
+        document.addEventListener('DOMContentLoaded', function() {
+            if (supabase) {
+                supabase.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_IN' && session) {
+                        window.location.href = '/dashboard'
+                    }
+                })
             }
         })
     </script>
