@@ -4,26 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - TUTOR.AI</title>
+    <!-- Load Supabase and config first -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/config.js"></script>
+    
+    <!-- Other scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
-    <script src="/js/config.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script>
-        // Wait for Supabase CDN to load before loading config.js
-        window.addEventListener('load', function() {
-            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                console.log('Supabase CDN loaded successfully');
-                // Load config.js after Supabase is ready
-                const script = document.createElement('script');
-                script.src = '/js/config.js';
-                document.head.appendChild(script);
-            } else {
-                console.error('Supabase CDN failed to load');
-            }
-        });
-    </script>
     <style>
         .glass-effect {
             backdrop-filter: blur(20px);
@@ -190,17 +177,10 @@
             }
         }
         
-        // Initialize when config.js is loaded
-        function waitForConfig() {
-            if (typeof getSupabaseClient !== 'undefined') {
-                initializeSupabase();
-            } else {
-                setTimeout(waitForConfig, 100);
-            }
-        }
-        
-        // Start waiting for config.js to load
-        waitForConfig();
+        // Initialize immediately since scripts are loaded in order
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSupabase();
+        });
     </script>
 
     <script>
@@ -414,6 +394,7 @@
         })
     </script>
 
+    <!-- Load auth.js at the bottom of body -->
     <script src="/js/auth.js"></script>
 </body>
 </html>
