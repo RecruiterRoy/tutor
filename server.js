@@ -64,7 +64,8 @@ async function getPDFProcessor() {
                 findRelevantContent: () => [],
                 extractPDFText: async () => null,
                 processAllPDFs: async () => console.log('PDF processing not available'),
-                getBooksByClassAndSubject: () => []
+                getBooksByClassAndSubject: () => [],
+                bookContent: new Map() // Add missing property
             };
         }
     }
@@ -319,6 +320,8 @@ app.get('/api/fs/books', (req, res) => {
         const ncertPath = path.join(BOOKS_DIR, 'ncert');
 
         function traverseDir(dir) {
+            if (!fs.existsSync(dir)) return;
+            
             const files = fs.readdirSync(dir);
             files.forEach(file => {
                 const fullPath = path.join(dir, file);
@@ -355,9 +358,7 @@ app.get('/api/fs/books', (req, res) => {
             });
         }
 
-        if (fs.existsSync(ncertPath)) {
-            traverseDir(ncertPath);
-        }
+        traverseDir(ncertPath);
         
         res.json(allFiles);
     } catch (error) {
@@ -404,7 +405,8 @@ app.get('/api/fs/books/:id(*)', (req, res) => {
 // Get available books
 app.get('/api/books', async (req, res) => {
     try {
-        const books = Array.from(pdfProcessor.bookContent.entries()).map(([fileName, content]) => ({
+        const pdfProc = await getPDFProcessor();
+        const books = Array.from(pdfProc.bookContent.entries()).map(([fileName, content]) => ({
             fileName,
             subject: content.subject,
             grade: content.grade,
@@ -559,22 +561,84 @@ const regionalAvatars = [
     { id: 'kashmiri-female', name: 'Kashmiri Female', region: 'Kashmir', gender: 'female', image: '👩‍🦲' }
 ];
 
-// Page routes (must come BEFORE static file serving)
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
-});
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'register.html'));
+// Static file serving FIRST (before HTML routes)
+app.use(express.static(path.join(__dirname)));
+
+// Serve extracted images statically
+app.use('/extracted_images', express.static(path.join(__dirname, 'extracted_images')));
+
+// Book images API
+app.get('/api/book-images', (req, res) => {
+  const { file, page, keyword } = req.query;
+  const indexPath = path.join(__dirname, 'extracted_images', 'index.json');
+  if (!fs.existsSync(indexPath)) return res.json({ images: [] });
+  
+  try {
+    const allImages = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    let results = allImages;
+    if (file) results = results.filter(img => img.file.includes(file));
+    if (page) results = results.filter(img => img.page == page);
+    // For now, keyword just matches file name; can be improved with OCR later
+    if (keyword) results = results.filter(img => img.file.toLowerCase().includes(keyword.toLowerCase()));
+    res.json({ images: results });
+  } catch (error) {
+    console.error('Error reading image index:', error);
+    res.json({ images: [] });
+  }
 });
 
-// Static file serving (must come after page routes)
-app.use(express.static(path.join(__dirname)));
+// HTML Page routes (must come AFTER static file serving to avoid conflicts)
+app.get('/', (req, res) => {
+    const indexPath = path.join(__dirname, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).send('index.html not found');
+    }
+});
+
+app.get('/dashboard', (req, res) => {
+    const dashboardPath = path.join(__dirname, 'dashboard.html');
+    if (fs.existsSync(dashboardPath)) {
+        res.sendFile(dashboardPath);
+    } else {
+        res.status(404).send('dashboard.html not found');
+    }
+});
+
+app.get('/login', (req, res) => {
+    const loginPath = path.join(__dirname, 'login.html');
+    if (fs.existsSync(loginPath)) {
+        res.sendFile(loginPath);
+    } else {
+        res.status(404).send('login.html not found');
+    }
+});
+
+app.get('/register', (req, res) => {
+    const registerPath = path.join(__dirname, 'register.html');
+    if (fs.existsSync(registerPath)) {
+        res.sendFile(registerPath);
+    } else {
+        res.status(404).send('register.html not found');
+    }
+});
+
+// Catch all route for SPA - must be LAST
+app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    // For all other routes, serve index.html (SPA behavior)
+    const indexPath = path.join(__dirname, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).send('Application not found');
+    }
+});
 
 // Load books on startup (only in development)
 async function loadBooks() {
@@ -611,29 +675,7 @@ if (process.env.NODE_ENV !== 'production') {
     loadBooks();
 }
 
-// API Health Check
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok' });
-});
-
-// Serve extracted images statically
-app.use('/extracted_images', express.static(path.join(__dirname, 'extracted_images')));
-
-// Book images API
-app.get('/api/book-images', (req, res) => {
-  const { file, page, keyword } = req.query;
-  const indexPath = path.join(__dirname, 'extracted_images', 'index.json');
-  if (!fs.existsSync(indexPath)) return res.json({ images: [] });
-  const allImages = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
-  let results = allImages;
-  if (file) results = results.filter(img => img.file.includes(file));
-  if (page) results = results.filter(img => img.page == page);
-  // For now, keyword just matches file name; can be improved with OCR later
-  if (keyword) results = results.filter(img => img.file.toLowerCase().includes(keyword.toLowerCase()));
-  res.json({ images: results });
-});
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Tutor.AI backend listening at http://localhost:${PORT}`);
-}); 
+});
