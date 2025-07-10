@@ -9,10 +9,13 @@
     <script src="js/config.js"></script>
     <script type="module">
         import { getSupabaseClient } from './js/supabaseClient.js';
-        let supabase = null;
+        
+        // Initialize Supabase and make it globally available
+        window.supabase = null;
+        
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                supabase = await getSupabaseClient();
+                window.supabase = await getSupabaseClient();
                 console.log('Supabase initialized successfully');
                 // Economic status handling
                 const economicStatusRadios = document.querySelectorAll('input[name="economicStatus"]');
@@ -31,19 +34,21 @@
                     });
                 });
             } catch (error) {
+                console.error('Failed to initialize Supabase:', error);
                 alert('Failed to initialize database connection. Please refresh the page.');
             }
         });
+    </script>
 
         // OAuth functions
         async function signInWithGoogle() {
-            if (!supabase) {
+            if (!window.supabase) {
                 alert('Database not initialized. Please refresh the page.');
                 return;
             }
             
             try {
-                const { data, error } = await supabase.auth.signInWithOAuth({
+                const { data, error } = await window.supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
                         redirectTo: window.location.origin + '/dashboard'
@@ -59,7 +64,7 @@
         }
 
         async function signInWithPhone() {
-            if (!supabase) {
+            if (!window.supabase) {
                 alert('Database not initialized. Please refresh the page.');
                 return;
             }
@@ -78,7 +83,7 @@
                 
                 const fullPhoneNumber = '+91' + cleanPhone;
                 
-                const { data, error } = await supabase.auth.signInWithOtp({
+                const { data, error } = await window.supabase.auth.signInWithOtp({
                     phone: fullPhoneNumber,
                     options: {
                         shouldCreateUser: true
@@ -91,7 +96,7 @@
                 const otp = prompt(`Enter the 6-digit OTP sent to ${fullPhoneNumber}:`);
                 if (!otp) return;
                 
-                const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+                const { data: verifyData, error: verifyError } = await window.supabase.auth.verifyOtp({
                     phone: fullPhoneNumber,
                     token: otp,
                     type: 'sms'
@@ -314,7 +319,7 @@
         async function registerUser() {
             if (!validateCurrentStep()) return;
             
-            if (!supabase) {
+            if (!window.supabase) {
                 alert('Database not initialized. Please refresh the page.');
                 return;
             }
@@ -328,7 +333,7 @@
                 const full_name = document.getElementById('studentName').value.trim();
                 const phone = document.getElementById('phone').value.trim();
                 
-                const { data, error } = await supabase.auth.signUp({
+                const { data, error } = await window.supabase.auth.signUp({
                     email,
                     password,
                     options: { data: { full_name, phone } }
@@ -338,7 +343,7 @@
                 const user = data.user;
                 
                 // 2. Insert into users table (handled by trigger, but update with phone if needed)
-                await supabase.from('users').update({ phone }).eq('id', user.id);
+                await window.supabase.from('users').update({ phone }).eq('id', user.id);
                 
                 // 3. Insert or update student_profiles
                 const grade = parseInt(document.getElementById('class').value);
@@ -347,7 +352,7 @@
                 const state = document.getElementById('state').value;
                 const preferred_language = document.getElementById('language').value.toLowerCase();
                 
-                const { data: existingProfile } = await supabase
+                const { data: existingProfile } = await window.supabase
                     .from('student_profiles')
                     .select('id')
                     .eq('user_id', user.id)
@@ -355,7 +360,7 @@
                     
                 if (existingProfile) {
                     // Update existing profile
-                    await supabase.from('student_profiles').update({
+                    await window.supabase.from('student_profiles').update({
                         grade,
                         board,
                         city,
@@ -364,7 +369,7 @@
                     }).eq('user_id', user.id);
                 } else {
                     // Insert new profile
-                    await supabase.from('student_profiles').insert({
+                    await window.supabase.from('student_profiles').insert({
                         user_id: user.id,
                         grade,
                         board,
@@ -385,16 +390,16 @@
                         let document_url = '';
                         const cardPic = document.getElementById('cardPic').files[0];
                         if (cardPic) {
-                            const { data: uploadData, error: uploadError } = await supabase.storage
+                            const { data: uploadData, error: uploadError } = await window.supabase.storage
                                 .from('verification-docs')
                                 .upload(`${user.id}/card_${Date.now()}`, cardPic);
                             if (uploadError) throw uploadError;
-                            document_url = supabase.storage
+                            document_url = window.supabase.storage
                                 .from('verification-docs')
                                 .getPublicUrl(uploadData.path).data.publicUrl;
                         }
                         
-                        await supabase.from('bpl_apl_verifications').insert({
+                        await window.supabase.from('bpl_apl_verifications').insert({
                             user_id: user.id,
                             document_type,
                             document_url,

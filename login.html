@@ -159,17 +159,23 @@
 
     <script type="module">
         import { getSupabaseClient } from './js/supabaseClient.js';
-        let supabase = null;
+        
+        // Initialize Supabase and make it globally available
+        window.supabase = null;
+        
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                supabase = await getSupabaseClient();
+                window.supabase = await getSupabaseClient();
                 console.log('Supabase initialized successfully');
-                // ... call your page init logic here ...
             } catch (error) {
+                console.error('Failed to initialize Supabase:', error);
                 alert('Failed to initialize database connection. Please refresh the page.');
             }
         });
+    </script>
 
+    <script>
+        // Alpine.js app - must be globally available
         function authApp() {
             return {
                 currentTab: 'email',
@@ -185,7 +191,7 @@
                 messageType: 'error',
 
                 async signInWithEmail() {
-                    if (!supabase) {
+                    if (!window.supabase) {
                         this.showMessage('Database not initialized. Please refresh the page.', 'error');
                         return;
                     }
@@ -196,7 +202,7 @@
                     try {
                         let result
                         if (this.isMagicLink) {
-                            result = await supabase.auth.signInWithOtp({
+                            result = await window.supabase.auth.signInWithOtp({
                                 email: this.email,
                                 options: {
                                     shouldCreateUser: false
@@ -204,7 +210,7 @@
                             })
                             this.showMessage('Magic link sent to your email!', 'success')
                         } else {
-                            result = await supabase.auth.signInWithPassword({
+                            result = await window.supabase.auth.signInWithPassword({
                                 email: this.email,
                                 password: this.password
                             })
@@ -226,7 +232,7 @@
                 },
 
                 async sendOTP() {
-                    if (!supabase) {
+                    if (!window.supabase) {
                         this.showMessage('Database not initialized. Please refresh the page.', 'error');
                         return;
                     }
@@ -244,7 +250,7 @@
                         
                         const fullPhoneNumber = this.countryCode + cleanPhone;
                         
-                        const result = await supabase.auth.signInWithOtp({
+                        const result = await window.supabase.auth.signInWithOtp({
                             phone: fullPhoneNumber,
                             options: {
                                 shouldCreateUser: true
@@ -266,7 +272,7 @@
                 },
 
                 async verifyOTP() {
-                    if (!supabase) {
+                    if (!window.supabase) {
                         this.showMessage('Database not initialized. Please refresh the page.', 'error');
                         return;
                     }
@@ -278,7 +284,7 @@
                         const cleanPhone = this.phone.replace(/\D/g, '');
                         const fullPhoneNumber = this.countryCode + cleanPhone;
                         
-                        const result = await supabase.auth.verifyOtp({
+                        const result = await window.supabase.auth.verifyOtp({
                             phone: fullPhoneNumber,
                             token: this.otp,
                             type: 'sms'
@@ -303,7 +309,7 @@
                 },
 
                 async signInWithGoogle() {
-                    if (!supabase) {
+                    if (!window.supabase) {
                         this.showMessage('Database not initialized. Please refresh the page.', 'error');
                         return;
                     }
@@ -312,7 +318,7 @@
                     this.message = ''
                     
                     try {
-                        const result = await supabase.auth.signInWithOAuth({
+                        const result = await window.supabase.auth.signInWithOAuth({
                             provider: 'google',
                             options: {
                                 redirectTo: window.location.origin + '/dashboard'
@@ -331,7 +337,7 @@
                 },
 
                 async resetPassword() {
-                    if (!supabase) {
+                    if (!window.supabase) {
                         this.showMessage('Database not initialized. Please refresh the page.', 'error');
                         return;
                     }
@@ -343,7 +349,7 @@
                     
                     this.loading = true
                     try {
-                        const result = await supabase.auth.resetPasswordForEmail(this.email)
+                        const result = await window.supabase.auth.resetPasswordForEmail(this.email)
                         if (result.error) {
                             this.showMessage(result.error.message, 'error')
                         } else {
@@ -369,8 +375,8 @@
 
         // Check if user is already logged in
         document.addEventListener('DOMContentLoaded', function() {
-            if (supabase) {
-                supabase.auth.onAuthStateChange((event, session) => {
+            if (window.supabase) {
+                window.supabase.auth.onAuthStateChange((event, session) => {
                     if (event === 'SIGNED_IN' && session) {
                         window.location.href = '/dashboard'
                     }
