@@ -19,12 +19,19 @@
                 return;
             }
             
+            // Try to get config from server first, fallback to config.js
             fetch('/api/supabase-config')
-                .then(response => response.json())
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Server config not available');
+                    }
+                })
                 .then(config => {
                     if (config.supabaseUrl && config.supabaseKey) {
                         window.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-                        console.log('Supabase initialized successfully');
+                        console.log('Supabase initialized successfully from server config');
                         
                         // Economic status handling
                         const economicStatusRadios = document.querySelectorAll('input[name="economicStatus"]');
@@ -47,8 +54,32 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Failed to initialize Supabase:', error);
-                    alert('Failed to initialize database connection. Please refresh the page.');
+                    console.log('Falling back to config.js:', error.message);
+                    // Fallback to config.js if server config fails
+                    if (window.appConfig && window.appConfig.supabaseUrl && window.appConfig.supabaseAnonKey) {
+                        window.supabase = window.supabase.createClient(window.appConfig.supabaseUrl, window.appConfig.supabaseAnonKey);
+                        console.log('Supabase initialized successfully from config.js');
+                        
+                        // Economic status handling
+                        const economicStatusRadios = document.querySelectorAll('input[name="economicStatus"]');
+                        const cardDetails = document.getElementById('cardDetails');
+                        const premiumDetails = document.getElementById('premiumDetails');
+
+                        economicStatusRadios.forEach(radio => {
+                            radio.addEventListener('change', function() {
+                                if (this.value === 'BPL' || this.value === 'APL') {
+                                    cardDetails.classList.remove('hidden');
+                                    premiumDetails.classList.add('hidden');
+                                } else if (this.value === 'Premium') {
+                                    cardDetails.classList.add('hidden');
+                                    premiumDetails.classList.remove('hidden');
+                                }
+                            });
+                        });
+                    } else {
+                        console.error('No Supabase configuration available');
+                        alert('Failed to initialize database connection. Please check your configuration.');
+                    }
                 });
         }
         
