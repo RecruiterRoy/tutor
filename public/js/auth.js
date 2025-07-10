@@ -3,14 +3,10 @@
 
 class TutorAuth {
     constructor() {
-      // Validate Supabase is loaded
-      if (!window.supabase?.auth) {
-        throw new Error('Supabase client not initialized. Load supabase.js first!');
-      }
-  
-      this.supabase = window.supabase;
+      this.supabase = null;
       this.user = null;
       this.rememberMe = localStorage.getItem('rememberMe') === 'true';
+      this.initialized = false;
       this.init();
     }
   
@@ -19,6 +15,9 @@ class TutorAuth {
     // ========================
   
     async init() {
+      // Wait for Supabase to be available
+      await this.waitForSupabase();
+      
       // Check existing session
       await this.checkSession();
       
@@ -27,6 +26,24 @@ class TutorAuth {
       
       // Restore remember me preference
       this.restoreRememberMe();
+      
+      this.initialized = true;
+    }
+    
+    async waitForSupabase() {
+      let attempts = 0;
+      const maxAttempts = 100; // 10 seconds max
+      
+      while (!window.supabase?.auth && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
+      if (!window.supabase?.auth) {
+        throw new Error('Supabase client not initialized after 10 seconds');
+      }
+      
+      this.supabase = window.supabase;
     }
   
     async checkSession() {

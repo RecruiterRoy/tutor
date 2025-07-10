@@ -177,17 +177,10 @@
             }
         }
         
-        // Wait for Supabase CDN to load
-        function waitForSupabase() {
-            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                initializeSupabase();
-            } else {
-                setTimeout(waitForSupabase, 100);
-            }
-        }
-        
-        // Start waiting for Supabase
-        waitForSupabase();
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSupabase();
+        });
     </script>
 
     <script>
