@@ -22,14 +22,32 @@ const app = express();
 const REBUILD_TIMESTAMP = process.env.REBUILD_TIMESTAMP || Date.now();
 console.log(`Server starting with rebuild timestamp: ${REBUILD_TIMESTAMP}`);
 
-// Initialize OpenAI
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Initialize OpenAI lazily to avoid startup crashes
+let openai = null;
+function getOpenAI() {
+    if (!openai) {
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error('OPENAI_API_KEY environment variable is required');
+        }
+        openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    }
+    return openai;
+}
 
-// Initialize Supabase
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
-);
+// Initialize Supabase lazily to avoid startup crashes
+let supabase = null;
+function getSupabase() {
+    if (!supabase) {
+        if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+            throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required');
+        }
+        supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_ANON_KEY
+        );
+    }
+    return supabase;
+}
 
 // Initialize PDF Processor lazily to avoid Vercel deployment issues
 let pdfProcessor = null;
@@ -275,7 +293,7 @@ If a diagram or chart is requested, always try to provide a Mermaid diagram or C
 
     const gptMessages = [systemPrompt, ...filteredMessages];
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-3.5-turbo", // or "gpt-4" if available
       messages: gptMessages,
       temperature: 0.7,
@@ -451,7 +469,7 @@ app.post('/api/preferences', async (req, res) => {
     try {
         const { userId, preferences } = req.body;
         
-        const { error } = await supabase
+        const { error } = await getSupabase()
             .from('user_preferences')
             .upsert({
                 user_id: userId,
@@ -473,7 +491,7 @@ app.post('/api/study-session', async (req, res) => {
     try {
         const { userId, topic, subject, duration } = req.body;
         
-        const { error } = await supabase
+        const { error } = await getSupabase()
             .from('study_sessions')
             .insert({
                 user_id: userId,
@@ -542,18 +560,12 @@ const regionalAvatars = [
 ];
 
 // Page routes (must come BEFORE static file serving)
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
-
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
-
 app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'register.html'));
 });
