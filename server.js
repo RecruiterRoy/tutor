@@ -560,6 +560,9 @@ const regionalAvatars = [
 ];
 
 // Page routes (must come BEFORE static file serving)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
