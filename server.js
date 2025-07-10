@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { OpenAI } from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 // Import PDFProcessor lazily to avoid Vercel deployment issues
 // import { PDFProcessor } from './utils/pdfExtractor.js';
@@ -22,16 +22,16 @@ const app = express();
 const REBUILD_TIMESTAMP = process.env.REBUILD_TIMESTAMP || Date.now();
 console.log(`Server starting with rebuild timestamp: ${REBUILD_TIMESTAMP}`);
 
-// Initialize OpenAI lazily to avoid startup crashes
-let openai = null;
-function getOpenAI() {
-    if (!openai) {
-        if (!process.env.OPENAI_API_KEY) {
-            throw new Error('OPENAI_API_KEY environment variable is required');
+// Initialize Claude lazily to avoid startup crashes
+let anthropic = null;
+function getClaude() {
+    if (!anthropic) {
+        if (!process.env.ANTHROPIC_API_KEY) {
+            throw new Error('ANTHROPIC_API_KEY environment variable is required');
         }
-        openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     }
-    return openai;
+    return anthropic;
 }
 
 // Initialize Supabase lazily to avoid startup crashes
@@ -78,7 +78,7 @@ app.use(express.json());
 
 // API Key middleware
 app.use('/api', (req, res, next) => {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'Server misconfigured' });
   }
   next();
@@ -235,7 +235,7 @@ app.post('/api/pdf/parse', async (req, res) => {
 
 // API Routes (must come before static file serving)
 
-// GPT Chat API
+// Claude Chat API
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages, grade, subject, language } = req.body;
@@ -269,12 +269,17 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // Add system prompt based on grade and subject
-    const systemPrompt = {
-      role: 'system',
-      content: `You are a friendly, proactive Indian teacher for ${grade || 'a student'}. Current subject: ${subject || 'general'}. Please respond in ${language || 'English'}.
+    // Enhanced system prompt for Indian education context
+    const systemPrompt = `You are an expert AI tutor for Indian students. 
 
-IMPORTANT: Always address the student by their first name. If you don't know their name, ask for it politely. Never use "children" or "kids" - always use their actual name.
+Key Guidelines:
+- Follow CBSE/ICSE curriculum standards
+- Use step-by-step explanations
+- Ask guiding questions instead of giving direct answers
+- Relate concepts to Indian contexts when possible
+- Support both English and Hindi explanations
+- Encourage critical thinking
+- Always address the student by their first name. If you don't know their name, ask for it politely. Never use "children" or "kids" - always use their actual name.
 
 Always explain concepts clearly and simply, using:
 - Visuals FIRST: diagrams (Mermaid), tables, or charts (Chart.js) whenever possible
@@ -283,23 +288,38 @@ Always explain concepts clearly and simply, using:
 - Mermaid code blocks (~~~mermaid ... ~~~) for diagrams and flowcharts
 - Chart.js code blocks (~~~chartjs ... ~~~) with valid Chart.js JSON config for bar, line, or pie charts
 - Embed YouTube/video links in Markdown if a video is relevant
-If a diagram or chart is requested, always try to provide a Mermaid diagram or Chart.js chart using tildes (~~~) for code blocks. Only use text if a visual is not possible. Always keep answers visually clear and easy to follow for a school student.${bookContext}`
-    };
 
-    const gptMessages = [systemPrompt, ...filteredMessages];
+Student Context: Grade ${grade || 'a student'}, Subject: ${subject || 'general'}, Language: ${language || 'English'}
+${bookContext}
 
-    const completion = await getOpenAI().chat.completions.create({
-      model: "gpt-3.5-turbo", // or "gpt-4" if available
-      messages: gptMessages,
-      temperature: 0.7,
+Remember: Guide the student to understand, don't just provide answers.`;
+
+    // Convert messages to Claude format
+    const claudeMessages = filteredMessages.map(msg => ({
+      role: msg.role === 'system' ? 'user' : msg.role,
+      content: msg.content
+    }));
+
+    const completion = await getClaude().messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 1500,
+      system: systemPrompt,
+      messages: claudeMessages,
+      temperature: 0.7
     });
+
+    const response = completion.content[0].text;
 
     res.json({
-      response: completion.choices[0].message.content,
-      status: "success"
+      response: response,
+      status: "success",
+      usage: {
+        input_tokens: completion.usage.input_tokens,
+        output_tokens: completion.usage.output_tokens
+      }
     });
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('Claude API error:', error);
     res.status(500).json({
       error: error.message || 'Failed to process request'
     });
