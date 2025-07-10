@@ -43,12 +43,21 @@ async function getSupabaseClient() {
         throw new Error('Supabase configuration not available');
     }
     
-    // Check if Supabase is available
-    if (typeof supabase === 'undefined' || !supabase.createClient) {
+    // Wait for Supabase CDN to load
+    let retries = 0;
+    const maxRetries = 30; // 15 seconds max
+    
+    while ((typeof window.supabase === 'undefined' || !window.supabase.createClient) && retries < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        retries++;
+        console.log(`Waiting for Supabase CDN... attempt ${retries}`);
+    }
+    
+    if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
         throw new Error('Supabase client library not loaded');
     }
     
-    return supabase.createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseKey);
+    return window.supabase.createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseKey);
 }
 
 // API helper functions
