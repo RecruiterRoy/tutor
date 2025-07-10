@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/config.js"></script>
     <style>
         .glass-effect {
             backdrop-filter: blur(20px);
@@ -158,6 +157,53 @@
     </div>
 
     <script>
+        // Supabase configuration and initialization
+        let supabaseConfig = null;
+        
+        // Load Supabase configuration from server
+        async function loadSupabaseConfig() {
+            try {
+                const response = await fetch('/api/supabase-config');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                supabaseConfig = await response.json();
+                console.log('Supabase config loaded successfully');
+                return supabaseConfig;
+            } catch (error) {
+                console.error('Failed to load Supabase config:', error);
+                
+                // Fallback for local development
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.log('Using fallback config for local development');
+                    return {
+                        supabaseUrl: 'https://xhuljxuxnlwtocfmwiid.supabase.co',
+                        supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU'
+                    };
+                }
+                
+                return null;
+            }
+        }
+
+        // Get Supabase client
+        async function getSupabaseClient() {
+            if (!supabaseConfig) {
+                await loadSupabaseConfig();
+            }
+            
+            if (!supabaseConfig || !supabaseConfig.supabaseUrl || !supabaseConfig.supabaseKey) {
+                throw new Error('Supabase configuration not available');
+            }
+            
+            // Check if Supabase is available
+            if (typeof supabase === 'undefined' || !supabase.createClient) {
+                throw new Error('Supabase client library not loaded');
+            }
+            
+            return supabase.createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseKey);
+        }
+        
         // Initialize Supabase when CDN is loaded
         window.supabase = null;
         
@@ -176,7 +222,7 @@
                     throw new Error('Supabase client library failed to load');
                 }
                 
-                // Use the new config.js functions
+                // Use the getSupabaseClient function
                 const supabaseClient = await getSupabaseClient();
                 window.supabase = supabaseClient;
                 console.log('Supabase initialized successfully');
