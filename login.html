@@ -157,31 +157,17 @@
              x-text="message"></div>
     </div>
 
-    <script>
-        // Initialize Supabase client - will be set by server
+    <script type="module">
+        import { getSupabaseClient } from './js/supabaseClient.js';
         let supabase = null;
-        
-        // Initialize Supabase when page loads
-        async function initializeSupabase() {
+        document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Use config from config.js file
-                const config = window.appConfig || {};
-                
-                if (config.supabaseUrl && config.supabaseAnonKey) {
-                    supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-                    console.log('Supabase initialized successfully');
-                } else {
-                    throw new Error('Supabase configuration not available. Please check config.js file.');
-                }
+                supabase = await getSupabaseClient();
+                console.log('Supabase initialized successfully');
+                // ... call your page init logic here ...
             } catch (error) {
-                console.error('Failed to initialize Supabase:', error);
-                alert('Failed to initialize database connection. Please check the configuration.');
+                alert('Failed to initialize database connection. Please refresh the page.');
             }
-        }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeSupabase();
         });
 
         function authApp() {
