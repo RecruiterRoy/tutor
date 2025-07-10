@@ -541,7 +541,24 @@ const regionalAvatars = [
     { id: 'kashmiri-female', name: 'Kashmiri Female', region: 'Kashmir', gender: 'female', image: '👩‍🦲' }
 ];
 
-// Static file serving (must come after API routes)
+// Page routes (must come BEFORE static file serving)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'register.html'));
+});
+
+// Static file serving (must come after page routes)
 app.use(express.static(path.join(__dirname)));
 
 // Load books on startup (only in development)
@@ -578,23 +595,6 @@ async function loadBooks() {
 if (process.env.NODE_ENV !== 'production') {
     loadBooks();
 }
-
-// Page routes (must come after static file serving)
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
-
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
-});
-
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'register.html'));
-});
 
 // API Health Check
 app.get('/api/health', (req, res) => {
