@@ -12,6 +12,13 @@
         window.supabase = null;
         
         function initializeSupabase() {
+            // Check if Supabase CDN is loaded
+            if (typeof window.supabase === 'undefined') {
+                console.error('Supabase CDN not loaded');
+                alert('Failed to load Supabase. Please refresh the page.');
+                return;
+            }
+            
             fetch('/api/supabase-config')
                 .then(response => response.json())
                 .then(config => {
@@ -47,12 +54,23 @@
         
         // Initialize when DOM is ready and CDN is loaded
         window.addEventListener('DOMContentLoaded', () => {
-            if (typeof window.supabase !== 'undefined') {
-                initializeSupabase();
-            } else {
-                // Wait for CDN to load
-                setTimeout(initializeSupabase, 1000);
+            // Wait for Supabase CDN to load
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            
+            function tryInitialize() {
+                if (typeof window.supabase !== 'undefined') {
+                    initializeSupabase();
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(tryInitialize, 100);
+                } else {
+                    console.error('Supabase CDN failed to load after 5 seconds');
+                    alert('Failed to load Supabase. Please refresh the page.');
+                }
             }
+            
+            tryInitialize();
         });
     </script>
 

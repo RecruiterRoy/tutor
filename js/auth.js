@@ -12,9 +12,19 @@ class TutorAuth {
 
     async init() {
         // Wait for global supabase to be available
-        while (!window.supabase) {
+        let attempts = 0;
+        const maxAttempts = 100; // 10 seconds max
+        
+        while (!window.supabase && attempts < maxAttempts) {
             await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
         }
+        
+        if (!window.supabase) {
+            console.error('Supabase not available after 10 seconds');
+            return;
+        }
+        
         this.supabase = window.supabase;
         
         // Initialize auth state
