@@ -43,27 +43,9 @@ async function getSupabaseClient() {
         throw new Error('Supabase configuration not available');
     }
     
-    // Wait for Supabase CDN to load
-    let retries = 0;
-    const maxRetries = 50; // 25 seconds max
-    
-    while ((typeof window.supabase === 'undefined' || !window.supabase.createClient) && retries < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        retries++;
-        console.log(`Waiting for Supabase CDN... attempt ${retries}`);
-        
-        // Try to access supabase from different possible locations
-        if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-            break;
-        }
-        if (typeof supabase !== 'undefined' && supabase.createClient) {
-            window.supabase = supabase;
-            break;
-        }
-    }
-    
+    // Supabase should already be loaded by now
     if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
-        console.error('Supabase CDN failed to load. Available globals:', Object.keys(window).filter(k => k.includes('supabase')));
+        console.error('Supabase not available. Available globals:', Object.keys(window).filter(k => k.includes('supabase')));
         throw new Error('Supabase client library not loaded');
     }
     
