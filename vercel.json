@@ -12,12 +12,15 @@
       "dest": "/server.js"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|html))",
+      "src": "/(.*\\.(js|css|html|png|jpg|jpeg|gif|svg|ico|pdf|txt|json))",
       "dest": "/$1"
     },
     {
       "src": "/(.*)",
       "dest": "/server.js"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 } 
