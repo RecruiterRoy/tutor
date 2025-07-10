@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - TUTOR.AI</title>
     <!-- Load Supabase and config first -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     
     <!-- Other scripts -->
@@ -177,10 +177,17 @@
             }
         }
         
-        // Initialize immediately since scripts are loaded in order
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeSupabase();
-        });
+        // Wait for Supabase CDN to load
+        function waitForSupabase() {
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                initializeSupabase();
+            } else {
+                setTimeout(waitForSupabase, 100);
+            }
+        }
+        
+        // Start waiting for Supabase
+        waitForSupabase();
     </script>
 
     <script>
