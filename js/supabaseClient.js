@@ -5,18 +5,24 @@ export async function getSupabaseClient() {
     if (supabase) return supabase;
     
     try {
-        const response = await fetch('/api/supabase-config');
-        const config = await response.json();
-        
-        if (!config.supabaseUrl || !config.supabaseKey) {
-            throw new Error('Supabase configuration not available');
-        }
-        
-        // Use the global Supabase client that should be loaded via CDN
-        if (typeof window.supabase !== 'undefined') {
-            supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+        // Use the new config.js functions
+        if (typeof getSupabaseClient === 'function') {
+            supabase = await getSupabaseClient();
         } else {
-            throw new Error('Supabase CDN not loaded');
+            // Fallback to direct API call
+            const response = await fetch('/api/supabase-config');
+            const config = await response.json();
+            
+            if (!config.supabaseUrl || !config.supabaseKey) {
+                throw new Error('Supabase configuration not available');
+            }
+            
+            // Use the global Supabase client that should be loaded via CDN
+            if (typeof window.supabase !== 'undefined') {
+                supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+            } else {
+                throw new Error('Supabase CDN not loaded');
+            }
         }
         
         return supabase;
