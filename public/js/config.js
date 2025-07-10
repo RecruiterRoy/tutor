@@ -60,7 +60,7 @@ async function getSupabaseClient() {
 
 // API helper functions
 const API = {
-    // Chat API
+    // Chat API (Claude)
     async chat(messages, grade, subject, language) {
         const response = await fetch(`${API_BASE_URL}/api/chat`, {
             method: 'POST',
@@ -72,6 +72,28 @@ const API = {
                 grade,
                 subject,
                 language
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+    },
+    
+    // Claude Chat API (alternative endpoint)
+    async claudeChat(message, context = {}) {
+        const response = await fetch(`${API_BASE_URL}/api/chat-claude`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message,
+                context: context.additionalInfo,
+                subject: context.subject || 'General',
+                grade: context.grade || '10'
             })
         });
         
