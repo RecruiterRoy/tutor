@@ -1,521 +1,415 @@
-// auth.js - TUTOR.AI Authentication Utilities
-// Handles all authentication logic for the application
-
-// Remove module import - use global window.supabase instead
+// tutor/js/auth.js
+// Complete authentication system for Supabase with persistent sessions
 
 class TutorAuth {
     constructor() {
-        this.supabase = null;
-        this.isAuthenticated = false;
-        this.init();
+      // Validate Supabase is loaded
+      if (!window.supabase?.auth) {
+        throw new Error('Supabase client not initialized. Load supabase.js first!');
+      }
+  
+      this.supabase = window.supabase;
+      this.user = null;
+      this.rememberMe = localStorage.getItem('rememberMe') === 'true';
+      this.init();
     }
-
+  
+    // ========================
+    // INITIALIZATION
+    // ========================
+  
     async init() {
-        // Wait for global supabase to be available
-        let attempts = 0;
-        const maxAttempts = 100; // 10 seconds max
-        
-        while (!window.supabase && attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
-        }
-        
-        if (!window.supabase) {
-            console.error('Supabase not available after 10 seconds');
-            return;
-        }
-        
-        this.supabase = window.supabase;
-        
-        // Initialize auth state
-        this.currentUser = null;
-        
-        // Set up auth state listener
-        this.setupAuthListener();
+      // Check existing session
+      await this.checkSession();
+      
+      // Setup auth state listener
+      this.setupAuthListener();
+      
+      // Restore remember me preference
+      this.restoreRememberMe();
     }
-
-    // Set up authentication state listener
+  
+    async checkSession() {
+      try {
+        const { data: { session }, error } = await this.supabase.auth.getSession();
+        
+        if (error) throw error;
+        if (session) this.user = session.user;
+        
+      } catch (error) {
+        console.error('Session check failed:', error);
+      }
+    }
+  
     setupAuthListener() {
-        this.supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('Auth state changed:', event, session);
-            
-            if (session) {
-                this.currentUser = session.user;
-                this.isAuthenticated = true;
-                
-                // Update user profile if needed
-                await this.updateUserProfile(session.user);
-                
-                // Redirect based on user completion status
-                this.handleAuthRedirect();
-            } else {
-                this.currentUser = null;
-                this.isAuthenticated = false;
-            }
-            
-            // Update UI based on auth state
-            this.updateAuthUI();
+      this.supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth state changed:', event);
+        
+        this.user = session?.user || null;
+        
+        // Handle session persistence
+        if (this.rememberMe && event === 'SIGNED_IN') {
+          await this.setPersistentSession();
+        }
+        
+        // Handle auth events
+        this.handleAuthEvents(event);
+      });
+    }
+  
+    // ========================
+    // AUTHENTICATION METHODS
+    // ========================
+  
+    // Email + Password
+    async signInWithEmail(email, password, rememberMe = false) {
+      try {
+        this.rememberMe = rememberMe;
+        localStorage.setItem('rememberMe', rememberMe.toString());
+        
+        const { data, error } = await this.supabase.auth.signInWithPassword({
+          email,
+          password
         });
+        
+        if (error) throw error;
+        return { success: true, user: data.user };
+        
+      } catch (error) {
+        console.error('Email sign in failed:', error);
+        return { success: false, error: error.message };
+      }
     }
-
-    // Email/Password Authentication
-    async signInWithEmail(email, password) {
-        try {
-            const { data, error } = await this.supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-
-            if (error) throw error;
-            return { success: true, user: data.user };
-        } catch (error) {
-            console.error('Email sign in error:', error);
-            return { success: false, error: error.message };
-        }
+  
+    // Magic Link (Email)
+    async sendMagicLink(email, rememberMe = false) {
+      try {
+        this.rememberMe = rememberMe;
+        localStorage.setItem('rememberMe', rememberMe.toString());
+        
+        const { data, error } = await this.supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: window.location.origin,
+            shouldCreateUser: true
+          }
+        });
+        
+        if (error) throw error;
+        return { success: true, message: 'Magic link sent!' };
+        
+      } catch (error) {
+        console.error('Magic link failed:', error);
+        return { success: false, error: error.message };
+      }
     }
-
-    // Magic Link Authentication
-    async signInWithMagicLink(email) {
-        try {
-            const { data, error } = await this.supabase.auth.signInWithOtp({
-                email: email,
-                options: {
-                    emailRedirectTo: `${window.location.origin}/dashboard.html`
-                }
-            });
-
-            if (error) throw error;
-            return { success: true, message: 'Magic link sent to your email!' };
-        } catch (error) {
-            console.error('Magic link error:', error);
-            return { success: false, error: error.message };
-        }
+  
+    // Phone (Twilio)
+    async sendPhoneOTP(phone, rememberMe = false) {
+      try {
+        this.rememberMe = rememberMe;
+        localStorage.setItem('rememberMe', rememberMe.toString());
+        
+        // Format phone number (remove all non-digit characters)
+        const formattedPhone = phone.replace(/\D/g, '');
+        
+        const { data, error } = await this.supabase.auth.signInWithOtp({
+          phone: `+${formattedPhone}`,
+          options: {
+            shouldCreateUser: true
+          }
+        });
+        
+        if (error) throw error;
+        return { success: true, message: 'OTP sent!' };
+        
+      } catch (error) {
+        console.error('Phone OTP failed:', error);
+        return { success: false, error: error.message };
+      }
     }
-
-    // Phone/OTP Authentication
-    async signInWithPhone(phone) {
-        try {
-            const { data, error } = await this.supabase.auth.signInWithOtp({
-                phone: phone,
-                options: {
-                    shouldCreateUser: true
-                }
-            });
-
-            if (error) throw error;
-            return { success: true, message: 'OTP sent to your phone!' };
-        } catch (error) {
-            console.error('Phone sign in error:', error);
-            return { success: false, error: error.message };
-        }
+  
+    async verifyPhoneOTP(phone, token) {
+      try {
+        const formattedPhone = phone.replace(/\D/g, '');
+        
+        const { data, error } = await this.supabase.auth.verifyOtp({
+          phone: `+${formattedPhone}`,
+          token,
+          type: 'sms'
+        });
+        
+        if (error) throw error;
+        return { success: true, user: data.user };
+        
+      } catch (error) {
+        console.error('OTP verification failed:', error);
+        return { success: false, error: error.message };
+      }
     }
-
-    // Verify OTP
-    async verifyOTP(phone, token) {
-        try {
-            const { data, error } = await this.supabase.auth.verifyOtp({
-                phone: phone,
-                token: token,
-                type: 'sms'
-            });
-
-            if (error) throw error;
-            return { success: true, user: data.user };
-        } catch (error) {
-            console.error('OTP verification error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
+  
     // Google OAuth
-    async signInWithGoogle() {
-        try {
-            const { data, error } = await this.supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: `${window.location.origin}/dashboard.html`
-                }
-            });
-
-            if (error) throw error;
-            return { success: true };
-        } catch (error) {
-            console.error('Google sign in error:', error);
-            return { success: false, error: error.message };
-        }
+    async signInWithGoogle(rememberMe = false) {
+      try {
+        this.rememberMe = rememberMe;
+        localStorage.setItem('rememberMe', rememberMe.toString());
+        
+        const { data, error } = await this.supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'consent'
+            }
+          }
+        });
+        
+        if (error) throw error;
+        return { success: true };
+        
+      } catch (error) {
+        console.error('Google sign in failed:', error);
+        return { success: false, error: error.message };
+      }
     }
-
-    // Sign Up with Email
-    async signUpWithEmail(email, password, userData = {}) {
-        try {
-            const { data, error } = await this.supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: userData
-                }
-            });
-
-            if (error) throw error;
-            return { success: true, user: data.user, needsConfirmation: !data.session };
-        } catch (error) {
-            console.error('Email sign up error:', error);
-            return { success: false, error: error.message };
-        }
+  
+    // Sign Up
+    async signUpWithEmail(email, password, userData = {}, rememberMe = false) {
+      try {
+        this.rememberMe = rememberMe;
+        localStorage.setItem('rememberMe', rememberMe.toString());
+        
+        const { data, error } = await this.supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: userData,
+            emailRedirectTo: window.location.origin
+          }
+        });
+        
+        if (error) throw error;
+        
+        return { 
+          success: true, 
+          user: data.user, 
+          needsConfirmation: !data.session 
+        };
+        
+      } catch (error) {
+        console.error('Sign up failed:', error);
+        return { success: false, error: error.message };
+      }
     }
-
-    // Sign Out
-    async signOut() {
-        try {
-            const { error } = await this.supabase.auth.signOut();
-            if (error) throw error;
-            
-            // Redirect to login page
-            window.location.href = '/login.html';
-            return { success: true };
-        } catch (error) {
-            console.error('Sign out error:', error);
-            return { success: false, error: error.message };
+  
+    // ========================
+    // SESSION MANAGEMENT
+    // ========================
+  
+    async setPersistentSession() {
+      if (!this.rememberMe) return;
+      
+      try {
+        // Refresh session to get long-lived token
+        const { data, error } = await this.supabase.auth.refreshSession();
+        
+        if (error) throw error;
+        if (data.session) {
+          // Set to never expire (controlled by Supabase's refresh token rotation)
+          localStorage.setItem('supabase.auth.token', JSON.stringify({
+            currentSession: data.session,
+            expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000 // 1 year
+          }));
         }
+        
+      } catch (error) {
+        console.error('Persistent session failed:', error);
+      }
     }
-
-    // Reset Password
+  
+    restoreRememberMe() {
+      const rememberMe = localStorage.getItem('rememberMe');
+      if (rememberMe !== null) {
+        this.rememberMe = rememberMe === 'true';
+        
+        // Restore session if remember me is enabled
+        if (this.rememberMe) {
+          this.tryRestoreSession();
+        }
+      }
+    }
+  
+    async tryRestoreSession() {
+      try {
+        const { data: { session }, error } = await this.supabase.auth.getSession();
+        
+        if (error) throw error;
+        if (session) {
+          this.user = session.user;
+          return true;
+        }
+        
+      } catch (error) {
+        console.error('Session restore failed:', error);
+        localStorage.removeItem('supabase.auth.token');
+      }
+      return false;
+    }
+  
+    // ========================
+    // PASSWORD MANAGEMENT
+    // ========================
+  
     async resetPassword(email) {
-        try {
-            const { data, error } = await this.supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/reset-password.html`
-            });
-
-            if (error) throw error;
-            return { success: true, message: 'Password reset email sent!' };
-        } catch (error) {
-            console.error('Password reset error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Update User Profile
-    async updateUserProfile(user) {
-        try {
-            // Get existing user profile
-            const { data: existingUser, error: fetchError } = await this.supabase
-                .from('users')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            if (fetchError && fetchError.code !== 'PGRST116') {
-                throw fetchError;
-            }
-
-            // If user doesn't exist in our users table, they were just created
-            if (!existingUser) {
-                console.log('User profile will be created by trigger');
-                return;
-            }
-
-            // Update user profile with latest auth data
-            const updates = {
-                email: user.email,
-                updated_at: new Date().toISOString()
-            };
-
-            // Add phone if available
-            if (user.phone) {
-                updates.phone = user.phone;
-                updates.phone_verified = true;
-            }
-
-            const { error: updateError } = await this.supabase
-                .from('users')
-                .update(updates)
-                .eq('id', user.id);
-
-            if (updateError) throw updateError;
-        } catch (error) {
-            console.error('Profile update error:', error);
-        }
-    }
-
-    // Get User Profile
-    async getUserProfile(userId = null) {
-        try {
-            const id = userId || this.currentUser?.id;
-            if (!id) return null;
-
-            const { data, error } = await this.supabase
-                .from('users')
-                .select(`
-                    *,
-                    student_profiles (*),
-                    user_subscriptions (
-                        *,
-                        subscription_plans (*)
-                    )
-                `)
-                .eq('id', id)
-                .single();
-
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Get profile error:', error);
-            return null;
-        }
-    }
-
-    // Check if user has completed profile
-    async checkProfileCompletion(userId = null) {
-        try {
-            const profile = await this.getUserProfile(userId);
-            if (!profile) return false;
-
-            // Check if student profile exists
-            const hasStudentProfile = profile.student_profiles && profile.student_profiles.length > 0;
-            
-            return {
-                hasBasicProfile: !!profile.full_name,
-                hasStudentProfile: hasStudentProfile,
-                hasSubscription: profile.user_subscriptions && profile.user_subscriptions.length > 0,
-                isComplete: !!profile.full_name && hasStudentProfile
-            };
-        } catch (error) {
-            console.error('Profile completion check error:', error);
-            return false;
-        }
-    }
-
-    // Check subscription status
-    async getSubscriptionStatus(userId = null) {
-        try {
-            const id = userId || this.currentUser?.id;
-            if (!id) return null;
-
-            const { data, error } = await this.supabase
-                .from('user_subscriptions')
-                .select(`
-                    *,
-                    subscription_plans (*)
-                `)
-                .eq('user_id', id)
-                .eq('status', 'active')
-                .single();
-
-            if (error && error.code !== 'PGRST116') throw error;
-            return data;
-        } catch (error) {
-            console.error('Subscription status error:', error);
-            return null;
-        }
-    }
-
-    // Handle authentication redirects
-    handleAuthRedirect() {
-        const currentPath = window.location.pathname;
+      try {
+        const { data, error } = await this.supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`
+        });
         
-        // Don't redirect if already on a protected page
-        if (currentPath.includes('dashboard') || currentPath.includes('profile')) {
-            return;
-        }
-
-        // Redirect authenticated users away from auth pages
-        if (this.isAuthenticated && (currentPath.includes('login') || currentPath.includes('register'))) {
-            window.location.href = '/dashboard.html';
-        }
-    }
-
-    // Update UI based on auth state
-    updateAuthUI() {
-        // Update login/logout buttons
-        const loginButtons = document.querySelectorAll('.login-btn');
-        const logoutButtons = document.querySelectorAll('.logout-btn');
-        const userInfo = document.querySelectorAll('.user-info');
-
-        if (this.isAuthenticated) {
-            loginButtons.forEach(btn => btn.style.display = 'none');
-            logoutButtons.forEach(btn => btn.style.display = 'block');
-            userInfo.forEach(info => {
-                info.style.display = 'block';
-                info.textContent = this.currentUser?.email || 'User';
-            });
-        } else {
-            loginButtons.forEach(btn => btn.style.display = 'block');
-            logoutButtons.forEach(btn => btn.style.display = 'none');
-            userInfo.forEach(info => info.style.display = 'none');
-        }
-    }
-
-    // Protect routes (call this on protected pages)
-    async protectRoute() {
-        const session = await this.supabase.auth.getSession();
+        if (error) throw error;
+        return { success: true, message: 'Password reset email sent!' };
         
-        if (!session.data.session) {
-            window.location.href = '/login.html';
-            return false;
-        }
+      } catch (error) {
+        console.error('Password reset failed:', error);
+        return { success: false, error: error.message };
+      }
+    }
+  
+    async updatePassword(newPassword) {
+      try {
+        const { data, error } = await this.supabase.auth.updateUser({
+          password: newPassword
+        });
         
-        return true;
+        if (error) throw error;
+        return { success: true, message: 'Password updated!' };
+        
+      } catch (error) {
+        console.error('Password update failed:', error);
+        return { success: false, error: error.message };
+      }
     }
-
-    // Get current session
-    async getCurrentSession() {
-        try {
-            const { data: { session }, error } = await this.supabase.auth.getSession();
-            if (error) throw error;
-            return session;
-        } catch (error) {
-            console.error('Session error:', error);
-            return null;
-        }
+  
+    // ========================
+    // USER MANAGEMENT
+    // ========================
+  
+    async getUserProfile() {
+      if (!this.user) return null;
+      
+      try {
+        const { data, error } = await this.supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', this.user.id)
+          .single();
+        
+        if (error) throw error;
+        return data;
+        
+      } catch (error) {
+        console.error('Profile fetch failed:', error);
+        return null;
+      }
     }
-
-    // Refresh session
-    async refreshSession() {
-        try {
-            const { data, error } = await this.supabase.auth.refreshSession();
-            if (error) throw error;
-            return data.session;
-        } catch (error) {
-            console.error('Session refresh error:', error);
-            return null;
-        }
+  
+    async updateProfile(updates) {
+      if (!this.user) return { success: false, error: 'Not authenticated' };
+      
+      try {
+        // Update auth user
+        const { data: authData, error: authError } = await this.supabase.auth.updateUser({
+          data: updates
+        });
+        
+        if (authError) throw authError;
+        
+        // Update profile in profiles table
+        const { data, error } = await this.supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', this.user.id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        return { success: true, profile: data };
+        
+      } catch (error) {
+        console.error('Profile update failed:', error);
+        return { success: false, error: error.message };
+      }
     }
-
-    // Upload file to Supabase Storage
-    async uploadFile(file, bucket = 'homework', path = '') {
-        try {
-            const fileName = `${Date.now()}_${file.name}`;
-            const filePath = path ? `${path}/${fileName}` : fileName;
-
-            const { data, error } = await this.supabase.storage
-                .from(bucket)
-                .upload(filePath, file);
-
-            if (error) throw error;
-
-            // Get public URL
-            const { data: { publicUrl } } = this.supabase.storage
-                .from(bucket)
-                .getPublicUrl(data.path);
-
-            return { success: true, url: publicUrl, path: data.path };
-        } catch (error) {
-            console.error('File upload error:', error);
-            return { success: false, error: error.message };
-        }
+  
+    // ========================
+    // LOGOUT
+    // ========================
+  
+    async signOut() {
+      try {
+        const { error } = await this.supabase.auth.signOut();
+        
+        // Clear local session data
+        this.user = null;
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('rememberMe');
+        
+        if (error) throw error;
+        return { success: true };
+        
+      } catch (error) {
+        console.error('Sign out failed:', error);
+        return { success: false, error: error.message };
+      }
     }
-
-    // Create homework submission
-    async createHomeworkSubmission(homeworkData) {
-        try {
-            const { data, error } = await this.supabase
-                .from('homework_submissions')
-                .insert([{
-                    user_id: this.currentUser.id,
-                    ...homeworkData
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-            return { success: true, submission: data };
-        } catch (error) {
-            console.error('Homework submission error:', error);
-            return { success: false, error: error.message };
-        }
+  
+    // ========================
+    // EVENT HANDLING
+    // ========================
+  
+    handleAuthEvents(event) {
+      switch (event) {
+        case 'SIGNED_IN':
+          this.handleSignedIn();
+          break;
+          
+        case 'SIGNED_OUT':
+          this.handleSignedOut();
+          break;
+          
+        case 'TOKEN_REFRESHED':
+          if (this.rememberMe) {
+            this.setPersistentSession();
+          }
+          break;
+      }
     }
-
-    // Get user's homework submissions
-    async getHomeworkSubmissions(limit = 10) {
-        try {
-            const { data, error } = await this.supabase
-                .from('homework_submissions')
-                .select('*')
-                .eq('user_id', this.currentUser.id)
-                .order('created_at', { ascending: false })
-                .limit(limit);
-
-            if (error) throw error;
-            return { success: true, submissions: data };
-        } catch (error) {
-            console.error('Get homework submissions error:', error);
-            return { success: false, error: error.message };
-        }
+  
+    handleSignedIn() {
+      // Redirect to dashboard after sign in
+      if (!window.location.pathname.includes('dashboard')) {
+        window.location.href = '/dashboard';
+      }
     }
-
-    // Save AI chat message
-    async saveChatMessage(sessionId, message, messageType = 'user') {
-        try {
-            const { data, error } = await this.supabase
-                .from('ai_chat_messages')
-                .insert([{
-                    session_id: sessionId,
-                    user_id: this.currentUser.id,
-                    message_type: messageType,
-                    content: message
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-            return { success: true, message: data };
-        } catch (error) {
-            console.error('Save chat message error:', error);
-            return { success: false, error: error.message };
-        }
+  
+    handleSignedOut() {
+      // Redirect to login page after sign out
+      if (!window.location.pathname.includes('login')) {
+        window.location.href = '/login';
+      }
     }
-
-    // Create AI chat session
-    async createChatSession(title = 'New Chat', subject = null) {
-        try {
-            const { data, error } = await this.supabase
-                .from('ai_chat_sessions')
-                .insert([{
-                    user_id: this.currentUser.id,
-                    title: title,
-                    subject: subject
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-            return { success: true, session: data };
-        } catch (error) {
-            console.error('Create chat session error:', error);
-            return { success: false, error: error.message };
-        }
+  }
+  
+  // Initialize auth system when DOM is loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!window.tutorAuth) {
+      window.tutorAuth = new TutorAuth();
     }
-
-    // Update daily progress
-    async updateDailyProgress(progressData) {
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            
-            const { data, error } = await this.supabase
-                .from('daily_progress')
-                .upsert([{
-                    user_id: this.currentUser.id,
-                    date: today,
-                    ...progressData
-                }], {
-                    onConflict: 'user_id,date'
-                })
-                .select()
-                .single();
-
-            if (error) throw error;
-            return { success: true, progress: data };
-        } catch (error) {
-            console.error('Update daily progress error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-}
-
-// Initialize global auth instance
-window.tutorAuth = new TutorAuth();
-
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
+  });
+  
+  // Export for module systems
+  if (typeof module !== 'undefined' && module.exports) {
     module.exports = TutorAuth;
-}
+  }
