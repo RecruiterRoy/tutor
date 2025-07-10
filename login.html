@@ -4,10 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - TUTOR.AI</title>
-    <!-- Load Supabase and config first -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <!-- Load Supabase CDN first -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/public/js/config.js"></script>
-    <script src="/public/js/auth.js"></script>
+    
+    <!-- Wait for Supabase to load, then load config -->
+    <script>
+        // Wait for Supabase CDN to load
+        function waitForSupabase() {
+            if (typeof window.supabase !== 'undefined') {
+                console.log('Supabase CDN loaded successfully');
+                // Load config after Supabase is available
+                const script = document.createElement('script');
+                script.src = '/public/js/config.js';
+                document.head.appendChild(script);
+            } else {
+                setTimeout(waitForSupabase, 100);
+            }
+        }
+        waitForSupabase();
+    </script>
     
     <!-- Other scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -162,27 +178,23 @@
     </div>
 
     <script>
-        // Initialize Supabase when CDN is loaded
-        window.supabase = null;
+        // Wait for Supabase to be ready
+        window.onSupabaseReady = function() {
+            console.log('Supabase is ready, initializing app...');
+            // Alpine.js will handle the rest
+        };
         
-        async function initializeSupabase() {
-            try {
-                // Use the config.js getSupabaseClient function
-                const supabaseClient = await getSupabaseClient();
-                window.supabase = supabaseClient;
-                console.log('Supabase initialized successfully');
-                
-            } catch (error) {
-                console.error('Supabase initialization error:', error);
-                alert('Failed to initialize database connection. Please check your configuration.');
-            }
-        }
-        
-        // Initialize when DOM is ready
+        // Fallback initialization
         document.addEventListener('DOMContentLoaded', () => {
-            initializeSupabase();
+            // If Supabase is already ready, trigger the callback
+            if (window.supabase) {
+                window.onSupabaseReady();
+            }
         });
     </script>
+
+    <!-- Load auth.js after Supabase is initialized -->
+    <script src="/public/js/auth.js"></script>
 
     <script>
         // Alpine.js app - must be globally available
@@ -199,10 +211,34 @@
                 loading: false,
                 message: '',
                 messageType: 'error',
+                supabaseReady: false,
+
+                init() {
+                    // Wait for Supabase to be ready
+                    this.waitForSupabase();
+                },
+
+                async waitForSupabase() {
+                    let attempts = 0;
+                    const maxAttempts = 50; // 5 seconds max
+                    
+                    while (!window.supabase && attempts < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+                    
+                    if (window.supabase) {
+                        this.supabaseReady = true;
+                        console.log('Supabase ready in Alpine app');
+                    } else {
+                        console.error('Supabase failed to initialize');
+                        this.showMessage('Database connection failed. Please refresh the page.', 'error');
+                    }
+                },
 
                 async signInWithEmail() {
-                    if (!window.supabase) {
-                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                    if (!this.supabaseReady) {
+                        this.showMessage('Database not initialized. Please wait...', 'error');
                         return;
                     }
                     
@@ -242,8 +278,8 @@
                 },
 
                 async sendOTP() {
-                    if (!window.supabase) {
-                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                    if (!this.supabaseReady) {
+                        this.showMessage('Database not initialized. Please wait...', 'error');
                         return;
                     }
                     
@@ -282,8 +318,8 @@
                 },
 
                 async verifyOTP() {
-                    if (!window.supabase) {
-                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                    if (!this.supabaseReady) {
+                        this.showMessage('Database not initialized. Please wait...', 'error');
                         return;
                     }
                     
@@ -319,8 +355,8 @@
                 },
 
                 async signInWithGoogle() {
-                    if (!window.supabase) {
-                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                    if (!this.supabaseReady) {
+                        this.showMessage('Database not initialized. Please wait...', 'error');
                         return;
                     }
                     
@@ -347,8 +383,8 @@
                 },
 
                 async resetPassword() {
-                    if (!window.supabase) {
-                        this.showMessage('Database not initialized. Please refresh the page.', 'error');
+                    if (!this.supabaseReady) {
+                        this.showMessage('Database not initialized. Please wait...', 'error');
                         return;
                     }
                     
@@ -385,16 +421,21 @@
 
         // Check if user is already logged in
         document.addEventListener('DOMContentLoaded', function() {
-            if (window.supabase) {
-                window.supabase.auth.onAuthStateChange((event, session) => {
-                    if (event === 'SIGNED_IN' && session) {
+            // Wait for Supabase to be ready
+            function checkSupabase() {
+                if (window.supabase) {
+                    window.supabase.auth.onAuthStateChange((event, session) => {
+                                            if (event === 'SIGNED_IN' && session) {
                         window.location.href = '/dashboard'
                     }
-                })
+                    })
+                } else {
+                    setTimeout(checkSupabase, 100);
+                }
             }
+            checkSupabase();
         })
     </script>
 
-    <script src="/public/js/auth.js"></script>
 </body>
 </html>

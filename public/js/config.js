@@ -10,12 +10,22 @@ function getSupabaseClient() {
   return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
-// Initialize immediately when loaded
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize when config is loaded
+function initializeSupabaseConfig() {
   try {
     window.supabase = getSupabaseClient();
     console.log('Supabase initialized successfully');
+    
+    // Trigger any waiting initialization
+    if (window.onSupabaseReady) {
+      window.onSupabaseReady();
+    }
   } catch (error) {
     console.error('Supabase init error:', error);
+    // Retry after a short delay
+    setTimeout(initializeSupabaseConfig, 100);
   }
-});
+}
+
+// Initialize immediately
+initializeSupabaseConfig();
