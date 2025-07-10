@@ -234,6 +234,28 @@ app.post('/api/pdf/parse', async (req, res) => {
 });
 
 // API Routes (must come before static file serving)
+app.get('/api/supabase-config', (req, res) => {
+    try {
+        // Check if environment variables are set
+        if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+            return res.status(500).json({
+                error: 'Supabase configuration not available',
+                message: 'Server environment variables not configured'
+            });
+        }
+        
+        res.json({
+            supabaseUrl: process.env.SUPABASE_URL,
+            supabaseKey: process.env.SUPABASE_ANON_KEY
+        });
+    } catch (error) {
+        console.error('Error serving Supabase config:', error);
+        res.status(500).json({
+            error: 'Failed to load configuration',
+            message: error.message
+        });
+    }
+});
 
 // Claude Chat API
 app.post('/api/chat', async (req, res) => {
