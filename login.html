@@ -5,25 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - TUTOR.AI</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
     <!-- Load Supabase CDN first -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Wait for Supabase to load, then load config -->
-    <script>
-        // Wait for Supabase CDN to load
-        function waitForSupabase() {
-            if (typeof window.supabase !== 'undefined') {
-                console.log('Supabase CDN loaded successfully');
-                // Load config after Supabase is available
-                const script = document.createElement('script');
-                script.src = '/public/js/config.js';
-                document.head.appendChild(script);
-            } else {
-                setTimeout(waitForSupabase, 100);
-            }
-        }
-        waitForSupabase();
-    </script>
     
     <!-- Other scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -178,23 +162,40 @@
     </div>
 
     <script>
-        // Wait for Supabase to be ready
-        window.onSupabaseReady = function() {
-            console.log('Supabase is ready, initializing app...');
-            // Alpine.js will handle the rest
-        };
-        
-        // Fallback initialization
-        document.addEventListener('DOMContentLoaded', () => {
-            // If Supabase is already ready, trigger the callback
-            if (window.supabase) {
-                window.onSupabaseReady();
-            }
-        });
-    </script>
+        // Supabase configuration - embedded directly to avoid loading issues
+        const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU';
 
-    <!-- Load auth.js after Supabase is initialized -->
-    <script src="/public/js/auth.js"></script>
+        // Initialize Supabase when CDN is loaded
+        function initializeSupabase() {
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                try {
+                    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    console.log('Supabase initialized successfully');
+                    return true;
+                } catch (error) {
+                    console.error('Supabase initialization error:', error);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        // Wait for Supabase CDN to load
+        function waitForSupabase() {
+            if (initializeSupabase()) {
+                // Trigger Alpine.js initialization
+                if (window.Alpine) {
+                    window.Alpine.start();
+                }
+            } else {
+                setTimeout(waitForSupabase, 100);
+            }
+        }
+
+        // Start waiting when DOM is ready
+        document.addEventListener('DOMContentLoaded', waitForSupabase);
+    </script>
 
     <script>
         // Alpine.js app - must be globally available
@@ -230,9 +231,23 @@
                     if (window.supabase) {
                         this.supabaseReady = true;
                         console.log('Supabase ready in Alpine app');
+                        
+                        // Check if user is already logged in
+                        this.checkAuthState();
                     } else {
                         console.error('Supabase failed to initialize');
                         this.showMessage('Database connection failed. Please refresh the page.', 'error');
+                    }
+                },
+
+                async checkAuthState() {
+                    try {
+                        const { data: { session } } = await window.supabase.auth.getSession();
+                        if (session) {
+                            window.location.href = '/dashboard';
+                        }
+                    } catch (error) {
+                        console.error('Auth state check error:', error);
                     }
                 },
 
@@ -418,23 +433,6 @@
                 }
             }
         }
-
-        // Check if user is already logged in
-        document.addEventListener('DOMContentLoaded', function() {
-            // Wait for Supabase to be ready
-            function checkSupabase() {
-                if (window.supabase) {
-                    window.supabase.auth.onAuthStateChange((event, session) => {
-                                            if (event === 'SIGNED_IN' && session) {
-                        window.location.href = '/dashboard'
-                    }
-                    })
-                } else {
-                    setTimeout(checkSupabase, 100);
-                }
-            }
-            checkSupabase();
-        })
     </script>
 
 </body>
