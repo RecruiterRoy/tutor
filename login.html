@@ -7,7 +7,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="/config.js"></script>
+    <script>
+        // Wait for Supabase CDN to load before loading config.js
+        window.addEventListener('load', function() {
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                console.log('Supabase CDN loaded successfully');
+                // Load config.js after Supabase is ready
+                const script = document.createElement('script');
+                script.src = '/config.js';
+                document.head.appendChild(script);
+            } else {
+                console.error('Supabase CDN failed to load');
+            }
+        });
+    </script>
     <style>
         .glass-effect {
             backdrop-filter: blur(20px);
@@ -174,10 +187,17 @@
             }
         }
         
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeSupabase();
-        });
+        // Initialize when config.js is loaded
+        function waitForConfig() {
+            if (typeof getSupabaseClient !== 'undefined') {
+                initializeSupabase();
+            } else {
+                setTimeout(waitForConfig, 100);
+            }
+        }
+        
+        // Start waiting for config.js to load
+        waitForConfig();
     </script>
 
     <script>
