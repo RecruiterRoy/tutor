@@ -14,7 +14,7 @@
                 console.log('Supabase CDN loaded successfully');
                 // Load config.js after Supabase is ready
                 const script = document.createElement('script');
-                script.src = '/config.js';
+                script.src = '/js/config.js';
                 document.head.appendChild(script);
             } else {
                 console.error('Supabase CDN failed to load');
@@ -411,5 +411,6 @@
         })
     </script>
 
+    <script src="js/auth.js"></script>
 </body>
 </html>
