@@ -1,7 +1,7 @@
 // auth.js - TUTOR.AI Authentication Utilities
 // Handles all authentication logic for the application
 
-import { getSupabaseClient } from './supabaseClient.js';
+// Remove module import - use global window.supabase instead
 
 class TutorAuth {
     constructor() {
@@ -11,7 +11,11 @@ class TutorAuth {
     }
 
     async init() {
-        this.supabase = await getSupabaseClient();
+        // Wait for global supabase to be available
+        while (!window.supabase) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        this.supabase = window.supabase;
         
         // Initialize auth state
         this.currentUser = null;

@@ -562,7 +562,15 @@ const regionalAvatars = [
 ];
 
 // Static file serving FIRST (before HTML routes)
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        } else if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+    }
+}));
 
 // Serve extracted images statically
 app.use('/extracted_images', express.static(path.join(__dirname, 'extracted_images')));

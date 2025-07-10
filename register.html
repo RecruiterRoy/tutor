@@ -7,35 +7,51 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script type="module">
-        import { getSupabaseClient } from './js/supabaseClient.js';
-        
-        // Initialize Supabase and make it globally available
+    <script>
+        // Initialize Supabase when CDN is loaded
         window.supabase = null;
         
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                window.supabase = await getSupabaseClient();
-                console.log('Supabase initialized successfully');
-                // Economic status handling
-                const economicStatusRadios = document.querySelectorAll('input[name="economicStatus"]');
-                const cardDetails = document.getElementById('cardDetails');
-                const premiumDetails = document.getElementById('premiumDetails');
+        function initializeSupabase() {
+            fetch('/api/supabase-config')
+                .then(response => response.json())
+                .then(config => {
+                    if (config.supabaseUrl && config.supabaseKey) {
+                        window.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                        console.log('Supabase initialized successfully');
+                        
+                        // Economic status handling
+                        const economicStatusRadios = document.querySelectorAll('input[name="economicStatus"]');
+                        const cardDetails = document.getElementById('cardDetails');
+                        const premiumDetails = document.getElementById('premiumDetails');
 
-                economicStatusRadios.forEach(radio => {
-                    radio.addEventListener('change', function() {
-                        if (this.value === 'BPL' || this.value === 'APL') {
-                            cardDetails.classList.remove('hidden');
-                            premiumDetails.classList.add('hidden');
-                        } else if (this.value === 'Premium') {
-                            cardDetails.classList.add('hidden');
-                            premiumDetails.classList.remove('hidden');
-                        }
-                    });
+                        economicStatusRadios.forEach(radio => {
+                            radio.addEventListener('change', function() {
+                                if (this.value === 'BPL' || this.value === 'APL') {
+                                    cardDetails.classList.remove('hidden');
+                                    premiumDetails.classList.add('hidden');
+                                } else if (this.value === 'Premium') {
+                                    cardDetails.classList.add('hidden');
+                                    premiumDetails.classList.remove('hidden');
+                                }
+                            });
+                        });
+                    } else {
+                        throw new Error('Supabase configuration not available');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to initialize Supabase:', error);
+                    alert('Failed to initialize database connection. Please refresh the page.');
                 });
-            } catch (error) {
-                console.error('Failed to initialize Supabase:', error);
-                alert('Failed to initialize database connection. Please refresh the page.');
+        }
+        
+        // Initialize when DOM is ready and CDN is loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.supabase !== 'undefined') {
+                initializeSupabase();
+            } else {
+                // Wait for CDN to load
+                setTimeout(initializeSupabase, 1000);
             }
         });
     </script>
