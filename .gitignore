@@ -6,3 +6,4 @@ extracted_images/
 *.mobi
 node_modules/
 .env
+.vercel
