@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { PDFProcessor } from '../utils/pdfExtractor.js';
+import { getSupabaseClient } from './supabaseClient.js';
 
 // Initialize Supabase - will be set by server
 let supabase = null;
@@ -7,16 +8,8 @@ let supabase = null;
 // Initialize Supabase when page loads
 async function initializeSupabase() {
     try {
-        // Get Supabase config from server
-        const response = await fetch('/api/config');
-        const config = await response.json();
-        
-        if (config.supabaseUrl && config.supabaseAnonKey) {
-            supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
-            console.log('Supabase initialized successfully');
-        } else {
-            throw new Error('Supabase configuration not available');
-        }
+        supabase = await getSupabaseClient();
+        console.log('Supabase initialized successfully');
     } catch (error) {
         console.error('Failed to initialize Supabase:', error);
         alert('Failed to initialize database connection. Please try again.');

@@ -1,18 +1,20 @@
 // auth.js - TUTOR.AI Authentication Utilities
 // Handles all authentication logic for the application
 
+import { getSupabaseClient } from './supabaseClient.js';
+
 class TutorAuth {
     constructor() {
-        // Initialize Supabase client
-        const config = window.appConfig || {};
-        this.supabase = window.supabase.createClient(
-            config.supabaseUrl || 'https://your-project-ref.supabase.co',
-            config.supabaseAnonKey || 'your-anon-key-here'
-        );
+        this.supabase = null;
+        this.isAuthenticated = false;
+        this.init();
+    }
+
+    async init() {
+        this.supabase = await getSupabaseClient();
         
         // Initialize auth state
         this.currentUser = null;
-        this.isAuthenticated = false;
         
         // Set up auth state listener
         this.setupAuthListener();

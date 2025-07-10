@@ -7,378 +7,32 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { font-family: 'Inter', sans-serif; }
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .step-indicator {
-            transition: all 0.3s ease;
-        }
-        .step-active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .step-completed {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
-        }
-        .form-container {
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-        .form-container::-webkit-scrollbar {
-            width: 4px;
-        }
-        .form-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        .form-container::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-        }
-    </style>
-</head>
-<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
-    <!-- Navigation -->
-    <nav class="p-4">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <span class="text-white font-bold text-sm">T</span>
-                </div>
-                <span class="text-white font-bold text-xl">TUTOR.AI</span>
-            </div>
-            <a href="login.html" class="text-white hover:text-blue-300 transition-colors">Already have an account?</a>
-        </div>
-    </nav>
-    
-    <!-- Main Content -->
-    <div class="container mx-auto px-4 py-8">
-        <div class="max-w-4xl mx-auto">
-            <!-- Step Indicator -->
-            <div class="flex justify-center mb-8">
-                <div class="flex space-x-4">
-                    <div class="step-indicator step-active w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold">1</div>
-                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">2</div>
-                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">3</div>
-                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">4</div>
-                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">5</div>
-                </div>
-            </div>
-            
-            <!-- Registration Form -->
-            <div class="glass-effect rounded-2xl p-8 shadow-2xl">
-                <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-white mb-2">Create Your Account</h1>
-                    <p class="text-gray-300">Join thousands of students learning with AI</p>
-                </div>
-
-                <!-- Step 1: OAuth -->
-                <div id="step1" class="step-content">
-                    <h2 class="text-xl font-semibold text-white mb-6">Choose Your Sign-In Method</h2>
-                    <p class="text-gray-300 mb-6">You can sign in with your existing account or continue with email registration</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <button onclick="signInWithGoogle()" class="px-4 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold flex flex-col items-center justify-center space-y-2">
-                            <svg class="w-6 h-6" viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                            </svg>
-                            <span class="text-sm">Google</span>
-                        </button>
-                        <button onclick="signInWithPhone()" class="px-4 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 font-semibold flex flex-col items-center justify-center space-y-2">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                            </svg>
-                            <span class="text-sm">Phone</span>
-                        </button>
-                        <button onclick="nextStep()" class="px-4 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold flex flex-col items-center justify-center space-y-2">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                    </svg>
-                            <span class="text-sm">Email</span>
-                        </button>
-                                </div>
-                    <div class="text-center">
-                        <p class="text-gray-300 text-sm">Choose your preferred sign-in method to get started</p>
-                            </div>
-                        </div>
-                        
-                <!-- Step 2: Basic Information -->
-                <div id="step2" class="step-content hidden">
-                    <h2 class="text-xl font-semibold text-white mb-6">Basic Information</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Student Name *</label>
-                            <input type="text" id="studentName" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter student's full name" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
-                            <input type="email" id="email" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter email address" required>
-                                </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Phone Number *</label>
-                            <input type="tel" id="phone" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="+91 9876543210" required>
-                            </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Password *</label>
-                            <input type="password" id="password" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Create a strong password" required>
-                        </div>
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
-                            ← Back to Home
-                        </button>
-                        <button onclick="nextStep()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
-                            Next Step →
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Step 3: Academic Information -->
-                <div id="step3" class="step-content hidden">
-                    <h2 class="text-xl font-semibold text-white mb-6">Academic Information</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Select Class *</label>
-                            <select id="class" class="w-full px-4 py-3 bg-purple-800 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                                <option value="" class="bg-purple-800 text-white">Choose class</option>
-                                <option value="1" class="bg-purple-800 text-white">Class 1</option>
-                                <option value="2" class="bg-purple-800 text-white">Class 2</option>
-                                <option value="3" class="bg-purple-800 text-white">Class 3</option>
-                                <option value="4" class="bg-purple-800 text-white">Class 4</option>
-                                <option value="5" class="bg-purple-800 text-white">Class 5</option>
-                                <option value="6" class="bg-purple-800 text-white">Class 6</option>
-                                <option value="7" class="bg-purple-800 text-white">Class 7</option>
-                                <option value="8" class="bg-purple-800 text-white">Class 8</option>
-                                <option value="9" class="bg-purple-800 text-white">Class 9</option>
-                                <option value="10" class="bg-purple-800 text-white">Class 10</option>
-                                <option value="11" class="bg-purple-800 text-white">Class 11</option>
-                                <option value="12" class="bg-purple-800 text-white">Class 12</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Board of Education *</label>
-                            <select id="board" class="w-full px-4 py-3 bg-purple-800 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                                <option value="" class="bg-purple-800 text-white">Choose board</option>
-                                <option value="CBSE" class="bg-purple-800 text-white">CBSE</option>
-                                <option value="ICSE" class="bg-purple-800 text-white">ICSE</option>
-                                <option value="State Board" class="bg-purple-800 text-white">State Board</option>
-                                <option value="IGCSE" class="bg-purple-800 text-white">IGCSE</option>
-                                <option value="IB" class="bg-purple-800 text-white">IB</option>
-                                <option value="Other" class="bg-purple-800 text-white">Other</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">State *</label>
-                            <select id="state" class="w-full px-4 py-3 bg-purple-800 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                                <option value="" class="bg-purple-800 text-white">Choose state</option>
-                                <option value="Andhra Pradesh" class="bg-purple-800 text-white">Andhra Pradesh</option>
-                                <option value="Arunachal Pradesh" class="bg-purple-800 text-white">Arunachal Pradesh</option>
-                                <option value="Assam" class="bg-purple-800 text-white">Assam</option>
-                                <option value="Bihar" class="bg-purple-800 text-white">Bihar</option>
-                                <option value="Chhattisgarh" class="bg-purple-800 text-white">Chhattisgarh</option>
-                                <option value="Goa" class="bg-purple-800 text-white">Goa</option>
-                                <option value="Gujarat" class="bg-purple-800 text-white">Gujarat</option>
-                                <option value="Haryana" class="bg-purple-800 text-white">Haryana</option>
-                                <option value="Himachal Pradesh" class="bg-purple-800 text-white">Himachal Pradesh</option>
-                                <option value="Jharkhand" class="bg-purple-800 text-white">Jharkhand</option>
-                                <option value="Karnataka" class="bg-purple-800 text-white">Karnataka</option>
-                                <option value="Kerala" class="bg-purple-800 text-white">Kerala</option>
-                                <option value="Madhya Pradesh" class="bg-purple-800 text-white">Madhya Pradesh</option>
-                                <option value="Maharashtra" class="bg-purple-800 text-white">Maharashtra</option>
-                                <option value="Manipur" class="bg-purple-800 text-white">Manipur</option>
-                                <option value="Meghalaya" class="bg-purple-800 text-white">Meghalaya</option>
-                                <option value="Mizoram" class="bg-purple-800 text-white">Mizoram</option>
-                                <option value="Nagaland" class="bg-purple-800 text-white">Nagaland</option>
-                                <option value="Odisha" class="bg-purple-800 text-white">Odisha</option>
-                                <option value="Punjab" class="bg-purple-800 text-white">Punjab</option>
-                                <option value="Rajasthan" class="bg-purple-800 text-white">Rajasthan</option>
-                                <option value="Sikkim" class="bg-purple-800 text-white">Sikkim</option>
-                                <option value="Tamil Nadu" class="bg-purple-800 text-white">Tamil Nadu</option>
-                                <option value="Telangana" class="bg-purple-800 text-white">Telangana</option>
-                                <option value="Tripura" class="bg-purple-800 text-white">Tripura</option>
-                                <option value="Uttar Pradesh" class="bg-purple-800 text-white">Uttar Pradesh</option>
-                                <option value="Uttarakhand" class="bg-purple-800 text-white">Uttarakhand</option>
-                                <option value="West Bengal" class="bg-purple-800 text-white">West Bengal</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">City *</label>
-                            <input type="text" id="city" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter city name" required>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Address Line 1 *</label>
-                            <input type="text" id="addressLine1" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter full address (Village/Town/Area)" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Preferred Language</label>
-                            <select id="language" class="w-full px-4 py-3 bg-purple-800 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="English" class="bg-purple-800 text-white">English</option>
-                                <option value="Hindi" class="bg-purple-800 text-white">Hindi</option>
-                                <option value="Hinglish" class="bg-purple-800 text-white">Hinglish (Hindi + English)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
-                            ← Previous
-                        </button>
-                        <button onclick="nextStep()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
-                            Next Step →
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Step 4: Economic Status -->
-                <div id="step4" class="step-content hidden">
-                    <h2 class="text-xl font-semibold text-white mb-6">Economic Status Verification</h2>
-                    <div class="mb-6">
-                        <p class="text-gray-300 mb-4">To provide free access to eligible students, please select your economic status:</p>
-                        <div class="space-y-4">
-                            <div class="flex items-center space-x-3">
-                                <input type="radio" id="bpl" name="economicStatus" value="BPL" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
-                                <label for="bpl" class="text-white">Below Poverty Line (BPL) - Free Access</label>
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <input type="radio" id="apl" name="economicStatus" value="APL" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
-                                <label for="apl" class="text-white">Above Poverty Line (APL) - Free Access</label>
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <input type="radio" id="premium" name="economicStatus" value="Premium" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
-                                <label for="premium" class="text-white">Premium Plan (₹99/month) - Full Access</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- BPL/APL Card Details -->
-                    <div id="cardDetails" class="hidden">
-                        <div class="bg-blue-900/30 p-4 rounded-lg mb-4">
-                            <h3 class="text-white font-semibold mb-2">Ration Card Verification</h3>
-                            <p class="text-gray-300 text-sm">Please provide your ration card details for verification</p>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Ration Card Number *</label>
-                                <input type="text" id="cardNumber" maxlength="10" pattern="[A-Za-z0-9]{10}" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 10-character card number" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Upload Card Image *</label>
-                                <input type="file" id="cardPic" accept="image/*" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Premium Plan Details -->
-                    <div id="premiumDetails" class="hidden">
-                        <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 p-6 rounded-lg">
-                            <h3 class="text-white font-semibold mb-2">Premium Plan Benefits</h3>
-                            <ul class="text-gray-300 space-y-2">
-                                <li>• Unlimited AI tutoring sessions</li>
-                                <li>• Advanced homework help with step-by-step solutions</li>
-                                <li>• Personalized study plans</li>
-                                <li>• Progress tracking and analytics</li>
-                                <li>• Priority support</li>
-                                <li>• Access to premium content library</li>
-                            </ul>
-                            <p class="text-yellow-400 mt-4 font-semibold">Only ₹99/month - Cancel anytime</p>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between mt-6">
-                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
-                            ← Previous
-                        </button>
-                        <button onclick="nextStep()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
-                            Next Step →
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 5: Confirmation -->
-                <div id="step5" class="step-content hidden">
-                    <h2 class="text-xl font-semibold text-white mb-6">Confirm Your Details</h2>
-                    <div id="confirmationDetails" class="space-y-4 mb-6">
-                        <!-- Details will be populated by JavaScript -->
-                    </div>
-                    
-                    <div class="flex items-center space-x-3 mb-6">
-                        <input type="checkbox" id="termsAgree" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
-                        <label for="termsAgree" class="text-gray-300">I agree to the <a href="#" class="text-blue-400 hover:underline">Terms of Service</a> and <a href="#" class="text-blue-400 hover:underline">Privacy Policy</a></label>
-                    </div>
-
-                    <div class="flex justify-between">
-                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
-                            ← Previous
-                        </button>
-                        <button onclick="registerUser()" class="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg hover:from-green-600 hover:to-blue-700 transition-all duration-300 font-semibold">
-                            Create Account
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-        <div class="glass-effect p-8 rounded-2xl text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p class="text-white">Creating your account...</p>
-        </div>
-    </div>
-    
-    <script>
-        // Supabase configuration - will be set by server
+    <script type="module">
+        import { getSupabaseClient } from './js/supabaseClient.js';
         let supabase = null;
-        
-        // Initialize Supabase when page loads
-        async function initializeSupabase() {
+        window.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Use config from config.js file
-                const config = window.appConfig || {};
-                
-                if (config.supabaseUrl && config.supabaseAnonKey) {
-                    supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-                    console.log('Supabase initialized successfully');
-                } else {
-                    throw new Error('Supabase configuration not available. Please check config.js file.');
-                }
-            } catch (error) {
-                console.error('Failed to initialize Supabase:', error);
-                alert('Failed to initialize database connection. Please check the configuration.');
-            }
-        }
+                supabase = await getSupabaseClient();
+                console.log('Supabase initialized successfully');
+                // Economic status handling
+                const economicStatusRadios = document.querySelectorAll('input[name="economicStatus"]');
+                const cardDetails = document.getElementById('cardDetails');
+                const premiumDetails = document.getElementById('premiumDetails');
 
-        let currentStep = 1;
-        const totalSteps = 5; // Now 5 steps including OAuth
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeSupabase();
-            
-            // Economic status handling
-            const economicStatusRadios = document.querySelectorAll('input[name="economicStatus"]');
-            const cardDetails = document.getElementById('cardDetails');
-            const premiumDetails = document.getElementById('premiumDetails');
-
-            economicStatusRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.value === 'BPL' || this.value === 'APL') {
-                        cardDetails.classList.remove('hidden');
-                        premiumDetails.classList.add('hidden');
-                    } else if (this.value === 'Premium') {
-                        cardDetails.classList.add('hidden');
-                        premiumDetails.classList.remove('hidden');
-                    }
+                economicStatusRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'BPL' || this.value === 'APL') {
+                            cardDetails.classList.remove('hidden');
+                            premiumDetails.classList.add('hidden');
+                        } else if (this.value === 'Premium') {
+                            cardDetails.classList.add('hidden');
+                            premiumDetails.classList.remove('hidden');
+                        }
+                    });
                 });
-            });
+            } catch (error) {
+                alert('Failed to initialize database connection. Please refresh the page.');
+            }
         });
 
         // OAuth functions
@@ -779,5 +433,332 @@
             }
         });
     </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        .step-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .step-completed {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .form-container {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .form-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .form-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .form-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+    <!-- Navigation -->
+    <nav class="p-4">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">T</span>
+                </div>
+                <span class="text-white font-bold text-xl">TUTOR.AI</span>
+            </div>
+            <a href="login.html" class="text-white hover:text-blue-300 transition-colors">Already have an account?</a>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Step Indicator -->
+            <div class="flex justify-center mb-8">
+                <div class="flex space-x-4">
+                    <div class="step-indicator step-active w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold">1</div>
+                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">2</div>
+                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">3</div>
+                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">4</div>
+                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">5</div>
+                </div>
+            </div>
+            
+            <!-- Registration Form -->
+            <div class="glass-effect rounded-2xl p-8 shadow-2xl">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-white mb-2">Create Your Account</h1>
+                    <p class="text-gray-300">Join thousands of students learning with AI</p>
+                </div>
+
+                <!-- Step 1: OAuth -->
+                <div id="step1" class="step-content">
+                    <h2 class="text-xl font-semibold text-white mb-6">Choose Your Sign-In Method</h2>
+                    <p class="text-gray-300 mb-6">You can sign in with your existing account or continue with email registration</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <button onclick="signInWithGoogle()" class="px-4 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold flex flex-col items-center justify-center space-y-2">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            <span class="text-sm">Google</span>
+                        </button>
+                        <button onclick="signInWithPhone()" class="px-4 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 font-semibold flex flex-col items-center justify-center space-y-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            <span class="text-sm">Phone</span>
+                        </button>
+                        <button onclick="nextStep()" class="px-4 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold flex flex-col items-center justify-center space-y-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                            <span class="text-sm">Email</span>
+                        </button>
+                                </div>
+                    <div class="text-center">
+                        <p class="text-gray-300 text-sm">Choose your preferred sign-in method to get started</p>
+                            </div>
+                        </div>
+                        
+                <!-- Step 2: Basic Information -->
+                <div id="step2" class="step-content hidden">
+                    <h2 class="text-xl font-semibold text-white mb-6">Basic Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Student Name *</label>
+                            <input type="text" id="studentName" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter student's full name" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Email Address *</label>
+                            <input type="email" id="email" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter email address" required>
+                                </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Phone Number *</label>
+                            <input type="tel" id="phone" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="+91 9876543210" required>
+                            </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Password *</label>
+                            <input type="password" id="password" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Create a strong password" required>
+                        </div>
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
+                            ← Back to Home
+                        </button>
+                        <button onclick="nextStep()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                            Next Step →
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Academic Information -->
+                <div id="step3" class="step-content hidden">
+                    <h2 class="text-xl font-semibold text-white mb-6">Academic Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Select Class *</label>
+                            <select id="class" class="w-full px-4 py-3 bg-purple-800 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" class="bg-purple-800 text-white">Choose class</option>
+                                <option value="1" class="bg-purple-800 text-white">Class 1</option>
+                                <option value="2" class="bg-purple-800 text-white">Class 2</option>
+                                <option value="3" class="bg-purple-800 text-white">Class 3</option>
+                                <option value="4" class="bg-purple-800 text-white">Class 4</option>
+                                <option value="5" class="bg-purple-800 text-white">Class 5</option>
+                                <option value="6" class="bg-purple-800 text-white">Class 6</option>
+                                <option value="7" class="bg-purple-800 text-white">Class 7</option>
+                                <option value="8" class="bg-purple-800 text-white">Class 8</option>
+                                <option value="9" class="bg-purple-800 text-white">Class 9</option>
+                                <option value="10" class="bg-purple-800 text-white">Class 10</option>
+                                <option value="11" class="bg-purple-800 text-white">Class 11</option>
+                                <option value="12" class="bg-purple-800 text-white">Class 12</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Board of Education *</label>
+                            <select id="board" class="w-full px-4 py-3 bg-purple-800 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" class="bg-purple-800 text-white">Choose board</option>
+                                <option value="CBSE" class="bg-purple-800 text-white">CBSE</option>
+                                <option value="ICSE" class="bg-purple-800 text-white">ICSE</option>
+                                <option value="State Board" class="bg-purple-800 text-white">State Board</option>
+                                <option value="IGCSE" class="bg-purple-800 text-white">IGCSE</option>
+                                <option value="IB" class="bg-purple-800 text-white">IB</option>
+                                <option value="Other" class="bg-purple-800 text-white">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">State *</label>
+                            <select id="state" class="w-full px-4 py-3 bg-purple-800 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" class="bg-purple-800 text-white">Choose state</option>
+                                <option value="Andhra Pradesh" class="bg-purple-800 text-white">Andhra Pradesh</option>
+                                <option value="Arunachal Pradesh" class="bg-purple-800 text-white">Arunachal Pradesh</option>
+                                <option value="Assam" class="bg-purple-800 text-white">Assam</option>
+                                <option value="Bihar" class="bg-purple-800 text-white">Bihar</option>
+                                <option value="Chhattisgarh" class="bg-purple-800 text-white">Chhattisgarh</option>
+                                <option value="Goa" class="bg-purple-800 text-white">Goa</option>
+                                <option value="Gujarat" class="bg-purple-800 text-white">Gujarat</option>
+                                <option value="Haryana" class="bg-purple-800 text-white">Haryana</option>
+                                <option value="Himachal Pradesh" class="bg-purple-800 text-white">Himachal Pradesh</option>
+                                <option value="Jharkhand" class="bg-purple-800 text-white">Jharkhand</option>
+                                <option value="Karnataka" class="bg-purple-800 text-white">Karnataka</option>
+                                <option value="Kerala" class="bg-purple-800 text-white">Kerala</option>
+                                <option value="Madhya Pradesh" class="bg-purple-800 text-white">Madhya Pradesh</option>
+                                <option value="Maharashtra" class="bg-purple-800 text-white">Maharashtra</option>
+                                <option value="Manipur" class="bg-purple-800 text-white">Manipur</option>
+                                <option value="Meghalaya" class="bg-purple-800 text-white">Meghalaya</option>
+                                <option value="Mizoram" class="bg-purple-800 text-white">Mizoram</option>
+                                <option value="Nagaland" class="bg-purple-800 text-white">Nagaland</option>
+                                <option value="Odisha" class="bg-purple-800 text-white">Odisha</option>
+                                <option value="Punjab" class="bg-purple-800 text-white">Punjab</option>
+                                <option value="Rajasthan" class="bg-purple-800 text-white">Rajasthan</option>
+                                <option value="Sikkim" class="bg-purple-800 text-white">Sikkim</option>
+                                <option value="Tamil Nadu" class="bg-purple-800 text-white">Tamil Nadu</option>
+                                <option value="Telangana" class="bg-purple-800 text-white">Telangana</option>
+                                <option value="Tripura" class="bg-purple-800 text-white">Tripura</option>
+                                <option value="Uttar Pradesh" class="bg-purple-800 text-white">Uttar Pradesh</option>
+                                <option value="Uttarakhand" class="bg-purple-800 text-white">Uttarakhand</option>
+                                <option value="West Bengal" class="bg-purple-800 text-white">West Bengal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">City *</label>
+                            <input type="text" id="city" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter city name" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Address Line 1 *</label>
+                            <input type="text" id="addressLine1" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter full address (Village/Town/Area)" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Preferred Language</label>
+                            <select id="language" class="w-full px-4 py-3 bg-purple-800 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="English" class="bg-purple-800 text-white">English</option>
+                                <option value="Hindi" class="bg-purple-800 text-white">Hindi</option>
+                                <option value="Hinglish" class="bg-purple-800 text-white">Hinglish (Hindi + English)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
+                            ← Previous
+                        </button>
+                        <button onclick="nextStep()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                            Next Step →
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Economic Status -->
+                <div id="step4" class="step-content hidden">
+                    <h2 class="text-xl font-semibold text-white mb-6">Economic Status Verification</h2>
+                    <div class="mb-6">
+                        <p class="text-gray-300 mb-4">To provide free access to eligible students, please select your economic status:</p>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" id="bpl" name="economicStatus" value="BPL" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                <label for="bpl" class="text-white">Below Poverty Line (BPL) - Free Access</label>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" id="apl" name="economicStatus" value="APL" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                <label for="apl" class="text-white">Above Poverty Line (APL) - Free Access</label>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" id="premium" name="economicStatus" value="Premium" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                <label for="premium" class="text-white">Premium Plan (₹99/month) - Full Access</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- BPL/APL Card Details -->
+                    <div id="cardDetails" class="hidden">
+                        <div class="bg-blue-900/30 p-4 rounded-lg mb-4">
+                            <h3 class="text-white font-semibold mb-2">Ration Card Verification</h3>
+                            <p class="text-gray-300 text-sm">Please provide your ration card details for verification</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Ration Card Number *</label>
+                                <input type="text" id="cardNumber" maxlength="10" pattern="[A-Za-z0-9]{10}" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 10-character card number" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Upload Card Image *</label>
+                                <input type="file" id="cardPic" accept="image/*" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Premium Plan Details -->
+                    <div id="premiumDetails" class="hidden">
+                        <div class="bg-gradient-to-r from-purple-900/30 to-pink-900/30 p-6 rounded-lg">
+                            <h3 class="text-white font-semibold mb-2">Premium Plan Benefits</h3>
+                            <ul class="text-gray-300 space-y-2">
+                                <li>• Unlimited AI tutoring sessions</li>
+                                <li>• Advanced homework help with step-by-step solutions</li>
+                                <li>• Personalized study plans</li>
+                                <li>• Progress tracking and analytics</li>
+                                <li>• Priority support</li>
+                                <li>• Access to premium content library</li>
+                            </ul>
+                            <p class="text-yellow-400 mt-4 font-semibold">Only ₹99/month - Cancel anytime</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between mt-6">
+                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
+                            ← Previous
+                        </button>
+                        <button onclick="nextStep()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                            Next Step →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Confirmation -->
+                <div id="step5" class="step-content hidden">
+                    <h2 class="text-xl font-semibold text-white mb-6">Confirm Your Details</h2>
+                    <div id="confirmationDetails" class="space-y-4 mb-6">
+                        <!-- Details will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 mb-6">
+                        <input type="checkbox" id="termsAgree" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <label for="termsAgree" class="text-gray-300">I agree to the <a href="#" class="text-blue-400 hover:underline">Terms of Service</a> and <a href="#" class="text-blue-400 hover:underline">Privacy Policy</a></label>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <button onclick="prevStep()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 font-semibold">
+                            ← Previous
+                        </button>
+                        <button onclick="registerUser()" class="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg hover:from-green-600 hover:to-blue-700 transition-all duration-300 font-semibold">
+                            Create Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="glass-effect p-8 rounded-2xl text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p class="text-white">Creating your account...</p>
+        </div>
+    </div>
+    
 </body>
 </html>
