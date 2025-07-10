@@ -565,9 +565,11 @@ const regionalAvatars = [
 app.use(express.static(path.join(__dirname), {
     setHeaders: (res, path) => {
         if (path.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript');
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
         } else if (path.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css');
+            res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        } else if (path.endsWith('.html')) {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
         }
     }
 }));
