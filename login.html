@@ -157,19 +157,34 @@
              x-text="message"></div>
     </div>
 
-    <script type="module">
-        import { getSupabaseClient } from './js/supabaseClient.js';
-        
-        // Initialize Supabase and make it globally available
+    <script>
+        // Initialize Supabase when CDN is loaded
         window.supabase = null;
         
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                window.supabase = await getSupabaseClient();
-                console.log('Supabase initialized successfully');
-            } catch (error) {
-                console.error('Failed to initialize Supabase:', error);
-                alert('Failed to initialize database connection. Please refresh the page.');
+        function initializeSupabase() {
+            fetch('/api/supabase-config')
+                .then(response => response.json())
+                .then(config => {
+                    if (config.supabaseUrl && config.supabaseKey) {
+                        window.supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                        console.log('Supabase initialized successfully');
+                    } else {
+                        throw new Error('Supabase configuration not available');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to initialize Supabase:', error);
+                    alert('Failed to initialize database connection. Please refresh the page.');
+                });
+        }
+        
+        // Initialize when DOM is ready and CDN is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.supabase !== 'undefined') {
+                initializeSupabase();
+            } else {
+                // Wait for CDN to load
+                setTimeout(initializeSupabase, 1000);
             }
         });
     </script>
