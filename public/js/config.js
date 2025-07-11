@@ -1,42 +1,18 @@
-// config.js - Fixed version for NEXT_PUBLIC environment variables
+// config.js - Hardcoded Supabase configuration
 class SupabaseConfig {
   constructor() {
-    this.config = null;
-    this.isLoaded = false;
+    // Hardcoded Supabase configuration
+    this.config = {
+      supabaseUrl: 'https://xhuljxuxnlwtocfmwiid.supabase.co',
+      supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU'
+    };
+    this.isLoaded = true;
   }
 
   async loadSupabaseConfig() {
-    try {
-      // Option 1: Use NEXT_PUBLIC_ environment variables (direct access)
-      if (typeof window !== 'undefined' && window.NEXT_PUBLIC_SUPABASE_URL) {
-        this.config = {
-          supabaseUrl: window.NEXT_PUBLIC_SUPABASE_URL,
-          supabaseAnonKey: window.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        };
-        console.log('Using NEXT_PUBLIC environment variables');
-      } else {
-        // Option 2: Fetch from your API endpoint (fallback)
-        console.log('Falling back to API config endpoint');
-        const response = await fetch('/api/config');
-        if (!response.ok) {
-          throw new Error('Failed to fetch config');
-        }
-        this.config = await response.json();
-      }
-
-      // Validate config
-      if (!this.config?.supabaseUrl || !this.config?.supabaseAnonKey) {
-        throw new Error('Invalid Supabase configuration');
-      }
-
-      this.isLoaded = true;
-      console.log('Supabase config loaded successfully');
-      return this.config;
-
-    } catch (error) {
-      console.error('Failed to load Supabase config:', error);
-      throw error;
-    }
+    // No async loading needed with hardcoded values
+    console.log('Using hardcoded Supabase configuration');
+    return this.config;
   }
 
   getConfig() {
@@ -53,10 +29,6 @@ window.supabaseConfig = window.supabaseConfig || new SupabaseConfig();
 
 async function getSupabaseClient() {
   try {
-    if (!window.supabaseConfig.isConfigLoaded()) {
-      await window.supabaseConfig.loadSupabaseConfig();
-    }
-
     const config = window.supabaseConfig.getConfig();
     
     if (!config) {
