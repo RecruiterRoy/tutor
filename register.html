@@ -437,7 +437,31 @@
                     }
                 }
                 
-                // 5. Success
+                // 5. Automatically assign class access based on user's grade
+                const userClass = `class${grade}`; // Convert grade to class format (e.g., 6 -> class6)
+                console.log(`Automatically assigning ${userClass} access to user ${user.id}`);
+                
+                try {
+                    // Call the assign_user_class_access function
+                    const { data: accessData, error: accessError } = await window.supabase.rpc('assign_user_class_access', {
+                        p_user_id: user.id,
+                        p_class_name: userClass,
+                        p_subjects: null, // null means all subjects for this class
+                        p_languages: ['English'] // Default language
+                    });
+                    
+                    if (accessError) {
+                        console.error('Error assigning class access:', accessError);
+                        // Don't fail registration if class assignment fails
+                    } else {
+                        console.log(`Successfully assigned ${userClass} access to user`);
+                    }
+                } catch (accessErr) {
+                    console.error('Class access assignment failed:', accessErr);
+                    // Don't fail registration if class assignment fails
+                }
+                
+                // 6. Success
                 alert('Registration successful! Please check your email to verify your account.');
                 window.location.href = 'login.html';
                 
@@ -494,6 +518,40 @@
         .form-container::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.3);
             border-radius: 10px;
+        }
+        
+        /* Fix input field visibility */
+        input[type="text"], 
+        input[type="email"], 
+        input[type="password"], 
+        input[type="tel"],
+        select {
+            background: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        }
+        
+        input[type="text"]::placeholder, 
+        input[type="email"]::placeholder, 
+        input[type="password"]::placeholder, 
+        input[type="tel"]::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+        
+        input[type="text"]:focus, 
+        input[type="email"]:focus, 
+        input[type="password"]:focus, 
+        input[type="tel"]:focus,
+        select:focus {
+            background: rgba(0, 0, 0, 0.5) !important;
+            border-color: rgba(139, 92, 246, 0.8) !important;
+            outline: none !important;
+        }
+        
+        /* Fix select dropdown */
+        select option {
+            background: #1f2937;
+            color: white;
         }
     </style>
 </head>
