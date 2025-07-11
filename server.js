@@ -101,6 +101,57 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// Config API endpoint for client-side Supabase configuration
+app.get('/api/config', (req, res) => {
+    try {
+        // Server-side can access process.env - check both regular and NEXT_PUBLIC versions
+        const config = {
+            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+            supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+        };
+
+        // Validate environment variables
+        if (!config.supabaseUrl || !config.supabaseAnonKey) {
+            console.error('Missing Supabase environment variables');
+            return res.status(500).json({ 
+                error: 'Server configuration error',
+                details: 'Missing required environment variables (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY)'
+            });
+        }
+
+        res.status(200).json(config);
+
+    } catch (error) {
+        console.error('Config API error:', error);
+        res.status(500).json({ 
+            error: 'Internal server error',
+            details: error.message 
+        });
+    }
+});
+
+// Inject NEXT_PUBLIC environment variables into HTML pages
+app.use((req, res, next) => {
+    // Only inject for HTML files
+    if (req.path.endsWith('.html') || req.path === '/') {
+        const originalSend = res.send;
+        res.send = function(data) {
+            if (typeof data === 'string' && data.includes('</head>')) {
+                // Inject environment variables into window object
+                const envScript = `
+                    <script>
+                        window.NEXT_PUBLIC_SUPABASE_URL = '${process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || ''}';
+                        window.NEXT_PUBLIC_SUPABASE_ANON_KEY = '${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || ''}';
+                    </script>
+                `;
+                data = data.replace('</head>', envScript + '</head>');
+            }
+            return originalSend.call(this, data);
+        };
+    }
+    next();
+});
+
 // Root health check
 app.get('/health', (req, res) => {
     res.json({ 

@@ -161,41 +161,9 @@
              x-text="message"></div>
     </div>
 
-    <script>
-        // Supabase configuration - embedded directly to avoid loading issues
-        const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU';
-
-        // Initialize Supabase when CDN is loaded
-        function initializeSupabase() {
-            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                try {
-                    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    console.log('Supabase initialized successfully');
-                    return true;
-                } catch (error) {
-                    console.error('Supabase initialization error:', error);
-                    return false;
-                }
-            }
-            return false;
-        }
-
-        // Wait for Supabase CDN to load
-        function waitForSupabase() {
-            if (initializeSupabase()) {
-                // Trigger Alpine.js initialization
-                if (window.Alpine) {
-                    window.Alpine.start();
-                }
-            } else {
-                setTimeout(waitForSupabase, 100);
-            }
-        }
-
-        // Start waiting when DOM is ready
-        document.addEventListener('DOMContentLoaded', waitForSupabase);
-    </script>
+    <!-- Load config and auth in order -->
+    <script src="/public/js/config.js"></script>
+    <script src="/public/js/auth.js"></script>
 
     <script>
         // Alpine.js app - must be globally available
@@ -223,27 +191,32 @@
                     let attempts = 0;
                     const maxAttempts = 50; // 5 seconds max
                     
-                    while (!window.supabase && attempts < maxAttempts) {
+                    while (!window.TutorAuth && attempts < maxAttempts) {
                         await new Promise(resolve => setTimeout(resolve, 100));
                         attempts++;
                     }
                     
-                    if (window.supabase) {
-                        this.supabaseReady = true;
-                        console.log('Supabase ready in Alpine app');
-                        
-                        // Check if user is already logged in
-                        this.checkAuthState();
+                    if (window.TutorAuth) {
+                        try {
+                            await window.TutorAuth.init();
+                            this.supabaseReady = true;
+                            console.log('Supabase ready in Alpine app');
+                            
+                            // Check if user is already logged in
+                            this.checkAuthState();
+                        } catch (error) {
+                            console.error('Failed to initialize TutorAuth:', error);
+                            this.showMessage('Database connection failed. Please refresh the page.', 'error');
+                        }
                     } else {
-                        console.error('Supabase failed to initialize');
+                        console.error('TutorAuth failed to initialize');
                         this.showMessage('Database connection failed. Please refresh the page.', 'error');
                     }
                 },
 
                 async checkAuthState() {
                     try {
-                        const { data: { session } } = await window.supabase.auth.getSession();
-                        if (session) {
+                        if (window.TutorAuth.isAuthenticated()) {
                             window.location.href = '/dashboard';
                         }
                     } catch (error) {
@@ -263,7 +236,7 @@
                     try {
                         let result
                         if (this.isMagicLink) {
-                            result = await window.supabase.auth.signInWithOtp({
+                            result = await window.TutorAuth.supabase.auth.signInWithOtp({
                                 email: this.email,
                                 options: {
                                     shouldCreateUser: false
@@ -271,18 +244,13 @@
                             })
                             this.showMessage('Magic link sent to your email!', 'success')
                         } else {
-                            result = await window.supabase.auth.signInWithPassword({
-                                email: this.email,
-                                password: this.password
-                            })
+                            result = await window.TutorAuth.signInWithEmail(this.email, this.password)
                             
-                            if (result.data.user) {
+                            if (result.success) {
                                 window.location.href = '/dashboard'
+                            } else {
+                                this.showMessage(result.error, 'error')
                             }
-                        }
-                        
-                        if (result.error) {
-                            this.showMessage(result.error.message, 'error')
                         }
                     } catch (error) {
                         console.error('Login error:', error);
@@ -311,7 +279,7 @@
                         
                         const fullPhoneNumber = this.countryCode + cleanPhone;
                         
-                        const result = await window.supabase.auth.signInWithOtp({
+                        const result = await window.TutorAuth.supabase.auth.signInWithOtp({
                             phone: fullPhoneNumber,
                             options: {
                                 shouldCreateUser: true
@@ -345,7 +313,7 @@
                         const cleanPhone = this.phone.replace(/\D/g, '');
                         const fullPhoneNumber = this.countryCode + cleanPhone;
                         
-                        const result = await window.supabase.auth.verifyOtp({
+                        const result = await window.TutorAuth.supabase.auth.verifyOtp({
                             phone: fullPhoneNumber,
                             token: this.otp,
                             type: 'sms'
@@ -379,7 +347,7 @@
                     this.message = ''
                     
                     try {
-                        const result = await window.supabase.auth.signInWithOAuth({
+                        const result = await window.TutorAuth.supabase.auth.signInWithOAuth({
                             provider: 'google',
                             options: {
                                 redirectTo: window.location.origin + '/dashboard'
@@ -410,7 +378,7 @@
                     
                     this.loading = true
                     try {
-                        const result = await window.supabase.auth.resetPasswordForEmail(this.email)
+                        const result = await window.TutorAuth.supabase.auth.resetPasswordForEmail(this.email)
                         if (result.error) {
                             this.showMessage(result.error.message, 'error')
                         } else {
