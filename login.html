@@ -37,6 +37,46 @@
         .input-glow:focus {
             box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
         }
+        
+        /* Fix input field visibility */
+        input[type="email"], 
+        input[type="password"], 
+        input[type="tel"], 
+        input[type="text"],
+        select {
+            background: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        }
+        
+        input[type="email"]::placeholder, 
+        input[type="password"]::placeholder, 
+        input[type="tel"]::placeholder, 
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+        
+        input[type="email"]:focus, 
+        input[type="password"]:focus, 
+        input[type="tel"]:focus, 
+        input[type="text"]:focus,
+        select:focus {
+            background: rgba(0, 0, 0, 0.5) !important;
+            border-color: rgba(139, 92, 246, 0.8) !important;
+            outline: none !important;
+        }
+        
+        /* Fix select dropdown */
+        select option {
+            background: #1f2937;
+            color: white;
+        }
+        
+        /* Fix checkbox */
+        input[type="checkbox"] {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen flex items-center justify-center p-4">

@@ -1677,8 +1677,8 @@
             // Set initial context for GPT
             gptService.setContext(className, null);
             
-            // Load class-specific books
-            loadClassBooks(className);
+            // Load class-specific books (automatically gets user's class from database)
+            loadClassBooks();
         }
 
         // --- Initialization ---
@@ -1856,24 +1856,47 @@
         renderSubjects();
 
         // --- Study Materials Functions ---
-        async function loadClassBooks(userClass) {
+        async function loadClassBooks() {
             try {
                 const bookList = document.getElementById('bookList');
                 bookList.innerHTML = '<p class="text-gray-400 col-span-full">Loading books for your class...</p>';
                 
-                // Extract class number from userClass (e.g., "Class 10" -> "10")
-                const classNumber = userClass.toLowerCase().replace('class', '').trim();
+                // Get current user's class access
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    throw new Error('User not authenticated');
+                }
                 
-                // Fetch processed books from the API
-                const response = await fetch(`/api/processed-books?grade=${classNumber}`);
-                if (!response.ok) {
+                // Get user's class access from user_class_access table
+                const { data: userAccess, error: accessError } = await supabase
+                    .from('user_class_access')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('is_active', true)
+                    .single();
+                
+                if (accessError || !userAccess) {
+                    console.error('No class access found for user:', accessError);
+                    bookList.innerHTML = '<p class="text-yellow-400 col-span-full">No class access found. Please contact support.</p>';
+                    return;
+                }
+                
+                const userClassName = userAccess.class_name; // e.g., "class6"
+                console.log(`Loading books for user's class: ${userClassName}`);
+                
+                // Use the new get_class_books function to fetch books
+                const { data: books, error: booksError } = await supabase.rpc('get_class_books', {
+                    p_class_name: userClassName,
+                    p_subject: null, // null means all subjects
+                    p_language: 'English'
+                });
+                
+                if (booksError) {
+                    console.error('Error fetching books:', booksError);
                     throw new Error('Failed to fetch books');
                 }
                 
-                const data = await response.json();
-                const books = data.books || [];
-                
-                if (books.length === 0) {
+                if (!books || books.length === 0) {
                     bookList.innerHTML = '<p class="text-gray-400 col-span-full">No books available for your class yet. More books will be added soon!</p>';
                     return;
                 }
@@ -1894,8 +1917,10 @@
                     const bookCard = document.createElement('div');
                     bookCard.className = 'bg-indigo-600/50 hover:bg-indigo-600/70 p-3 rounded-lg text-white text-sm cursor-pointer transition-all duration-300 flex flex-col';
                     
-                    const bookNames = subjectBooks.map(book => book.bookName).join(', ');
-                    const totalChunks = subjectBooks.reduce((sum, book) => sum + book.chunkCount, 0);
+                    const bookNames = subjectBooks.map(book => book.book_name).join(', ');
+                    const totalChapters = subjectBooks.length;
+                    const totalSize = subjectBooks.reduce((sum, book) => sum + (book.file_size || 0), 0);
+                    const sizeInMB = (totalSize / (1024 * 1024)).toFixed(1);
                     
                     bookCard.innerHTML = `
                         <div class="flex items-center mb-2">
@@ -1903,9 +1928,9 @@
                             <span class="font-medium">${subject}</span>
                         </div>
                         <div class="text-xs text-gray-300 mb-2 flex-1">${bookNames}</div>
-                        <div class="text-xs text-gray-400 mb-2">${subjectBooks.length} books • ${totalChunks} chapters</div>
-                        <button class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs transition-colors" onclick="downloadSubjectBooks('${subject}', ${classNumber})">
-                            📥 Download All
+                        <div class="text-xs text-gray-400 mb-2">${subjectBooks.length} chapters • ${sizeInMB} MB</div>
+                        <button class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs transition-colors" onclick="viewSubjectBooks('${subject}', '${userClassName}')">
+                            📖 View Books
                         </button>
                     `;
                     bookList.appendChild(bookCard);
@@ -1914,6 +1939,88 @@
             } catch (error) {
                 console.error('Error loading books:', error);
                 document.getElementById('bookList').innerHTML = '<p class="text-red-400 col-span-full">Error loading books. Please try again later.</p>';
+            }
+        }
+        
+        async function viewSubjectBooks(subject, className) {
+            try {
+                // Get books for specific subject
+                const { data: books, error: booksError } = await supabase.rpc('get_class_books', {
+                    p_class_name: className,
+                    p_subject: subject,
+                    p_language: 'English'
+                });
+                
+                if (booksError || !books) {
+                    showError('Failed to load books for this subject');
+                    return;
+                }
+                
+                // Show books in a modal
+                showBooksModal(subject, books);
+                
+            } catch (error) {
+                console.error('Error viewing subject books:', error);
+                showError('Failed to load books');
+            }
+        }
+        
+        function showBooksModal(subject, books) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="glass-effect rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-white text-xl font-bold">${subject} Books</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${books.map(book => `
+                            <div class="bg-indigo-600/30 p-4 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <span class="mr-2">📚</span>
+                                    <span class="font-medium text-white">${book.book_name}</span>
+                                </div>
+                                <div class="text-xs text-gray-300 mb-2">Chapter ${book.chapter_number}: ${book.chapter_name}</div>
+                                <div class="text-xs text-gray-400 mb-3">${(book.file_size / (1024 * 1024)).toFixed(1)} MB</div>
+                                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm transition-colors" onclick="downloadBookFromStorage('${book.file_path}', '${book.book_name} - Chapter ${book.chapter_number}')">
+                                    📥 Download
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        async function downloadBookFromStorage(filePath, fileName) {
+            try {
+                showSuccess(`Preparing download for ${fileName}...`);
+                
+                // Get download URL from Supabase storage
+                const { data: { publicUrl }, error } = supabase.storage
+                    .from('educational-content')
+                    .getPublicUrl(filePath);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.href = publicUrl;
+                link.download = `${fileName}.pdf`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showSuccess(`Download started for ${fileName}`);
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                showError('Failed to download book. Please try again.');
             }
         }
         
