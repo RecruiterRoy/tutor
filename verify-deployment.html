@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Deployment Verification - TUTOR.AI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 4px solid #fff;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        .info { color: #60a5fa; }
+        .loading { color: #a78bfa; }
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .timestamp {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+        .cache-buster {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 TUTOR.AI Deployment Verification</h1>
+        <div class="cache-buster">
+            Cache Buster: <span id="cache-buster"></span>
+        </div>
+        <div class="timestamp">
+            Last Updated: <span id="timestamp"></span>
+        </div>
+        
+        <button onclick="location.reload()">🔄 Refresh</button>
+        <button onclick="clearCache()">🗑️ Clear Cache</button>
+        <button onclick="runTests()">🧪 Re-run Tests</button>
+    </div>
+    
+    <div class="container">
+        <h2>📋 Environment Status</h2>
+        <div id="env-status">Checking...</div>
+    </div>
+    
+    <div class="container">
+        <h2>📦 Script Loading Status</h2>
+        <div id="script-status">Checking...</div>
+    </div>
+    
+    <div class="container">
+        <h2>🔧 Configuration Status</h2>
+        <div id="config-status">Checking...</div>
+    </div>
+    
+    <div class="container">
+        <h2>🔐 Authentication Status</h2>
+        <div id="auth-status">Checking...</div>
+    </div>
+    
+    <div class="container">
+        <h2>🌐 Network Status</h2>
+        <div id="network-status">Checking...</div>
+    </div>
+
+    <!-- Add cache busting to scripts -->
+    <script>
+        const cacheBuster = Date.now();
+        document.getElementById('cache-buster').textContent = cacheBuster;
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/public/js/config.js?v=<?php echo time(); ?>"></script>
+    <script src="/public/js/auth.js?v=<?php echo time(); ?>"></script>
+    
+    <script>
+        let testResults = {};
+        
+        function clearCache() {
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                    });
+                });
+            }
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('Cache cleared! Please refresh the page.');
+        }
+        
+        async function runTests() {
+            console.log('🚀 Starting deployment verification...');
+            
+            // Test 1: Environment Variables
+            await testEnvironment();
+            
+            // Test 2: Script Loading
+            await testScriptLoading();
+            
+            // Test 3: Configuration
+            await testConfiguration();
+            
+            // Test 4: Authentication
+            await testAuthentication();
+            
+            // Test 5: Network
+            await testNetwork();
+            
+            // Summary
+            displaySummary();
+        }
+        
+        async function testEnvironment() {
+            const results = [];
+            
+            // Check for injected environment variables
+            if (typeof window.NEXT_PUBLIC_SUPABASE_URL !== 'undefined' && window.NEXT_PUBLIC_SUPABASE_URL) {
+                results.push(`<span class="success">✅ NEXT_PUBLIC_SUPABASE_URL: ${window.NEXT_PUBLIC_SUPABASE_URL}</span>`);
+            } else {
+                results.push(`<span class="warning">⚠️ NEXT_PUBLIC_SUPABASE_URL not found</span>`);
+            }
+            
+            if (typeof window.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'undefined' && window.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+                results.push(`<span class="success">✅ NEXT_PUBLIC_SUPABASE_ANON_KEY: ${window.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 20)}...</span>`);
+            } else {
+                results.push(`<span class="warning">⚠️ NEXT_PUBLIC_SUPABASE_ANON_KEY not found</span>`);
+            }
+            
+            // Check Vercel deployment
+            results.push(`<span class="info">📍 User Agent: ${navigator.userAgent}</span>`);
+            results.push(`<span class="info">🌐 Location: ${window.location.href}</span>`);
+            
+            testResults.environment = results.length > 0;
+            document.getElementById('env-status').innerHTML = results.join('<br>');
+        }
+        
+        async function testScriptLoading() {
+            const results = [];
+            
+            // Check Supabase CDN
+            if (typeof window.supabase !== 'undefined') {
+                results.push(`<span class="success">✅ Supabase CDN loaded</span>`);
+                results.push(`<span class="info">📦 createClient: ${typeof window.supabase.createClient}</span>`);
+            } else {
+                results.push(`<span class="error">❌ Supabase CDN failed to load</span>`);
+            }
+            
+            // Check our scripts
+            if (typeof window.supabaseConfigLoaded !== 'undefined') {
+                results.push(`<span class="success">✅ Config.js loaded (new version)</span>`);
+            } else {
+                results.push(`<span class="error">❌ Config.js not loaded or old version</span>`);
+            }
+            
+            if (typeof window.tutorAuthLoaded !== 'undefined') {
+                results.push(`<span class="success">✅ Auth.js loaded (new version)</span>`);
+            } else {
+                results.push(`<span class="error">❌ Auth.js not loaded or old version</span>`);
+            }
+            
+            testResults.scripts = results.filter(r => r.includes('✅')).length >= 2;
+            document.getElementById('script-status').innerHTML = results.join('<br>');
+        }
+        
+        async function testConfiguration() {
+            const results = [];
+            
+            try {
+                if (window.supabaseConfig) {
+                    const config = window.supabaseConfig.getConfig();
+                    results.push(`<span class="success">✅ SupabaseConfig instance created</span>`);
+                    results.push(`<span class="info">📍 URL: ${config.supabaseUrl}</span>`);
+                    results.push(`<span class="info">🔑 Key: ${config.supabaseAnonKey.substring(0, 20)}...</span>`);
+                } else {
+                    results.push(`<span class="error">❌ SupabaseConfig not available</span>`);
+                }
+                
+                if (typeof window.getSupabaseClient === 'function') {
+                    results.push(`<span class="success">✅ getSupabaseClient function available</span>`);
+                } else {
+                    results.push(`<span class="error">❌ getSupabaseClient function missing</span>`);
+                }
+                
+                testResults.config = window.supabaseConfig && typeof window.getSupabaseClient === 'function';
+                
+            } catch (error) {
+                results.push(`<span class="error">❌ Configuration error: ${error.message}</span>`);
+                testResults.config = false;
+            }
+            
+            document.getElementById('config-status').innerHTML = results.join('<br>');
+        }
+        
+        async function testAuthentication() {
+            const results = [];
+            
+            try {
+                if (window.TutorAuth) {
+                    results.push(`<span class="success">✅ TutorAuth class available</span>`);
+                    
+                    // Try to initialize
+                    await window.TutorAuth.init();
+                    results.push(`<span class="success">✅ TutorAuth initialized successfully</span>`);
+                    results.push(`<span class="info">🔐 Authenticated: ${window.TutorAuth.isAuthenticated()}</span>`);
+                    
+                    testResults.auth = true;
+                } else {
+                    results.push(`<span class="error">❌ TutorAuth class not available</span>`);
+                    testResults.auth = false;
+                }
+                
+            } catch (error) {
+                results.push(`<span class="error">❌ Authentication error: ${error.message}</span>`);
+                testResults.auth = false;
+            }
+            
+            document.getElementById('auth-status').innerHTML = results.join('<br>');
+        }
+        
+        async function testNetwork() {
+            const results = [];
+            
+            try {
+                // Test Supabase client creation
+                if (typeof window.getSupabaseClient === 'function') {
+                    const client = await window.getSupabaseClient();
+                    results.push(`<span class="success">✅ Supabase client created</span>`);
+                    results.push(`<span class="info">🔗 Client type: ${typeof client}</span>`);
+                    results.push(`<span class="info">🔐 Auth available: ${typeof client.auth}</span>`);
+                    
+                    testResults.network = true;
+                } else {
+                    results.push(`<span class="error">❌ Cannot create Supabase client</span>`);
+                    testResults.network = false;
+                }
+                
+            } catch (error) {
+                results.push(`<span class="error">❌ Network error: ${error.message}</span>`);
+                testResults.network = false;
+            }
+            
+            document.getElementById('network-status').innerHTML = results.join('<br>');
+        }
+        
+        function displaySummary() {
+            const total = Object.keys(testResults).length;
+            const passed = Object.values(testResults).filter(Boolean).length;
+            const percentage = Math.round((passed / total) * 100);
+            
+            let status = '';
+            if (percentage >= 80) {
+                status = `<span class="success">🎉 Deployment looks good! (${passed}/${total} tests passed)</span>`;
+            } else if (percentage >= 60) {
+                status = `<span class="warning">⚠️ Deployment has issues (${passed}/${total} tests passed)</span>`;
+            } else {
+                status = `<span class="error">❌ Deployment failed (${passed}/${total} tests passed)</span>`;
+            }
+            
+            document.title = `${percentage}% - Deployment Verification`;
+            
+            // Add summary to top
+            const container = document.querySelector('.container');
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'test-section';
+            summaryDiv.innerHTML = `<h3>📊 Summary</h3>${status}`;
+            container.appendChild(summaryDiv);
+        }
+        
+        // Auto-run tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(runTests, 1000);
+        });
+    </script>
+</body>
+</html> 
