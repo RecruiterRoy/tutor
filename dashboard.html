@@ -844,28 +844,34 @@
         
         const gptService = new GPTService();
 
-        // Teacher Profiles
+        // Teacher Profiles - Improved and more intelligent
         const teachers = {
             hindi: {
                 name: "Ms. Sapana",
-                image: "/public/images/teacher-avatar1.png", // Ms. Sapana's avatar
-                description: "Sweet and empathetic storyteller",
+                image: "/public/images/teacher-avatar1.png",
+                description: "Empathetic and encouraging Hindi teacher",
                 style: "gentle",
                 behaviors: {
-                    intro: "नमस्ते! मैं आपकी हिंदी शिक्षिका सपना हूं। आपका नाम क्या है? आज कहानियों के साथ सीखते हैं।",
-                    outro: "याद रखो, हर समस्या का समाधान होता है, बिल्कुल हमारी कहानियों की तरह!",
-                    storyFrequency: 30 // minutes
+                    intro: "नमस्ते! मैं आपकी हिंदी शिक्षिका सपना हूं। आज हम साथ में सीखेंगे।",
+                    outro: "बहुत अच्छा! आपने अच्छी तरह से सीखा।",
+                    storyFrequency: 3600000, // 1 hour in milliseconds
+                    maxStoriesPerDay: 3,
+                    storiesToday: 0,
+                    lastStoryDate: null
                 }
             },
             english: {
                 name: "Roy Sir",
-                image: "/public/images/teacher-avatar2.png", // Roy Sir's avatar
-                description: "Detailed explainer with health tips",
+                image: "/public/images/teacher-avatar2.png",
+                description: "Clear and structured English teacher",
                 style: "direct",
                 behaviors: {
-                    intro: "Hello! I'm your English teacher Roy Sir. What's your name? Let's break this down step by step.",
-                    outro: "Don't forget to drink water and stretch between study sessions!",
-                    storyFrequency: 45 // minutes
+                    intro: "Hello! I'm your English teacher Roy Sir. Let's learn together.",
+                    outro: "Excellent work! Keep up the good learning.",
+                    healthTipFrequency: 3600000, // 1 hour in milliseconds
+                    maxHealthTipsPerDay: 5,
+                    healthTipsToday: 0,
+                    lastHealthTipDate: null
                 }
             }
         };
@@ -873,6 +879,7 @@
         // Current teacher - Roy Sir (English) is default
         let currentTeacher = teachers.english;
         let lastStoryTime = 0;
+        let lastHealthTipTime = 0;
         
         // Media control variables
         let currentSpeech = null;
@@ -881,8 +888,8 @@
         let isPlaying = false;
         let autoPlayEnabled = true; // Auto-play TTS by default
 
-        // --- Enhanced Message Handling ---
-        async function addMessage(role, content) {
+        // --- Enhanced Message Handling with Image Support ---
+        async function addMessage(role, content, subject = null, grade = null) {
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message-${role} p-4 rounded-2xl mb-4`;
@@ -901,7 +908,7 @@
             // Process other markdown with marked.js
             processedContent = marked.parse(processedContent);
             
-                messageDiv.innerHTML = `
+            messageDiv.innerHTML = `
                 <div class="flex items-start space-x-4">
                     <div class="w-10 h-10 ${role === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gradient-to-r from-green-500 to-blue-600'} rounded-full flex items-center justify-center flex-shrink-0">
                         <span class="text-white font-bold text-sm">${role === 'user' ? 'You' : 'AI'}</span>
@@ -910,10 +917,24 @@
                         <div class="text-white message-content prose prose-invert max-w-none">${processedContent}</div>
                         <p class="text-gray-400 text-xs mt-2">Just now</p>
                     </div>
-                    </div>
-                `;
+                </div>
+            `;
             
             chatMessages.appendChild(messageDiv);
+            
+            // Load and display relevant images for AI responses
+            if (role === 'ai' && subject && grade) {
+                try {
+                    // Extract topic from content for image search
+                    const topic = extractTopicFromContent(content);
+                    const relevantImages = await loadRelevantImages(subject, grade, topic);
+                    if (relevantImages.length > 0) {
+                        displayImagesInChat(relevantImages, messageDiv);
+                    }
+                } catch (error) {
+                    console.error('Error loading images:', error);
+                }
+            }
             
             // Render Mermaid diagrams after DOM insertion
             if (mermaidDiagrams.length > 0) {
@@ -945,93 +966,48 @@
             }
         }
 
-        // --- Speech Synthesis (TTS) ---
-        function populateVoices() {
-            const voiceSelect = document.getElementById('voiceSelect');
-            const voices = speechSynthesis.getVoices();
+        // Extract topic from content for image search
+        function extractTopicFromContent(content) {
+            // Remove markdown and code blocks
+            let cleanContent = content.replace(/```[\s\S]*?```/g, '');
+            cleanContent = cleanContent.replace(/`[^`]*`/g, '');
+            cleanContent = cleanContent.replace(/\*\*([^*]+)\*\*/g, '$1');
+            cleanContent = cleanContent.replace(/\*([^*]+)\*/g, '$1');
             
-            voiceSelect.innerHTML = '';
+            // Extract key words (simple approach)
+            const words = cleanContent.toLowerCase().split(/\s+/);
+            const keyWords = words.filter(word => 
+                word.length > 3 && 
+                !['the', 'and', 'for', 'with', 'this', 'that', 'they', 'have', 'from', 'will', 'your', 'what', 'when', 'where', 'how', 'why'].includes(word)
+            );
             
-            // Filter to only include Microsoft Ravi (English) and Google Hindi
-            const allowedVoices = voices.filter(voice => {
-                const name = voice.name.toLowerCase();
-                const lang = voice.lang.toLowerCase();
-                
-                // Microsoft Ravi - English (India)
-                if (name.includes('ravi') && name.includes('english') && lang.includes('en')) {
-                    return true;
-                }
-                
-                // Google Hindi
-                if (name.includes('google') && (name.includes('hindi') || lang.includes('hi'))) {
-                    return true;
-                }
-                
-                return false;
-            });
-            
-            // Add default option
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = 'Select a voice';
-            voiceSelect.appendChild(defaultOption);
-            
-            // Add filtered voices
-            allowedVoices.forEach(voice => {
-                const option = document.createElement('option');
-                option.value = voice.name;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                voiceSelect.appendChild(option);
-            });
-            
-            // Auto-select Microsoft Ravi as default for Roy Sir
-            const raviVoice = allowedVoices.find(v => v.name.toLowerCase().includes('ravi'));
-            if (raviVoice) {
-                voiceSelect.value = raviVoice.name;
-            }
+            return keyWords.slice(0, 3).join(' '); // Return first 3 key words
         }
 
-        // Update avatar based on language
-        function updateTeacher(language) {
-            currentTeacher = language === 'hi' ? teachers.hindi : teachers.english;
+        // --- Enhanced TTS with Smart Content Filtering ---
+        function cleanTextForTTS(text) {
+            // Remove Mermaid diagrams completely from TTS
+            text = text.replace(/```mermaid[\s\S]*?```/g, '');
             
-            // Update chat avatar
-            const avatarImgChat = document.getElementById('teacher-avatar-chat');
-            const teacherNameChat = document.getElementById('teacher-name-chat');
+            // Remove code blocks but keep their descriptions
+            text = text.replace(/```[\s\S]*?```/g, '');
             
-            if (avatarImgChat) {
-                avatarImgChat.src = currentTeacher.image;
-            }
-            if (teacherNameChat) {
-                teacherNameChat.textContent = currentTeacher.name;
-            }
+            // Remove markdown formatting but keep content
+            text = text.replace(/\*\*(.*?)\*\*/g, '$1'); // Bold
+            text = text.replace(/\*(.*?)\*/g, '$1'); // Italic
+            text = text.replace(/`(.*?)`/g, '$1'); // Code
+            text = text.replace(/\[(.*?)\]\(.*?\)/g, '$1'); // Links
+            text = text.replace(/^#+\s*/gm, ''); // Headers
+            text = text.replace(/^\s*[-*+]\s*/gm, ''); // List markers
             
-            // Auto-select appropriate voice based on teacher
-            const voiceSelect = document.getElementById('voiceSelect');
-            const voices = speechSynthesis.getVoices();
+            // Remove special characters that TTS struggles with
+            text = text.replace(/[~`^]/g, '');
+            text = text.replace(/\s+/g, ' '); // Multiple spaces to single
             
-            if (language === 'hi') {
-                // Ms. Sapana - select Google Hindi
-                const hindiVoice = voices.find(v => v.name.toLowerCase().includes('google') && 
-                    (v.name.toLowerCase().includes('hindi') || v.lang.toLowerCase().includes('hi')));
-                if (hindiVoice && voiceSelect) {
-                    voiceSelect.value = hindiVoice.name;
-                }
-            } else {
-                // Roy Sir - select Microsoft Ravi
-                const raviVoice = voices.find(v => v.name.toLowerCase().includes('ravi'));
-                if (raviVoice && voiceSelect) {
-                    voiceSelect.value = raviVoice.name;
-                }
-            }
-            
-            // Add teacher-specific intro if it's a new session
-            if(chatHistory.length === 0) {
-                addMessage('ai', currentTeacher.behaviors.intro);
-            }
+            return text.trim();
         }
 
-        // Enhanced speakText function with avatar animation
+        // --- Enhanced speakText function with Smart Behavior ---
         async function speakText(text) {
             if (!speechSynthesis) return;
             
@@ -1042,7 +1018,10 @@
             avatarImg.classList.add('talking-animation');
             mouth.classList.add('talking');
             
-            const utterance = new SpeechSynthesisUtterance(text);
+            // Clean text for TTS (remove diagrams, code, etc.)
+            const cleanText = cleanTextForTTS(text);
+            
+            const utterance = new SpeechSynthesisUtterance(cleanText);
             
             // Select voice based on teacher
             const voices = speechSynthesis.getVoices();
@@ -1061,52 +1040,166 @@
             if(currentTeacher === teachers.hindi) {
                 // Ms. Sapana's gentle style
                 utterance.rate = 0.85;
-                if(text.length > 100) {
-                    // Add pauses for longer explanations
-                    const sentences = text.split('. ');
-                    text = sentences.join('. \n\n');
-                }
             } else {
                 // Roy Sir's direct style
-                if(!text.endsWith('!') && !text.endsWith('?')) {
-                    text += '.';
+                if(!cleanText.endsWith('!') && !cleanText.endsWith('?')) {
+                    utterance.text = cleanText + '.';
                 }
             }
             
-            // Check if it's time for a story
+            // Smart story/health tip management
             const now = new Date();
-            if((now.getTime() - lastStoryTime) > currentTeacher.behaviors.storyFrequency * 60 * 1000) {
-                text += `\n\n<em>${getPanchatantraStory()}</em>`;
-                lastStoryTime = now.getTime();
-            }
+            const today = now.toDateString();
             
-            utterance.text = text;
+            if(currentTeacher === teachers.hindi) {
+                // Ms. Sapana - Stories
+                if(currentTeacher.behaviors.lastStoryDate !== today) {
+                    currentTeacher.behaviors.storiesToday = 0;
+                    currentTeacher.behaviors.lastStoryDate = today;
+                }
+                
+                if((now.getTime() - lastStoryTime) > currentTeacher.behaviors.storyFrequency && 
+                   currentTeacher.behaviors.storiesToday < currentTeacher.behaviors.maxStoriesPerDay) {
+                    const story = getPanchatantraStory();
+                    utterance.text += `\n\n${story}`;
+                    lastStoryTime = now.getTime();
+                    currentTeacher.behaviors.storiesToday++;
+                }
+            } else {
+                // Roy Sir - Health tips
+                if(currentTeacher.behaviors.lastHealthTipDate !== today) {
+                    currentTeacher.behaviors.healthTipsToday = 0;
+                    currentTeacher.behaviors.lastHealthTipDate = today;
+                }
+                
+                if((now.getTime() - lastHealthTipTime) > currentTeacher.behaviors.healthTipFrequency && 
+                   currentTeacher.behaviors.healthTipsToday < currentTeacher.behaviors.maxHealthTipsPerDay) {
+                    const healthTip = getHealthTip();
+                    utterance.text += `\n\n${healthTip}`;
+                    lastHealthTipTime = now.getTime();
+                    currentTeacher.behaviors.healthTipsToday++;
+                }
+            }
             
             utterance.onend = () => {
                 avatarImg.classList.remove('talking-animation');
                 mouth.classList.remove('talking');
-                
-                // Add teacher-specific outro
-                if(Math.random() > 0.7) { // 30% chance
-                    setTimeout(() => {
-                        speakText(currentTeacher.behaviors.outro);
-                    }, 1000);
-                }
             };
             
             speechSynthesis.speak(utterance);
         }
 
-        // Panchatantra stories database
+        // Improved Panchatantra stories
         function getPanchatantraStory() {
             const stories = [
-                "The Monkey and the Crocodile: Teaching us about trust and cleverness...",
-                "The Lion and the Rabbit: Showing how wisdom beats strength...",
-                "The Tortoise and the Geese: A lesson about holding your tongue...",
-                "The Elephants and the Mice: Proving even the small can help the big...",
-                "The Blue Jackal: Teaching the importance of being true to yourself..."
+                "एक छोटी सी कहानी: बुद्धिमानी हमेशा ताकत से बेहतर होती है।",
+                "याद रखो: धैर्य और मेहनत से हर मुश्किल आसान हो जाती है।",
+                "एक सीख: दूसरों की मदद करने से हमें भी मदद मिलती है।"
             ];
             return stories[Math.floor(Math.random() * stories.length)];
+        }
+
+        // Health tips for Roy Sir
+        function getHealthTip() {
+            const tips = [
+                "Remember to take a short break and stretch every hour.",
+                "Don't forget to drink water while studying.",
+                "Good posture helps you focus better.",
+                "Take deep breaths to stay relaxed while learning.",
+                "A short walk can refresh your mind."
+            ];
+            return tips[Math.floor(Math.random() * tips.length)];
+        }
+
+        // --- Image Integration from Extracted Images ---
+        async function loadRelevantImages(subject, grade, topic) {
+            try {
+                // Load the image index
+                const response = await fetch('/extracted_images/index.json');
+                if (!response.ok) return [];
+                
+                const imageIndex = await response.json();
+                
+                // Filter images by subject, grade, and topic
+                const relevantImages = imageIndex.filter(img => {
+                    const matchesSubject = img.subject.toLowerCase().includes(subject.toLowerCase());
+                    const matchesGrade = img.grade === grade || img.grade === grade.toString();
+                    const matchesTopic = img.description.toLowerCase().includes(topic.toLowerCase()) ||
+                                       img.tags.some(tag => tag.toLowerCase().includes(topic.toLowerCase()));
+                    
+                    return matchesSubject && matchesGrade && matchesTopic;
+                });
+                
+                return relevantImages.slice(0, 3); // Return max 3 relevant images
+            } catch (error) {
+                console.error('Error loading images:', error);
+                return [];
+            }
+        }
+
+        // Function to display images in chat
+        function displayImagesInChat(images, messageDiv) {
+            if (!images || images.length === 0) return;
+            
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+            
+            images.forEach(img => {
+                const imgElement = document.createElement('div');
+                imgElement.className = 'bg-gray-800 rounded-lg p-2';
+                imgElement.innerHTML = `
+                    <img src="/extracted_images/${img.imgPath}" 
+                         alt="${img.description}" 
+                         class="w-full h-32 object-cover rounded"
+                         onclick="openImageModal('/extracted_images/${img.imgPath}', '${img.description}')"
+                         style="cursor: pointer;">
+                    <p class="text-xs text-gray-400 mt-2">${img.description}</p>
+                `;
+                imageContainer.appendChild(imgElement);
+            });
+            
+            messageDiv.appendChild(imageContainer);
+        }
+
+        // Image modal for full-size viewing
+        function openImageModal(imageSrc, description) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="max-w-4xl max-h-full p-4">
+                    <img src="${imageSrc}" alt="${description}" class="max-w-full max-h-full object-contain">
+                    <p class="text-white text-center mt-2">${description}</p>
+                    <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white text-2xl">&times;</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+                imgElement.innerHTML = `
+                    <img src="/extracted_images/${img.imgPath}" 
+                         alt="${img.description}" 
+                         class="w-full h-32 object-cover rounded"
+                         onclick="openImageModal('/extracted_images/${img.imgPath}', '${img.description}')"
+                         style="cursor: pointer;">
+                    <p class="text-xs text-gray-400 mt-2">${img.description}</p>
+                `;
+                imageContainer.appendChild(imgElement);
+            });
+            
+            messageDiv.appendChild(imageContainer);
+        }
+
+        // Image modal for full-size viewing
+        function openImageModal(imageSrc, description) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="max-w-4xl max-h-full p-4">
+                    <img src="${imageSrc}" alt="${description}" class="max-w-full max-h-full object-contain">
+                    <p class="text-white text-center mt-2">${description}</p>
+                    <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white text-2xl">&times;</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
         // --- Speech Recognition (STT) ---
@@ -1391,18 +1484,6 @@
             }
         }
 
-        // Health tips for Roy Sir
-        function getHealthTip() {
-            const tips = [
-                "take a 5-minute stretch break every hour.",
-                "drink at least 8 glasses of water daily.",
-                "maintain good posture while studying.",
-                "eat nuts for better concentration.",
-                "get 8 hours of sleep for optimal learning."
-            ];
-            return tips[Math.floor(Math.random() * tips.length)];
-        }
-
         // --- Media Control Functions ---
         function playCurrentAnswer() {
             console.log('Play button clicked');
@@ -1537,7 +1618,12 @@
                 }
                 
                 removeTypingIndicator();
-                await addMessage('ai', aiResponse);
+                
+                // Get current user's class and subject for image loading
+                const userClass = userData?.grade ? `class${userData.grade}` : 'class6';
+                const currentSubject = gptService.currentSubject || 'English';
+                
+                await addMessage('ai', aiResponse, currentSubject, userData?.grade || 6);
                 // TTS is now handled automatically in addMessage function
             } catch (err) {
                 removeTypingIndicator();
@@ -1553,7 +1639,7 @@
                     errorMessage = 'Request timed out. Please try again.';
                 }
                 
-                addMessage('ai', errorMessage);
+                addMessage('ai', errorMessage, 'General', userData?.grade || 6);
             } finally {
                 sendButton.disabled = false;
             }
