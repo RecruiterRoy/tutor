@@ -1117,14 +1117,6 @@
         // Initialize demo on page load
         document.addEventListener('DOMContentLoaded', function() {
             startDemo();
-            
-            // Check if user is already logged in and redirect if needed
-            if (window.TutorAuth && TutorAuth.prototype.handleAuthRedirect) {
-                if (!window.tutorAuthInstance) {
-                    window.tutorAuthInstance = new TutorAuth();
-                }
-                window.tutorAuthInstance.handleAuthRedirect();
-            }
         });
 
         // Preload images for better performance
@@ -1137,6 +1129,5 @@
             img.src = src;
         });
     </script>
-    <script src="/public/js/auth.js"></script>
 </body>
 </html>
