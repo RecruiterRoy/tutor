@@ -20,12 +20,32 @@
       "dest": "/server.js"
     },
     {
-      "src": "/public/js/(.*)",
-      "dest": "/public/js/$1"
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
     },
     {
-      "src": "/public/images/(.*)",
-      "dest": "/public/images/$1"
+      "src": "/login.html",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/register.html",
+      "dest": "/register.html"
+    },
+    {
+      "src": "/dashboard.html",
+      "dest": "/dashboard.html"
+    },
+    {
+      "src": "/verify-deployment.html",
+      "dest": "/verify-deployment.html"
+    },
+    {
+      "src": "/test-localhost.html",
+      "dest": "/test-localhost.html"
+    },
+    {
+      "src": "/test-api.html",
+      "dest": "/test-api.html"
     },
     {
       "src": "/favicon.ico",
@@ -33,18 +53,11 @@
     },
     {
       "src": "/",
-      "dest": "/index.html",
-      "headers": {
-        "Cache-Control": "no-cache"
-      }
-    },
-    {
-      "src": "/(.*\\.html)",
-      "dest": "/$1"
+      "dest": "/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/server.js"
     }
   ]
 }
