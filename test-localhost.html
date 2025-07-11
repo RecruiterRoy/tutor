@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localhost Test - TUTOR.AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        .info { color: #60a5fa; }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        input {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px;
+            width: 200px;
+        }
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Localhost Authentication Test</h1>
+        <div id="status">Loading...</div>
+        
+        <div style="margin-top: 20px;">
+            <h3>Quick Login Test</h3>
+            <input type="email" id="testEmail" placeholder="Enter email" value="test@example.com">
+            <input type="password" id="testPassword" placeholder="Enter password" value="password123">
+            <button onclick="testLogin()">🔐 Test Login</button>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button onclick="testLogout()">🚪 Test Logout</button>
+            <button onclick="checkAuthState()">🔍 Check Auth State</button>
+            <button onclick="location.reload()">🔄 Refresh</button>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <h3>Navigation Test</h3>
+            <button onclick="goToLogin()">➡️ Go to Login</button>
+            <button onclick="goToDashboard()">➡️ Go to Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Load scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/public/js/config.js"></script>
+    <script src="/public/js/auth.js"></script>
+    
+    <script>
+        let statusDiv = document.getElementById('status');
+        
+        function updateStatus(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            statusDiv.innerHTML += `<div class="${type}">• ${message}</div>`;
+        }
+        
+        async function runTests() {
+            updateStatus('🚀 Starting localhost tests...');
+            
+            try {
+                // Test 1: Check if all dependencies are loaded
+                if (typeof window.supabase !== 'undefined') {
+                    updateStatus('✅ Supabase CDN loaded', 'success');
+                } else {
+                    updateStatus('❌ Supabase CDN failed', 'error');
+                }
+                
+                if (typeof window.supabaseConfig !== 'undefined') {
+                    updateStatus('✅ Config loaded', 'success');
+                } else {
+                    updateStatus('❌ Config failed', 'error');
+                }
+                
+                if (typeof window.TutorAuth !== 'undefined') {
+                    updateStatus('✅ TutorAuth loaded', 'success');
+                } else {
+                    updateStatus('❌ TutorAuth failed', 'error');
+                }
+                
+                // Test 2: Initialize TutorAuth
+                if (window.TutorAuth) {
+                    await window.TutorAuth.init();
+                    updateStatus('✅ TutorAuth initialized', 'success');
+                    
+                    // Test 3: Check current auth state
+                    const user = window.TutorAuth.getCurrentUser();
+                    if (user) {
+                        updateStatus(`✅ User already logged in: ${user.email}`, 'success');
+                    } else {
+                        updateStatus('ℹ️ No user currently logged in', 'info');
+                    }
+                } else {
+                    updateStatus('❌ Cannot initialize TutorAuth', 'error');
+                }
+                
+                updateStatus('🎉 Localhost tests completed', 'success');
+                
+            } catch (error) {
+                updateStatus(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            if (!email || !password) {
+                updateStatus('❌ Please enter email and password', 'error');
+                return;
+            }
+            
+            try {
+                updateStatus(`🔐 Attempting login for ${email}...`, 'info');
+                
+                const result = await window.TutorAuth.signInWithEmail(email, password);
+                
+                if (result.success) {
+                    updateStatus(`✅ Login successful for ${email}`, 'success');
+                    updateStatus('ℹ️ You should be redirected to dashboard now', 'info');
+                } else {
+                    updateStatus(`❌ Login failed: ${result.error}`, 'error');
+                }
+                
+            } catch (error) {
+                updateStatus(`❌ Login error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testLogout() {
+            try {
+                updateStatus('🚪 Attempting logout...', 'info');
+                
+                const result = await window.TutorAuth.signOut();
+                
+                if (result.success) {
+                    updateStatus('✅ Logout successful', 'success');
+                } else {
+                    updateStatus(`❌ Logout failed: ${result.error}`, 'error');
+                }
+                
+            } catch (error) {
+                updateStatus(`❌ Logout error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkAuthState() {
+            try {
+                const user = window.TutorAuth.getCurrentUser();
+                const isAuth = window.TutorAuth.isAuthenticated();
+                
+                updateStatus(`🔍 Current user: ${user ? user.email : 'None'}`, 'info');
+                updateStatus(`🔍 Is authenticated: ${isAuth}`, 'info');
+                
+            } catch (error) {
+                updateStatus(`❌ Auth state check error: ${error.message}`, 'error');
+            }
+        }
+        
+        function goToLogin() {
+            window.location.href = '/login.html';
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard.html';
+        }
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html> 

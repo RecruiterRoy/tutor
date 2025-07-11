@@ -251,8 +251,16 @@
 
                 async checkAuthState() {
                     try {
-                        if (window.TutorAuth.isAuthenticated()) {
-                            window.location.href = '/dashboard';
+                        // Only check auth state if TutorAuth is properly initialized
+                        if (window.TutorAuth && window.TutorAuth.isInitialized) {
+                            const user = window.TutorAuth.getCurrentUser();
+                            if (user) {
+                                console.log('User already authenticated, redirecting to dashboard');
+                                // Add a small delay to prevent immediate redirect loops
+                                setTimeout(() => {
+                                    window.location.href = '/dashboard.html';
+                                }, 100);
+                            }
                         }
                     } catch (error) {
                         console.error('Auth state check error:', error);
@@ -282,7 +290,8 @@
                             result = await window.TutorAuth.signInWithEmail(this.email, this.password)
                             
                             if (result.success) {
-                                window.location.href = '/dashboard'
+                                console.log('Login successful, redirecting to dashboard');
+                                window.location.href = '/dashboard.html'
                             } else {
                                 this.showMessage(result.error, 'error')
                             }
@@ -357,7 +366,8 @@
                         if (result.error) {
                             this.showMessage(result.error.message, 'error')
                         } else {
-                            window.location.href = '/dashboard'
+                            console.log('OTP verification successful, redirecting to dashboard');
+                            window.location.href = '/dashboard.html'
                         }
                     } catch (error) {
                         console.error('OTP verification error:', error);

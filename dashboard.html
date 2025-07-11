@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/public/js/config.js"></script>
+    <script src="/public/js/auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1683,13 +1684,38 @@
         // --- Initialization ---
         async function initDashboard() {
             try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) {
+                console.log('🚀 Initializing dashboard...');
+                
+                // Wait for TutorAuth to be available and initialized
+                let attempts = 0;
+                const maxAttempts = 50; // 5 seconds max
+                
+                while (attempts < maxAttempts) {
+                    if (window.TutorAuth && window.TutorAuth.isInitialized) {
+                        console.log('✅ TutorAuth is ready');
+                        break;
+                    }
+                    console.log(`⏳ Waiting for TutorAuth... (${attempts + 1}/${maxAttempts})`);
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.TutorAuth || !window.TutorAuth.isInitialized) {
+                    console.error('❌ TutorAuth failed to initialize');
                     window.location.href = '/login.html';
                     return;
                 }
                 
-                currentUser = session.user;
+                // Check authentication using TutorAuth
+                const user = window.TutorAuth.getCurrentUser();
+                if (!user) {
+                    console.log('❌ No authenticated user found, redirecting to login');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                console.log('✅ User authenticated:', user.email);
+                currentUser = user;
                 await loadUserProfile();
                 
                 // Debug the system after initialization
@@ -2156,7 +2182,21 @@
         }
 
         // Start the application
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Dashboard DOM loaded');
+            
+            // Initialize TutorAuth first
+            if (window.TutorAuth) {
+                try {
+                    await window.TutorAuth.init();
+                    console.log('✅ TutorAuth initialized in dashboard');
+                } catch (error) {
+                    console.error('❌ TutorAuth initialization failed:', error);
+                }
+            } else {
+                console.warn('⚠️ TutorAuth not available');
+            }
+            
             showSection('dashboard');
             initDashboard();
         });
