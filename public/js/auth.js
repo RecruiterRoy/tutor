@@ -1,12 +1,23 @@
-// auth.js - Fixed version with proper singleton pattern
+// auth.js - Robust singleton pattern with multiple load protection
 (function() {
   'use strict';
 
-  // Check if TutorAuth already exists
-  if (window.TutorAuth) {
-    console.log('TutorAuth already initialized');
+  // Prevent multiple script execution
+  if (window.tutorAuthLoaded) {
+    console.log('TutorAuth script already loaded, skipping execution');
     return;
   }
+  
+  // Mark script as loaded
+  window.tutorAuthLoaded = true;
+
+  // Check if TutorAuth class already exists
+  if (window.TutorAuth) {
+    console.log('TutorAuth class already exists, skipping redeclaration');
+    return;
+  }
+
+  console.log('Initializing TutorAuth class...');
 
   class TutorAuth {
     constructor() {
@@ -34,7 +45,7 @@
         await this.waitForSupabase();
         
         // Get Supabase client
-        this.supabase = await getSupabaseClient();
+        this.supabase = await window.getSupabaseClient();
         
         // Check current session
         const { data: { session } } = await this.supabase.auth.getSession();
@@ -63,7 +74,7 @@
       
       while (Date.now() - startTime < timeout) {
         if (typeof window.supabase !== 'undefined' && 
-            typeof getSupabaseClient === 'function') {
+            typeof window.getSupabaseClient === 'function') {
           return;
         }
         await new Promise(resolve => setTimeout(resolve, 100));

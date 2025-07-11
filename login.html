@@ -9,8 +9,21 @@
     <!-- Load Supabase CDN first -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Other scripts -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Tailwind via CDN with config (production ready) -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2'
+                    }
+                }
+            }
+        }
+    </script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
     <style>
         .glass-effect {
@@ -166,6 +179,14 @@
     <script src="/public/js/auth.js"></script>
 
     <script>
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, scripts should be available');
+            console.log('window.supabaseConfig:', typeof window.supabaseConfig);
+            console.log('window.TutorAuth:', typeof window.TutorAuth);
+            console.log('window.supabase:', typeof window.supabase);
+        });
+
         // Alpine.js app - must be globally available
         function authApp() {
             return {
@@ -183,20 +204,29 @@
                 supabaseReady: false,
 
                 init() {
+                    console.log('Alpine app initializing...');
                     // Wait for Supabase to be ready
                     this.waitForSupabase();
                 },
 
                 async waitForSupabase() {
+                    console.log('Waiting for Supabase to be ready...');
                     let attempts = 0;
                     const maxAttempts = 50; // 5 seconds max
                     
-                    while (!window.TutorAuth && attempts < maxAttempts) {
+                    // Check all dependencies
+                    while (attempts < maxAttempts) {
+                        if (window.supabase && window.supabaseConfig && window.TutorAuth) {
+                            console.log('All dependencies loaded, initializing TutorAuth...');
+                            break;
+                        }
+                        
+                        console.log(`Attempt ${attempts + 1}: Supabase=${!!window.supabase}, Config=${!!window.supabaseConfig}, TutorAuth=${!!window.TutorAuth}`);
                         await new Promise(resolve => setTimeout(resolve, 100));
                         attempts++;
                     }
                     
-                    if (window.TutorAuth) {
+                    if (window.TutorAuth && window.supabase && window.supabaseConfig) {
                         try {
                             await window.TutorAuth.init();
                             this.supabaseReady = true;
@@ -206,11 +236,16 @@
                             this.checkAuthState();
                         } catch (error) {
                             console.error('Failed to initialize TutorAuth:', error);
-                            this.showMessage('Database connection failed. Please refresh the page.', 'error');
+                            this.showMessage(`Database connection failed: ${error.message}`, 'error');
                         }
                     } else {
-                        console.error('TutorAuth failed to initialize');
-                        this.showMessage('Database connection failed. Please refresh the page.', 'error');
+                        const missing = [];
+                        if (!window.supabase) missing.push('Supabase library');
+                        if (!window.supabaseConfig) missing.push('Config');
+                        if (!window.TutorAuth) missing.push('TutorAuth');
+                        
+                        console.error('Missing dependencies:', missing.join(', '));
+                        this.showMessage(`Failed to load: ${missing.join(', ')}. Please refresh the page.`, 'error');
                     }
                 },
 
