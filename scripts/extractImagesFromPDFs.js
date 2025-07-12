@@ -135,16 +135,16 @@ async function extractImagesFromPDF(pdfPath) {
     
     // Extract ALL pages from the book
     for (let page = 1; page <= pageCount; page++) {
-      const imgFileName = `${pdfName}-page-${page.toString().padStart(3, '0')}.png`;
+      const imgFileName = `${pdfName}-page-${page.toString().padStart(3, '0')}.jpg`;
       const imgPath = path.join(bookDir, imgFileName);
       const relativeImgPath = path.relative(outputDir, imgPath);
       
       try {
-        // Try to extract using pdftoppm (if available)
-        await execAsync(`pdftoppm -png -f ${page} -l ${page} "${pdfPath}" "${path.join(bookDir, pdfName + '-page')}"`);
+        // Try to extract using pdftoppm with JPG format
+        await execAsync(`pdftoppm -jpeg -f ${page} -l ${page} "${pdfPath}" "${path.join(bookDir, pdfName + '-page')}"`);
         
         // Rename the output file to our desired name
-        const tempFile = path.join(bookDir, `${pdfName}-page-${page.toString().padStart(3, '0')}-1.png`);
+        const tempFile = path.join(bookDir, `${pdfName}-page-${page.toString().padStart(3, '0')}-1.jpg`);
         if (fs.existsSync(tempFile)) {
           fs.renameSync(tempFile, imgPath);
         }
@@ -172,7 +172,7 @@ async function extractImagesFromPDF(pdfPath) {
         images.push({
           file: pdfName,
           page: page,
-          imgPath: `placeholder_images/placeholder.png`,
+          imgPath: `placeholder_images/placeholder.jpg`,
           fullPath: relativePath,
           subject: subject,
           grade: grade,
@@ -210,9 +210,9 @@ async function main() {
     fs.mkdirSync(placeholderDir, { recursive: true });
   }
   
-  // Create a simple placeholder image (1x1 pixel PNG)
-  const placeholderImage = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
-  fs.writeFileSync(path.join(placeholderDir, 'placeholder.png'), placeholderImage);
+  // Create a simple placeholder image (1x1 pixel JPG)
+  const placeholderImage = Buffer.from('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxAAPwA/8A', 'base64');
+  fs.writeFileSync(path.join(placeholderDir, 'placeholder.jpg'), placeholderImage);
   
   const allImages = [];
   let processedCount = 0;

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Local Images</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <h1 class="text-3xl font-bold mb-8">Test Local Image Serving</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="imageContainer">
+        <div class="bg-gray-800 p-4 rounded">
+            <h3 class="text-lg font-semibold mb-2">Loading images...</h3>
+        </div>
+    </div>
+
+    <script>
+        async function testLocalImages() {
+            try {
+                console.log('🔍 Testing local image loading...');
+                
+                // Test if index file exists
+                const response = await fetch('/extracted_images/index.json');
+                if (!response.ok) {
+                    throw new Error('Index file not found');
+                }
+                
+                const imageIndex = await response.json();
+                console.log(`✅ Found ${imageIndex.length} images in index`);
+                
+                // Display first 6 images
+                const container = document.getElementById('imageContainer');
+                container.innerHTML = '';
+                
+                const sampleImages = imageIndex.slice(0, 6);
+                
+                sampleImages.forEach(img => {
+                    const imgDiv = document.createElement('div');
+                    imgDiv.className = 'bg-gray-800 rounded-lg p-2';
+                    imgDiv.innerHTML = `
+                        <img src="/extracted_images/${img.imgPath}" 
+                             alt="${img.bookName}" 
+                             class="w-full h-32 object-cover rounded mb-2"
+                             onerror="this.src='https://via.placeholder.com/400x300/666666/ffffff?text=Not+Found'">
+                        <p class="text-sm font-semibold">${img.subject} - ${img.grade}</p>
+                        <p class="text-xs text-gray-400">${img.bookName}</p>
+                        <p class="text-xs text-gray-500">${img.imgPath}</p>
+                    `;
+                    container.appendChild(imgDiv);
+                });
+                
+                console.log('✅ Local images loaded successfully');
+                
+            } catch (error) {
+                console.error('❌ Error loading local images:', error);
+                document.getElementById('imageContainer').innerHTML = `
+                    <div class="bg-red-800 p-4 rounded">
+                        <h3 class="text-lg font-semibold">Error Loading Images</h3>
+                        <p class="text-sm">${error.message}</p>
+                        <p class="text-xs mt-2">Make sure the extracted_images folder is accessible</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Run test on page load
+        testLocalImages();
+    </script>
+</body>
+</html> 

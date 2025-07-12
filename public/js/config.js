@@ -77,17 +77,16 @@
       }
 
       // Check if Supabase library is loaded
-      if (typeof window.supabase === 'undefined') {
+      if (typeof window.supabase === 'undefined' || !window.supabase) {
         throw new Error('Supabase library not loaded. Please check CDN connection.');
       }
 
-      const { createClient } = window.supabase;
-      
-      if (typeof createClient !== 'function') {
+      // Check if createClient function exists
+      if (typeof window.supabase.createClient !== 'function') {
         throw new Error('Supabase createClient function not available');
       }
 
-      const client = createClient(config.supabaseUrl, config.supabaseAnonKey);
+      const client = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
       
       console.log('✅ Supabase client created successfully');
       return client;

@@ -3,22 +3,28 @@ class GPTService {
         this.currentGrade = null;
         this.currentSubject = null;
         this.chatHistory = [];
-        this.baseUrl = '/api/chat'; // Ensure this matches your endpoint
+        this.baseUrl = '/api/enhanced-chat'; // Use enhanced chat API
     }
     
-    async sendMessage(userMessage) {
+    setContext(grade, subject) {
+        this.currentGrade = grade;
+        this.currentSubject = subject;
+        console.log(`GPT Service Context Updated: Grade=${grade}, Subject=${subject}`);
+    }
+    
+    async sendMessage(userMessage, userProfile = null) {
         try {
             this.chatHistory.push({ role: 'user', content: userMessage });
             
             const requestBody = {
-                messages: this.chatHistory,
-                grade: this.currentGrade || 'Class 2', // Default value
-                subject: this.currentSubject || 'General', // Default value
-                response_format: 'markdown',
-                language: document.getElementById('preferredLanguage').value || 'en'
+                message: userMessage,
+                grade: this.currentGrade || '6',
+                subject: this.currentSubject || 'General',
+                userProfile: userProfile, // Send user profile to API
+                action: 'chat'
             };
 
-            console.log('Sending request:', JSON.stringify(requestBody, null, 2));
+            console.log('Sending request to enhanced chat:', JSON.stringify(requestBody, null, 2));
 
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
@@ -37,6 +43,15 @@ class GPTService {
             const data = await response.json();
             if (!data.response) {
                 throw new Error('Invalid response format from API');
+            }
+            
+            // Log usage for cost monitoring
+            if (data.usage) {
+                console.log('Claude Usage:', {
+                    input_tokens: data.usage.input_tokens,
+                    output_tokens: data.usage.output_tokens,
+                    estimated_cost: (data.usage.input_tokens * 0.000003) + (data.usage.output_tokens * 0.000015)
+                });
             }
             
             this.chatHistory.push({ role: 'assistant', content: data.response });

@@ -311,7 +311,7 @@ app.get('/api/supabase-config', (req, res) => {
 // Claude Chat API
 app.post('/api/chat', async (req, res) => {
   try {
-    const { messages, grade, subject, language } = req.body;
+    const { messages, grade, subject, language, userProfile } = req.body;
 
     // Validate input
     if (!messages || !Array.isArray(messages)) {
@@ -342,30 +342,49 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // Enhanced system prompt for Indian education context
+    // Build user context from profile
+    const userContext = userProfile ? {
+      name: userProfile.full_name || userProfile.name || 'Student',
+      class: userProfile.class || grade,
+      board: userProfile.board || 'CBSE',
+      subject: userProfile.subject || subject
+    } : {
+      name: 'Student',
+      class: grade,
+      board: 'CBSE',
+      subject: subject
+    };
+
+    // Enhanced system prompt for Indian education context - PLAIN TEXT ONLY
     const systemPrompt = `You are an expert AI tutor for Indian students. 
 
-Key Guidelines:
-- Follow CBSE/ICSE curriculum standards
-- Use step-by-step explanations
-- Ask guiding questions instead of giving direct answers
-- Relate concepts to Indian contexts when possible
-- Support both English and Hindi explanations
-- Encourage critical thinking
-- Always address the student by their first name. If you don't know their name, ask for it politely. Never use "children" or "kids" - always use their actual name.
+STUDENT INFORMATION (CRITICAL - DO NOT ASK FOR THIS):
+- Student Name: ${userContext.name}
+- Class: ${userContext.class}
+- Board: ${userContext.board}
+- Subject: ${userContext.subject}
+
+ABSOLUTE RULES - NEVER VIOLATE:
+1. NEVER ask for the student's name - you already know it's ${userContext.name}
+2. NEVER ask "What is your name?" or "May I know your name?" or similar questions
+3. NEVER ask for class, board, or any personal information
+4. ALWAYS address the student as "${userContext.name}" in your responses
+5. Use the provided information without asking for it
+6. NEVER mention images, pictures, or visual resources
+7. RESPOND IN PLAIN TEXT ONLY - no markdown, no formatting, no special characters
 
 Always explain concepts clearly and simply, using:
-- Visuals FIRST: diagrams (Mermaid), tables, or charts (Chart.js) whenever possible
-- Markdown formatting for all responses (use paragraphs, bullet/numbered lists, and tables where helpful)
-- Markdown image syntax for pictures (use relevant image URLs if available)
-- Mermaid code blocks (~~~mermaid ... ~~~) for diagrams and flowcharts
-- Chart.js code blocks (~~~chartjs ... ~~~) with valid Chart.js JSON config for bar, line, or pie charts
-- Embed YouTube/video links in Markdown if a video is relevant
+- Simple, clear plain text explanations
+- Natural language without formatting
+- Regular paragraphs and sentences
+- NO markdown formatting, NO lists with symbols, NO tables, NO special characters
+- Just plain, readable text
 
-Student Context: Grade ${grade || 'a student'}, Subject: ${subject || 'general'}, Language: ${language || 'English'}
+Student Context: ${userContext.name} is in ${userContext.class}, studying ${userContext.subject} under ${userContext.board} board
 ${bookContext}
 
-Remember: Guide the student to understand, don't just provide answers.`;
+Remember: Guide ${userContext.name} to understand through simple, clear plain text explanations. 
+Use natural language without any formatting or special characters.`;
 
     // Convert messages to Claude format
     const claudeMessages = filteredMessages.map(msg => ({
@@ -383,6 +402,13 @@ Remember: Guide the student to understand, don't just provide answers.`;
 
     const response = completion.content[0].text;
 
+    // Log usage for cost monitoring
+    console.log('Claude Usage:', {
+      input_tokens: completion.usage.input_tokens,
+      output_tokens: completion.usage.output_tokens,
+      estimated_cost: (completion.usage.input_tokens * 0.000003) + (completion.usage.output_tokens * 0.000015)
+    });
+
     res.json({
       response: response,
       status: "success",
@@ -391,10 +417,12 @@ Remember: Guide the student to understand, don't just provide answers.`;
         output_tokens: completion.usage.output_tokens
       }
     });
+
   } catch (error) {
-    console.error('Claude API error:', error);
-    res.status(500).json({
-      error: error.message || 'Failed to process request'
+    console.error('Claude API Error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get response from Claude',
+      details: error.message 
     });
   }
 });
@@ -630,7 +658,7 @@ const regionalAvatars = [
     // West India
     { id: 'gujarati-male', name: 'Gujarati Male', region: 'Gujarat', gender: 'male', image: '👨‍🦳' },
     { id: 'gujarati-female', name: 'Gujarati Female', region: 'Gujarat', gender: 'female', image: '👩‍🦳' },
-    { id: 'marathi-male', name: 'Marathi Male', region: 'Maharashtra', gender: 'male', image: '👨‍🦱' },
+    { id: 'marathi-male', name: 'Marathi Male', region: 'Maharashtra', gender: 'male', image: '👨‍��' },
     { id: 'marathi-female', name: 'Marathi Female', region: 'Maharashtra', gender: 'female', image: '👩‍🦱' },
     
     // Central India
@@ -648,6 +676,52 @@ const regionalAvatars = [
     { id: 'kashmiri-female', name: 'Kashmiri Female', region: 'Kashmir', gender: 'female', image: '👩‍🦲' }
 ];
 
+// Enhanced Chat API endpoint
+app.post('/api/enhanced-chat', async (req, res) => {
+    try {
+        const { message, subject, grade, action, examMonth, weekNumber, month } = req.body;
+        
+        // Check if required environment variables are set
+        if (!process.env.ANTHROPIC_API_KEY) {
+            return res.status(500).json({ 
+                error: 'Claude API key not configured',
+                details: 'ANTHROPIC_API_KEY environment variable is required'
+            });
+        }
+        
+        // Import the enhanced chat handler dynamically
+        const enhancedChatHandler = await import('./pages/api/enhanced-chat.js');
+        
+        // Call the handler with the request and response
+        await enhancedChatHandler.default(req, res);
+        
+    } catch (error) {
+        console.error('Enhanced chat API error:', error);
+        res.status(500).json({ 
+            error: 'Enhanced chat service unavailable',
+            details: error.message 
+        });
+    }
+});
+
+// Claude Chat API endpoint
+app.post('/api/chat-claude', async (req, res) => {
+    try {
+        // Import the Claude chat handler dynamically
+        const claudeChatHandler = await import('./pages/api/chat-claude.js');
+        
+        // Call the handler with the request and response
+        await claudeChatHandler.default(req, res);
+        
+    } catch (error) {
+        console.error('Claude chat API error:', error);
+        res.status(500).json({ 
+            error: 'Claude chat service unavailable',
+            details: error.message 
+        });
+    }
+});
+
 // Static file serving FIRST (before HTML routes)
 app.use(express.static(path.join(__dirname), {
     setHeaders: (res, path) => {
@@ -663,6 +737,26 @@ app.use(express.static(path.join(__dirname), {
 
 // Serve extracted images statically
 app.use('/extracted_images', express.static(path.join(__dirname, 'extracted_images')));
+
+// Serve public/js directory
+app.use('/public/js', express.static(path.join(__dirname, 'public', 'js')));
+
+// Test endpoint for config.js
+app.get('/test-config', (req, res) => {
+    const configPath = path.join(__dirname, 'public', 'js', 'config.js');
+    if (fs.existsSync(configPath)) {
+        res.json({ 
+            status: 'Config file exists',
+            path: configPath,
+            size: fs.statSync(configPath).size
+        });
+    } else {
+        res.status(404).json({ 
+            status: 'Config file not found',
+            path: configPath
+        });
+    }
+});
 
 // Book images API
 app.get('/api/book-images', (req, res) => {
@@ -718,6 +812,15 @@ app.get('/register', (req, res) => {
         res.sendFile(registerPath);
     } else {
         res.status(404).send('register.html not found');
+    }
+});
+
+app.get('/admin', (req, res) => {
+    const adminPath = path.join(__dirname, 'admin.html');
+    if (fs.existsSync(adminPath)) {
+        res.sendFile(adminPath);
+    } else {
+        res.status(404).send('admin.html not found');
     }
 });
 
