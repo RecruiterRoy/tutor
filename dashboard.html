@@ -9,6 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/public/js/config.js"></script>
     <script src="/public/js/auth.js"></script>
+    <script src="/public/js/enhancedAIService.js"></script>
+    <script src="/public/js/imageSearch.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -198,19 +200,112 @@
         .prose h2 { font-size: 1.3em; }
         .prose h3 { font-size: 1.1em; }
         
+        /* Enhanced AI Features */
+        .knowledge-bank-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+            animation: slideInLeft 0.3s ease-out;
+        }
+        
+        .kb-info-content h4 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+        
+        .kb-info-content p {
+            margin: 4px 0;
+            font-size: 13px;
+        }
+        
+        .weekly-reminder,
+        .monthly-test-reminder {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 400px;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .reminder-content h3 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+        
+        .reminder-content h4 {
+            margin: 15px 0 8px 0;
+            font-size: 14px;
+        }
+        
+        .reminder-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .reminder-content li {
+            margin: 4px 0;
+            font-size: 13px;
+        }
+        
+        .reminder-content button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            margin: 10px 5px 0 0;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .reminder-content button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
         /* Mermaid Diagram Styles */
         .mermaid-container {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 0.75rem;
             padding: 1rem;
             margin: 1rem 0;
-            overflow: auto;
+            min-height: 100px;
+            position: relative;
         }
-        .mermaid {
-            background: transparent !important;
-            display: flex;
-            justify-content: center;
+
+        .mermaid-loading {
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
         }
+
+        .mermaid-error {
+            color: #f87171;
+            padding: 0.5rem;
+        }
+
+        .mermaid-error.hidden {
+            display: none;
+        }
+
         .mermaid svg {
             max-width: 100%;
             height: auto;
@@ -218,8 +313,10 @@
             margin: 0 auto;
             background: transparent !important;
         }
+
         .mermaid .label {
             color: white !important;
+            font-family: 'Inter', sans-serif;
         }
         
         /* Avatar Animation Styles */
@@ -548,7 +645,7 @@
                                     <div class="gradient-border-content">
                                         <div id="chatMessages" class="chat-container space-y-4 mb-4">
                                             <!-- Messages will be inserted here -->
-                </div>
+                                        </div>
                                         <!-- Chat Input -->
                                         <div class="flex space-x-3">
                                             <input 
@@ -566,8 +663,8 @@
                                                 Send
                                             </button>
                                         </div>
-                    </div>
-                </div>
+                                    </div>
+                                </div>
 
                                 <!-- Quick Actions -->
                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -582,14 +679,12 @@
                                     <button onclick="sendQuickMessage('Help with English grammar', 'English')" class="glass-effect p-4 rounded-2xl text-center hover:bg-white/20 transition-all duration-300 group">
                                         <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">📝</div>
                                         <p class="text-white font-medium text-sm">English</p>
-                    </button>
+                                    </button>
                                     <button onclick="sendQuickMessage('Create a study plan for me')" class="glass-effect p-4 rounded-2xl text-center hover:bg-white/20 transition-all duration-300 group">
                                         <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">📅</div>
                                         <p class="text-white font-medium text-sm">Study Plan</p>
-                    </button>
-                </div>
-
-
+                                    </button>
+                                </div>
 
                                 <!-- Study Materials Panel -->
                                 <div class="glass-effect rounded-2xl p-4 mt-4">
@@ -633,7 +728,7 @@
                                 <label class="text-white text-sm">Subjects:</label>
                                 <div id="subjectsList" class="flex flex-col space-y-2 mt-2"></div>
                                 <button id="addSubjectBtn" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded">Add Subject</button>
-                        </div>
+                            </div>
                             <div id="learning-progress"></div>
                         </div>
                     </div>
@@ -736,19 +831,30 @@
                             <div class="mb-4">
                                 <label class="text-white text-sm">Voice Input Test:</label>
                                 <div class="flex flex-col space-y-2 mt-2">
-                                    <button onclick="testSTT()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                    <button onclick="testMicrophone()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
                                         Test Microphone
-                                    </button>
-                                    <button onclick="toggleVoiceRecording()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
-                                        Toggle Voice Recording
                                     </button>
                                     <button onclick="testMicButton()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">
                                         Test Mic Button
                                     </button>
-                                    <button onclick="makeMicVisible()" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors">
-                                        Make Mic Visible
+                                </div>
+                            </div>
+
+                            <!-- Account Management -->
+                            <div class="mb-4">
+                                <label class="text-white text-sm font-medium">Account Management:</label>
+                                <div class="flex flex-col space-y-2 mt-2">
+                                    <button onclick="signOut()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                                        🚪 Sign Out
+                                    </button>
+                                    <button onclick="showUserProfile()" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                                        👤 View Profile
+                                    </button>
+                                    <button onclick="openFeedbackModal()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">
+                                        💬 Send Feedback
                                     </button>
                                 </div>
+                                <p class="text-gray-400 text-xs mt-2">Tell us if you face any issue or have something to say to us</p>
                             </div>
                         </div>
                     </div>
@@ -758,6 +864,8 @@
     </div>
 
     <script>
+        // ========== CORE FUNCTIONS ==========
+        
         // Initialize Mermaid before any other scripts
         mermaid.initialize({
             startOnLoad: false,
@@ -771,142 +879,150 @@
             fontFamily: '"Inter", sans-serif'
         });
 
-        // Initialize Supabase
+        // ========== GLOBAL VARIABLES ==========
         const supabaseConfig = window.appConfig || {};
         const supabaseUrl = supabaseConfig.supabaseUrl || 'https://your-project-ref.supabase.co';
         const supabaseKey = supabaseConfig.supabaseAnonKey || 'your-anon-key-here';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Global variables
         let currentUser = null;
-        let userData = null; // Add global userData variable
+        let userData = null;
         let chatHistory = [];
         let isRecording = false;
         let recognition = null;
         let recognitionTimeout;
         let speechSynthesis = window.speechSynthesis;
-
-        // --- Enhanced GPT Service ---
-        class GPTService {
-            constructor() {
-                this.currentGrade = null;
-                this.currentSubject = null;
-                this.chatHistory = [];
-                this.baseUrl = (window.appConfig?.apiBaseUrl || 'http://localhost:3000') + '/api/chat';
-            }
-            
-            setContext(grade, subject) {
-                if (grade) this.currentGrade = grade;
-                if (subject) this.currentSubject = subject;
-            }
-            
-            async sendMessage(userMessage) {
-                try {
-                    this.chatHistory.push({ role: 'user', content: userMessage });
-                    
-                    const requestBody = {
-                        messages: this.chatHistory,
-                        grade: this.currentGrade || 'Class 2', // Default value
-                        subject: this.currentSubject || 'General', // Default value
-                        response_format: 'markdown',
-                        language: document.getElementById('preferredLanguage')?.value || 'en'
-                    };
-
-                    console.log('Sending request:', JSON.stringify(requestBody, null, 2));
-
-                    const response = await fetch(this.baseUrl, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(requestBody)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        throw new Error(errorData.message || `API request failed with status ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    if (!data.response) {
-                        throw new Error('Invalid response format from API');
-                    }
-                    
-                    this.chatHistory.push({ role: 'assistant', content: data.response });
-                    return data.response;
-                } catch (error) {
-                    console.error('API Error:', error);
-                    return `I'm having trouble connecting right now. ${error.message}`;
-                }
-            }
-        }
-        
-        const gptService = new GPTService();
-
-        // Teacher Profiles - Improved and more intelligent
-        const teachers = {
-            hindi: {
-                name: "Ms. Sapana",
-                image: "/public/images/teacher-avatar1.png",
-                description: "Empathetic and encouraging Hindi teacher",
-                style: "gentle",
-                behaviors: {
-                    intro: "नमस्ते! मैं आपकी हिंदी शिक्षिका सपना हूं। आज हम साथ में सीखेंगे।",
-                    outro: "बहुत अच्छा! आपने अच्छी तरह से सीखा।",
-                    storyFrequency: 3600000, // 1 hour in milliseconds
-                    maxStoriesPerDay: 3,
-                    storiesToday: 0,
-                    lastStoryDate: null
-                }
-            },
-            english: {
-                name: "Roy Sir",
-                image: "/public/images/teacher-avatar2.png",
-                description: "Clear and structured English teacher",
-                style: "direct",
-                behaviors: {
-                    intro: "Hello! I'm your English teacher Roy Sir. Let's learn together.",
-                    outro: "Excellent work! Keep up the good learning.",
-                    healthTipFrequency: 3600000, // 1 hour in milliseconds
-                    maxHealthTipsPerDay: 5,
-                    healthTipsToday: 0,
-                    lastHealthTipDate: null
-                }
-            }
-        };
-
-        // Current teacher - Roy Sir (English) is default
-        let currentTeacher = teachers.english;
-        let lastStoryTime = 0;
-        let lastHealthTipTime = 0;
-        
-        // Media control variables
         let currentSpeech = null;
         let currentText = '';
         let pausedPosition = 0;
         let isPlaying = false;
-        let autoPlayEnabled = true; // Auto-play TTS by default
+        let autoPlayEnabled = true;
 
-        // --- Enhanced Message Handling with Image Support ---
+        // ========== UI FUNCTIONS ==========
+        
+        function showSection(section) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(section + 'Section').classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('nav' + section.charAt(0).toUpperCase() + section.slice(1)).classList.add('active');
+        }
+
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `<div class='typing-dot'></div><div class='typing-dot'></div><div class='typing-dot'></div>`;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingDiv = document.getElementById('typingIndicator');
+            if (typingDiv && typingDiv.parentNode) {
+                typingDiv.parentNode.removeChild(typingDiv);
+            }
+        }
+
+        function showError(message, duration = 5000) {
+            const existing = document.querySelector('.error-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 glass-effect p-4 rounded-xl text-red-400 font-medium flex items-center space-x-2 z-50 error-toast';
+            toast.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function showSuccess(message, duration = 3000) {
+            const existing = document.querySelector('.success-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 glass-effect p-4 rounded-xl text-green-400 font-medium flex items-center space-x-2 z-50 success-toast';
+            toast.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function showSTTFeedback(message, type = 'info') {
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.id = 'sttFeedback';
+            feedbackDiv.className = `fixed top-4 right-4 glass-effect p-3 rounded-xl text-sm font-medium z-50 ${
+                type === 'success' ? 'text-green-400' : 
+                type === 'error' ? 'text-red-400' : 
+                'text-blue-400'
+            }`;
+            feedbackDiv.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : '🎤'}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            const existing = document.getElementById('sttFeedback');
+            if (existing) existing.remove();
+            
+            document.body.appendChild(feedbackDiv);
+            
+            setTimeout(() => {
+                if (feedbackDiv.parentNode) {
+                    feedbackDiv.remove();
+                }
+            }, 3000);
+        }
+
+        // ========== CHAT FUNCTIONS ==========
+
+        function sendQuickMessage(message, subject = null) {
+            if (subject) gptService.setContext(null, subject);
+            document.getElementById('chatInput').value = message;
+            handleSendMessage();
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleSendMessage();
+            }
+            // Shift+Enter will naturally create a line break in the textarea
+        }
+
         async function addMessage(role, content, subject = null, grade = null) {
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message-${role} p-4 rounded-2xl mb-4`;
             
-            // Process Mermaid diagrams first
-            let processedContent = content;
-            const mermaidDiagrams = [];
-            
-            // Extract and replace Mermaid blocks
-            processedContent = processedContent.replace(/```mermaid([\s\S]*?)```/g, (match, diagram) => {
-                const id = 'mermaid-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-                mermaidDiagrams.push({ id, diagram: diagram.trim() });
-                return `<div class="mermaid-container" id="${id}">Loading diagram...</div>`;
-            });
-            
-            // Process other markdown with marked.js
-            processedContent = marked.parse(processedContent);
+            // Use plain text only - no markdown processing
+            let plainText = content
+                .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+                .replace(/`([^`]+)`/g, '$1') // Remove inline code
+                .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+                .replace(/\*(.*?)\*/g, '$1') // Remove italic
+                .replace(/#{1,6}\s/g, '') // Remove headers
+                .replace(/\n{3,}/g, '\n\n') // Remove extra line breaks
+                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
+                .replace(/!\[([^\]]*)\]\([^)]+\)/g, '') // Remove images
+                .trim();
             
             messageDiv.innerHTML = `
                 <div class="flex items-start space-x-4">
@@ -914,295 +1030,104 @@
                         <span class="text-white font-bold text-sm">${role === 'user' ? 'You' : 'AI'}</span>
                     </div>
                     <div class="flex-1 overflow-x-auto">
-                        <div class="text-white message-content prose prose-invert max-w-none">${processedContent}</div>
+                        <div class="text-white message-content whitespace-pre-wrap">${plainText}</div>
                         <p class="text-gray-400 text-xs mt-2">Just now</p>
                     </div>
                 </div>
             `;
             
             chatMessages.appendChild(messageDiv);
-            
-            // Load and display relevant images for AI responses
-            if (role === 'ai' && subject && grade) {
-                try {
-                    // Extract topic from content for image search
-                    const topic = extractTopicFromContent(content);
-                    const relevantImages = await loadRelevantImages(subject, grade, topic);
-                    if (relevantImages.length > 0) {
-                        displayImagesInChat(relevantImages, messageDiv);
-                    }
-                } catch (error) {
-                    console.error('Error loading images:', error);
-                }
-            }
-            
-            // Render Mermaid diagrams after DOM insertion
-            if (mermaidDiagrams.length > 0) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                mermaidDiagrams.forEach(({id, diagram}) => {
-                    const container = document.getElementById(id);
-                    if (container) {
-                        try {
-                            container.innerHTML = `<div class="mermaid">${diagram}</div>`;
-                            mermaid.init(undefined, container.querySelector('.mermaid'));
-                        } catch (err) {
-                            console.error('Mermaid render error:', err);
-                            container.innerHTML = `<div class="text-red-400 p-2">Failed to render diagram: ${err.message}</div>`;
-                        }
-                    }
-                });
-            }
-            
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
-            // Auto-play TTS for AI responses unless paused
+            // Auto-play TTS for AI responses
             if (role === 'ai' && autoPlayEnabled) {
                 setTimeout(() => {
-                    currentText = cleanTextForTTS(content);
+                    currentText = cleanTextForTTS(plainText);
                     pausedPosition = 0;
                     playFromPosition();
-                }, 500); // Small delay to ensure DOM is ready
+                }, 500);
             }
         }
 
-        // Extract topic from content for image search
-        function extractTopicFromContent(content) {
-            // Remove markdown and code blocks
-            let cleanContent = content.replace(/```[\s\S]*?```/g, '');
-            cleanContent = cleanContent.replace(/`[^`]*`/g, '');
-            cleanContent = cleanContent.replace(/\*\*([^*]+)\*\*/g, '$1');
-            cleanContent = cleanContent.replace(/\*([^*]+)\*/g, '$1');
+        async function handleSendMessage() {
+            const input = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
             
-            // Extract key words (simple approach)
-            const words = cleanContent.toLowerCase().split(/\s+/);
-            const keyWords = words.filter(word => 
-                word.length > 3 && 
-                !['the', 'and', 'for', 'with', 'this', 'that', 'they', 'have', 'from', 'will', 'your', 'what', 'when', 'where', 'how', 'why'].includes(word)
-            );
+            if (!message) return;
             
-            return keyWords.slice(0, 3).join(' '); // Return first 3 key words
-        }
-
-        // --- Enhanced TTS with Smart Content Filtering ---
-        function cleanTextForTTS(text) {
-            // Remove Mermaid diagrams completely from TTS
-            text = text.replace(/```mermaid[\s\S]*?```/g, '');
+            addMessage('user', message);
+            input.value = '';
+            sendButton.disabled = true;
             
-            // Remove code blocks but keep their descriptions
-            text = text.replace(/```[\s\S]*?```/g, '');
-            
-            // Remove markdown formatting but keep content
-            text = text.replace(/\*\*(.*?)\*\*/g, '$1'); // Bold
-            text = text.replace(/\*(.*?)\*/g, '$1'); // Italic
-            text = text.replace(/`(.*?)`/g, '$1'); // Code
-            text = text.replace(/\[(.*?)\]\(.*?\)/g, '$1'); // Links
-            text = text.replace(/^#+\s*/gm, ''); // Headers
-            text = text.replace(/^\s*[-*+]\s*/gm, ''); // List markers
-            
-            // Remove special characters that TTS struggles with
-            text = text.replace(/[~`^]/g, '');
-            text = text.replace(/\s+/g, ' '); // Multiple spaces to single
-            
-            return text.trim();
-        }
-
-        // --- Enhanced speakText function with Smart Behavior ---
-        async function speakText(text) {
-            if (!speechSynthesis) return;
-            
-            const avatarImg = document.getElementById('teacher-avatar');
-            const mouth = document.querySelector('.avatar-mouth');
-            
-            // Start talking animation
-            avatarImg.classList.add('talking-animation');
-            mouth.classList.add('talking');
-            
-            // Clean text for TTS (remove diagrams, code, etc.)
-            const cleanText = cleanTextForTTS(text);
-            
-            const utterance = new SpeechSynthesisUtterance(cleanText);
-            
-            // Select voice based on teacher
-            const voices = speechSynthesis.getVoices();
-            if(currentTeacher === teachers.hindi) {
-                const hindiVoice = voices.find(v => v.name.includes('Hindi') || v.lang.includes('hi-IN'));
-                if(hindiVoice) utterance.voice = hindiVoice;
-            } else {
-                const englishVoice = voices.find(v => v.name.includes('English') || v.lang.includes('en-'));
-                if(englishVoice) utterance.voice = englishVoice;
-            }
-            
-            utterance.rate = 0.9;
-            utterance.pitch = currentTeacher === teachers.hindi ? 1.1 : 1.0;
-            
-            // Add teacher personality quirks
-            if(currentTeacher === teachers.hindi) {
-                // Ms. Sapana's gentle style
-                utterance.rate = 0.85;
-            } else {
-                // Roy Sir's direct style
-                if(!cleanText.endsWith('!') && !cleanText.endsWith('?')) {
-                    utterance.text = cleanText + '.';
-                }
-            }
-            
-            // Smart story/health tip management
-            const now = new Date();
-            const today = now.toDateString();
-            
-            if(currentTeacher === teachers.hindi) {
-                // Ms. Sapana - Stories
-                if(currentTeacher.behaviors.lastStoryDate !== today) {
-                    currentTeacher.behaviors.storiesToday = 0;
-                    currentTeacher.behaviors.lastStoryDate = today;
-                }
-                
-                if((now.getTime() - lastStoryTime) > currentTeacher.behaviors.storyFrequency && 
-                   currentTeacher.behaviors.storiesToday < currentTeacher.behaviors.maxStoriesPerDay) {
-                    const story = getPanchatantraStory();
-                    utterance.text += `\n\n${story}`;
-                    lastStoryTime = now.getTime();
-                    currentTeacher.behaviors.storiesToday++;
-                }
-            } else {
-                // Roy Sir - Health tips
-                if(currentTeacher.behaviors.lastHealthTipDate !== today) {
-                    currentTeacher.behaviors.healthTipsToday = 0;
-                    currentTeacher.behaviors.lastHealthTipDate = today;
-                }
-                
-                if((now.getTime() - lastHealthTipTime) > currentTeacher.behaviors.healthTipFrequency && 
-                   currentTeacher.behaviors.healthTipsToday < currentTeacher.behaviors.maxHealthTipsPerDay) {
-                    const healthTip = getHealthTip();
-                    utterance.text += `\n\n${healthTip}`;
-                    lastHealthTipTime = now.getTime();
-                    currentTeacher.behaviors.healthTipsToday++;
-                }
-            }
-            
-            utterance.onend = () => {
-                avatarImg.classList.remove('talking-animation');
-                mouth.classList.remove('talking');
-            };
-            
-            speechSynthesis.speak(utterance);
-        }
-
-        // Improved Panchatantra stories
-        function getPanchatantraStory() {
-            const stories = [
-                "एक छोटी सी कहानी: बुद्धिमानी हमेशा ताकत से बेहतर होती है।",
-                "याद रखो: धैर्य और मेहनत से हर मुश्किल आसान हो जाती है।",
-                "एक सीख: दूसरों की मदद करने से हमें भी मदद मिलती है।"
-            ];
-            return stories[Math.floor(Math.random() * stories.length)];
-        }
-
-        // Health tips for Roy Sir
-        function getHealthTip() {
-            const tips = [
-                "Remember to take a short break and stretch every hour.",
-                "Don't forget to drink water while studying.",
-                "Good posture helps you focus better.",
-                "Take deep breaths to stay relaxed while learning.",
-                "A short walk can refresh your mind."
-            ];
-            return tips[Math.floor(Math.random() * tips.length)];
-        }
-
-        // --- Image Integration from Extracted Images ---
-        async function loadRelevantImages(subject, grade, topic) {
             try {
-                // Load the image index
-                const response = await fetch('/extracted_images/index.json');
-                if (!response.ok) return [];
+                showTypingIndicator();
                 
-                const imageIndex = await response.json();
+                // Get user profile data to send to API
+                const userProfileData = userData || {
+                    full_name: currentUser?.user_metadata?.full_name || 'Student',
+                    class: userData?.class || 'Class 6',
+                    board: userData?.board || 'CBSE',
+                    subject: gptService.currentSubject || 'General'
+                };
                 
-                // Filter images by subject, grade, and topic
-                const relevantImages = imageIndex.filter(img => {
-                    const matchesSubject = img.subject.toLowerCase().includes(subject.toLowerCase());
-                    const matchesGrade = img.grade === grade || img.grade === grade.toString();
-                    const matchesTopic = img.description.toLowerCase().includes(topic.toLowerCase()) ||
-                                       img.tags.some(tag => tag.toLowerCase().includes(topic.toLowerCase()));
-                    
-                    return matchesSubject && matchesGrade && matchesTopic;
-                });
+                let aiResponse = await gptService.sendMessage(message, userProfileData);
                 
-                return relevantImages.slice(0, 3); // Return max 3 relevant images
-            } catch (error) {
-                console.error('Error loading images:', error);
-                return [];
+                // Remove ALL name-related questions and references
+                const firstName = (userData?.full_name || currentUser?.user_metadata?.full_name || 'Student').split(' ')[0];
+                
+                if(currentTeacher === teachers.hindi) {
+                    // Remove Hindi name questions and references
+                    aiResponse = aiResponse.replace(/नाम.*?जान.*?सकती?/gi, ''); // Remove "naam jaan sakti/sakta"
+                    aiResponse = aiResponse.replace(/आपका नाम.*?बताने.*?के बाद/gi, ''); // Remove "aapka naam batane ke baad"
+                    aiResponse = aiResponse.replace(/आपसे personally बात.*?चाहती?/gi, ''); // Remove "personally baat chahungi/chahunga"
+                    aiResponse = aiResponse.replace(/क्या आप.*?समझ गए\?/gi, ''); // Remove "do you understand?"
+                    aiResponse = aiResponse.replace(/आपका नाम क्या है\?/gi, ''); // Remove "what is your name?"
+                    aiResponse = aiResponse.replace(/मैं.*?आपका नाम.*?जानना.*?चाहती?/gi, ''); // Remove "I want to know your name"
+                    aiResponse = aiResponse.replace(/Homework देने से पहले.*?नाम.*?जान.*?सकती?/gi, ''); // Remove homework name questions
+                    aiResponse = aiResponse.replace(/Aapka naam batane ke baad.*?homework.*?doongi/gi, ''); // Remove homework name references
+                } else {
+                    // Remove English name questions and references
+                    aiResponse = aiResponse.replace(/what.*?your.*?name/gi, ''); // Remove "what is your name"
+                    aiResponse = aiResponse.replace(/can.*?know.*?your.*?name/gi, ''); // Remove "can I know your name"
+                    aiResponse = aiResponse.replace(/before.*?giving.*?homework.*?name/gi, ''); // Remove homework name questions
+                    aiResponse = aiResponse.replace(/after.*?telling.*?name.*?homework/gi, ''); // Remove homework name references
+                    aiResponse = aiResponse.replace(/personally.*?talk.*?you/gi, ''); // Remove "personally talk to you"
+                    aiResponse = aiResponse.replace(/Remember:.*$/g, ''); // Remove health tips from main response
+                }
+                
+                // Clean up extra whitespace and punctuation
+                aiResponse = aiResponse.replace(/\s+/g, ' ').trim();
+                aiResponse = aiResponse.replace(/^\s*[,\s]+\s*/, ''); // Remove leading commas and spaces
+                aiResponse = aiResponse.replace(/\s*[,\s]+\s*$/, ''); // Remove trailing commas and spaces
+                
+                removeTypingIndicator();
+                
+                const userClass = userData?.grade ? `class${userData.grade}` : 'class6';
+                const currentSubject = gptService.currentSubject || 'English';
+                
+                await addMessage('ai', aiResponse, currentSubject, userData?.grade || 6);
+            } catch (err) {
+                removeTypingIndicator();
+                console.error('Chat error:', err);
+                
+                let errorMessage = 'Sorry, I encountered an error. Please try again.';
+                if (err.message.includes('API request failed')) {
+                    errorMessage = 'Connection error. Please check your internet connection and try again.';
+                } else if (err.message.includes('Invalid response format')) {
+                    errorMessage = 'Service temporarily unavailable. Please try again in a moment.';
+                } else if (err.message.includes('timeout')) {
+                    errorMessage = 'Request timed out. Please try again.';
+                }
+                
+                addMessage('ai', errorMessage, 'General', userData?.grade || 6);
+            } finally {
+                sendButton.disabled = false;
             }
         }
 
-        // Function to display images in chat
-        function displayImagesInChat(images, messageDiv) {
-            if (!images || images.length === 0) return;
-            
-            const imageContainer = document.createElement('div');
-            imageContainer.className = 'mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
-            
-            images.forEach(img => {
-                const imgElement = document.createElement('div');
-                imgElement.className = 'bg-gray-800 rounded-lg p-2';
-                imgElement.innerHTML = `
-                    <img src="/extracted_images/${img.imgPath}" 
-                         alt="${img.description}" 
-                         class="w-full h-32 object-cover rounded"
-                         onclick="openImageModal('/extracted_images/${img.imgPath}', '${img.description}')"
-                         style="cursor: pointer;">
-                    <p class="text-xs text-gray-400 mt-2">${img.description}</p>
-                `;
-                imageContainer.appendChild(imgElement);
-            });
-            
-            messageDiv.appendChild(imageContainer);
-        }
+        // ========== SPEECH FUNCTIONS ==========
 
-        // Image modal for full-size viewing
-        function openImageModal(imageSrc, description) {
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
-            modal.innerHTML = `
-                <div class="max-w-4xl max-h-full p-4">
-                    <img src="${imageSrc}" alt="${description}" class="max-w-full max-h-full object-contain">
-                    <p class="text-white text-center mt-2">${description}</p>
-                    <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white text-2xl">&times;</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-                imgElement.innerHTML = `
-                    <img src="/extracted_images/${img.imgPath}" 
-                         alt="${img.description}" 
-                         class="w-full h-32 object-cover rounded"
-                         onclick="openImageModal('/extracted_images/${img.imgPath}', '${img.description}')"
-                         style="cursor: pointer;">
-                    <p class="text-xs text-gray-400 mt-2">${img.description}</p>
-                `;
-                imageContainer.appendChild(imgElement);
-            });
-            
-            messageDiv.appendChild(imageContainer);
-        }
-
-        // Image modal for full-size viewing
-        function openImageModal(imageSrc, description) {
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
-            modal.innerHTML = `
-                <div class="max-w-4xl max-h-full p-4">
-                    <img src="${imageSrc}" alt="${description}" class="max-w-full max-h-full object-contain">
-                    <p class="text-white text-center mt-2">${description}</p>
-                    <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white text-2xl">&times;</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-
-        // --- Speech Recognition (STT) ---
         function initSpeechRecognition() {
             try {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1213,17 +1138,13 @@
                 }
 
                 recognition = new SpeechRecognition();
-                
-                // Optimized settings for better performance
-                recognition.continuous = false; // Changed to false for better accuracy
-                recognition.interimResults = true; // Keep interim results for immediate feedback
-                recognition.maxAlternatives = 3; // Increased for better accuracy
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 3;
                 recognition.lang = document.getElementById('preferredLanguage')?.value || 'en-US';
                 
-                // Additional settings for better performance (optional grammar)
                 if (recognition.grammars && window.SpeechGrammarList) {
                     try {
-                        // Add grammar for better recognition if supported
                         const grammar = new SpeechGrammarList();
                         grammar.addFromString('#JSGF V1.0; grammar commands; public <command> = help | explain | what is | how to | tell me about;', 1);
                         recognition.grammars = grammar;
@@ -1238,20 +1159,16 @@
                     document.getElementById('voiceIcon').textContent = '🔴';
                     document.getElementById('voiceButton').classList.add('voice-recording');
                     document.getElementById('voiceStatus').style.opacity = '1';
-                    
-                    // Show immediate feedback
                     showSTTFeedback("Listening... Speak now!", 'info');
                     
-                    // Set a timeout for single recognition session
                     recognitionTimeout = setTimeout(() => {
                         if (isRecording) {
                             recognition.stop();
                         }
-                    }, 10000); // 10 second timeout per session
+                    }, 10000);
                 };
 
                 recognition.onresult = (event) => {
-                    // Clear timeout since we got results
                     if (recognitionTimeout) {
                         clearTimeout(recognitionTimeout);
                     }
@@ -1268,7 +1185,6 @@
                         
                         if (result.isFinal) {
                             finalTranscript += transcript;
-                            // Track the highest confidence result
                             if (confidence > highestConfidence) {
                                 highestConfidence = confidence;
                                 bestTranscript = transcript;
@@ -1281,21 +1197,17 @@
                     const chatInput = document.getElementById('chatInput');
                     
                     if (finalTranscript) {
-                        // Use the best transcript if we have multiple alternatives
                         const finalText = bestTranscript || finalTranscript;
                         
-                        // Only process if confidence is above threshold
                         if (highestConfidence > 0.6) {
                             chatInput.value = finalText;
                             console.log('Final transcript:', finalText, 'Confidence:', highestConfidence);
                             showSTTFeedback("Voice input received - processing...", 'success');
                             
-                            // Auto-send after a short delay
                             setTimeout(() => {
                                 handleSendMessage();
                             }, 500);
                             
-                            // Restart recognition for next input
                             setTimeout(() => {
                                 if (isRecording) {
                                     restartRecognition();
@@ -1304,18 +1216,15 @@
                         } else {
                             console.log('Low confidence result:', highestConfidence);
                             showSTTFeedback("Couldn't understand clearly. Please try again.", 'error');
-                            // Restart recognition immediately
                             setTimeout(() => {
                                 if (isRecording) {
                                     restartRecognition();
                                 }
                             }, 500);
                         }
-                        
                     } else if (interimTranscript) {
                         chatInput.value = interimTranscript;
                         console.log('Interim transcript:', interimTranscript);
-                        // Show interim feedback
                         chatInput.style.borderColor = '#10b981';
                     }
                 };
@@ -1323,16 +1232,13 @@
                 recognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
                     
-                    // Clear timeout on error
                     if (recognitionTimeout) {
                         clearTimeout(recognitionTimeout);
                     }
                     
-                    // Handle specific errors
                     switch(event.error) {
                         case 'no-speech':
                             console.log('No speech detected');
-                            // Restart recognition after a short delay
                             setTimeout(() => {
                                 if (isRecording) {
                                     restartRecognition();
@@ -1361,7 +1267,6 @@
                             
                         default:
                             console.log('Recognition error:', event.error);
-                            // Restart recognition for other errors
                             setTimeout(() => {
                                 if (isRecording) {
                                     restartRecognition();
@@ -1371,25 +1276,20 @@
                 };
 
                 recognition.onend = () => {
-                    // Clear timeout
                     if (recognitionTimeout) {
                         clearTimeout(recognitionTimeout);
                     }
-                    // Only stop recording, do not restart recognition automatically
                     stopRecording();
-                    // Reset input field styling
                     const chatInput = document.getElementById('chatInput');
                     chatInput.style.borderColor = '';
                 };
 
             } catch (error) {
                 console.error('Failed to initialize speech recognition:', error);
-                // Don't hide the button, just show an error
                 showSTTFeedback('Voice input may not work properly in this browser', 'error');
             }
         }
 
-        // Helper function to restart recognition safely
         function restartRecognition() {
             try {
                 if (recognition && isRecording) {
@@ -1397,7 +1297,6 @@
                 }
             } catch (e) {
                 console.log('Recognition restart failed:', e);
-                // Try again after a longer delay
                 setTimeout(() => {
                     if (isRecording) {
                         try {
@@ -1464,12 +1363,10 @@
 
             try {
                 console.log('Starting voice recording...');
-                // Initialize recognition if not already done
                 if (!recognition) {
                     initSpeechRecognition();
                 }
                 
-                // Start recording
                 startRecording();
                 
             } catch (error) {
@@ -1484,7 +1381,8 @@
             }
         }
 
-        // --- Media Control Functions ---
+        // ========== TTS FUNCTIONS ==========
+
         function playCurrentAnswer() {
             console.log('Play button clicked');
             const lastAIMessage = document.querySelector('.message-ai:last-child .message-content');
@@ -1502,10 +1400,9 @@
             if (currentSpeech) {
                 speechSynthesis.pause();
                 isPlaying = false;
-                autoPlayEnabled = false; // Disable auto-play when user manually pauses
-                // Store current position (approximate)
+                autoPlayEnabled = false;
                 const elapsed = currentSpeech.elapsedTime || 0;
-                pausedPosition = Math.floor(elapsed * 10); // rough character position
+                pausedPosition = Math.floor(elapsed * 10);
             }
         }
 
@@ -1515,28 +1412,17 @@
                 speechSynthesis.resume();
                 isPlaying = true;
             } else if (currentText && pausedPosition > 0) {
-                // Resume from where we left off
                 playFromPosition();
             } else {
                 showError('Nothing to resume');
             }
         }
 
-        // Clean text for TTS - remove markdown formatting
         function cleanTextForTTS(text) {
+            // Text is already cleaned, just ensure it's ready for TTS
             return text
-                // Remove markdown formatting
-                .replace(/\*\*(.*?)\*\*/g, '$1')  // Bold **text**
-                .replace(/\*(.*?)\*/g, '$1')     // Italic *text*
-                .replace(/#{1,6}\s*/g, '')       // Headers # ## ###
-                .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // Code blocks
-                .replace(/\[(.*?)\]\(.*?\)/g, '$1')  // Links [text](url)
-                .replace(/!\[.*?\]\(.*?\)/g, '')     // Images ![alt](url)
-                .replace(/^\s*[-*+]\s+/gm, '')       // List bullets
-                .replace(/^\s*\d+\.\s+/gm, '')       // Numbered lists
-                .replace(/^\s*>\s+/gm, '')           // Blockquotes
-                .replace(/\n{3,}/g, '\n\n')          // Multiple newlines
-                .replace(/\s+/g, ' ')                // Multiple spaces
+                .replace(/\n{3,}/g, '\n\n') // Remove extra line breaks
+                .replace(/\s+/g, ' ') // Normalize spaces
                 .trim();
         }
 
@@ -1550,7 +1436,6 @@
             
             currentSpeech = new SpeechSynthesisUtterance(textToPlay);
             
-            // Apply voice settings
             const voices = speechSynthesis.getVoices();
             const selectedVoice = voices.find(v => v.name === document.getElementById('voiceSelect').value);
             if (selectedVoice) {
@@ -1562,8 +1447,7 @@
             
             currentSpeech.onstart = () => {
                 isPlaying = true;
-                autoPlayEnabled = true; // Re-enable auto-play when speech starts
-                // Animate chat avatar
+                autoPlayEnabled = true;
                 const avatarImgChat = document.getElementById('teacher-avatar-chat');
                 const mouthChat = document.querySelector('.avatar-mouth-chat');
                 if (avatarImgChat) {
@@ -1590,166 +1474,306 @@
             speechSynthesis.speak(currentSpeech);
         }
 
-        // --- Chat Functions ---
-        async function handleSendMessage() {
-            const input = document.getElementById('chatInput');
-            const sendButton = document.getElementById('sendButton');
-            const message = input.value.trim();
+        // Extract topic from content for image search
+        function extractTopicFromContent(content) {
+            // Simple topic extraction without image dependencies
+            const words = content.toLowerCase().split(' ');
+            const topics = ['math', 'science', 'english', 'history', 'geography', 'physics', 'chemistry', 'biology'];
+            for (const topic of topics) {
+                if (words.includes(topic)) return topic;
+            }
+            return 'general';
+        }
+
+        // Populate voice options with only specific voices
+        function populateVoices() {
+            const voiceSelect = document.getElementById('voiceSelect');
+            if (!voiceSelect) return;
             
-            if (!message) return;
+            const voices = speechSynthesis.getVoices();
+            voiceSelect.innerHTML = '';
             
-            addMessage('user', message);
-            input.value = '';
-            sendButton.disabled = true;
+            // Define our preferred voices
+            const preferredVoices = {
+                english: 'Microsoft Ravi - English (India)',
+                hindi: 'Google हिन्दी'
+            };
             
-            try {
-                showTypingIndicator();
-                
-                // Get response with teacher personality
-                let aiResponse = await gptService.sendMessage(message);
-                
-                // Add teacher-specific formatting
-                const firstName = (userData?.full_name || currentUser?.user_metadata?.full_name || 'Student').split(' ')[0];
-                if(currentTeacher === teachers.hindi) {
-                    aiResponse = `${firstName} जी, ${aiResponse}\n\nक्या आप समझ गए?`;
+            // Find and add only our preferred voices
+            voices.forEach((voice) => {
+                if (voice.name === preferredVoices.english || voice.name === preferredVoices.hindi) {
+                    const option = document.createElement('option');
+                    option.value = voice.name;
+                    option.textContent = voice.name;
+                    option.setAttribute('data-language', voice.name === preferredVoices.english ? 'en' : 'hi');
+                    voiceSelect.appendChild(option);
+                }
+            });
+            
+            // Set default voice based on current teacher
+            if (currentTeacher === teachers.hindi) {
+                const hindiVoice = voiceSelect.querySelector('[data-language="hi"]');
+                if (hindiVoice) hindiVoice.selected = true;
+            } else {
+                const englishVoice = voiceSelect.querySelector('[data-language="en"]');
+                if (englishVoice) englishVoice.selected = true;
+            }
+            
+            console.log('✅ Voices populated with preferred voices only');
+        }
+
+        // Update teacher based on language
+        function updateTeacher(language) {
+            if (language === 'hi' || language === 'hi-en') {
+                currentTeacher = teachers.hindi;
+            } else {
+                currentTeacher = teachers.english;
+            }
+            
+            // Update UI elements
+            const teacherNameChat = document.getElementById('teacher-name-chat');
+            const teacherAvatarChat = document.getElementById('teacher-avatar-chat');
+            
+            if (teacherNameChat) {
+                teacherNameChat.textContent = currentTeacher.name;
+            }
+            
+            if (teacherAvatarChat) {
+                teacherAvatarChat.src = currentTeacher.image;
+            }
+            
+            // Auto-update voice selection based on teacher
+            const voiceSelect = document.getElementById('voiceSelect');
+            if (voiceSelect) {
+                if (currentTeacher === teachers.hindi) {
+                    const hindiVoice = voiceSelect.querySelector('[data-language="hi"]');
+                    if (hindiVoice) {
+                        hindiVoice.selected = true;
+                        console.log('✅ Voice changed to Hindi: Google हिन्दी');
+                    }
                 } else {
-                    if(!aiResponse.endsWith('.')) aiResponse += '.';
-                    aiResponse = `${firstName}, ${aiResponse}\n\nRemember: ${getHealthTip()}`;
+                    const englishVoice = voiceSelect.querySelector('[data-language="en"]');
+                    if (englishVoice) {
+                        englishVoice.selected = true;
+                        console.log('✅ Voice changed to English: Microsoft Ravi');
+                    }
                 }
-                
-                removeTypingIndicator();
-                
-                // Get current user's class and subject for image loading
-                const userClass = userData?.grade ? `class${userData.grade}` : 'class6';
-                const currentSubject = gptService.currentSubject || 'English';
-                
-                await addMessage('ai', aiResponse, currentSubject, userData?.grade || 6);
-                // TTS is now handled automatically in addMessage function
-            } catch (err) {
-                removeTypingIndicator();
-                console.error('Chat error:', err);
-                
-                // Provide more specific error messages
-                let errorMessage = 'Sorry, I encountered an error. Please try again.';
-                if (err.message.includes('API request failed')) {
-                    errorMessage = 'Connection error. Please check your internet connection and try again.';
-                } else if (err.message.includes('Invalid response format')) {
-                    errorMessage = 'Service temporarily unavailable. Please try again in a moment.';
-                } else if (err.message.includes('timeout')) {
-                    errorMessage = 'Request timed out. Please try again.';
+            }
+            
+            console.log('✅ Teacher updated to:', currentTeacher.name);
+        }
+
+        // ========== TEACHER FUNCTIONS ==========
+
+        const teachers = {
+            hindi: {
+                name: "Ms. Sapana",
+                image: "/public/images/teacher-avatar1.png",
+                description: "Empathetic and encouraging Hindi teacher",
+                style: "gentle",
+                behaviors: {
+                    intro: "नमस्ते! मैं आपकी हिंदी शिक्षिका सपना हूं। आज हम साथ में सीखेंगे।",
+                    outro: "बहुत अच्छा! आपने अच्छी तरह से सीखा।",
+                    storyFrequency: 3600000,
+                    maxStoriesPerDay: 3,
+                    storiesToday: 0,
+                    lastStoryDate: null
                 }
-                
-                addMessage('ai', errorMessage, 'General', userData?.grade || 6);
-            } finally {
-                sendButton.disabled = false;
+            },
+            english: {
+                name: "Roy Sir",
+                image: "/public/images/teacher-avatar2.png",
+                description: "Clear and structured English teacher",
+                style: "direct",
+                behaviors: {
+                    intro: "Hello! I'm your English teacher Roy Sir. Let's learn together.",
+                    outro: "Excellent work! Keep up the good learning.",
+                    healthTipFrequency: 3600000,
+                    maxHealthTipsPerDay: 5,
+                    healthTipsToday: 0,
+                    lastHealthTipDate: null
+                }
             }
+        };
+
+        let currentTeacher = teachers.english;
+        let lastStoryTime = 0;
+        let lastHealthTipTime = 0;
+
+        function getPanchatantraStory() {
+            const stories = [
+                "एक छोटी सी कहानी: बुद्धिमानी हमेशा ताकत से बेहतर होती है।",
+                "याद रखो: धैर्य और मेहनत से हर मुश्किल आसान हो जाती है।",
+                "एक सीख: दूसरों की मदद करने से हमें भी मदद मिलती है।"
+            ];
+            return stories[Math.floor(Math.random() * stories.length)];
         }
 
-        function sendQuickMessage(message, subject = null) {
-            if (subject) gptService.setContext(null, subject);
-            document.getElementById('chatInput').value = message;
-            handleSendMessage();
+        function getHealthTip() {
+            const tips = [
+                "Remember to take a short break and stretch every hour.",
+                "Don't forget to drink water while studying.",
+                "Good posture helps you focus better.",
+                "Take deep breaths to stay relaxed while learning.",
+                "A short walk can refresh your mind."
+            ];
+            return tips[Math.floor(Math.random() * tips.length)];
         }
 
-        function handleChatKeyPress(event) {
-            if (event.key === 'Enter') {
-                handleSendMessage();
+        // --- Enhanced GPT Service ---
+        class GPTService {
+            constructor() {
+                this.currentGrade = null;
+                this.currentSubject = null;
+                this.chatHistory = [];
+                this.baseUrl = (window.appConfig?.apiBaseUrl || 'http://localhost:3000') + '/api/chat';
             }
-        }
-
-        // --- UI Functions ---
-        function showTypingIndicator() {
-            const chatMessages = document.getElementById('chatMessages');
-            const typingDiv = document.createElement('div');
-            typingDiv.id = 'typingIndicator';
-            typingDiv.className = 'typing-indicator';
-            typingDiv.innerHTML = `<div class='typing-dot'></div><div class='typing-dot'></div><div class='typing-dot'></div>`;
-            chatMessages.appendChild(typingDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function removeTypingIndicator() {
-            const typingDiv = document.getElementById('typingIndicator');
-            if (typingDiv && typingDiv.parentNode) {
-                typingDiv.parentNode.removeChild(typingDiv);
-            }
-        }
-
-        // Enhanced error handling
-        function showError(message, duration = 5000) {
-            const existing = document.querySelector('.error-toast');
-            if (existing) existing.remove();
-
-            const toast = document.createElement('div');
-            toast.className = 'fixed bottom-4 right-4 glass-effect p-4 rounded-xl text-red-400 font-medium flex items-center space-x-2 z-50 error-toast';
-            toast.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>${message}</span>
-            `;
-            document.body.appendChild(toast);
             
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-                setTimeout(() => toast.remove(), 300);
-            }, duration);
-        }
-
-        function showSuccess(message, duration = 3000) {
-            const existing = document.querySelector('.success-toast');
-            if (existing) existing.remove();
-
-            const toast = document.createElement('div');
-            toast.className = 'fixed bottom-4 right-4 glass-effect p-4 rounded-xl text-green-400 font-medium flex items-center space-x-2 z-50 success-toast';
-            toast.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>${message}</span>
-            `;
-            document.body.appendChild(toast);
+            setContext(grade, subject) {
+                if (grade) this.currentGrade = grade;
+                if (subject) this.currentSubject = subject;
+            }
             
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-                setTimeout(() => toast.remove(), 300);
-            }, duration);
-        }
+            async sendMessage(userMessage, userProfileData) {
+                try {
+                    this.chatHistory.push({ role: 'user', content: userMessage });
+                    
+                    const requestBody = {
+                        messages: this.chatHistory,
+                        grade: this.currentGrade || 'Class 2',
+                        subject: this.currentSubject || 'General',
+                        response_format: 'markdown',
+                        language: document.getElementById('preferredLanguage')?.value || 'en',
+                        user_profile: userProfileData
+                    };
 
-        function showSection(section) {
-            document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(section + 'Section').classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('nav' + section.charAt(0).toUpperCase() + section.slice(1)).classList.add('active');
-        }
+                    console.log('Sending request to:', this.baseUrl);
+                    console.log('Request body:', requestBody);
 
-        // --- User Management ---
+                    const response = await fetch(this.baseUrl, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('API Error Response:', errorText);
+                        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (!data.response) {
+                        console.error('Invalid response format:', data);
+                        throw new Error('Invalid response format from API');
+                    }
+                    
+                    this.chatHistory.push({ role: 'assistant', content: data.response });
+                    return data.response;
+                    
+                } catch (error) {
+                    console.error('API Request Error:', error);
+                    
+                    // Use fallback response when API is not available
+                    const fallbackResponse = getFallbackResponse(userMessage);
+                    this.chatHistory.push({ role: 'assistant', content: fallbackResponse });
+                    
+                    return fallbackResponse;
+                }
+            }
+        }
+        
+        const gptService = new GPTService();
+
+        // --- Enhanced AI Service Integration ---
+        // EnhancedAIService is loaded from external file /public/js/enhancedAIService.js
+        // No need to redeclare it here
+
+        // Functions are already defined in CHAT FUNCTIONS section above
+
+        // ========== USER MANAGEMENT ==========
+
         async function loadUserProfile() {
             try {
-                const { data, error } = await supabase
-                    .from('users')
+                console.log('🔄 Loading user profile for:', currentUser.id);
+                
+                // First try to get user profile from the user_profiles table
+                const { data: profileData, error: profileError } = await supabaseClient
+                    .from('user_profiles')
                     .select('*')
-                    .eq('id', currentUser.id)
+                    .eq('user_id', currentUser.id)
                     .single();
 
-                if (error) throw error;
+                if (profileError) {
+                    console.log('Profile table error, trying RPC:', profileError);
+                    
+                    // Fallback to RPC function
+                    const { data, error } = await supabaseClient
+                        .rpc('get_user_profile', { user_id: currentUser.id });
 
-                if (data) {
-                    updateUserInterface(data);
+                    if (error) {
+                        console.log('RPC error, trying auth metadata:', error);
+                        throw error;
+                    }
+
+                    if (data && data.length > 0) {
+                        const profile = data[0];
+                        updateUserInterface({
+                            full_name: profile.full_name,
+                            class: profile.class,
+                            board: profile.board,
+                            board_abbr: profile.board_abbr,
+                            phone: profile.phone,
+                            city: profile.city,
+                            state: profile.state,
+                            preferred_language: profile.preferred_language,
+                            email: currentUser.email
+                        });
+                        return;
+                    } else {
+                        throw new Error('No profile found in RPC');
+                    }
+                }
+
+                if (profileData) {
+                    console.log('✅ User profile loaded:', profileData);
+                    updateUserInterface({
+                        full_name: profileData.full_name,
+                        class: profileData.class,
+                        board: profileData.board,
+                        board_abbr: profileData.board_abbr,
+                        phone: profileData.phone,
+                        city: profileData.city,
+                        state: profileData.state,
+                        preferred_language: profileData.preferred_language,
+                        email: currentUser.email
+                    });
+                } else {
+                    throw new Error('No profile data found');
                 }
             } catch (error) {
-                console.error('Error loading user profile:', error);
+                console.error('❌ Error loading user profile:', error);
+                
+                // Try to get from user metadata
+                const metadata = currentUser.user_metadata || {};
                 const fallbackData = {
-                    full_name: currentUser.user_metadata?.full_name || 'Student',
-                    class: currentUser.user_metadata?.class || 'Class 2',
+                    full_name: metadata.full_name || 'Student',
+                    class: metadata.class || 'Class 2',
+                    board: 'Central Board of Secondary Education',
+                    board_abbr: 'CBSE',
                     email: currentUser.email
                 };
+                
+                console.log('⚠️ Using fallback data:', fallbackData);
                 updateUserInterface(fallbackData);
             }
         }
 
         function updateUserInterface(userDataParam) {
-            // Store userData globally
             userData = userDataParam;
             
             const name = userData.full_name || 'Student';
@@ -1760,186 +1784,159 @@
             document.getElementById('topBarUserClass').textContent = className;
             document.getElementById('topBarInitials').textContent = initials;
             
-            // Set initial context for GPT
             gptService.setContext(className, null);
             
-            // Load class-specific books (automatically gets user's class from database)
             loadClassBooks();
         }
 
-        // --- Initialization ---
-        async function initDashboard() {
+        // Sign out function
+        async function signOut() {
             try {
-                console.log('🚀 Initializing dashboard...');
-                
-                // Wait for TutorAuth to be available and initialized
-                let attempts = 0;
-                const maxAttempts = 50; // 5 seconds max
-                
-                while (attempts < maxAttempts) {
-                    if (window.TutorAuth && window.TutorAuth.isInitialized) {
-                        console.log('✅ TutorAuth is ready');
-                        break;
-                    }
-                    console.log(`⏳ Waiting for TutorAuth... (${attempts + 1}/${maxAttempts})`);
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    attempts++;
+                if (window.TutorAuth) {
+                    await window.TutorAuth.signOut();
+                } else if (supabaseClient) {
+                    await supabaseClient.auth.signOut();
                 }
                 
-                if (!window.TutorAuth || !window.TutorAuth.isInitialized) {
-                    console.error('❌ TutorAuth failed to initialize');
-                    window.location.href = '/login.html';
-                    return;
-                }
+                // Clear local storage
+                localStorage.clear();
                 
-                // Check authentication using TutorAuth
-                const user = window.TutorAuth.getCurrentUser();
-                if (!user) {
-                    console.log('❌ No authenticated user found, redirecting to login');
-                    window.location.href = '/login.html';
-                    return;
-                }
-                
-                console.log('✅ User authenticated:', user.email);
-                currentUser = user;
-                await loadUserProfile();
-                
-                // Debug the system after initialization
-                setTimeout(() => {
-                    debugChatSystem();
-                    testSTT(); // Test STT functionality
-                    makeMicVisible(); // Ensure microphone button is visible
-                    testMicButton(); // Test microphone button specifically
-                }, 1000);
-                
-                // Initialize voice services
-                if (speechSynthesis) {
-                    speechSynthesis.onvoiceschanged = populateVoices;
-                    setTimeout(populateVoices, 500);
-                }
-                
-                initSpeechRecognition();
-                
-                // Setup event listeners
-                document.getElementById('sendButton').addEventListener('click', handleSendMessage);
-                document.getElementById('voiceButton').addEventListener('click', toggleVoiceRecording);
-                
-                // Voice settings controls
-                document.getElementById('voiceRate').addEventListener('input', (e) => {
-                    document.getElementById('rateValue').textContent = `${e.target.value}x`;
-                });
-                
-                document.getElementById('voicePitch').addEventListener('input', (e) => {
-                    document.getElementById('pitchValue').textContent = e.target.value;
-                });
-                
-
-                
-                // Initialize teacher avatar - Roy Sir (English) is default
-                updateTeacher('en');
-                
-                // Add avatar selection functionality
-                document.querySelectorAll('.avatar-selection-card').forEach(card => {
-                    card.addEventListener('click', function() {
-                        const teacher = this.getAttribute('data-teacher');
-                        
-                        // Update selection UI
-                        document.querySelectorAll('.avatar-selection-card').forEach(c => c.classList.remove('selected'));
-                        this.classList.add('selected');
-                        
-                        // Update teacher
-                        const language = teacher === 'english' ? 'en' : 'hi';
-                        updateTeacher(language);
-                        
-                        // Update language dropdown
-                        const langSelect = document.getElementById('preferredLanguage');
-                        if (langSelect) {
-                            langSelect.value = language;
-                        }
-                    });
-                });
-                
-                // Set Roy Sir as selected by default
-                document.querySelector('.avatar-selection-card[data-teacher="english"]')?.classList.add('selected');
-                
-                // Update when language changes
-                const langSelect = document.getElementById('preferredLanguage');
-                if (langSelect) {
-                    langSelect.addEventListener('change', (e) => {
-                        updateTeacher(e.target.value);
-                        
-                        // Update avatar selection in settings
-                        const teacher = e.target.value === 'hi' ? 'hindi' : 'english';
-                        document.querySelectorAll('.avatar-selection-card').forEach(c => c.classList.remove('selected'));
-                        document.querySelector(`.avatar-selection-card[data-teacher="${teacher}"]`)?.classList.add('selected');
-                    });
-                }
-                
-                console.log('Dashboard initialized successfully');
-                
+                // Redirect to index page instead of login to prevent auto sign-in
+                window.location.href = '/index.html';
             } catch (error) {
-                console.error('Error initializing dashboard:', error);
-                showError('Failed to initialize dashboard');
+                console.error('Sign out error:', error);
+                // Force redirect anyway
+                window.location.href = '/index.html';
             }
         }
 
-        // --- Progress Section Logic ---
-        function updateExamYearDropdown() {
-            const examYear = document.getElementById('examYear');
-            const now = new Date();
-            const nextYear = now.getMonth() >= 3 ? now.getFullYear() + 1 : now.getFullYear();
-            examYear.innerHTML = '';
-            for (let y = nextYear; y <= nextYear + 5; y++) {
-                const opt = document.createElement('option');
-                opt.value = y;
-                opt.textContent = y;
-                if (y === nextYear) opt.selected = true;
-                examYear.appendChild(opt);
+        function showUserProfile() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="glass-effect rounded-2xl p-6 max-w-md w-full mx-4">
+                    <h3 class="text-white text-lg font-bold mb-4">👤 User Profile</h3>
+                    <div class="space-y-3 text-white">
+                        <div>
+                            <strong>Name:</strong> ${userData?.full_name || currentUser?.user_metadata?.full_name || 'Not set'}
+                        </div>
+                        <div>
+                            <strong>Email:</strong> ${currentUser?.email || 'Not set'}
+                        </div>
+                        <div>
+                            <strong>Class:</strong> ${userData?.class || 'Not set'}
+                        </div>
+                        <div>
+                            <strong>Board:</strong> ${userData?.board || 'Not set'}
+                        </div>
+                        <div>
+                            <strong>Member Since:</strong> ${new Date(currentUser?.created_at || Date.now()).toLocaleDateString()}
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-6">
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors">
+                            Close
+                        </button>
+                        <button onclick="signOut()" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors">
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Feedback Modal Function
+        function openFeedbackModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="glass-effect rounded-2xl p-6 max-w-md w-full mx-4">
+                    <h3 class="text-white text-lg font-bold mb-4">💬 Send Feedback</h3>
+                    <p class="text-gray-300 text-sm mb-4">Tell us if you face any issue or have something to say to us</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-white text-sm font-medium">Subject:</label>
+                            <input type="text" id="feedbackSubject" placeholder="Brief subject of your message" 
+                                   class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white mt-1 focus:outline-none focus:border-purple-500">
+                        </div>
+                        
+                        <div>
+                            <label class="text-white text-sm font-medium">Message:</label>
+                            <textarea id="feedbackMessage" rows="5" placeholder="Write your message here..." 
+                                      class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white mt-1 focus:outline-none focus:border-purple-500 resize-none"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="text-white text-sm font-medium">Category:</label>
+                            <select id="feedbackCategory" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white mt-1 focus:outline-none focus:border-purple-400">
+                                <option value="general">General</option>
+                                <option value="feedback">Feedback</option>
+                                <option value="books">Books</option>
+                                <option value="technical">Technical Issue</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2 mt-6">
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors">
+                            Cancel
+                        </button>
+                        <button onclick="submitFeedback()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors">
+                            Send Feedback
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Submit Feedback Function
+        async function submitFeedback() {
+            const subject = document.getElementById('feedbackSubject').value.trim();
+            const message = document.getElementById('feedbackMessage').value.trim();
+            const category = document.getElementById('feedbackCategory').value;
+
+            if (!subject || !message) {
+                showError('Please fill in both subject and message');
+                return;
+            }
+
+            try {
+                // Get current user
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    showError('Please log in to send feedback');
+                    return;
+                }
+
+                // Insert feedback into database
+                const { error } = await supabaseClient
+                    .from('user_feedback')
+                    .insert({
+                        user_id: user.id,
+                        subject: subject,
+                        message: message,
+                        category: category,
+                        status: 'unread'
+                    });
+
+                if (error) {
+                    console.error('Feedback submission error:', error);
+                    showError('Failed to send feedback. Please try again.');
+                    return;
+                }
+
+                // Close modal and show success
+                document.querySelector('.fixed').remove();
+                showSuccess('Feedback sent successfully! We will review it soon.');
+
+            } catch (error) {
+                console.error('Feedback submission error:', error);
+                showError('Failed to send feedback. Please try again.');
             }
         }
-        
-        function updateMonthsTillExam() {
-            const month = parseInt(document.getElementById('examMonth').value) - 1;
-            const year = parseInt(document.getElementById('examYear').value);
-            const now = new Date();
-            const examDate = new Date(year, month, 1);
-            let months = (examDate.getFullYear() - now.getFullYear()) * 12 + (examDate.getMonth() - now.getMonth());
-            if (months < 0) months = 0;
-            document.getElementById('monthsTillExam').textContent = `Months till final exam: ${months}`;
-        }
-        
-        function renderSubjects() {
-            const subjectsList = document.getElementById('subjectsList');
-            subjectsList.innerHTML = '';
-            window.progressSubjects = window.progressSubjects || [
-                { name: 'Math', progress: 0 },
-                { name: 'Science', progress: 0 },
-                { name: 'English', progress: 0 }
-            ];
-            window.progressSubjects.forEach((subj, idx) => {
-                const row = document.createElement('div');
-                row.className = 'flex items-center space-x-2';
-                row.innerHTML = `<input type='text' value='${subj.name}' class='bg-white/10 text-white rounded px-2 py-1 w-32' onchange='window.progressSubjects[${idx}].name=this.value'>
-                    <input type='number' min='0' max='100' value='${subj.progress}' class='bg-white/10 text-white rounded px-2 py-1 w-20' onchange='window.progressSubjects[${idx}].progress=parseInt(this.value)'>
-                    <span class='text-white text-sm'>% Complete</span>
-                    <button onclick='window.progressSubjects.splice(${idx},1);renderSubjects();' class='text-red-400 ml-2'>&times;</button>`;
-                subjectsList.appendChild(row);
-            });
-        }
-        
-        document.getElementById('addSubjectBtn').onclick = function() {
-            window.progressSubjects = window.progressSubjects || [];
-            window.progressSubjects.push({ name: '', progress: 0 });
-            renderSubjects();
-        };
-        
-        document.getElementById('examMonth').onchange = updateMonthsTillExam;
-        document.getElementById('examYear').onchange = updateMonthsTillExam;
-        
-        // Initialize progress section
-        updateExamYearDropdown();
-        updateMonthsTillExam();
-        renderSubjects();
 
         // --- Study Materials Functions ---
         async function loadClassBooks() {
@@ -1948,13 +1945,13 @@
                 bookList.innerHTML = '<p class="text-gray-400 col-span-full">Loading books for your class...</p>';
                 
                 // Get current user's class access
-                const { data: { user } } = await supabase.auth.getUser();
+                const { data: { user } } = await supabaseClient.auth.getUser();
                 if (!user) {
                     throw new Error('User not authenticated');
                 }
                 
                 // Get user's class access from user_class_access table
-                const { data: userAccess, error: accessError } = await supabase
+                const { data: userAccess, error: accessError } = await supabaseClient
                     .from('user_class_access')
                     .select('*')
                     .eq('user_id', user.id)
@@ -1971,7 +1968,7 @@
                 console.log(`Loading books for user's class: ${userClassName}`);
                 
                 // Use the new get_class_books function to fetch books
-                const { data: books, error: booksError } = await supabase.rpc('get_class_books', {
+                const { data: books, error: booksError } = await supabaseClient.rpc('get_class_books', {
                     p_class_name: userClassName,
                     p_subject: null, // null means all subjects
                     p_language: 'English'
@@ -2031,7 +2028,7 @@
         async function viewSubjectBooks(subject, className) {
             try {
                 // Get books for specific subject
-                const { data: books, error: booksError } = await supabase.rpc('get_class_books', {
+                const { data: books, error: booksError } = await supabaseClient.rpc('get_class_books', {
                     p_class_name: className,
                     p_subject: subject,
                     p_language: 'English'
@@ -2084,7 +2081,6 @@
             try {
                 showSuccess(`Preparing download for ${fileName}...`);
                 
-                // Get download URL from Supabase storage
                 const { data: { publicUrl }, error } = supabase.storage
                     .from('educational-content')
                     .getPublicUrl(filePath);
@@ -2093,7 +2089,6 @@
                     throw error;
                 }
                 
-                // Create download link
                 const link = document.createElement('a');
                 link.href = publicUrl;
                 link.download = `${fileName}.pdf`;
@@ -2107,45 +2102,6 @@
             } catch (error) {
                 console.error('Download error:', error);
                 showError('Failed to download book. Please try again.');
-            }
-        }
-        
-        async function downloadSubjectBooks(subject, classNumber) {
-            try {
-                showSuccess(`Preparing download for ${subject} books...`);
-                
-                // Get all books for this subject and class
-                const response = await fetch(`/api/processed-books?grade=${classNumber}&subject=${subject}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch books');
-                }
-                
-                const data = await response.json();
-                const books = data.books || [];
-                
-                if (books.length === 0) {
-                    showError('No books found for this subject');
-                    return;
-                }
-                
-                // Download each book
-                books.forEach((book, index) => {
-                    setTimeout(() => {
-                        const downloadUrl = `/api/fs/books/${encodeURIComponent(book.filePath)}`;
-                        const link = document.createElement('a');
-                        link.href = downloadUrl;
-                        link.download = `${book.bookName}.pdf`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    }, index * 1000); // Stagger downloads by 1 second
-                });
-                
-                showSuccess(`Downloading ${books.length} ${subject} books...`);
-                
-            } catch (error) {
-                console.error('Download error:', error);
-                showError('Failed to download books. Please try again.');
             }
         }
         
@@ -2171,131 +2127,201 @@
             };
             return icons[subject] || '📚';
         }
-        
-        async function downloadBook(bookPath, bookName) {
-            try {
-                showSuccess(`Preparing download for ${bookName}...`);
-                
-                // Try to fetch the book directory to get PDF files
-                const response = await fetch(`/api/books/${encodeURIComponent(bookPath)}`);
-                if (!response.ok) {
-                    throw new Error('Book not found');
-                }
-                
-                const files = await response.json();
-                const pdfFiles = files.filter(file => file.toLowerCase().endsWith('.pdf'));
-                
-                if (pdfFiles.length === 0) {
-                    showError('No PDF files found in this book');
-                    return;
-                }
-                
-                // If only one PDF, download directly
-                if (pdfFiles.length === 1) {
-                    const downloadUrl = `${bookPath}${pdfFiles[0]}`;
-                    const link = document.createElement('a');
-                    link.href = downloadUrl;
-                    link.download = pdfFiles[0];
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    showSuccess(`Downloaded ${pdfFiles[0]}`);
-                } else {
-                    // Multiple PDFs - show selection modal
-                    showPDFSelectionModal(bookPath, pdfFiles, bookName);
-                }
-                
-            } catch (error) {
-                console.error('Download error:', error);
-                showError('Failed to download book. Please try again.');
+
+        // ========== PROGRESS SECTION ==========
+
+        function updateExamYearDropdown() {
+            const examYear = document.getElementById('examYear');
+            const now = new Date();
+            const nextYear = now.getMonth() >= 3 ? now.getFullYear() + 1 : now.getFullYear();
+            examYear.innerHTML = '';
+            for (let y = nextYear; y <= nextYear + 5; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                if (y === nextYear) opt.selected = true;
+                examYear.appendChild(opt);
             }
         }
         
-        function showPDFSelectionModal(bookPath, pdfFiles, bookName) {
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-            modal.innerHTML = `
-                <div class="glass-effect rounded-2xl p-6 max-w-md w-full mx-4">
-                    <h3 class="text-white text-lg font-bold mb-4">${bookName}</h3>
-                    <p class="text-gray-300 text-sm mb-4">Select which chapter to download:</p>
-                    <div class="max-h-60 overflow-y-auto space-y-2 mb-4">
-                        ${pdfFiles.map(file => `
-                            <button class="w-full text-left bg-indigo-600/50 hover:bg-indigo-600/70 p-2 rounded text-white text-sm transition-colors" onclick="downloadSinglePDF('${bookPath}', '${file}')">
-                                📄 ${file}
-                            </button>
-                        `).join('')}
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors" onclick="downloadAllPDFs('${bookPath}', ${JSON.stringify(pdfFiles).replace(/"/g, '&quot;')})">
-                            📥 Download All
-                        </button>
-                        <button class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors" onclick="this.closest('.fixed').remove()">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
+        function updateMonthsTillExam() {
+            const month = parseInt(document.getElementById('examMonth').value) - 1;
+            const year = parseInt(document.getElementById('examYear').value);
+            const now = new Date();
+            const examDate = new Date(year, month, 1);
+            let months = (examDate.getFullYear() - now.getFullYear()) * 12 + (examDate.getMonth() - now.getMonth());
+            if (months < 0) months = 0;
+            document.getElementById('monthsTillExam').textContent = `Months till final exam: ${months}`;
         }
         
-        function downloadSinglePDF(bookPath, fileName) {
-            const downloadUrl = `${bookPath}${fileName}`;
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showSuccess(`Downloaded ${fileName}`);
-            
-            // Close modal
-            document.querySelector('.fixed.inset-0').remove();
-        }
-        
-        function downloadAllPDFs(bookPath, pdfFiles) {
-            pdfFiles.forEach((file, index) => {
-                setTimeout(() => {
-                    downloadSinglePDF(bookPath, file);
-                }, index * 500); // Stagger downloads
+        function renderSubjects() {
+            const subjectsList = document.getElementById('subjectsList');
+            subjectsList.innerHTML = '';
+            window.progressSubjects = window.progressSubjects || [
+                { name: 'Math', progress: 0 },
+                { name: 'Science', progress: 0 },
+                { name: 'English', progress: 0 }
+            ];
+            window.progressSubjects.forEach((subj, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center space-x-2';
+                row.innerHTML = `<input type='text' value='${subj.name}' class='bg-white/10 text-white rounded px-2 py-1 w-32' onchange='window.progressSubjects[${idx}].name=this.value'>
+                    <input type='number' min='0' max='100' value='${subj.progress}' class='bg-white/10 text-white rounded px-2 py-1 w-20' onchange='window.progressSubjects[${idx}].progress=parseInt(this.value)'>
+                    <span class='text-white text-sm'>% Complete</span>
+                    <button onclick='window.progressSubjects.splice(${idx},1);renderSubjects();' class='text-red-400 ml-2'>&times;</button>`;
+                subjectsList.appendChild(row);
             });
-            
-            showSuccess(`Downloading all ${pdfFiles.length} files...`);
-            
-            // Close modal
-            document.querySelector('.fixed.inset-0').remove();
         }
 
-        // Add visual feedback for STT processing
-        function showSTTFeedback(message, type = 'info') {
-            const feedbackDiv = document.createElement('div');
-            feedbackDiv.id = 'sttFeedback';
-            feedbackDiv.className = `fixed top-4 right-4 glass-effect p-3 rounded-xl text-sm font-medium z-50 ${
-                type === 'success' ? 'text-green-400' : 
-                type === 'error' ? 'text-red-400' : 
-                'text-blue-400'
-            }`;
-            feedbackDiv.innerHTML = `
-                <div class="flex items-center space-x-2">
-                    <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : '🎤'}</span>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            // Remove existing feedback
-            const existing = document.getElementById('sttFeedback');
-            if (existing) existing.remove();
-            
-            document.body.appendChild(feedbackDiv);
-            
-            // Auto-remove after 3 seconds
-            setTimeout(() => {
-                if (feedbackDiv.parentNode) {
-                    feedbackDiv.remove();
+        // ========== INITIALIZATION ==========
+
+        // Global Supabase client variable
+        let supabaseClient = null;
+
+        async function initSupabase() {
+            try {
+                // Check if Supabase is already initialized
+                if (supabaseClient) {
+                    console.log('ℹ️ Supabase already initialized');
+                    return supabaseClient;
                 }
-            }, 3000);
+
+                // Wait for Supabase to load if not already available
+                if (typeof window.supabase === 'undefined') {
+                    console.log('⏳ Waiting for Supabase to load...');
+                    await new Promise((resolve) => {
+                        const checkSupabase = () => {
+                            if (typeof window.supabase !== 'undefined') {
+                                resolve();
+                            } else {
+                                setTimeout(checkSupabase, 100);
+                            }
+                        };
+                        checkSupabase();
+                    });
+                }
+
+                // Initialize Supabase client
+                const supabaseUrl = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU';
+                
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                console.log('✅ Supabase initialized successfully');
+                return supabaseClient;
+
+            } catch (error) {
+                console.error('❌ Supabase initialization failed:', error);
+                throw error;
+            }
         }
 
-        // Debug function to test the system
+        async function initDashboard() {
+            try {
+                console.log('🚀 Initializing dashboard...');
+                
+                // Initialize Supabase first
+                supabaseClient = await initSupabase();
+                
+                // Check authentication
+                const { data: { session }, error: authError } = await supabaseClient.auth.getSession();
+                
+                if (authError) {
+                    console.error('Auth error:', authError);
+                    throw authError;
+                }
+                
+                if (!session || !session.user) {
+                    console.log('❌ No authenticated user found, redirecting to login');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                console.log('✅ User authenticated:', session.user.email);
+                currentUser = session.user;
+                await loadUserProfile();
+                
+                // Debug the system after initialization
+                setTimeout(() => {
+                    debugChatSystem();
+                    testSTT(); // Test STT functionality
+                    makeMicVisible(); // Ensure microphone button is visible
+                    testMicButton(); // Test microphone button specifically
+                }, 1000);
+                
+                // Initialize voice services
+                if (speechSynthesis) {
+                    speechSynthesis.onvoiceschanged = populateVoices;
+                    setTimeout(populateVoices, 500);
+                }
+                
+                initSpeechRecognition();
+                
+                // Setup event listeners
+                document.getElementById('sendButton').addEventListener('click', handleSendMessage);
+                
+                // Add Shift+Enter functionality for line breaks
+                document.getElementById('chatInput').addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && e.shiftKey) {
+                        e.preventDefault();
+                        // Insert a line break
+                        const start = this.selectionStart;
+                        const end = this.selectionEnd;
+                        this.value = this.value.substring(0, start) + '\n' + this.value.substring(end);
+                        this.selectionStart = this.selectionEnd = start + 1;
+                    } else if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                    }
+                });
+                
+                document.getElementById('voiceButton').addEventListener('click', toggleVoiceRecording);
+                
+                // Voice settings controls
+                document.getElementById('voiceRate').addEventListener('input', (e) => {
+                    document.getElementById('rateValue').textContent = `${e.target.value}x`;
+                });
+                
+                document.getElementById('voicePitch').addEventListener('input', (e) => {
+                    document.getElementById('pitchValue').textContent = e.target.value;
+                });
+                
+                // Initialize teacher avatar - Roy Sir (English) is default
+                updateTeacher('en');
+                
+                // Add avatar selection functionality
+                document.querySelectorAll('.avatar-selection-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const teacher = this.getAttribute('data-teacher');
+                        handleAvatarSelection(teacher);
+                    });
+                });
+                
+                // Set Roy Sir as selected by default
+                document.querySelector('.avatar-selection-card[data-teacher="english"]')?.classList.add('selected');
+                
+                // Update when language changes
+                const langSelect = document.getElementById('preferredLanguage');
+                if (langSelect) {
+                    langSelect.addEventListener('change', (e) => {
+                        updateTeacher(e.target.value);
+                        
+                        // Update avatar selection in settings
+                        const teacher = e.target.value === 'hi' ? 'hindi' : 'english';
+                        document.querySelectorAll('.avatar-selection-card').forEach(c => c.classList.remove('selected'));
+                        document.querySelector(`.avatar-selection-card[data-teacher="${teacher}"]`)?.classList.add('selected');
+                    });
+                }
+                
+                console.log('Dashboard initialized successfully');
+                
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                showError('Failed to initialize dashboard');
+            }
+        }
+
+        // ========== DEBUG FUNCTIONS ==========
+
         function debugChatSystem() {
             console.log('=== Chat System Debug Info ===');
             console.log('Current User:', currentUser);
@@ -2309,7 +2335,6 @@
             console.log('==============================');
         }
 
-        // Test STT functionality
         function testSTT() {
             console.log('=== Testing STT System ===');
             console.log('Speech Recognition available:', !!(window.SpeechRecognition || window.webkitSpeechRecognition));
@@ -2317,7 +2342,6 @@
             console.log('Current recording state:', isRecording);
             console.log('Recognition object:', recognition);
             
-            // Test microphone access
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(() => {
                     console.log('✅ Microphone access granted');
@@ -2329,7 +2353,6 @@
                 });
         }
 
-        // Test microphone button visibility and functionality
         function testMicButton() {
             console.log('=== Testing Microphone Button ===');
             const voiceButton = document.getElementById('voiceButton');
@@ -2342,12 +2365,9 @@
                 console.log('Button opacity:', voiceButton.style.opacity);
                 console.log('Button text content:', voiceButton.textContent);
                 
-                // Make it more visible
                 makeMicVisible();
-                
-                // Test click
                 voiceButton.click();
-                console.log('🎤 Voice button clicked programmatically');
+                console.log('✅ Voice button clicked for testing');
             } else {
                 console.error('❌ Voice button NOT found in DOM');
             }
@@ -2359,7 +2379,6 @@
             }
         }
 
-        // Make microphone button more visible
         function makeMicVisible() {
             const voiceButton = document.getElementById('voiceButton');
             if (voiceButton) {
@@ -2374,24 +2393,214 @@
             }
         }
 
+        // ========== START APPLICATION ==========
+
         // Start the application
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 Dashboard DOM loaded');
-            
-            // Initialize TutorAuth first
-            if (window.TutorAuth) {
-                try {
-                    await window.TutorAuth.init();
-                    console.log('✅ TutorAuth initialized in dashboard');
-                } catch (error) {
-                    console.error('❌ TutorAuth initialization failed:', error);
+            await initDashboard();
+        });
+
+        // Initialize progress section
+        updateExamYearDropdown();
+        updateMonthsTillExam();
+        renderSubjects();
+
+        // --- Image Integration Functions ---
+        async function loadRelevantImages(subject, grade, topic) {
+            try {
+                // First, try to load from local extracted images
+                const localImages = await loadLocalImages(subject, grade, topic);
+                if (localImages.length > 0) {
+                    console.log(`✅ Found ${localImages.length} local images for ${subject} ${grade} ${topic}`);
+                    return localImages;
                 }
-            } else {
-                console.warn('⚠️ TutorAuth not available');
+                
+                // If no local images, search web for relevant images
+                console.log(`🔍 No local images found, searching web for ${subject} ${grade} ${topic}`);
+                const webImages = await searchWebImages(subject, grade, topic);
+                return webImages;
+                
+            } catch (error) {
+                console.error('Error loading images:', error);
+                return [];
+            }
+        }
+
+        async function loadLocalImages(subject, grade, topic) {
+            try {
+                // Load the image index file
+                const response = await fetch('/extracted_images/index.json');
+                if (!response.ok) {
+                    console.log('📁 No local image index found');
+                    return [];
+                }
+                
+                const imageIndex = await response.json();
+                
+                // Filter images by subject, grade, and topic
+                const relevantImages = imageIndex.filter(img => {
+                    const matchesSubject = img.subject.toLowerCase().includes(subject.toLowerCase());
+                    const matchesGrade = img.grade.toString() === grade.toString();
+                    const matchesTopic = img.topic && img.topic.toLowerCase().includes(topic.toLowerCase());
+                    
+                    return matchesSubject && matchesGrade && (matchesTopic || !topic);
+                });
+                
+                // Convert to display format
+                return relevantImages.slice(0, 6).map(img => ({
+                    url: `/extracted_images/${img.imgPath}`,
+                    description: `${img.subject} - ${img.bookName} - ${img.topic || 'General'}`,
+                    source: 'local'
+                }));
+                
+            } catch (error) {
+                console.error('Error loading local images:', error);
+                return [];
+            }
+        }
+
+        async function searchWebImages(subject, grade, topic) {
+            try {
+                // Use a simple web search API (you can replace with your preferred service)
+                const searchQuery = `${subject} ${grade} class ${topic} educational diagram`;
+                
+                // For now, return placeholder images (replace with actual API call)
+                const placeholderImages = [
+                    {
+                        url: `https://source.unsplash.com/400x300/?${encodeURIComponent(searchQuery)}`,
+                        description: `${subject} ${grade} - ${topic}`,
+                        source: 'web'
+                    },
+                    {
+                        url: `https://source.unsplash.com/400x300/?${encodeURIComponent(subject + ' ' + 'education')}`,
+                        description: `${subject} educational content`,
+                        source: 'web'
+                    }
+                ];
+                
+                console.log(`🌐 Found ${placeholderImages.length} web images for ${searchQuery}`);
+                return placeholderImages;
+                
+            } catch (error) {
+                console.error('Error searching web images:', error);
+                return [];
+            }
+        }
+
+        function displayImagesInChat(images, messageDiv) {
+            if (!images || images.length === 0) return;
+            
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+            
+            images.forEach(img => {
+                const imgElement = document.createElement('div');
+                imgElement.className = 'bg-gray-800 rounded-lg p-2 relative';
+                
+                // Add source indicator
+                const sourceBadge = img.source === 'local' ? 
+                    '<span class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">📁 Local</span>' :
+                    '<span class="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">🌐 Web</span>';
+                
+                imgElement.innerHTML = `
+                    ${sourceBadge}
+                    <img src="${img.url}" 
+                         alt="${img.description}" 
+                         class="w-full h-32 object-cover rounded"
+                         onclick="openImageModal('${img.url}', '${img.description}')"
+                         style="cursor: pointer;"
+                         onerror="this.style.display='none'; this.nextElementSibling.textContent='Image not available';">
+                    <p class="text-xs text-gray-400 mt-2">${img.description}</p>
+                `;
+                imageContainer.appendChild(imgElement);
+            });
+            
+            messageDiv.appendChild(imageContainer);
+        }
+
+        function openImageModal(imageSrc, description) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="max-w-4xl max-h-full p-4">
+                    <img src="${imageSrc}" alt="${description}" class="max-w-full max-h-full object-contain">
+                    <p class="text-white text-center mt-2">${description}</p>
+                    <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white text-2xl">&times;</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // --- Fallback Responses for when API is not available ---
+        function getFallbackResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // Simple keyword-based responses
+            if (message.includes('hello') || message.includes('hi') || message.includes('namaste')) {
+                return currentTeacher === teachers.hindi 
+                    ? "नमस्ते! मैं आपकी मदद करने के लिए यहाँ हूं। आप क्या सीखना चाहते हैं?"
+                    : "Hello! I'm here to help you learn. What would you like to study today?";
             }
             
-            showSection('dashboard');
-            initDashboard();
+            if (message.includes('math') || message.includes('गणित')) {
+                return currentTeacher === teachers.hindi
+                    ? "गणित एक बहुत महत्वपूर्ण विषय है। आइए इसे सरल तरीके से सीखें। कौन सा टॉपिक आपको मुश्किल लग रहा है?"
+                    : "Math is a very important subject. Let's learn it in a simple way. Which topic are you finding difficult?";
+            }
+            
+            if (message.includes('science') || message.includes('विज्ञान')) {
+                return currentTeacher === teachers.hindi
+                    ? "विज्ञान हमारे आसपास की दुनिया को समझने में मदद करता है। किस विषय के बारे में जानना चाहते हैं?"
+                    : "Science helps us understand the world around us. What topic would you like to learn about?";
+            }
+            
+            if (message.includes('english') || message.includes('अंग्रेजी')) {
+                return currentTeacher === teachers.hindi
+                    ? "अंग्रेजी एक अंतरराष्ट्रीय भाषा है। आइए इसे सरल तरीके से सीखें।"
+                    : "English is an international language. Let's learn it in a simple way. What would you like to practice?";
+            }
+            
+            if (message.includes('help') || message.includes('मदद')) {
+                return currentTeacher === teachers.hindi
+                    ? "मैं आपकी मदद करने के लिए यहाँ हूं। आप मुझसे कुछ भी पूछ सकते हैं।"
+                    : "I'm here to help you. You can ask me anything about your studies.";
+            }
+            
+            // Default response
+            return currentTeacher === teachers.hindi
+                ? "यह एक अच्छा सवाल है। आइए इसे साथ में समझें। क्या आप और कुछ बताना चाहते हैं?"
+                : "That's a good question. Let's understand it together. Would you like to tell me more about what you're studying?";
+        }
+
+        // --- API Health Check ---
+        async function checkAPIHealth() {
+            try {
+                const baseUrl = (window.appConfig?.apiBaseUrl || 'http://localhost:3000');
+                const response = await fetch(`${baseUrl}/api/health`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    console.log('✅ API is healthy and available');
+                    return true;
+                } else {
+                    console.warn('⚠️ API returned status:', response.status);
+                    return false;
+                }
+            } catch (error) {
+                console.warn('⚠️ API health check failed:', error.message);
+                return false;
+            }
+        }
+
+        // Initialize API health check on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isAPIHealthy = await checkAPIHealth();
+            if (!isAPIHealthy) {
+                console.log('ℹ️ Using fallback responses - API not available');
+            }
         });
     </script>
 </body>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Test - TUTOR.AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .test-result { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-4">Dashboard Test Results</h1>
+        
+        <div id="testResults" class="space-y-2">
+            <div class="test-result info">Running tests...</div>
+        </div>
+        
+        <div class="mt-4">
+            <button onclick="runTests()" class="bg-blue-500 text-white px-4 py-2 rounded">Run Tests Again</button>
+            <button onclick="window.location.href='dashboard.html'" class="bg-green-500 text-white px-4 py-2 rounded ml-2">Go to Dashboard</button>
+        </div>
+    </div>
+
+    <script>
+        function addTestResult(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        function runTests() {
+            document.getElementById('testResults').innerHTML = '';
+            addTestResult('Starting dashboard tests...', 'info');
+            
+            // Test 1: Check if dashboard.html exists
+            fetch('dashboard.html')
+                .then(response => {
+                    if (response.ok) {
+                        addTestResult('✅ Dashboard HTML file exists', 'success');
+                    } else {
+                        addTestResult('❌ Dashboard HTML file not found', 'error');
+                    }
+                })
+                .catch(error => {
+                    addTestResult(`❌ Error checking dashboard file: ${error.message}`, 'error');
+                });
+
+            // Test 2: Check required script files
+            const requiredFiles = [
+                'public/js/config.js',
+                'public/js/auth.js',
+                'public/js/enhancedAIService.js'
+            ];
+
+            requiredFiles.forEach(file => {
+                fetch(file)
+                    .then(response => {
+                        if (response.ok) {
+                            addTestResult(`✅ ${file} exists`, 'success');
+                        } else {
+                            addTestResult(`❌ ${file} not found`, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        addTestResult(`❌ Error checking ${file}: ${error.message}`, 'error');
+                    });
+            });
+
+            // Test 3: Check Supabase CDN
+            if (typeof window.supabase !== 'undefined') {
+                addTestResult('✅ Supabase CDN loaded', 'success');
+            } else {
+                addTestResult('❌ Supabase CDN not loaded', 'error');
+            }
+
+            // Test 4: Check browser features
+            if (window.speechSynthesis) {
+                addTestResult('✅ Speech Synthesis available', 'success');
+            } else {
+                addTestResult('❌ Speech Synthesis not available', 'warning');
+            }
+
+            if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+                addTestResult('✅ Speech Recognition available', 'success');
+            } else {
+                addTestResult('❌ Speech Recognition not available', 'warning');
+            }
+
+            // Test 5: Check for syntax errors in dashboard
+            fetch('dashboard.html')
+                .then(response => response.text())
+                .then(html => {
+                    try {
+                        // Basic syntax check
+                        if (html.includes('</script>') && html.includes('<script>')) {
+                            const scriptCount = (html.match(/<script>/g) || []).length;
+                            const endScriptCount = (html.match(/<\/script>/g) || []).length;
+                            
+                            if (scriptCount === endScriptCount) {
+                                addTestResult('✅ Dashboard HTML syntax appears correct', 'success');
+                            } else {
+                                addTestResult(`❌ Script tag mismatch: ${scriptCount} opening, ${endScriptCount} closing`, 'error');
+                            }
+                        } else {
+                            addTestResult('❌ Dashboard HTML missing script tags', 'error');
+                        }
+                    } catch (error) {
+                        addTestResult(`❌ Error parsing dashboard HTML: ${error.message}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    addTestResult(`❌ Error reading dashboard file: ${error.message}`, 'error');
+                });
+
+            addTestResult('Tests completed. Check results above.', 'info');
+        }
+
+        // Run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html> 

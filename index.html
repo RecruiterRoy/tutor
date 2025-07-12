@@ -538,6 +538,147 @@
             font-weight: bold;
         }
 
+        /* Feedback Section */
+        .feedback-section {
+            padding: 4rem 0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .feedback-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .feedback-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .feedback-form h3 {
+            color: white;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2);
+        }
+
+        .feedback-info {
+            color: white;
+        }
+
+        .feedback-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contact-item .icon {
+            font-size: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .contact-item h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-item p {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .feedback-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .feedback-stats .stat {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .feedback-stats .stat h4 {
+            font-size: 2rem;
+            color: #4ecdc4;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-stats .stat p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .feedback-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .feedback-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Footer */
         footer {
             background: rgba(0, 0, 0, 0.3);
@@ -925,6 +1066,87 @@
         </div>
     </section>
 
+    <!-- Feedback Section -->
+    <section id="feedback" class="feedback-section">
+        <div class="container">
+            <h2 class="section-title">💬 We'd Love to Hear From You</h2>
+            <p class="section-subtitle">Your feedback helps us improve and serve you better</p>
+            
+            <div class="feedback-container">
+                <div class="feedback-form">
+                    <h3>Send us a Message</h3>
+                    <form id="feedbackForm" class="contact-form">
+                        <div class="form-group">
+                            <input type="text" id="feedbackName" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="feedbackEmail" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <select id="feedbackCategory" required>
+                                <option value="">Select Category</option>
+                                <option value="feedback">General Feedback</option>
+                                <option value="books">Books & Content</option>
+                                <option value="technical">Technical Issue</option>
+                                <option value="suggestion">Feature Suggestion</option>
+                                <option value="general">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="feedbackSubject" placeholder="Subject" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="feedbackMessage" rows="5" placeholder="Tell us about your experience, suggestions, or any issues you're facing..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Send Message</button>
+                    </form>
+                </div>
+                
+                <div class="feedback-info">
+                    <h3>Get in Touch</h3>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <span class="icon">📧</span>
+                            <div>
+                                <h4>Email</h4>
+                                <p>support@tutor.ai</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="icon">📱</span>
+                            <div>
+                                <h4>Mobile App</h4>
+                                <p>Available on Android & iOS</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="icon">⏰</span>
+                            <div>
+                                <h4>Response Time</h4>
+                                <p>Within 24 hours</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feedback-stats">
+                        <div class="stat">
+                            <h4>1000+</h4>
+                            <p>Happy Students</p>
+                        </div>
+                        <div class="stat">
+                            <h4>24/7</h4>
+                            <p>AI Support</p>
+                        </div>
+                        <div class="stat">
+                            <h4>95%</h4>
+                            <p>Satisfaction Rate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -1117,7 +1339,49 @@
         // Initialize demo on page load
         document.addEventListener('DOMContentLoaded', function() {
             startDemo();
+            
+            // Initialize feedback form
+            const feedbackForm = document.getElementById('feedbackForm');
+            if (feedbackForm) {
+                feedbackForm.addEventListener('submit', handleFeedbackSubmit);
+            }
         });
+
+        // Handle feedback form submission
+        async function handleFeedbackSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('feedbackName').value,
+                email: document.getElementById('feedbackEmail').value,
+                category: document.getElementById('feedbackCategory').value,
+                subject: document.getElementById('feedbackSubject').value,
+                message: document.getElementById('feedbackMessage').value
+            };
+
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
+
+            try {
+                // For now, just show success message
+                // In production, you would send this to your backend
+                alert('Thank you for your feedback! We will review your message and get back to you soon.');
+                
+                // Clear form
+                e.target.reset();
+                
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('Failed to submit feedback. Please try again.');
+            } finally {
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
 
         // Preload images for better performance
         const preloadImages = [

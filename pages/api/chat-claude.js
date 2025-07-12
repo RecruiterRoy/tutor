@@ -12,8 +12,27 @@ export default async function handler(req, res) {
   try {
     const { message, context, subject, grade } = req.body;
 
-    // Enhanced system prompt for Indian education context
-    const systemPrompt = `You are an expert AI tutor for Indian students. 
+    // Get knowledge bank context
+    let knowledgeContext = '';
+    try {
+      const knowledgeResponse = await fetch(`${req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000'}/api/knowledge-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: message, grade: `class${grade}`, subject })
+      });
+      
+      if (knowledgeResponse.ok) {
+        const knowledgeData = await knowledgeResponse.json();
+        if (knowledgeData.results && knowledgeData.results.context) {
+          knowledgeContext = knowledgeData.results.context;
+        }
+      }
+    } catch (error) {
+      console.log('Knowledge search failed, continuing without it:', error.message);
+    }
+
+    // Enhanced system prompt with knowledge bank integration
+    const systemPrompt = `You are an expert AI tutor for Indian students with access to a comprehensive knowledge bank of educational content.
 
 Key Guidelines:
 - Follow CBSE/ICSE curriculum standards
@@ -22,11 +41,16 @@ Key Guidelines:
 - Relate concepts to Indian contexts when possible
 - Support both English and Hindi explanations
 - Encourage critical thinking
+- Reference specific books and chapters when relevant
+- Mention available images and visual resources when helpful
 
 Student Context: Grade ${grade}, Subject: ${subject}
 ${context ? `Additional Context: ${context}` : ''}
+${knowledgeContext ? `Knowledge Bank Context: ${knowledgeContext}` : ''}
 
-Remember: Guide the student to understand, don't just provide answers.`;
+Available Resources: You have access to textbooks, images, and educational materials. When relevant, mention specific books, chapters, or visual resources that could help the student.
+
+Remember: Guide the student to understand, don't just provide answers. Use the available educational resources to provide accurate, grade-appropriate information.`;
 
     const completion = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022",
@@ -67,7 +91,30 @@ export async function POST(request) {
   try {
     const { message, context, subject, grade } = await request.json();
 
-    const systemPrompt = `You are an expert AI tutor for Indian students. 
+    // Get knowledge bank context
+    let knowledgeContext = '';
+    try {
+      const host = request.headers.get('host') || 'localhost:3000';
+      const protocol = host.includes('localhost') ? 'http' : 'https';
+      
+      const knowledgeResponse = await fetch(`${protocol}://${host}/api/knowledge-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: message, grade: `class${grade}`, subject })
+      });
+      
+      if (knowledgeResponse.ok) {
+        const knowledgeData = await knowledgeResponse.json();
+        if (knowledgeData.results && knowledgeData.results.context) {
+          knowledgeContext = knowledgeData.results.context;
+        }
+      }
+    } catch (error) {
+      console.log('Knowledge search failed, continuing without it:', error.message);
+    }
+
+    // Enhanced system prompt with knowledge bank integration
+    const systemPrompt = `You are an expert AI tutor for Indian students with access to a comprehensive knowledge bank of educational content.
 
 Key Guidelines:
 - Follow CBSE/ICSE curriculum standards
@@ -76,11 +123,16 @@ Key Guidelines:
 - Relate concepts to Indian contexts when possible
 - Support both English and Hindi explanations
 - Encourage critical thinking
+- Reference specific books and chapters when relevant
+- Mention available images and visual resources when helpful
 
 Student Context: Grade ${grade}, Subject: ${subject}
 ${context ? `Additional Context: ${context}` : ''}
+${knowledgeContext ? `Knowledge Bank Context: ${knowledgeContext}` : ''}
 
-Remember: Guide the student to understand, don't just provide answers.`;
+Available Resources: You have access to textbooks, images, and educational materials. When relevant, mention specific books, chapters, or visual resources that could help the student.
+
+Remember: Guide the student to understand, don't just provide answers. Use the available educational resources to provide accurate, grade-appropriate information.`;
 
     const completion = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022",
