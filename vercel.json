@@ -6,6 +6,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api-*.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "public/**/*",
       "use": "@vercel/static"
     },
@@ -15,6 +19,14 @@
     }
   ],
   "routes": [
+    {
+      "src": "/api/chat",
+      "dest": "/api-chat.js"
+    },
+    {
+      "src": "/api/health",
+      "dest": "/api-health.js"
+    },
     {
       "src": "/api/(.*)",
       "dest": "/server.js"
@@ -34,6 +46,10 @@
     {
       "src": "/dashboard.html",
       "dest": "/dashboard.html"
+    },
+    {
+      "src": "/admin.html",
+      "dest": "/admin.html"
     },
     {
       "src": "/verify-deployment.html",
