@@ -1626,7 +1626,8 @@
                 this.currentGrade = null;
                 this.currentSubject = null;
                 this.chatHistory = [];
-                this.baseUrl = (window.appConfig?.apiBaseUrl || 'http://localhost:3000') + '/api/chat';
+                // Use production API URL for deployed app
+                this.baseUrl = (window.getApiBaseUrl ? window.getApiBaseUrl() : 'https://tutor-ai-phi.vercel.app') + '/api/chat';
             }
             
             setContext(grade, subject) {
@@ -2576,7 +2577,7 @@
         // --- API Health Check ---
         async function checkAPIHealth() {
             try {
-                const baseUrl = (window.appConfig?.apiBaseUrl || 'http://localhost:3000');
+                const baseUrl = (window.getApiBaseUrl ? window.getApiBaseUrl() : 'https://tutor-ai-phi.vercel.app');
                 const response = await fetch(`${baseUrl}/api/health`, {
                     method: 'GET',
                     headers: { 'Accept': 'application/json' }
