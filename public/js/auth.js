@@ -185,3 +185,4 @@
   console.log('TutorAuth class defined');
 
 })();
+
