@@ -84,7 +84,9 @@
         <!-- Header -->
         <div class="text-center mb-8">
             <div class="flex justify-center mb-4">
-                <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" style="height: 60px; width: auto; filter: brightness(0) invert(1);">
+                <a href="index.html" class="cursor-pointer">
+                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" style="height: 60px; width: auto; filter: brightness(0) invert(1);">
+                </a>
             </div>
             <h1 class="text-3xl font-bold text-white mb-2">Welcome Back!</h1>
             <p class="text-gray-200">Sign in to continue your learning journey</p>
@@ -107,10 +109,10 @@
         <!-- Email/Password Login -->
         <div x-show="currentTab === 'email'" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-200 mb-2">Email</label>
+                <label class="block text-sm font-medium text-gray-200 mb-2">Email or Mobile Number</label>
                 <input x-model="email" 
-                       type="email" 
-                       placeholder="Enter your email"
+                       type="text" 
+                       placeholder="Enter your email or mobile number"
                        class="w-full px-4 py-3 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
             </div>
             
@@ -320,39 +322,52 @@
                 },
 
                 async signInWithEmail() {
-                    if (!this.supabaseReady) {
-                        this.showMessage('Database not initialized. Please wait...', 'error');
-                        return;
-                    }
-                    
-                    this.loading = true
-                    this.message = ''
+                    this.loading = true;
+                    this.showMessage('', '');
                     
                     try {
-                        let result
-                        if (this.isMagicLink) {
-                            result = await window.TutorAuth.supabase.auth.signInWithOtp({
-                                email: this.email,
-                                options: {
-                                    shouldCreateUser: false
-                                }
-                            })
-                            this.showMessage('Magic link sent to your email!', 'success')
+                        const identifier = this.email.trim();
+                        let loginData;
+                        
+                        // Check if input is mobile number (10 digits) or email
+                        const isMobile = /^\d{10}$/.test(identifier);
+                        
+                        if (isMobile) {
+                            // Mobile number login
+                            const phoneWithPrefix = `+91${identifier}`;
+                            loginData = await window.TutorAuth.supabase.auth.signInWithOtp({
+                                phone: phoneWithPrefix
+                            });
                         } else {
-                            result = await window.TutorAuth.signInWithEmail(this.email, this.password)
-                            
-                            if (result.success) {
-                                console.log('Login successful, redirecting to dashboard');
-                                window.location.href = '/dashboard.html'
+                            // Email login
+                            if (this.isMagicLink) {
+                                loginData = await window.TutorAuth.supabase.auth.signInWithOtp({
+                                    email: identifier
+                                });
                             } else {
-                                this.showMessage(result.error, 'error')
+                                loginData = await window.TutorAuth.supabase.auth.signInWithPassword({
+                                    email: identifier,
+                                    password: this.password
+                                });
                             }
                         }
+                        
+                        if (loginData.error) throw loginData.error;
+                        
+                        if (this.isMagicLink || isMobile) {
+                            this.showMessage('Check your email/phone for the magic link/OTP!', 'success');
+                        } else {
+                            this.showMessage('Login successful! Redirecting...', 'success');
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 1500);
+                        }
+                        
                     } catch (error) {
                         console.error('Login error:', error);
-                        this.showMessage('An error occurred. Please try again.', 'error')
+                        this.showMessage(error.message || 'Login failed', 'error');
                     } finally {
-                        this.loading = false
+                        this.loading = false;
                     }
                 },
 

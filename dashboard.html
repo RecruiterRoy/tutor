@@ -3003,20 +3003,25 @@
         // ========== MICROPHONE PERMISSIONS FUNCTIONS ==========
         
         function checkMicrophonePermissions() {
-            const hasRequested = localStorage.getItem('micPermissionRequested');
-            const hasPermission = localStorage.getItem('micPermissionGranted');
-            
-            // If we haven't asked before, show the modal
-            if (!hasRequested) {
-                showMicrophonePermissionModal();
-            }
-            // If we asked but permission was denied, don't show again unless user changes settings
-            else if (hasRequested && !hasPermission) {
-                console.log('Microphone permission was previously denied');
-            }
-            // If permission was granted, we're good
-            else if (hasPermission) {
-                console.log('Microphone permission already granted');
+            try {
+                const hasRequested = localStorage.getItem('micPermissionRequested');
+                const hasPermission = localStorage.getItem('micPermissionGranted');
+                
+                // Only show modal if we haven't asked before and the modal exists
+                if (!hasRequested && document.getElementById('micPermissionsModal')) {
+                    showMicrophonePermissionModal();
+                }
+                // If we asked but permission was denied, don't show again
+                else if (hasRequested && !hasPermission) {
+                    console.log('Microphone permission was previously denied');
+                }
+                // If permission was granted, we're good
+                else if (hasPermission) {
+                    console.log('Microphone permission already granted');
+                }
+            } catch (error) {
+                console.error('Error in checkMicrophonePermissions:', error);
+                // Don't crash the app
             }
         }
         
@@ -3217,10 +3222,15 @@
 
         // Check microphone permissions on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Wait a bit for the dashboard to load, then check permissions
+            // Wait for dashboard to fully load before checking permissions
             setTimeout(() => {
-                checkMicrophonePermissions();
-            }, 2000);
+                try {
+                    checkMicrophonePermissions();
+                } catch (error) {
+                    console.error('Error checking microphone permissions:', error);
+                    // Don't crash the app if permission check fails
+                }
+            }, 3000); // Increased delay to ensure dashboard is stable
         });
     </script>
 </body>
