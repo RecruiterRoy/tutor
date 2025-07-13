@@ -35,7 +35,7 @@
       } else {
         // Fallback to hardcoded values
         supabaseUrl = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
-        supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU';
+        supabaseAnonKey = 'process.env.SUPABASE_ANON_KEY';
         // Use the same domain as the deployed app to avoid CORS issues
         apiBaseUrl = 'https://tutor-tq4v.vercel.app';
         console.log('⚠️ Using hardcoded fallback values');
@@ -114,3 +114,4 @@
   console.log('🎯 SupabaseConfig module loaded successfully');
 
 })();
+

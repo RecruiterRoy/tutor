@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
 const supabaseUrl = 'https://qwxkqwxkqwxkqwxkqwxk.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3eGtxd3hrcXd4a3F3eGtxd3hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NzE5NzQsImV4cCI6MjA0NzU0Nzk3NH0.qwxkqwxkqwxkqwxkqwxkqwxkqwxkqwxkqwxkqwxkqwxk';
+const supabaseKey = 'process.env.SUPABASE_ANON_KEY';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const extractedImagesDir = path.resolve('./extracted_images');
@@ -181,3 +181,4 @@ if (supabaseUrl === 'https://your-project.supabase.co' || supabaseKey === 'your-
 } else {
     uploadAllImages().catch(console.error);
 } 
+
