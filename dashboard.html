@@ -632,12 +632,12 @@
             }
             
             .desktop-sidebar {
-                display: none;
+                display: none !important;
             }
             
             .main-content {
-                margin-left: 0;
-                width: 100%;
+                margin-left: 0 !important;
+                width: 100% !important;
             }
             
             .top-bar {
@@ -2570,11 +2570,16 @@
                 console.log('✅ User authenticated:', session.user.email);
                 currentUser = session.user;
                 await loadUserProfile();
-                // Update mobile user info after loading profile
-                updateMobileUserInfo();
                 
                 // Update mobile user info after loading profile
                 updateMobileUserInfo();
+                
+                // Check if voice features are already enabled
+                const micPermissionGranted = localStorage.getItem('micPermissionGranted') === 'true';
+                if (micPermissionGranted) {
+                    console.log('🎤 Voice features already enabled, initializing...');
+                    await initializeVoiceFeatures();
+                }
                 
                 // Debug the system after initialization
                 setTimeout(() => {
@@ -2610,7 +2615,11 @@
                     }
                 });
                 
-                document.getElementById('voiceButton').addEventListener('click', toggleVoiceRecording);
+                // Connect voice button to the enhanced toggle function
+                const voiceButton = document.getElementById('voiceButton');
+                if (voiceButton) {
+                    voiceButton.addEventListener('click', toggleVoiceRecording);
+                }
                 
                 // Voice settings controls
                 document.getElementById('voiceRate').addEventListener('input', (e) => {
@@ -3027,12 +3036,15 @@
                 localStorage.setItem('micPermissionGranted', 'true');
                 hideMicrophonePermissionModal();
                 
-                showSuccess('Microphone access granted! You can now use voice features.');
+                showSuccess('Microphone access granted! Voice features are now active.');
                 
                 // Stop the stream since we just needed permission
                 stream.getTracks().forEach(track => track.stop());
                 
-                console.log('✅ Microphone permission granted');
+                // Automatically initialize voice features
+                await initializeVoiceFeatures();
+                
+                console.log('✅ Microphone permission granted and voice features activated');
                 
             } catch (error) {
                 console.error('❌ Microphone permission denied:', error);
@@ -3051,6 +3063,125 @@
             showSuccess('Voice features skipped. You can enable them later in settings.');
         }
         
+        // Initialize voice features after permission is granted
+        async function initializeVoiceFeatures() {
+            try {
+                // Initialize speech recognition
+                if (typeof window.SpeechRecognition !== 'undefined' || typeof window.webkitSpeechRecognition !== 'undefined') {
+                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    recognition.continuous = false;
+                    recognition.interimResults = false;
+                    recognition.lang = 'en-IN';
+                    
+                    recognition.onstart = function() {
+                        console.log('🎤 Speech recognition started');
+                        isRecording = true;
+                        updateVoiceButton(true);
+                    };
+                    
+                    recognition.onresult = function(event) {
+                        const transcript = event.results[0][0].transcript;
+                        document.getElementById('chatInput').value = transcript;
+                        console.log('🎤 Speech recognized:', transcript);
+                    };
+                    
+                    recognition.onerror = function(event) {
+                        console.error('🎤 Speech recognition error:', event.error);
+                        isRecording = false;
+                        updateVoiceButton(false);
+                    };
+                    
+                    recognition.onend = function() {
+                        console.log('🎤 Speech recognition ended');
+                        isRecording = false;
+                        updateVoiceButton(false);
+                    };
+                    
+                    console.log('✅ Speech recognition initialized');
+                }
+                
+                // Initialize speech synthesis
+                if ('speechSynthesis' in window) {
+                    speechSynthesis = window.speechSynthesis;
+                    
+                    // Set default voice settings
+                    speechSynthesis.onvoiceschanged = function() {
+                        const voices = speechSynthesis.getVoices();
+                        // Try to find an Indian English voice
+                        const indianVoice = voices.find(voice => 
+                            voice.lang.includes('en-IN') || 
+                            voice.lang.includes('en-GB') || 
+                            voice.name.includes('Indian')
+                        );
+                        
+                        if (indianVoice) {
+                            defaultVoice = indianVoice;
+                        } else if (voices.length > 0) {
+                            defaultVoice = voices[0];
+                        }
+                        
+                        console.log('✅ Speech synthesis initialized with voice:', defaultVoice?.name);
+                    };
+                    
+                    // Trigger voice loading
+                    speechSynthesis.getVoices();
+                }
+                
+                // Enable voice button
+                const voiceButton = document.getElementById('voiceButton');
+                if (voiceButton) {
+                    voiceButton.style.display = 'block';
+                    voiceButton.style.visibility = 'visible';
+                    voiceButton.style.opacity = '1';
+                    voiceButton.disabled = false;
+                }
+                
+                showSuccess('Voice features activated! You can now use voice input and output.');
+                
+            } catch (error) {
+                console.error('❌ Error initializing voice features:', error);
+                showError('Voice features could not be initialized. Please try again.');
+            }
+        }
+        
+        // Update voice button appearance
+        function updateVoiceButton(recording) {
+            const voiceButton = document.getElementById('voiceButton');
+            const voiceIcon = document.getElementById('voiceIcon');
+            const voiceStatus = document.getElementById('voiceStatus');
+            
+            if (voiceButton && voiceIcon && voiceStatus) {
+                if (recording) {
+                    voiceButton.classList.add('voice-recording');
+                    voiceIcon.textContent = '🔴';
+                    voiceStatus.style.opacity = '1';
+                } else {
+                    voiceButton.classList.remove('voice-recording');
+                    voiceIcon.textContent = '🎤';
+                    voiceStatus.style.opacity = '0';
+                }
+            }
+        }
+        
+        // Enhanced voice recording toggle
+        function toggleVoiceRecording() {
+            if (!recognition) {
+                showError('Voice recognition not available. Please grant microphone permission first.');
+                return;
+            }
+            
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Error starting voice recognition:', error);
+                    showError('Could not start voice recording. Please try again.');
+                }
+            }
+        }
+
         // Check microphone permissions on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Wait a bit for the dashboard to load, then check permissions
