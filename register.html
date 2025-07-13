@@ -189,8 +189,11 @@
                             <div class="error-message" id="phoneError"></div>
                         </div>
                         
-                        <div id="passwordField">
-                            <input type="password" id="password" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Password (min 6 characters)">
+                        <div id="passwordField" class="relative">
+                            <input type="password" id="password" required class="input-style w-full px-4 py-3 pr-12 rounded-lg" placeholder="Password (min 6 characters)">
+                            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                                <span id="passwordToggleIcon">👁️</span>
+                            </button>
                             <div class="error-message" id="passwordError"></div>
                         </div>
                     </div>
@@ -948,6 +951,20 @@
                 btnText.style.display = 'block';
                 spinner.classList.add('hidden');
                 btn.classList.remove('loading');
+            }
+        }
+
+        // Password visibility toggle
+        function togglePasswordVisibility() {
+            const passwordField = document.getElementById('password');
+            const toggleIcon = document.getElementById('passwordToggleIcon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.textContent = '🙈';
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.textContent = '👁️';
             }
         }
 
