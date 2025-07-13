@@ -1155,19 +1155,11 @@
     </div>
 
     <script>
-        // ========== AUTHENTICATION CHECK ==========
-        // Check if user is already authenticated to prevent loops
-        if (window.location.pathname.includes('dashboard.html')) {
-            // Check for existing session in localStorage
-            const hasSession = localStorage.getItem('supabase.auth.token') || 
-                              localStorage.getItem('sb-tutor-tq4v-auth-token') ||
-                              sessionStorage.getItem('supabase.auth.token');
-            
-            if (!hasSession) {
-                console.log('❌ No session found, redirecting to login');
-                window.location.href = '/login.html';
-            }
-        }
+        // ========== DEBUGGING FOR LOOP DIAGNOSIS ==========
+        console.log('=== DASHBOARD DEBUG INFO ===');
+        console.log('Current path:', window.location.pathname);
+        console.log('Session exists:', !!localStorage.getItem('supabase.auth.token'));
+        console.log('Current timestamp:', new Date().toISOString());
         
         // ========== CONFIGURATION ==========
         // Supabase Configuration - Replace with your actual Supabase project URL and anon key
@@ -1203,8 +1195,8 @@
                 // Check if currentUser exists
                 if (!window.currentUser || !window.currentUser.id) {
                     console.log('❌ No authenticated user found');
-                    window.location.href = '/login.html';
-                    return;
+                    // Don't redirect immediately, let initializeApp handle it
+                    throw new Error('No authenticated user');
                 }
                 
                 console.log('🔄 Loading user profile for:', window.currentUser.id);
@@ -1268,9 +1260,8 @@
                 
                 // Check if currentUser exists before accessing metadata
                 if (!window.currentUser) {
-                    console.log('❌ No authenticated user, redirecting to login');
-                    window.location.href = '/login.html';
-                    return;
+                    console.log('❌ No authenticated user, throwing error');
+                    throw new Error('No authenticated user');
                 }
                 
                 // Try to get from user metadata
@@ -1317,10 +1308,36 @@
             }
         }
         
-        function signOut() {
-            window.supabaseClient.auth.signOut().then(() => {
-                window.location.href = 'index.html';
-            });
+        async function signOut() {
+            try {
+                console.log('🔄 Signing out...');
+                
+                // Clear local storage first
+                localStorage.removeItem('supabase.auth.token');
+                localStorage.removeItem('micPermissionGranted');
+                localStorage.removeItem('micPermissionRequested');
+                
+                // Then attempt Supabase logout
+                if (window.supabaseClient) {
+                    const { error } = await window.supabaseClient.auth.signOut();
+                    if (error) {
+                        console.error('Supabase logout error:', error);
+                    }
+                }
+                
+                // Clear any other auth-related data
+                sessionStorage.clear();
+                
+                console.log('✅ Logout successful, redirecting to login');
+                
+                // Redirect to login page
+                window.location.href = '/login.html';
+                
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Force redirect anyway
+                window.location.href = '/login.html';
+            }
         }
         
         // ========== ENHANCED AI SERVICE ==========
@@ -2278,8 +2295,8 @@
                 // Check if currentUser exists
                 if (!window.currentUser || !window.currentUser.id) {
                     console.log('❌ No authenticated user found');
-                    window.location.href = '/login.html';
-                    return;
+                    // Don't redirect immediately, let initializeApp handle it
+                    throw new Error('No authenticated user');
                 }
                 
                 console.log('🔄 Loading user profile for:', window.currentUser.id);
@@ -2343,9 +2360,8 @@
                 
                 // Check if currentUser exists before accessing metadata
                 if (!window.currentUser) {
-                    console.log('❌ No authenticated user, redirecting to login');
-                    window.location.href = '/login.html';
-                    return;
+                    console.log('❌ No authenticated user, throwing error');
+                    throw new Error('No authenticated user');
                 }
                 
                 // Try to get from user metadata
@@ -2382,21 +2398,33 @@
         // Sign out function
         async function signOut() {
             try {
-                if (window.TutorAuth) {
-                    await window.TutorAuth.signOut();
-                } else if (window.supabaseClient) {
-                    await window.supabaseClient.auth.signOut();
+                console.log('🔄 Signing out...');
+                
+                // Clear local storage first
+                localStorage.removeItem('supabase.auth.token');
+                localStorage.removeItem('micPermissionGranted');
+                localStorage.removeItem('micPermissionRequested');
+                
+                // Then attempt Supabase logout
+                if (window.supabaseClient) {
+                    const { error } = await window.supabaseClient.auth.signOut();
+                    if (error) {
+                        console.error('Supabase logout error:', error);
+                    }
                 }
                 
-                // Clear local storage
-                localStorage.clear();
+                // Clear any other auth-related data
+                sessionStorage.clear();
                 
-                // Redirect to index page instead of login to prevent auto sign-in
-                window.location.href = '/index.html';
+                console.log('✅ Logout successful, redirecting to login');
+                
+                // Redirect to login page
+                window.location.href = '/login.html';
+                
             } catch (error) {
-                console.error('Sign out error:', error);
+                console.error('Logout error:', error);
                 // Force redirect anyway
-                window.location.href = '/index.html';
+                window.location.href = '/login.html';
             }
         }
 
@@ -3570,48 +3598,106 @@
             }
         }
 
-        // ========== APP INITIALIZATION ==========
-        async function initializeApp() {
+        // ========== SHARED SESSION CHECK ==========
+        async function checkSession() {
             try {
-                // 1. Initialize Supabase (already done globally)
-                if (!window.supabaseClient) {
-                    throw new Error('Supabase client not available');
+                const sessionData = localStorage.getItem('supabase.auth.token');
+                
+                if (!sessionData) {
+                    return { isValid: false, user: null };
                 }
-
-                // 2. Check auth status
-                const { data: { session }, error: authError } = await window.supabaseClient.auth.getSession();
-                if (authError) throw authError;
-                if (!session || !session.user) {
-                    console.log('❌ No authenticated session found, redirecting to login');
+                
+                const session = JSON.parse(sessionData);
+                
+                if (!window.supabaseClient) {
+                    return { isValid: false, user: null };
+                }
+                
+                // Verify session is still valid
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                return { isValid: !error && !!user, user };
+                
+            } catch (error) {
+                console.error('Session check error:', error);
+                return { isValid: false, user: null };
+            }
+        }
+        
+        // ========== APP INITIALIZATION ==========
+        async function initializeDashboard() {
+            try {
+                console.log('🚀 Starting dashboard initialization...');
+                
+                // 1. Check for existing session in localStorage
+                const sessionData = localStorage.getItem('supabase.auth.token');
+                console.log('Session exists in localStorage:', !!sessionData);
+                
+                if (!sessionData) {
+                    console.log('❌ No session found, redirecting to login');
                     window.location.href = '/login.html';
                     return;
                 }
-                
-                // Set currentUser globally
-                window.currentUser = session.user;
-                console.log('✅ User authenticated:', session.user.email);
 
-                // 3. Load user profile
+                // 2. Parse the session
+                let session;
+                try {
+                    session = JSON.parse(sessionData);
+                } catch (error) {
+                    console.error('❌ Invalid session data, clearing and redirecting');
+                    localStorage.removeItem('supabase.auth.token');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // 3. Initialize Supabase with stored session
+                if (!window.supabaseClient) {
+                    console.error('❌ Supabase client not available');
+                    showError('Database connection failed. Please refresh the page.');
+                    return;
+                }
+
+                // 4. Validate the session with Supabase
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                
+                if (error || !user) {
+                    console.error('❌ Session validation failed:', error);
+                    localStorage.removeItem('supabase.auth.token');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // 5. Set current user and proceed
+                window.currentUser = user;
+                console.log('✅ User authenticated:', user.email);
+
+                // 6. Load user profile
                 await loadUserProfile();
 
-                // 4. Initialize UI components
+                // 7. Initialize UI components
                 initializeUI && initializeUI();
                 initializeChat && initializeChat();
                 updateMobileUserInfo && updateMobileUserInfo();
 
-                // 5. Initialize voice features only if permission granted
+                // 8. Initialize voice features only if permission granted
                 if (localStorage.getItem('micPermissionGranted') === 'true') {
                     await initializeVoiceFeatures();
                 }
 
-                console.log('✅ App initialized successfully');
+                console.log('✅ Dashboard initialized successfully');
+                
             } catch (error) {
-                console.error('Initialization failed:', error);
-                showError('App failed to initialize. Please refresh.');
+                console.error('❌ Dashboard initialization error:', error);
+                showError('Failed to initialize dashboard. Please refresh the page.');
+                // Clear invalid session and redirect
+                localStorage.removeItem('supabase.auth.token');
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
             }
         }
-        // Remove any other DOMContentLoaded listeners or scattered initialization
-        document.addEventListener('DOMContentLoaded', initializeApp);
+        
+        // Call this when DOM loads
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
 
         // ========== MOBILE OPTIMIZATION ==========
         function isMobile() {
