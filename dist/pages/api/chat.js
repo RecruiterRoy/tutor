@@ -1,12 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-// Check if API key is available
-const apiKey = process.env.ANTHROPIC_API_KEY;
-if (!apiKey) {
-  console.error('ANTHROPIC_API_KEY environment variable is not set');
-}
-
-const anthropic = apiKey ? new Anthropic({ apiKey }) : null;
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 export default async function handler(req, res) {
   // Add CORS headers
@@ -23,16 +19,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  // Check if API key is configured
-  if (!anthropic) {
-    console.error('Anthropic API key not configured');
-    return res.status(500).json({ 
-      success: false, 
-      error: 'AI service not configured',
-      details: 'Please configure the ANTHROPIC_API_KEY environment variable in Vercel'
-    });
-  }
-
   try {
     const { messages, grade, subject, response_format, language, user_profile } = req.body;
 
@@ -42,7 +28,7 @@ export default async function handler(req, res) {
     // Get knowledge bank context
     let knowledgeContext = '';
     try {
-      const host = req.headers.host || 'tutor-tq4v.vercel.app';
+      const host = req.headers.host || 'tutor-ai-phi.vercel.app';
       const protocol = host.includes('localhost') ? 'http' : 'https';
       
       const knowledgeResponse = await fetch(`${protocol}://${host}/api/knowledge-search`, {
