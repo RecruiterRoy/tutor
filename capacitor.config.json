@@ -3,7 +3,7 @@
   "appName": "TUTOR.AI",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https", "server": { "url": "https://tutor-tq4v.vercel.app" }
   },
   "plugins": {
     "SplashScreen": {
