@@ -258,6 +258,11 @@
                 showPassword: false, // Added for password reveal
 
                 init() {
+                    console.log('=== LOGIN DEBUG INFO ===');
+                    console.log('Current path:', window.location.pathname);
+                    console.log('Session exists:', !!localStorage.getItem('supabase.auth.token'));
+                    console.log('Current timestamp:', new Date().toISOString());
+                    
                     console.log('Alpine app initializing...');
                     // Wait for Supabase to be ready
                     this.waitForSupabase();
@@ -357,9 +362,15 @@
                         if (this.isMagicLink || isMobile) {
                             this.showMessage('Check your email/phone for the magic link/OTP!', 'success');
                         } else {
+                            // Store the session in localStorage
+                            if (loginData.data && loginData.data.session) {
+                                localStorage.setItem('supabase.auth.token', JSON.stringify(loginData.data.session));
+                                console.log('✅ Session stored in localStorage');
+                            }
+                            
                             this.showMessage('Login successful! Redirecting...', 'success');
                             setTimeout(() => {
-                                window.location.href = 'dashboard.html';
+                                window.location.href = '/dashboard.html';
                             }, 1500);
                         }
                         
@@ -433,6 +444,12 @@
                         if (result.error) {
                             this.showMessage(result.error.message, 'error')
                         } else {
+                            // Store the session in localStorage
+                            if (result.data && result.data.session) {
+                                localStorage.setItem('supabase.auth.token', JSON.stringify(result.data.session));
+                                console.log('✅ Session stored in localStorage after OTP verification');
+                            }
+                            
                             console.log('OTP verification successful, redirecting to dashboard');
                             window.location.href = '/dashboard.html'
                         }
