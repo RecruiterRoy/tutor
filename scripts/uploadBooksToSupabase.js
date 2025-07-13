@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 
 const supabase = createClient(
   'https://xhuljxuxnlwtocfmwiid.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTczNDgxNiwiZXhwIjoyMDY3MzEwODE2fQ.zWM_bFG_5ugzORG-hedkwuZ5sUxyJVj--zcf1UCMrow'
+  'process.env.SUPABASE_SERVICE_KEY'
 );
 
 const bucket = 'educational-content';
