@@ -565,33 +565,321 @@
             cursor: not-allowed;
         }
 
+        /* Mobile Sidebar Styles */
+        .mobile-sidebar {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 280px;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            transition: left 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-sidebar.open {
+            left: 0;
+        }
+
+        .mobile-sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-sidebar-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mobile Optimizations */
         @media (max-width: 768px) {
             .chat-container {
                 height: 50vh;
             }
+            
             .message-user, .message-ai {
                 max-width: 90%;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .desktop-sidebar {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .top-bar {
+                padding: 1rem;
+            }
+            
+            .chat-section {
+                padding: 1rem;
+            }
+            
+            .gradient-border-content {
+                padding: 1rem;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            
+            .study-materials {
+                margin-top: 1rem;
+            }
+            
+            .book-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            
+            .avatar-container-chat {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .teacher-info h2 {
+                font-size: 1.1rem;
+            }
+            
+            .teacher-info p {
+                font-size: 0.875rem;
+            }
+            
+            .media-controls-chat {
+                gap: 4px;
+            }
+            
+            .media-btn-chat {
+                padding: 3px 6px;
+                font-size: 9px;
+            }
+        }
+
+        /* Smooth scrolling for study materials */
+        .study-materials {
+            scroll-behavior: smooth;
+        }
+
+        .book-list {
+            scroll-behavior: smooth;
+        }
+
+        /* Enhanced mobile chat input */
+        @media (max-width: 768px) {
+            .chat-input-container {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .chat-input {
+                width: 100%;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            
+            .chat-buttons {
+                display: flex;
+                gap: 0.5rem;
+                width: 100%;
+            }
+            
+            .send-button, .voice-button {
+                flex: 1;
+                padding: 0.75rem;
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Mobile-friendly section transitions */
+        .section-content {
+            transition: all 0.3s ease;
+        }
+
+        .section-content.hidden {
+            display: none;
+        }
+
+        /* Enhanced mobile navigation */
+        .mobile-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 0.25rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-item:hover,
+        .mobile-nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: translateX(4px);
+        }
+
+        .mobile-nav-item .nav-icon {
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .mobile-nav-item .nav-text {
+            font-weight: 500;
+        }
+
+        /* Mobile header */
+        .mobile-header {
+            display: none;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            
+            .desktop-header {
+                display: none;
             }
         }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- Mobile Sidebar Overlay -->
+    <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+    
+    <!-- Microphone Permissions Modal -->
+    <div id="micPermissionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-effect rounded-2xl p-8 max-w-md mx-4 text-center">
+            <div class="mb-6">
+                <div class="text-6xl mb-4">🎤</div>
+                <h3 class="text-2xl font-bold text-white mb-4">Enable Voice Features</h3>
+                <p class="text-gray-300 mb-6">
+                    Tutor.AI can help you learn through voice interaction! Allow microphone access to:
+                </p>
+                <ul class="text-left text-gray-300 mb-6 space-y-2">
+                    <li>• Ask questions by speaking</li>
+                    <li>• Get voice responses from AI teacher</li>
+                    <li>• Practice pronunciation</li>
+                    <li>• Hands-free learning</li>
+                </ul>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="requestMicrophonePermission()" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200">
+                    Allow Access
+                </button>
+                <button onclick="skipMicrophonePermission()" class="flex-1 bg-gray-600 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition-all duration-200">
+                    Skip for Now
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile Sidebar -->
+    <div class="mobile-sidebar" id="mobileSidebar">
+        <div class="p-4 border-b border-white/10">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" style="height: 40px; width: auto; filter: brightness(0) invert(1);">
+                    <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
+                </div>
+                <button class="mobile-menu-toggle" onclick="closeMobileSidebar()">✕</button>
+            </div>
+            <div class="text-right">
+                <p class="text-white text-sm font-medium" id="mobileUserName">Loading...</p>
+                <p class="text-gray-400 text-xs" id="mobileUserClass">Loading...</p>
+            </div>
+        </div>
+        
+        <nav class="p-4 space-y-2">
+            <a href="#" class="mobile-nav-item active" onclick="showSection('dashboard'); closeMobileSidebar();">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">Dashboard</span>
+            </a>
+            <a href="#" class="mobile-nav-item" onclick="showSection('progress'); closeMobileSidebar();">
+                <span class="nav-icon">📈</span>
+                <span class="nav-text">Progress</span>
+            </a>
+            <a href="#" class="mobile-nav-item" onclick="showSection('settings'); closeMobileSidebar();">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Settings</span>
+            </a>
+            <a href="#" class="mobile-nav-item" onclick="signOut(); closeMobileSidebar();">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Sign Out</span>
+            </a>
+        </nav>
+    </div>
+
     <div class="flex h-screen">
-        <!-- Sidebar -->
-        <div class="w-20 md:w-56 bg-slate-800/90 flex flex-col items-center py-6 space-y-4">
+        <!-- Desktop Sidebar -->
+        <div class="desktop-sidebar w-20 md:w-56 bg-slate-800/90 flex flex-col items-center py-6 space-y-4">
             <button class="nav-item active w-full py-3 px-2 text-white text-left font-semibold rounded-lg mb-2" onclick="showSection('dashboard')" id="navDashboard">🏠 <span class="hidden md:inline">Dashboard</span></button>
             <button class="nav-item w-full py-3 px-2 text-white text-left font-semibold rounded-lg mb-2" onclick="showSection('progress')" id="navProgress">📈 <span class="hidden md:inline">Progress</span></button>
             <button class="nav-item w-full py-3 px-2 text-white text-left font-semibold rounded-lg mb-2" onclick="showSection('settings')" id="navSettings">⚙️ <span class="hidden md:inline">Settings</span></button>
         </div>
+        
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col h-full overflow-y-auto">
-            <!-- Top Bar -->
-            <div class="bg-slate-800/90 backdrop-blur-lg border-b border-white/10 p-4">
+        <div class="main-content flex-1 flex flex-col h-full overflow-y-auto">
+            <!-- Mobile Header -->
+            <div class="mobile-header">
+                <button class="mobile-menu-toggle" onclick="openMobileSidebar()">☰</button>
+                <div class="flex items-center space-x-3">
+                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" style="height: 32px; width: auto; filter: brightness(0) invert(1);">
+                    <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
+                </div>
+                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <span id="mobileInitials" class="text-white font-bold text-xs">L</span>
+                </div>
+            </div>
+            
+            <!-- Desktop Top Bar -->
+            <div class="desktop-header bg-slate-800/90 backdrop-blur-lg border-b border-white/10 p-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                            <span class="text-white font-bold text-lg">T</span>
-                        </div>
+                        <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" style="height: 40px; width: auto; filter: brightness(0) invert(1);">
                         <h1 class="text-white text-2xl font-bold">TUTOR.AI</h1>
                     </div>
                     <div class="flex items-center space-x-4">
@@ -605,14 +893,15 @@
                     </div>
                 </div>
             </div>
+            
             <!-- Section Content -->
             <div class="flex-1 flex flex-col overflow-y-auto">
                 <!-- Dashboard Section -->
                 <div id="dashboardSection" class="section-content flex-1 flex flex-col p-4 md:p-6 overflow-y-auto">
                     <!-- Chat Section -->
-                    <div id="chatSection">
-                        <div class="max-w-6xl mx-auto">
-                            <div class="glass-effect rounded-2xl p-6">
+                    <div id="chatSection" class="chat-section">
+                        <div class="max-w-6xl mx-auto w-full">
+                            <div class="glass-effect rounded-2xl p-4 md:p-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center space-x-4">
                                         <div class="avatar-container-chat">
@@ -624,7 +913,7 @@
                                             </div>
                                             <div class="avatar-mouth-chat"></div>
                                         </div>
-                                        <div>
+                                        <div class="teacher-info">
                                             <h2 id="teacher-name-chat" class="text-xl font-bold text-white">Roy Sir</h2>
                                             <p class="text-gray-300 text-sm">Ask me anything about your studies!</p>
                                             <div class="media-controls-chat mt-2">
@@ -647,27 +936,29 @@
                                             <!-- Messages will be inserted here -->
                                         </div>
                                         <!-- Chat Input -->
-                                        <div class="flex space-x-3">
+                                        <div class="chat-input-container flex space-x-3">
                                             <input 
                                                 type="text" 
                                                 id="chatInput" 
                                                 placeholder="Type your question here..." 
-                                                class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                class="chat-input flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                                 onkeypress="handleChatKeyPress(event)"
                                             >
-                                            <button id="voiceButton" class="px-4 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 transition-all duration-300 font-semibold relative" title="Voice Input">
-                                                <span id="voiceIcon">🎤</span>
-                                                <span id="voiceStatus" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full opacity-0 transition-opacity duration-300"></span>
-                                            </button>
-                                            <button id="sendButton" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
-                                                Send
-                                            </button>
+                                            <div class="chat-buttons flex space-x-2">
+                                                <button id="voiceButton" class="voice-button px-4 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 transition-all duration-300 font-semibold relative" title="Voice Input">
+                                                    <span id="voiceIcon">🎤</span>
+                                                    <span id="voiceStatus" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full opacity-0 transition-opacity duration-300"></span>
+                                                </button>
+                                                <button id="sendButton" class="send-button px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold">
+                                                    Send
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Quick Actions -->
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="quick-actions grid grid-cols-2 md:grid-cols-4 gap-4">
                                     <button onclick="sendQuickMessage('Help me with Math problems', 'Math')" class="glass-effect p-4 rounded-2xl text-center hover:bg-white/20 transition-all duration-300 group">
                                         <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">🔢</div>
                                         <p class="text-white font-medium text-sm">Math Help</p>
@@ -687,9 +978,9 @@
                                 </div>
 
                                 <!-- Study Materials Panel -->
-                                <div class="glass-effect rounded-2xl p-4 mt-4">
+                                <div class="study-materials glass-effect rounded-2xl p-4 mt-4">
                                     <h3 class="text-white font-bold mb-2">Study Materials</h3>
-                                    <div id="bookList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
+                                    <div id="bookList" class="book-list grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
                                         <!-- Books will be loaded here -->
                                         <p class="text-gray-400 col-span-full">Loading books for your class...</p>
                                     </div>
@@ -2279,6 +2570,11 @@
                 console.log('✅ User authenticated:', session.user.email);
                 currentUser = session.user;
                 await loadUserProfile();
+                // Update mobile user info after loading profile
+                updateMobileUserInfo();
+                
+                // Update mobile user info after loading profile
+                updateMobileUserInfo();
                 
                 // Debug the system after initialization
                 setTimeout(() => {
@@ -2439,6 +2735,9 @@
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 Dashboard DOM loaded');
             await initDashboard();
+            
+            // Update mobile user info after initialization
+            updateMobileUserInfo();
         });
 
         // Initialize progress section
@@ -2641,6 +2940,123 @@
             if (!isAPIHealthy) {
                 console.log('ℹ️ Using fallback responses - API not available');
             }
+        });
+
+        // ========== MOBILE SIDEBAR FUNCTIONS ==========
+        
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            
+            sidebar.classList.add('open');
+            overlay.classList.add('open');
+            
+            // Prevent body scroll when sidebar is open
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }
+        
+        function updateMobileUserInfo() {
+            if (userData) {
+                const mobileUserName = document.getElementById('mobileUserName');
+                const mobileUserClass = document.getElementById('mobileUserClass');
+                const mobileInitials = document.getElementById('mobileInitials');
+                
+                if (mobileUserName) {
+                    mobileUserName.textContent = userData.full_name || userData.email || 'User';
+                }
+                
+                if (mobileUserClass) {
+                    mobileUserClass.textContent = userData.class || userData.grade || 'Student';
+                }
+                
+                if (mobileInitials) {
+                    const name = userData.full_name || userData.email || 'User';
+                    mobileInitials.textContent = name.charAt(0).toUpperCase();
+                }
+            }
+        }
+        
+        // ========== MICROPHONE PERMISSIONS FUNCTIONS ==========
+        
+        function checkMicrophonePermissions() {
+            const hasRequested = localStorage.getItem('micPermissionRequested');
+            const hasPermission = localStorage.getItem('micPermissionGranted');
+            
+            // If we haven't asked before, show the modal
+            if (!hasRequested) {
+                showMicrophonePermissionModal();
+            }
+            // If we asked but permission was denied, don't show again unless user changes settings
+            else if (hasRequested && !hasPermission) {
+                console.log('Microphone permission was previously denied');
+            }
+            // If permission was granted, we're good
+            else if (hasPermission) {
+                console.log('Microphone permission already granted');
+            }
+        }
+        
+        function showMicrophonePermissionModal() {
+            const modal = document.getElementById('micPermissionsModal');
+            modal.classList.remove('hidden');
+        }
+        
+        function hideMicrophonePermissionModal() {
+            const modal = document.getElementById('micPermissionsModal');
+            modal.classList.add('hidden');
+        }
+        
+        async function requestMicrophonePermission() {
+            try {
+                localStorage.setItem('micPermissionRequested', 'true');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Permission granted
+                localStorage.setItem('micPermissionGranted', 'true');
+                hideMicrophonePermissionModal();
+                
+                showSuccess('Microphone access granted! You can now use voice features.');
+                
+                // Stop the stream since we just needed permission
+                stream.getTracks().forEach(track => track.stop());
+                
+                console.log('✅ Microphone permission granted');
+                
+            } catch (error) {
+                console.error('❌ Microphone permission denied:', error);
+                localStorage.setItem('micPermissionGranted', 'false');
+                hideMicrophonePermissionModal();
+                
+                showError('Microphone access denied. You can still use text-based features.');
+            }
+        }
+        
+        function skipMicrophonePermission() {
+            localStorage.setItem('micPermissionRequested', 'true');
+            localStorage.setItem('micPermissionGranted', 'false');
+            hideMicrophonePermissionModal();
+            
+            showSuccess('Voice features skipped. You can enable them later in settings.');
+        }
+        
+        // Check microphone permissions on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for the dashboard to load, then check permissions
+            setTimeout(() => {
+                checkMicrophonePermissions();
+            }, 2000);
         });
     </script>
 </body>
