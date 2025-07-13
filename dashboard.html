@@ -784,58 +784,6 @@
                 display: none;
             }
         }
-        
-        /* Mobile-specific optimizations */
-        @media (max-width: 768px) {
-            .glass-effect {
-                background: rgba(0, 0, 0, 0.8) !important;
-                backdrop-filter: none !important;
-            }
-            
-            .gradient-border {
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
-                background: rgba(0, 0, 0, 0.8) !important;
-            }
-            
-            /* Reduce animation complexity on mobile */
-            * {
-                animation-duration: 0.2s !important;
-                transition-duration: 0.2s !important;
-            }
-            
-            /* Simplify shadows */
-            .shadow-lg, .shadow-xl {
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
-            }
-            
-            /* Optimize for touch */
-            button, .nav-item {
-                min-height: 44px;
-                min-width: 44px;
-            }
-        }
-        
-        /* Performance optimizations */
-        .desktop-only {
-            display: none;
-        }
-        
-        @media (min-width: 769px) {
-            .desktop-only {
-                display: block;
-            }
-        }
-        
-        /* Reduce memory usage */
-        .message-ai, .message-user {
-            contain: layout style paint;
-        }
-        
-        /* Optimize images */
-        img {
-            max-width: 100%;
-            height: auto;
-        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -1207,223 +1155,133 @@
     </div>
 
     <script>
-        // ========== MOBILE DETECTION & OPTIMIZATION ==========
-        
-        function isMobile() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-        
-        function isLowMemoryDevice() {
-            return navigator.deviceMemory && navigator.deviceMemory < 4;
-        }
-        
-        // Mobile optimization
-        if (isMobile()) {
-            console.log('📱 Mobile device detected - applying optimizations');
-            // Remove desktop-only elements
-            document.querySelectorAll('.desktop-only').forEach(el => el.remove());
-            // Simplify animations
-            document.documentElement.style.setProperty('--animation-duration', '0.2s');
-        }
-        
-        // ========== SINGLE SUPABASE CONFIGURATION ==========
-        
-        // Single Supabase configuration to prevent duplication
+        // ========== CONFIGURATION ==========
+        // Supabase Configuration - Replace with your actual Supabase project URL and anon key
         const SUPABASE_URL = 'https://tutor-tq4v.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dG9yLXRxNHYiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNTU5NzI5MCwiZXhwIjoyMDUxMTczMjkwfQ.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
         
-        // Global Supabase client - single instance
-        let supabaseClient = null;
-        
-        // ========== MEMORY MANAGEMENT ==========
-        
-        const operationQueue = [];
-        let isProcessing = false;
-        
-        function addToQueue(operation) {
-            operationQueue.push(operation);
-            if (!isProcessing) processQueue();
-        }
-        
-        function processQueue() {
-            if (operationQueue.length === 0) {
-                isProcessing = false;
-                return;
-            }
-            
-            isProcessing = true;
-            const operation = operationQueue.shift();
-            operation().finally(() => processQueue());
-        }
-        
-        // Performance monitoring
-        let perfMonitor = null;
-        
-        function startPerformanceMonitoring() {
-            if (performance.memory) {
-                perfMonitor = setInterval(() => {
-                    const usedMB = performance.memory.usedJSHeapSize / (1024 * 1024);
-                    if (usedMB > 50) {
-                        console.warn('⚠️ High memory usage:', usedMB.toFixed(2), 'MB');
-                        clearInterval(perfMonitor);
-                        showError('High memory usage. Simplifying interface...');
-                        simplifyInterface();
-                    }
-                }, 5000);
-            }
-        }
-        
-        function simplifyInterface() {
-            // Remove complex animations
-            document.querySelectorAll('.glass-effect, .gradient-border').forEach(el => {
-                el.classList.remove('glass-effect', 'gradient-border');
-                el.style.background = 'rgba(0,0,0,0.8)';
-            });
-            
-            // Disable voice features to save memory
-            if (recognition) {
-                recognition.stop();
-                recognition = null;
-            }
-            
-            // Clear chat history
-            chatHistory = [];
-            document.getElementById('chatMessages').innerHTML = '';
-            
-            console.log('🔧 Interface simplified for performance');
-        }
-        
-        // ========== ERROR BOUNDARIES ==========
-        
-        // Global error handler
-        window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
-            showError('An error occurred. Trying to recover...');
-            setTimeout(() => {
-                if (isMobile()) {
-                    location.reload();
-                }
-            }, 3000);
-            event.preventDefault();
-        });
-        
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
-            showError('Operation failed. Please try again.');
-            event.preventDefault();
-        });
-        
-        // ========== SINGLE INITIALIZATION FUNCTION ==========
-        
-        async function initializeApp() {
+        // Initialize Supabase client ONCE globally
+        if (!window.supabaseClient) {
             try {
-                console.log('🚀 Starting app initialization...');
-                
-                // 1. Initialize Supabase once
-                if (!supabaseClient) {
-                    if (typeof window.supabase === 'undefined') {
-                        throw new Error('Supabase not loaded');
-                    }
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    console.log('✅ Supabase initialized');
-                }
-                
-                // 2. Check auth status
-                const { data: { session }, error: authError } = await supabaseClient.auth.getSession();
-                
-                if (authError) {
-                    console.error('Auth error:', authError);
-                    throw authError;
-                }
-                
-                if (!session?.user) {
-                    console.log('❌ No authenticated user found, redirecting to login');
-                    window.location.href = '/login.html';
-                    return;
-                }
-                
-                console.log('✅ User authenticated:', session.user.email);
-                currentUser = session.user;
-                
-                // 3. Load user data
-                await loadUserProfile();
-                
-                // 4. Initialize UI components
-                initializeUI();
-                
-                // 5. Initialize voice features only if needed and not on mobile
-                if (!isMobile() && localStorage.getItem('micPermissionGranted') === 'true') {
-                    addToQueue(() => initializeVoiceFeatures());
-                }
-                
-                // 6. Start performance monitoring
-                startPerformanceMonitoring();
-                
-                console.log('✅ App initialized successfully');
-                
+                window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase client initialized');
             } catch (error) {
-                console.error('❌ App initialization failed:', error);
-                showError('App failed to initialize. Please refresh.');
+                console.error('❌ Failed to initialize Supabase client:', error);
+                window.supabaseClient = null;
             }
         }
-        
-        // ========== MEMORY CLEANUP ==========
-        
-        window.addEventListener('beforeunload', () => {
-            // Clean up resources
-            if (recognition) {
-                recognition.stop();
-                recognition = null;
-            }
-            
-            if (currentSpeech) {
-                speechSynthesis.cancel();
-                currentSpeech = null;
-            }
-            
-            // Clear performance monitor
-            if (perfMonitor) {
-                clearInterval(perfMonitor);
-            }
-            
-            // Clean up event listeners
-            const sendButton = document.getElementById('sendButton');
-            const voiceButton = document.getElementById('voiceButton');
-            
-            if (sendButton) {
-                sendButton.removeEventListener('click', handleSendMessage);
-            }
-            
-            if (voiceButton) {
-                voiceButton.removeEventListener('click', toggleVoiceRecording);
-            }
-            
-            console.log('🧹 Cleanup completed');
-        });
-        
-        // ========== GLOBAL VARIABLES ==========
-        
-        let currentUser = null;
-        let userData = null;
-        let chatHistory = [];
-        let isRecording = false;
-        let recognition = null;
-        let recognitionTimeout;
-        let speechSynthesis = window.speechSynthesis;
-        let currentSpeech = null;
-        let currentText = '';
-        let pausedPosition = 0;
-        let isPlaying = false;
-        let autoPlayEnabled = true;
-        let isInitialized = false;
-
-        // ========== CONFIGURATION ==========
-        
-        // Supabase configuration moved to top - using single instance
+        // Remove all other supabase or supabaseClient declarations below this point
         
         // ========== AUTHENTICATION FUNCTIONS ==========
         
-        // Authentication functions moved to initializeApp() - no longer needed here
+        async function initSupabase() {
+            try {
+                console.log('🔧 Initializing Supabase...');
+                return window.supabaseClient;
+            } catch (error) {
+                console.error('❌ Supabase initialization failed:', error);
+                throw error;
+            }
+        }
+        
+        async function loadUserProfile() {
+            try {
+                console.log('👤 Loading user profile...');
+                
+                // Check if Supabase is available
+                if (!window.supabaseClient || !window.supabaseClient.auth) {
+                    console.log('⚠️ Supabase not available, using fallback user data');
+                    userData = {
+                        id: 'fallback-user',
+                        email: 'user@example.com',
+                        full_name: 'Student',
+                        class: 'Student',
+                        grade: 'Student'
+                    };
+                    updateUserInfo();
+                    return;
+                }
+                
+                const { data: { user }, error: userError } = await window.supabaseClient.auth.getUser();
+                if (userError) throw userError;
+                
+                if (!user) {
+                    console.log('❌ No user found');
+                    return;
+                }
+                
+                // Get user profile from profiles table
+                const { data: profile, error: profileError } = await window.supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (profileError && profileError.code !== 'PGRST116') {
+                    console.error('❌ Profile fetch error:', profileError);
+                }
+                
+                userData = profile || {
+                    id: user.id,
+                    email: user.email,
+                    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+                    class: 'Student',
+                    grade: 'Student'
+                };
+                
+                // Update UI with user data
+                updateUserInfo();
+                
+                console.log('✅ User profile loaded:', userData);
+                
+            } catch (error) {
+                console.error('❌ Error loading user profile:', error);
+                // Use fallback user data instead of crashing
+                userData = {
+                    id: 'fallback-user',
+                    email: 'user@example.com',
+                    full_name: 'Student',
+                    class: 'Student',
+                    grade: 'Student'
+                };
+                updateUserInfo();
+            }
+        }
+        
+        function updateUserInfo() {
+            if (userData) {
+                // Update desktop header
+                const topBarUserName = document.getElementById('topBarUserName');
+                const topBarUserClass = document.getElementById('topBarUserClass');
+                const topBarInitials = document.getElementById('topBarInitials');
+                
+                if (topBarUserName) {
+                    topBarUserName.textContent = userData.full_name || userData.email || 'User';
+                }
+                
+                if (topBarUserClass) {
+                    topBarUserClass.textContent = userData.class || userData.grade || 'Student';
+                }
+                
+                if (topBarInitials) {
+                    const name = userData.full_name || userData.email || 'User';
+                    topBarInitials.textContent = name.charAt(0).toUpperCase();
+                }
+                
+                // Update mobile header
+                const mobileInitials = document.getElementById('mobileInitials');
+                if (mobileInitials) {
+                    const name = userData.full_name || userData.email || 'User';
+                    mobileInitials.textContent = name.charAt(0).toUpperCase();
+                }
+            }
+        }
+        
+        function signOut() {
+            window.supabaseClient.auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
+        }
         
         // ========== ENHANCED AI SERVICE ==========
         
@@ -1552,59 +1410,9 @@
         
         // ========== SAFE INITIALIZATION ==========
         
-        let userData = null;
-        let isInitialized = false;
-        
-        async function safeInitialize() {
-            try {
-                console.log('🚀 Starting safe initialization...');
-                
-                // Initialize Supabase
-                await initSupabase();
-                
-                // Load user profile
-                await loadUserProfile();
-                
-                // Initialize other services
-                initializeChat();
-                initializeUI();
-                
-                isInitialized = true;
-                console.log('✅ Dashboard initialized successfully');
-                
-            } catch (error) {
-                console.error('❌ Initialization error:', error);
-                // Show user-friendly error message
-                showError('Failed to initialize dashboard. Please refresh the page.');
-            }
-        }
-        
-        function showError(message) {
-            console.error('Error:', message);
-            // Create a simple error display
-            const errorDiv = document.createElement('div');
-            errorDiv.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #ef4444;
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                z-index: 9999;
-                max-width: 300px;
-                word-wrap: break-word;
-            `;
-            errorDiv.textContent = message;
-            document.body.appendChild(errorDiv);
-            
-            // Remove after 5 seconds
-            setTimeout(() => {
-                if (errorDiv.parentNode) {
-                    errorDiv.parentNode.removeChild(errorDiv);
-                }
-            }, 5000);
-        }
+        // let userData = null;
+        // let isInitialized = false;
+        // async function safeInitialize() { ... } // REMOVE THIS FUNCTION
 
         // ========== GLOBAL VARIABLES ==========
         // Supabase client is already initialized above
@@ -2428,7 +2236,7 @@
                 console.log('🔄 Loading user profile for:', currentUser.id);
                 
                 // First try to get user profile from the user_profiles table
-                const { data: profileData, error: profileError } = await supabaseClient
+                const { data: profileData, error: profileError } = await window.supabaseClient
                     .from('user_profiles')
                     .select('*')
                     .eq('user_id', currentUser.id)
@@ -2438,7 +2246,7 @@
                     console.log('Profile table error, trying RPC:', profileError);
                     
                     // Fallback to RPC function
-                    const { data, error } = await supabaseClient
+                    const { data, error } = await window.supabaseClient
                         .rpc('get_user_profile', { user_id: currentUser.id });
 
                     if (error) {
@@ -2520,8 +2328,8 @@
             try {
                 if (window.TutorAuth) {
                     await window.TutorAuth.signOut();
-                } else if (supabaseClient) {
-                    await supabaseClient.auth.signOut();
+                } else if (window.supabaseClient) {
+                    await window.supabaseClient.auth.signOut();
                 }
                 
                 // Clear local storage
@@ -2670,14 +2478,14 @@
 
             try {
                 // Get current user
-                const { data: { user } } = await supabaseClient.auth.getUser();
+                const { data: { user } } = await window.supabaseClient.auth.getUser();
                 if (!user) {
                     showError('Please log in to send feedback');
                     return;
                 }
 
                 // Insert feedback into database
-                const { error } = await supabaseClient
+                const { error } = await window.supabaseClient
                     .from('user_feedback')
                     .insert({
                         user_id: user.id,
@@ -2710,13 +2518,13 @@
                 bookList.innerHTML = '<p class="text-gray-400 col-span-full">Loading books for your class...</p>';
                 
                 // Get current user's class access
-                const { data: { user } } = await supabaseClient.auth.getUser();
+                const { data: { user } } = await window.supabaseClient.auth.getUser();
                 if (!user) {
                     throw new Error('User not authenticated');
                 }
                 
                 // Get user's class access from user_class_access table
-                const { data: userAccess, error: accessError } = await supabaseClient
+                const { data: userAccess, error: accessError } = await window.supabaseClient
                     .from('user_class_access')
                     .select('*')
                     .eq('user_id', user.id)
@@ -2733,7 +2541,7 @@
                 console.log(`Loading books for user's class: ${userClassName}`);
                 
                 // Use the new get_class_books function to fetch books
-                const { data: books, error: booksError } = await supabaseClient.rpc('get_class_books', {
+                const { data: books, error: booksError } = await window.supabaseClient.rpc('get_class_books', {
                     p_class_name: userClassName,
                     p_subject: null, // null means all subjects
                     p_language: 'English'
@@ -2793,7 +2601,7 @@
         async function viewSubjectBooks(subject, className) {
             try {
                 // Get books for specific subject
-                const { data: books, error: booksError } = await supabaseClient.rpc('get_class_books', {
+                const { data: books, error: booksError } = await window.supabaseClient.rpc('get_class_books', {
                     p_class_name: className,
                     p_subject: subject,
                     p_language: 'English'
@@ -2846,7 +2654,7 @@
             try {
                 showSuccess(`Preparing download for ${fileName}...`);
                 
-                const { data: { publicUrl }, error } = supabase.storage
+                const { data: { publicUrl }, error } = window.supabaseClient.storage
                     .from('educational-content')
                     .getPublicUrl(filePath);
                 
@@ -2946,9 +2754,9 @@
         async function initSupabase() {
             try {
                 // Check if Supabase is already initialized
-                if (supabaseClient) {
+                if (window.supabaseClient) {
                     console.log('ℹ️ Supabase already initialized');
-                    return supabaseClient;
+                    return window.supabaseClient;
                 }
 
                 // Wait for Supabase to load if not already available
@@ -2970,9 +2778,9 @@
                 const supabaseUrl = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
                 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU';
                 
-                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                 console.log('✅ Supabase initialized successfully');
-                return supabaseClient;
+                return window.supabaseClient;
 
             } catch (error) {
                 console.error('❌ Supabase initialization failed:', error);
@@ -2985,10 +2793,10 @@
                 console.log('🚀 Initializing dashboard...');
                 
                 // Initialize Supabase first
-                supabaseClient = await initSupabase();
+                window.supabaseClient = await initSupabase();
                 
                 // Check authentication
-                const { data: { session }, error: authError } = await supabaseClient.auth.getSession();
+                const { data: { session }, error: authError } = await window.supabaseClient.auth.getSession();
                 
                 if (authError) {
                     console.error('Auth error:', authError);
@@ -3741,256 +3549,100 @@
             }
         }
 
-        // ========== MISSING FUNCTIONS FOR NEW INITIALIZATION ==========
-        
-        async function loadUserProfile() {
+        // ========== APP INITIALIZATION ==========
+        async function initializeApp() {
             try {
-                console.log('👤 Loading user profile...');
-                
-                if (!supabaseClient) {
-                    console.log('⚠️ Supabase not available, using fallback user data');
-                    userData = {
-                        id: 'fallback-user',
-                        email: 'user@example.com',
-                        full_name: 'Student',
-                        class: 'Student',
-                        grade: 'Student'
-                    };
-                    updateUserInfo();
+                // 1. Initialize Supabase (already done globally)
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client not available');
+                }
+
+                // 2. Check auth status
+                const { data: { session }, error: authError } = await window.supabaseClient.auth.getSession();
+                if (authError) throw authError;
+                if (!session || !session.user) {
+                    window.location.href = '/login.html';
                     return;
                 }
-                
-                // Get user profile from user_profiles table
-                const { data: profileData, error: profileError } = await supabaseClient
-                    .from('user_profiles')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .single();
+                window.currentUser = session.user;
 
-                if (profileError) {
-                    console.log('Profile table error, trying RPC:', profileError);
-                    
-                    // Fallback to RPC function
-                    const { data, error } = await supabaseClient
-                        .rpc('get_user_profile', { user_id: currentUser.id });
+                // 3. Load user profile
+                await loadUserProfile();
 
-                    if (error) {
-                        console.log('RPC error, using metadata:', error);
-                        throw error;
-                    }
+                // 4. Initialize UI components
+                initializeUI && initializeUI();
+                initializeChat && initializeChat();
+                updateMobileUserInfo && updateMobileUserInfo();
 
-                    if (data && data.length > 0) {
-                        const profile = data[0];
-                        updateUserInterface({
-                            full_name: profile.full_name,
-                            class: profile.class,
-                            board: profile.board,
-                            board_abbr: profile.board_abbr,
-                            phone: profile.phone,
-                            city: profile.city,
-                            state: profile.state,
-                            preferred_language: profile.preferred_language,
-                            email: currentUser.email
-                        });
-                        return;
-                    } else {
-                        throw new Error('No profile found in RPC');
-                    }
+                // 5. Initialize voice features only if permission granted
+                if (localStorage.getItem('micPermissionGranted') === 'true') {
+                    await initializeVoiceFeatures();
                 }
 
-                if (profileData) {
-                    console.log('✅ User profile loaded:', profileData);
-                    updateUserInterface({
-                        full_name: profileData.full_name,
-                        class: profileData.class,
-                        board: profileData.board,
-                        board_abbr: profileData.board_abbr,
-                        phone: profileData.phone,
-                        city: profileData.city,
-                        state: profileData.state,
-                        preferred_language: profileData.preferred_language,
-                        email: currentUser.email
-                    });
-                } else {
-                    throw new Error('No profile data found');
-                }
+                console.log('✅ App initialized successfully');
             } catch (error) {
-                console.error('❌ Error loading user profile:', error);
-                
-                // Try to get from user metadata
-                const metadata = currentUser.user_metadata || {};
-                const fallbackData = {
-                    full_name: metadata.full_name || 'Student',
-                    class: metadata.class || 'Class 2',
-                    board: 'Central Board of Secondary Education',
-                    board_abbr: 'CBSE',
-                    email: currentUser.email
-                };
-                
-                console.log('⚠️ Using fallback data:', fallbackData);
-                updateUserInterface(fallbackData);
+                console.error('Initialization failed:', error);
+                showError('App failed to initialize. Please refresh.');
             }
         }
-        
-        function updateUserInterface(userDataParam) {
-            userData = userDataParam;
-            
-            const name = userData.full_name || 'Student';
-            const className = userData.class || 'Class 2';
-            const initials = name.charAt(0).toUpperCase();
-
-            // Update desktop header
-            const topBarUserName = document.getElementById('topBarUserName');
-            const topBarUserClass = document.getElementById('topBarUserClass');
-            const topBarInitials = document.getElementById('topBarInitials');
-            
-            if (topBarUserName) {
-                topBarUserName.textContent = name;
-            }
-            
-            if (topBarUserClass) {
-                topBarUserClass.textContent = className;
-            }
-            
-            if (topBarInitials) {
-                topBarInitials.textContent = initials;
-            }
-            
-            // Update mobile header
-            const mobileInitials = document.getElementById('mobileInitials');
-            if (mobileInitials) {
-                mobileInitials.textContent = initials;
-            }
-            
-            // Update mobile user info
-            updateMobileUserInfo();
-            
-            console.log('✅ User interface updated');
-        }
-        
-        function updateMobileUserInfo() {
-            if (userData) {
-                const mobileInitials = document.getElementById('mobileInitials');
-                if (mobileInitials) {
-                    const name = userData.full_name || userData.email || 'User';
-                    mobileInitials.textContent = name.charAt(0).toUpperCase();
-                }
-            }
-        }
-        
-        function initializeUI() {
-            try {
-                console.log('🎨 Initializing UI components...');
-                
-                // Initialize navigation
-                document.querySelectorAll('.nav-item').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const section = this.getAttribute('data-section');
-                        showSection(section);
-                    });
-                });
-                
-                // Initialize chat input
-                const chatInput = document.getElementById('chatInput');
-                const sendButton = document.getElementById('sendButton');
-                
-                if (chatInput && sendButton) {
-                    sendButton.addEventListener('click', handleSendMessage);
-                    
-                    chatInput.addEventListener('keydown', function(e) {
-                        if (e.key === 'Enter' && e.shiftKey) {
-                            e.preventDefault();
-                            const start = this.selectionStart;
-                            const end = this.selectionEnd;
-                            this.value = this.value.substring(0, start) + '\n' + this.value.substring(end);
-                            this.selectionStart = this.selectionEnd = start + 1;
-                        } else if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                        }
-                    });
-                }
-                
-                // Initialize voice button (only if not mobile)
-                if (!isMobile()) {
-                    const voiceButton = document.getElementById('voiceButton');
-                    if (voiceButton) {
-                        voiceButton.addEventListener('click', toggleVoiceRecording);
-                    }
-                }
-                
-                // Initialize voice settings
-                const voiceRate = document.getElementById('voiceRate');
-                const voicePitch = document.getElementById('voicePitch');
-                
-                if (voiceRate) {
-                    voiceRate.addEventListener('input', (e) => {
-                        const rateValue = document.getElementById('rateValue');
-                        if (rateValue) rateValue.textContent = `${e.target.value}x`;
-                    });
-                }
-                
-                if (voicePitch) {
-                    voicePitch.addEventListener('input', (e) => {
-                        const pitchValue = document.getElementById('pitchValue');
-                        if (pitchValue) pitchValue.textContent = e.target.value;
-                    });
-                }
-                
-                console.log('✅ UI components initialized');
-                
-            } catch (error) {
-                console.error('❌ Error initializing UI:', error);
-            }
-        }
-        
-        function initializeChat() {
-            try {
-                console.log('💬 Initializing chat functionality...');
-                
-                // Initialize AI service
-                if (typeof EnhancedAIService !== 'undefined') {
-                    window.gptService = new EnhancedAIService();
-                } else {
-                    console.warn('⚠️ EnhancedAIService not available');
-                }
-                
-                // Initialize speech synthesis
-                if ('speechSynthesis' in window) {
-                    speechSynthesis = window.speechSynthesis;
-                    speechSynthesis.onvoiceschanged = populateVoices;
-                    setTimeout(populateVoices, 500);
-                }
-                
-                console.log('✅ Chat functionality initialized');
-                
-            } catch (error) {
-                console.error('❌ Error initializing chat:', error);
-            }
-        }
-        
-        function signOut() {
-            try {
-                if (supabaseClient) {
-                    supabaseClient.auth.signOut().then(() => {
-                        localStorage.clear();
-                        window.location.href = '/index.html';
-                    });
-                } else {
-                    localStorage.clear();
-                    window.location.href = '/index.html';
-                }
-            } catch (error) {
-                console.error('Sign out error:', error);
-                localStorage.clear();
-                window.location.href = '/index.html';
-            }
-        }
-        
-        // ========== SINGLE DOM CONTENT LOADED LISTENER ==========
-        
-        // Single initialization point
+        // Remove any other DOMContentLoaded listeners or scattered initialization
         document.addEventListener('DOMContentLoaded', initializeApp);
+
+        // ========== MOBILE OPTIMIZATION ==========
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            if (isMobile()) {
+                document.querySelectorAll('.desktop-only').forEach(el => el.remove());
+                // TODO: Further simplify or remove heavy/complex UI for mobile here
+            }
+        });
+
+        // ========== MEMORY MANAGEMENT & CLEANUP ==========
+        window.addEventListener('beforeunload', () => {
+            try {
+                if (window.recognition) window.recognition.stop();
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+                document.getElementById('sendButton')?.removeEventListener('click', handleSendMessage);
+                document.getElementById('voiceButton')?.removeEventListener('click', toggleVoiceRecording);
+            } catch (e) {
+                // Ignore errors
+            }
+        });
+
+        // ========== ERROR BOUNDARIES & RECOVERY ==========
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            showError('An error occurred. Trying to recover...');
+            setTimeout(() => location.reload(), 3000);
+            event.preventDefault();
+        });
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            showError('A critical error occurred. Trying to recover...');
+            setTimeout(() => location.reload(), 3000);
+            event.preventDefault();
+        });
+
+        // ========== PERFORMANCE MONITORING ==========
+        const perfMonitor = setInterval(() => {
+            if (performance.memory) {
+                const usedMB = performance.memory.usedJSHeapSize / (1024 * 1024);
+                if (usedMB > 50) {
+                    clearInterval(perfMonitor);
+                    showError('High memory usage. Simplifying interface...');
+                    simplifyInterface();
+                }
+            }
+        }, 5000);
+        function simplifyInterface() {
+            // Placeholder: Hide heavy UI, animations, or features for low-memory devices
+            document.body.classList.add('simple-mode');
+            // Example: Hide charts, animations, or large images
+            document.querySelectorAll('.heavy-ui, .animated, .large-image').forEach(el => el.style.display = 'none');
+        }
     </script>
 </body>
 </html>
