@@ -1155,6 +1155,20 @@
     </div>
 
     <script>
+        // ========== AUTHENTICATION CHECK ==========
+        // Check if user is already authenticated to prevent loops
+        if (window.location.pathname.includes('dashboard.html')) {
+            // Check for existing session in localStorage
+            const hasSession = localStorage.getItem('supabase.auth.token') || 
+                              localStorage.getItem('sb-tutor-tq4v-auth-token') ||
+                              sessionStorage.getItem('supabase.auth.token');
+            
+            if (!hasSession) {
+                console.log('❌ No session found, redirecting to login');
+                window.location.href = '/login.html';
+            }
+        }
+        
         // ========== CONFIGURATION ==========
         // Supabase Configuration - Replace with your actual Supabase project URL and anon key
         const SUPABASE_URL = 'https://tutor-tq4v.supabase.co';
@@ -1186,65 +1200,91 @@
         
         async function loadUserProfile() {
             try {
-                console.log('👤 Loading user profile...');
-                
-                // Check if Supabase is available
-                if (!window.supabaseClient || !window.supabaseClient.auth) {
-                    console.log('⚠️ Supabase not available, using fallback user data');
-                    userData = {
-                        id: 'fallback-user',
-                        email: 'user@example.com',
-                        full_name: 'Student',
-                        class: 'Student',
-                        grade: 'Student'
-                    };
-                    updateUserInfo();
+                // Check if currentUser exists
+                if (!window.currentUser || !window.currentUser.id) {
+                    console.log('❌ No authenticated user found');
+                    window.location.href = '/login.html';
                     return;
                 }
                 
-                const { data: { user }, error: userError } = await window.supabaseClient.auth.getUser();
-                if (userError) throw userError;
+                console.log('🔄 Loading user profile for:', window.currentUser.id);
                 
-                if (!user) {
-                    console.log('❌ No user found');
-                    return;
-                }
-                
-                // Get user profile from profiles table
-                const { data: profile, error: profileError } = await window.supabaseClient
-                    .from('profiles')
+                // First try to get user profile from the user_profiles table
+                const { data: profileData, error: profileError } = await window.supabaseClient
+                    .from('user_profiles')
                     .select('*')
-                    .eq('id', user.id)
+                    .eq('user_id', window.currentUser.id)
                     .single();
-                
-                if (profileError && profileError.code !== 'PGRST116') {
-                    console.error('❌ Profile fetch error:', profileError);
+
+                if (profileError) {
+                    console.log('Profile table error, trying RPC:', profileError);
+                    
+                    // Fallback to RPC function
+                    const { data, error } = await window.supabaseClient
+                        .rpc('get_user_profile', { user_id: window.currentUser.id });
+
+                    if (error) {
+                        console.log('RPC error, trying auth metadata:', error);
+                        throw error;
+                    }
+
+                    if (data && data.length > 0) {
+                        const profile = data[0];
+                        updateUserInterface({
+                            full_name: profile.full_name,
+                            class: profile.class,
+                            board: profile.board,
+                            board_abbr: profile.board_abbr,
+                            phone: profile.phone,
+                            city: profile.city,
+                            state: profile.state,
+                            preferred_language: profile.preferred_language,
+                            email: window.currentUser.email
+                        });
+                        return;
+                    } else {
+                        throw new Error('No profile found in RPC');
+                    }
                 }
-                
-                userData = profile || {
-                    id: user.id,
-                    email: user.email,
-                    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-                    class: 'Student',
-                    grade: 'Student'
-                };
-                
-                // Update UI with user data
-                updateUserInfo();
-                
-                console.log('✅ User profile loaded:', userData);
-                
+
+                if (profileData) {
+                    console.log('✅ User profile loaded:', profileData);
+                    updateUserInterface({
+                        full_name: profileData.full_name,
+                        class: profileData.class,
+                        board: profileData.board,
+                        board_abbr: profileData.board_abbr,
+                        phone: profileData.phone,
+                        city: profileData.city,
+                        state: profileData.state,
+                        preferred_language: profileData.preferred_language,
+                        email: window.currentUser.email
+                    });
+                } else {
+                    throw new Error('No profile data found');
+                }
             } catch (error) {
                 console.error('❌ Error loading user profile:', error);
-                // Use fallback user data instead of crashing
-                userData = {
-                    id: 'fallback-user',
-                    email: 'user@example.com',
-                    full_name: 'Student',
-                    class: 'Student',
-                    grade: 'Student'
+                
+                // Check if currentUser exists before accessing metadata
+                if (!window.currentUser) {
+                    console.log('❌ No authenticated user, redirecting to login');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                // Try to get from user metadata
+                const metadata = window.currentUser.user_metadata || {};
+                const fallbackData = {
+                    full_name: metadata.full_name || 'Student',
+                    class: metadata.class || 'Class 2',
+                    board: 'Central Board of Secondary Education',
+                    board_abbr: 'CBSE',
+                    email: window.currentUser.email
                 };
-                updateUserInfo();
+                
+                console.log('⚠️ Using fallback data:', fallbackData);
+                updateUserInterface(fallbackData);
             }
         }
         
@@ -1421,7 +1461,9 @@
         // const supabaseKey = supabaseConfig.supabaseAnonKey || 'your-anon-key-here';
         // const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        let currentUser = null;
+        // Global user variables
+        window.currentUser = null;
+        let userData = null;
         let chatHistory = [];
         let isRecording = false;
         let recognition = null;
@@ -1600,7 +1642,7 @@
                 
                 // Get user profile data to send to API
                 const userProfileData = userData || {
-                    full_name: currentUser?.user_metadata?.full_name || 'Student',
+                    full_name: window.currentUser?.user_metadata?.full_name || 'Student',
                     class: userData?.class || 'Class 6',
                     board: userData?.board || 'CBSE',
                     subject: gptService.currentSubject || 'General'
@@ -1609,7 +1651,7 @@
                 let aiResponse = await gptService.sendMessage(message, userProfileData);
                 
                 // Remove ALL name-related questions and references
-                const firstName = (userData?.full_name || currentUser?.user_metadata?.full_name || 'Student').split(' ')[0];
+                const firstName = (userData?.full_name || window.currentUser?.user_metadata?.full_name || 'Student').split(' ')[0];
                 
                 if(currentTeacher === teachers.hindi) {
                     // Remove Hindi name questions and references
@@ -2233,13 +2275,20 @@
 
         async function loadUserProfile() {
             try {
-                console.log('🔄 Loading user profile for:', currentUser.id);
+                // Check if currentUser exists
+                if (!window.currentUser || !window.currentUser.id) {
+                    console.log('❌ No authenticated user found');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                console.log('🔄 Loading user profile for:', window.currentUser.id);
                 
                 // First try to get user profile from the user_profiles table
                 const { data: profileData, error: profileError } = await window.supabaseClient
                     .from('user_profiles')
                     .select('*')
-                    .eq('user_id', currentUser.id)
+                    .eq('user_id', window.currentUser.id)
                     .single();
 
                 if (profileError) {
@@ -2247,7 +2296,7 @@
                     
                     // Fallback to RPC function
                     const { data, error } = await window.supabaseClient
-                        .rpc('get_user_profile', { user_id: currentUser.id });
+                        .rpc('get_user_profile', { user_id: window.currentUser.id });
 
                     if (error) {
                         console.log('RPC error, trying auth metadata:', error);
@@ -2265,7 +2314,7 @@
                             city: profile.city,
                             state: profile.state,
                             preferred_language: profile.preferred_language,
-                            email: currentUser.email
+                            email: window.currentUser.email
                         });
                         return;
                     } else {
@@ -2284,7 +2333,7 @@
                         city: profileData.city,
                         state: profileData.state,
                         preferred_language: profileData.preferred_language,
-                        email: currentUser.email
+                        email: window.currentUser.email
                     });
                 } else {
                     throw new Error('No profile data found');
@@ -2292,14 +2341,21 @@
             } catch (error) {
                 console.error('❌ Error loading user profile:', error);
                 
+                // Check if currentUser exists before accessing metadata
+                if (!window.currentUser) {
+                    console.log('❌ No authenticated user, redirecting to login');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
                 // Try to get from user metadata
-                const metadata = currentUser.user_metadata || {};
+                const metadata = window.currentUser.user_metadata || {};
                 const fallbackData = {
                     full_name: metadata.full_name || 'Student',
                     class: metadata.class || 'Class 2',
                     board: 'Central Board of Secondary Education',
                     board_abbr: 'CBSE',
-                    email: currentUser.email
+                    email: window.currentUser.email
                 };
                 
                 console.log('⚠️ Using fallback data:', fallbackData);
@@ -2352,10 +2408,10 @@
                     <h3 class="text-white text-lg font-bold mb-4">👤 User Profile</h3>
                     <div class="space-y-3 text-white">
                         <div>
-                            <strong>Name:</strong> ${userData?.full_name || currentUser?.user_metadata?.full_name || 'Not set'}
+                            <strong>Name:</strong> ${userData?.full_name || window.currentUser?.user_metadata?.full_name || 'Not set'}
                         </div>
                         <div>
-                            <strong>Email:</strong> ${currentUser?.email || 'Not set'}
+                            <strong>Email:</strong> ${window.currentUser?.email || 'Not set'}
                         </div>
                         <div>
                             <strong>Class:</strong> ${userData?.class || 'Not set'}
@@ -2364,7 +2420,7 @@
                             <strong>Board:</strong> ${userData?.board || 'Not set'}
                         </div>
                         <div>
-                            <strong>Member Since:</strong> ${new Date(currentUser?.created_at || Date.now()).toLocaleDateString()}
+                            <strong>Member Since:</strong> ${new Date(window.currentUser?.created_at || Date.now()).toLocaleDateString()}
                         </div>
                     </div>
                     <div class="flex gap-2 mt-6">
@@ -3491,42 +3547,7 @@
 
         // ========== SAFE INITIALIZATION ==========
         
-        // Single initialization function to prevent conflicts
-        async function initializeDashboard() {
-            try {
-                console.log('🚀 Starting dashboard initialization...');
-                
-                // Initialize Supabase
-                await initSupabase();
-                
-                // Load user profile
-                await loadUserProfile();
-                
-                // Initialize chat functionality
-                initializeChat();
-                
-                // Initialize UI elements
-                initializeUI();
-                
-                // Check API health
-                await checkAPIHealth();
-                
-                // Update mobile user info after initialization
-                updateMobileUserInfo();
-                
-                // MICROPHONE PERMISSION CHECK DISABLED FOR STABILITY
-                // Users can manually enable voice features by clicking the microphone button
-                
-                console.log('✅ Dashboard initialized successfully');
-                
-            } catch (error) {
-                console.error('❌ Dashboard initialization error:', error);
-                showError('Failed to initialize dashboard. Please refresh the page.');
-            }
-        }
-        
-        // Single DOMContentLoaded listener
-        document.addEventListener('DOMContentLoaded', initializeDashboard);
+        // OLD INITIALIZATION REMOVED - Only use initializeApp below
         
         // ========== FALLBACK FUNCTIONS ==========
         
@@ -3561,10 +3582,14 @@
                 const { data: { session }, error: authError } = await window.supabaseClient.auth.getSession();
                 if (authError) throw authError;
                 if (!session || !session.user) {
+                    console.log('❌ No authenticated session found, redirecting to login');
                     window.location.href = '/login.html';
                     return;
                 }
+                
+                // Set currentUser globally
                 window.currentUser = session.user;
+                console.log('✅ User authenticated:', session.user.email);
 
                 // 3. Load user profile
                 await loadUserProfile();
