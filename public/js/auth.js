@@ -45,8 +45,8 @@ async function initializeAuth() {
       console.log('Auth state changed:', event);
       handleAuthStateChange(event, session);
     });
-    
-  } catch (error) {
+        
+      } catch (error) {
     console.error('Auth initialization failed:', error);
     window.authState.isLoading = false;
     handleAuthError(error);
@@ -116,8 +116,8 @@ async function signIn(email, password) {
     }
     
     return data;
-    
-  } catch (error) {
+        
+      } catch (error) {
     console.error('Login error:', error.message);
     throw error;
   }
@@ -132,7 +132,7 @@ async function signUp(email, password, userData = {}) {
     const { data, error } = await window.supabaseClient.auth.signUp({
       email: email.trim(),
       password: password,
-      options: {
+          options: {
         data: userData
       }
     });
@@ -143,8 +143,8 @@ async function signUp(email, password, userData = {}) {
     }
     
     return data;
-    
-  } catch (error) {
+        
+      } catch (error) {
     console.error('Registration error:', error.message);
     throw error;
   }
@@ -189,8 +189,8 @@ async function resetPassword(email) {
     }
     
     return { success: true };
-    
-  } catch (error) {
+        
+      } catch (error) {
     console.error('Password reset error:', error.message);
     throw error;
   }

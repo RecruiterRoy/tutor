@@ -42,9 +42,9 @@ function getSupabase() {
             throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required');
         }
         supabase = createClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_KEY
-        );
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+);
     }
     return supabase;
 }
@@ -295,10 +295,10 @@ app.get('/api/supabase-config', (req, res) => {
             });
         }
         
-        res.json({
-            supabaseUrl: process.env.SUPABASE_URL,
-            supabaseKey: process.env.SUPABASE_ANON_KEY
-        });
+    res.json({
+        supabaseUrl: process.env.SUPABASE_URL,
+        supabaseKey: process.env.SUPABASE_ANON_KEY
+    });
     } catch (error) {
         console.error('Error serving Supabase config:', error);
         res.status(500).json({
@@ -420,7 +420,7 @@ Use natural language without any formatting or special characters.`;
 
   } catch (error) {
     console.error('Claude API Error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get response from Claude',
       details: error.message 
     });
@@ -473,7 +473,7 @@ app.get('/api/fs/books', (req, res) => {
             });
         }
 
-        traverseDir(ncertPath);
+            traverseDir(ncertPath);
         
         res.json(allFiles);
     } catch (error) {
@@ -878,4 +878,4 @@ if (process.env.NODE_ENV !== 'production') {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Tutor.AI backend listening at http://localhost:${PORT}`);
-});
+}); 

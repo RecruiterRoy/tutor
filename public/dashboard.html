@@ -7,7 +7,7 @@
     
     <!-- Preload essential resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
-    <link rel="preload" href="/public/images/teacher-avatar2.png" as="image">
+    <link rel="preload" href="./images/teacher-avatar2.png" as="image">
     
     <!-- Load Tailwind CSS with reduced size -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
@@ -22,8 +22,6 @@
     
     <!-- Load essential scripts with defer -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="./public/js/config.js" defer></script>
-    <script src="./public/js/auth.js" defer></script>
     
     <!-- Load non-critical scripts after page load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
@@ -272,7 +270,7 @@
         <div class="p-4 border-b border-white/10">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-2">
-                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
+                    <img src="./images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
                     <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
                 </div>
                 <button class="text-white text-2xl" onclick="closeMobileSidebar()">×</button>
@@ -326,7 +324,7 @@
             <div class="md:hidden flex items-center justify-between p-3 bg-slate-800/90 border-b border-white/10">
                 <button class="text-white text-2xl" onclick="openMobileSidebar()">☰</button>
                 <div class="flex items-center space-x-2">
-                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-6">
+                    <img src="./images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-6">
                     <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
                 </div>
                 <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -338,7 +336,7 @@
             <div class="hidden md:block bg-slate-800/90 border-b border-white/10 p-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
+                        <img src="./images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
                         <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
                     </div>
                     <div class="flex items-center space-x-3">
@@ -364,7 +362,7 @@
                                 <div class="flex items-center space-x-3">
                                     <div class="avatar-container-chat">
                                         <img id="teacher-avatar-chat" class="avatar-image-chat" 
-                                             src="/public/images/teacher-avatar2.png" alt="Teacher Avatar">
+                                             src="./images/teacher-avatar2.png" alt="Teacher Avatar">
                                     </div>
                                     <div class="teacher-info">
                                         <h2 id="teacher-name-chat" class="text-lg font-bold text-white">Roy Sir</h2>
@@ -483,13 +481,13 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="english" onclick="handleAvatarSelection('english')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="/public/images/teacher-avatar2.png" alt="Roy Sir">
+                                            <img class="avatar-image-settings" src="./images/teacher-avatar2.png" alt="Roy Sir">
                                         </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Roy Sir</h3>
                                     </div>
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="hindi" onclick="handleAvatarSelection('hindi')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="/public/images/teacher-avatar1.png" alt="Ms. Sapana">
+                                            <img class="avatar-image-settings" src="./images/teacher-avatar1.png" alt="Ms. Sapana">
                                         </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Ms. Sapana</h3>
                                     </div>
@@ -563,7 +561,7 @@
         let recognition = null;
         let currentTeacher = {
             name: "Roy Sir",
-            image: "/public/images/teacher-avatar2.png",
+            image: "./images/teacher-avatar2.png",
             language: "en"
         };
         
@@ -579,7 +577,7 @@
                 
                 if (authError || !session?.user) {
                     console.error('Auth error or no session:', authError);
-                    window.location.href = '/login.html';
+                    window.location.href = './login.html';
                     return;
                 }
                 
@@ -779,10 +777,10 @@
         async function signOut() {
             try {
                 await supabaseClient.auth.signOut();
-                window.location.href = '/login.html';
+                window.location.href = './login.html';
             } catch (error) {
                 console.error('Sign out error:', error);
-                window.location.href = '/login.html';
+                window.location.href = './login.html';
             }
         }
         
@@ -1048,13 +1046,13 @@
             if (teacher === 'hindi') {
                 currentTeacher = {
                     name: "Ms. Sapana",
-                    image: "/public/images/teacher-avatar1.png",
+                    image: "./images/teacher-avatar1.png",
                     language: "hi"
                 };
             } else {
                 currentTeacher = {
                     name: "Roy Sir",
-                    image: "/public/images/teacher-avatar2.png",
+                    image: "./images/teacher-avatar2.png",
                     language: "en"
                 };
             }
