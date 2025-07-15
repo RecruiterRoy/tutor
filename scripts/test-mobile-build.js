@@ -12,9 +12,9 @@ console.log('🔍 Testing TUTOR.AI Mobile Build Readiness...\n');
 
 // Required files for mobile build
 const requiredFiles = [
-    'dashboard.html',
-    'login.html',
-    'index.html',
+    'public/index.html',
+    'public/dashboard.html', 
+    'public/login.html',
     'public/js/config.js',
     'public/js/auth.js',
     'public/error.html',
