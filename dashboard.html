@@ -6,92 +6,99 @@
     <title>Dashboard - TUTOR.AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/vedicMath.js" defer></script>
+    <script src="js/storyDatabase.js" defer></script>
+    <script src="js/lessonPlanner.js" defer></script>
+    <script src="js/teacherBehavior.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { 
             font-family: 'Inter', sans-serif; 
-            touch-action: manipulation;
+            -webkit-font-smoothing: antialiased;
         }
         
-        /* Simplified glass effect for mobile */
         .glass-effect {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .gradient-border {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 1px;
-            border-radius: 12px;
-        }
-        
-        .gradient-border-content {
-            background: rgba(15, 23, 42, 0.95);
-            border-radius: 11px;
-            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
         
         .chat-container {
-            height: 50vh;
+            height: 60vh;
             overflow-y: auto;
             scroll-behavior: smooth;
         }
-        
-        .chat-container::-webkit-scrollbar { width: 4px; }
-        .chat-container::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-        .chat-container::-webkit-scrollbar-thumb { background: #667eea; border-radius: 2px; }
         
         .message-user {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             margin-left: auto;
             max-width: 85%;
-            border-radius: 12px;
             padding: 12px 16px;
+            border-radius: 16px;
             color: white;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
         
         .message-ai {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             margin-right: auto;
             max-width: 85%;
-            border-radius: 12px;
             padding: 12px 16px;
+            border-radius: 16px;
             color: white;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+        
+        .teacher-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        .teacher-avatar.talking {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
         
         .typing-indicator {
             display: flex;
-            align-items: center;
             gap: 4px;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            margin-right: auto;
-            max-width: 80px;
+            padding: 12px;
         }
         
         .typing-dot {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: #667eea;
-            animation: typing 1s infinite;
+            animation: typing 1.4s infinite;
         }
         
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
         
         @keyframes typing {
-            0%, 60%, 100% { opacity: 0.4; }
-            30% { opacity: 1; }
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+        
+        .voice-recording {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            animation: pulse 1s infinite;
         }
         
         .nav-item {
-            transition: all 0.2s ease;
-            position: relative;
+            transition: all 0.3s ease;
         }
         
         .nav-item.active {
@@ -99,302 +106,314 @@
             color: white;
         }
         
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        /* Mobile-first sidebar */
-        .mobile-sidebar {
-            position: fixed;
-            top: 0;
-            left: -100%;
-            width: 280px;
-            height: 100vh;
-            background: rgba(15, 23, 42, 0.98);
-            z-index: 1000;
-            transition: left 0.3s ease;
-            overflow-y: auto;
-        }
-        
-        .mobile-sidebar.open { left: 0; }
-        
-        .mobile-sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .mobile-sidebar-overlay.open {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .mobile-menu-toggle {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 8px;
-        }
-        
-        /* Responsive design */
+        /* Mobile Optimizations */
         @media (max-width: 768px) {
-            .desktop-only { display: none !important; }
-            .chat-container { height: 40vh; }
-            .message-user, .message-ai { max-width: 90%; }
-            .gradient-border-content { padding: 0.75rem; }
+            .chat-container {
+                height: 50vh;
+            }
+            
+            .message-user, .message-ai {
+                max-width: 90%;
+                font-size: 14px;
+            }
+            
+            .teacher-avatar {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .quick-action-btn {
+                padding: 12px 8px;
+                font-size: 12px;
+            }
         }
         
-        /* Error toast */
-        .error-toast {
+        .error-toast, .success-toast {
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             right: 20px;
-            background: #ef4444;
-            color: white;
-            padding: 12px 20px;
+            z-index: 1000;
+            max-width: 300px;
+            padding: 12px 16px;
             border-radius: 8px;
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
-        }
-        
-        /* Loading overlay */
-        .loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.9);
+            color: white;
+            font-size: 14px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            z-index: 9999;
+            gap: 8px;
         }
         
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-left: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .error-toast {
+            background: rgba(239, 68, 68, 0.9);
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .success-toast {
+            background: rgba(34, 197, 94, 0.9);
+        }
+        
+        .vedic-tip {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+            border-left: 4px solid #fbbf24;
+        }
+        
+        .story-content {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            font-size: 13px;
+            border-left: 4px solid #a855f7;
+        }
+        
+        .lesson-progress {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 12px;
         }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center z-50">
         <div class="text-center">
-            <div class="spinner mb-4"></div>
-            <p class="text-white">Loading Dashboard...</p>
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-white text-lg">Loading TUTOR.AI...</p>
         </div>
     </div>
 
-    <!-- Mobile Sidebar Overlay -->
-    <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay" onclick="closeMobileSidebar()"></div>
-    
     <!-- Mobile Sidebar -->
-    <div class="mobile-sidebar" id="mobileSidebar">
+    <div class="mobile-sidebar fixed top-0 left-0 w-64 h-full bg-slate-800/95 transform -translate-x-full transition-transform z-40" id="mobileSidebar">
         <div class="p-4 border-b border-white/10">
-            <div class="flex items-center justify-between mb-4">
-                <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
-                <button class="mobile-menu-toggle" onclick="closeMobileSidebar()">✕</button>
-            </div>
-            <div class="text-right">
-                <p class="text-white text-sm font-medium" id="mobileUserName">Loading...</p>
-                <p class="text-gray-400 text-xs" id="mobileUserClass">Student</p>
-            </div>
+            <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
+            <p class="text-gray-400 text-sm" id="mobileUserName">Loading...</p>
         </div>
-        
         <nav class="p-4 space-y-2">
-            <button class="nav-item active w-full text-left p-3 rounded-lg" onclick="showSection('dashboard'); closeMobileSidebar();">
+            <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="showSection('dashboard')" id="navDashboard">
                 🏠 Dashboard
             </button>
-            <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="showSection('progress'); closeMobileSidebar();">
+            <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="showSection('progress')" id="navProgress">
                 📈 Progress
             </button>
-            <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="showSection('settings'); closeMobileSidebar();">
+            <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="showSection('settings')" id="navSettings">
                 ⚙️ Settings
             </button>
-            <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="signOut(); closeMobileSidebar();">
+            <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="signOut()">
                 🚪 Sign Out
             </button>
         </nav>
     </div>
 
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay fixed inset-0 bg-black/50 hidden z-30" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+
     <div class="flex h-screen">
         <!-- Desktop Sidebar -->
-        <div class="desktop-only w-64 bg-slate-800/90 flex flex-col p-4 space-y-2">
-            <div class="text-white text-xl font-bold mb-6 text-center">TUTOR.AI</div>
-            <button class="nav-item active w-full py-3 px-4 text-white text-left font-medium rounded-lg" onclick="showSection('dashboard')" id="navDashboard">
-                🏠 Dashboard
-            </button>
-            <button class="nav-item w-full py-3 px-4 text-white text-left font-medium rounded-lg" onclick="showSection('progress')" id="navProgress">
-                📈 Progress
-            </button>
-            <button class="nav-item w-full py-3 px-4 text-white text-left font-medium rounded-lg" onclick="showSection('settings')" id="navSettings">
-                ⚙️ Settings
-            </button>
-            <div class="flex-1"></div>
-            <button class="nav-item w-full py-3 px-4 text-white text-left font-medium rounded-lg" onclick="signOut()">
-                🚪 Sign Out
-            </button>
+        <div class="hidden md:flex w-64 bg-slate-800/90 flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
+                <p class="text-gray-400 text-sm" id="desktopUserName">Loading...</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button class="nav-item active w-full text-left p-3 rounded-lg text-white" onclick="showSection('dashboard')" id="navDashboardDesktop">
+                    🏠 Dashboard
+                </button>
+                <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="showSection('progress')" id="navProgressDesktop">
+                    📈 Progress
+                </button>
+                <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="showSection('settings')" id="navSettingsDesktop">
+                    ⚙️ Settings
+                </button>
+                <button class="nav-item w-full text-left p-3 rounded-lg text-white" onclick="signOut()">
+                    🚪 Sign Out
+                </button>
+            </nav>
         </div>
         
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col h-full overflow-hidden">
+        <div class="flex-1 flex flex-col">
             <!-- Mobile Header -->
             <div class="md:hidden bg-slate-800/90 p-4 flex items-center justify-between">
-                <button class="mobile-menu-toggle" onclick="openMobileSidebar()">☰</button>
-                <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
+                <button onclick="openMobileSidebar()" class="text-white p-2">☰</button>
+                <h1 class="text-white font-bold">TUTOR.AI</h1>
                 <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span id="mobileInitials" class="text-white font-bold text-xs">U</span>
+                    <span id="userInitials" class="text-white font-bold text-xs">L</span>
                 </div>
             </div>
             
-            <!-- Desktop Top Bar -->
-            <div class="hidden md:flex bg-slate-800/90 p-4 items-center justify-between">
-                <h1 class="text-white text-2xl font-bold">Dashboard</h1>
-                <div class="flex items-center space-x-4">
-                    <div class="text-right">
-                        <p class="text-white text-sm font-medium" id="topBarUserName">Loading...</p>
-                        <p class="text-gray-400 text-xs" id="topBarUserClass">Student</p>
-                    </div>
-                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span id="topBarInitials" class="text-white font-bold text-sm">U</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Section Content -->
-            <div class="flex-1 overflow-y-auto p-4">
+            <!-- Content Container -->
+            <div class="flex-1 overflow-y-auto">
                 <!-- Dashboard Section -->
-                <div id="dashboardSection" class="section-content">
+                <div id="dashboardSection" class="section-content p-4">
                     <div class="max-w-4xl mx-auto">
-                        <div class="glass-effect rounded-xl p-4 mb-4">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                                        <span class="text-white font-bold">AI</span>
-                                    </div>
-                                    <div>
-                                        <h2 class="text-white font-bold">Your AI Tutor</h2>
-                                        <p class="text-gray-300 text-sm">Ask me anything!</p>
+                        <!-- Teacher Section -->
+                        <div class="glass-effect rounded-xl p-4 mb-6">
+                            <div class="flex items-center gap-4 mb-4">
+                                <img id="currentTeacherAvatar" class="teacher-avatar" src="/images/teacher-avatar2.png" alt="Teacher">
+                                <div>
+                                    <h2 id="currentTeacherName" class="text-white text-lg font-bold">Roy Sir</h2>
+                                    <p class="text-gray-300 text-sm">Your AI Teacher</p>
+                                    <div id="lessonProgress" class="lesson-progress hidden">
+                                        <span id="lessonProgressText">Lesson progress will appear here</span>
                                     </div>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <div class="w-3 h-3 bg-green-500 rounded-full pulse-animation"></div>
-                                    <span class="text-green-400 text-sm">Online</span>
+                                <div class="ml-auto flex items-center space-x-2">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                    <span class="text-green-400 text-xs">Online</span>
                                 </div>
                             </div>
 
                             <!-- Chat Container -->
-                            <div class="gradient-border mb-4">
-                                <div class="gradient-border-content">
-                                    <div id="chatMessages" class="chat-container space-y-2 mb-4">
-                                        <div class="message-ai">
-                                            👋 Hi! I'm your AI tutor. How can I help you today?
-                                        </div>
-                                    </div>
-                                    <!-- Chat Input -->
-                                    <div class="flex space-x-2">
-                                        <input 
-                                            type="text" 
-                                            id="chatInput" 
-                                            placeholder="Type your question..." 
-                                            class="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            onkeypress="handleChatKeyPress(event)"
-                                        >
-                                        <button id="sendButton" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium">
-                                            Send
-                                        </button>
+                            <div id="chatMessages" class="chat-container mb-4">
+                                <div class="message-ai">
+                                    <img class="teacher-avatar" src="/images/teacher-avatar2.png" alt="Roy Sir">
+                                    <div>
+                                        <div>Hello! I'm Roy Sir, your AI teacher. I'm here to help you learn and grow. What would you like to study today?</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Quick Actions -->
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                <button onclick="sendQuickMessage('Help with Math')" class="glass-effect p-3 rounded-lg text-center text-white hover:bg-white/20 transition-colors">
-                                    <div class="text-xl mb-1">🔢</div>
-                                    <div class="text-sm">Math</div>
+                            <!-- Chat Input -->
+                            <div class="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    id="chatInput" 
+                                    placeholder="Ask me anything about your studies..." 
+                                    class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    onkeypress="handleKeyPress(event)"
+                                >
+                                <button 
+                                    id="voiceButton" 
+                                    class="px-4 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-300 font-semibold" 
+                                    onclick="toggleVoice()" 
+                                    title="Voice Input (Optional)"
+                                >
+                                    🎤
                                 </button>
-                                <button onclick="sendQuickMessage('Science questions')" class="glass-effect p-3 rounded-lg text-center text-white hover:bg-white/20 transition-colors">
-                                    <div class="text-xl mb-1">🧪</div>
-                                    <div class="text-sm">Science</div>
+                                <button 
+                                    id="sendButton" 
+                                    class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold"
+                                    onclick="sendMessage()"
+                                >
+                                    Send
                                 </button>
-                                <button onclick="sendQuickMessage('English help')" class="glass-effect p-3 rounded-lg text-center text-white hover:bg-white/20 transition-colors">
-                                    <div class="text-xl mb-1">📝</div>
-                                    <div class="text-sm">English</div>
-                                </button>
-                                <button onclick="sendQuickMessage('Study plan')" class="glass-effect p-3 rounded-lg text-center text-white hover:bg-white/20 transition-colors">
-                                    <div class="text-xl mb-1">📅</div>
-                                    <div class="text-sm">Plan</div>
-                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="quick-actions grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <button onclick="quickStudy('Math')" class="quick-action-btn glass-effect p-4 rounded-xl text-center hover:bg-white/20 transition-all">
+                                <div class="text-2xl mb-2">🔢</div>
+                                <p class="text-white font-medium text-sm">Math Help</p>
+                            </button>
+                            <button onclick="quickStudy('Science')" class="quick-action-btn glass-effect p-4 rounded-xl text-center hover:bg-white/20 transition-all">
+                                <div class="text-2xl mb-2">🧪</div>
+                                <p class="text-white font-medium text-sm">Science</p>
+                            </button>
+                            <button onclick="quickStudy('English')" class="quick-action-btn glass-effect p-4 rounded-xl text-center hover:bg-white/20 transition-all">
+                                <div class="text-2xl mb-2">📝</div>
+                                <p class="text-white font-medium text-sm">English</p>
+                            </button>
+                            <button onclick="showProgress()" class="quick-action-btn glass-effect p-4 rounded-xl text-center hover:bg-white/20 transition-all">
+                                <div class="text-2xl mb-2">📈</div>
+                                <p class="text-white font-medium text-sm">Progress</p>
+                            </button>
+                        </div>
+
+                        <!-- Study Materials -->
+                        <div class="glass-effect rounded-xl p-4">
+                            <h3 class="text-white font-bold mb-4">Study Materials</h3>
+                            <div id="studyMaterials" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="bg-indigo-600/50 p-4 rounded-lg text-white">
+                                    <div class="flex items-center mb-2">
+                                        <span class="mr-2">📚</span>
+                                        <span class="font-medium">NCERT Books</span>
+                                    </div>
+                                    <p class="text-sm text-gray-300">Access your textbooks</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Progress Section -->
-                <div id="progressSection" class="section-content hidden">
+                <div id="progressSection" class="section-content p-4 hidden">
                     <div class="max-w-4xl mx-auto">
                         <div class="glass-effect rounded-xl p-6">
-                            <h2 class="text-2xl font-bold text-white mb-4">Learning Progress</h2>
-                            <div class="text-white">
-                                <p>Progress tracking will be available soon!</p>
+                            <h2 class="text-white text-2xl font-bold mb-6">Learning Progress</h2>
+                            <div id="progressContent">
+                                <p class="text-gray-300">Progress tracking will be implemented here...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Settings Section -->
-                <div id="settingsSection" class="section-content hidden">
+                <div id="settingsSection" class="section-content p-4 hidden">
                     <div class="max-w-2xl mx-auto">
                         <div class="glass-effect rounded-xl p-6">
-                            <h2 class="text-2xl font-bold text-white mb-4">Settings</h2>
+                            <h2 class="text-white text-2xl font-bold mb-6">Settings</h2>
                             
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="text-white text-sm font-medium">Language:</label>
-                                    <select id="preferredLanguage" class="mt-1 block w-full bg-slate-700 text-white rounded-lg p-2">
-                                        <option value="en">English</option>
-                                        <option value="hi">हिंदी (Hindi)</option>
-                                    </select>
+                            <!-- Teacher Selection -->
+                            <div class="mb-6">
+                                <label class="text-white text-sm font-medium mb-3 block">Choose Your Teacher:</label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="teacher-card bg-white/10 p-4 rounded-lg cursor-pointer border-2 border-transparent hover:border-blue-500" data-teacher="roy" onclick="selectTeacher('roy')">
+                                        <img class="teacher-avatar mx-auto mb-2" src="/images/teacher-avatar2.png" alt="Roy Sir">
+                                        <h3 class="text-white text-center font-medium">Roy Sir</h3>
+                                        <p class="text-gray-400 text-xs text-center">English • Structured</p>
+                                    </div>
+                                    <div class="teacher-card bg-white/10 p-4 rounded-lg cursor-pointer border-2 border-transparent hover:border-blue-500" data-teacher="sapna" onclick="selectTeacher('sapna')">
+                                        <img class="teacher-avatar mx-auto mb-2" src="/images/teacher-avatar1.png" alt="Ms. Sapna">
+                                        <h3 class="text-white text-center font-medium">Ms. Sapna</h3>
+                                        <p class="text-gray-400 text-xs text-center">Hindi • Nurturing</p>
+                                    </div>
                                 </div>
-                                
-                                <div>
-                                    <label class="text-white text-sm font-medium">Learning Style:</label>
-                                    <select id="learningStyle" class="mt-1 block w-full bg-slate-700 text-white rounded-lg p-2">
-                                        <option value="visual">Visual</option>
-                                        <option value="auditory">Auditory</option>
-                                        <option value="reading">Reading/Writing</option>
-                                        <option value="kinesthetic">Kinesthetic</option>
-                                    </select>
+                            </div>
+
+                            <!-- Language Settings -->
+                            <div class="mb-6">
+                                <label class="text-white text-sm font-medium mb-2 block">Preferred Language:</label>
+                                <select id="languageSelect" class="w-full bg-slate-700 text-white rounded-lg px-3 py-2" onchange="changeLanguage(this.value)">
+                                    <option value="en">English</option>
+                                    <option value="hi">हिंदी (Hindi)</option>
+                                    <option value="hinglish">Hinglish</option>
+                                </select>
+                            </div>
+
+                            <!-- Voice Settings -->
+                            <div class="mb-6">
+                                <label class="text-white text-sm font-medium mb-2 block">Voice Settings:</label>
+                                <div class="space-y-2">
+                                    <button onclick="testVoice()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                        🔊 Test Voice
+                                    </button>
+                                    <button onclick="testMicrophone()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                        🎤 Test Microphone
+                                    </button>
                                 </div>
-                                
-                                <div class="pt-4">
-                                    <button onclick="signOut()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                                        Sign Out
+                            </div>
+
+                            <!-- Account -->
+                            <div class="mb-6">
+                                <label class="text-white text-sm font-medium mb-2 block">Account:</label>
+                                <div class="space-y-2">
+                                    <button onclick="showProfile()" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                        👤 View Profile
+                                    </button>
+                                    <button onclick="signOut()" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                        🚪 Sign Out
                                     </button>
                                 </div>
                             </div>
@@ -406,474 +425,569 @@
     </div>
 
     <script>
-        // ========== GLOBAL STATE MANAGEMENT ==========
-        let isInitialized = false;
-        let isInitializing = false;
+        // ========== GLOBAL VARIABLES ==========
+        let supabaseClient;
         let currentUser = null;
-        let supabaseClient = null;
-        
-        // Performance monitoring
-        let memoryCheckInterval = null;
-        const MAX_MEMORY_MB = 100;
-        
-        // ========== CORE INITIALIZATION ==========
-        async function initializeApp() {
-            if (isInitialized || isInitializing) {
-                console.log('App already initialized or initializing');
-                return;
+        let currentTeacher = 'roy';
+        let currentLanguage = 'en';
+        let isRecording = false;
+        let recognition = null;
+        let speechSynthesis = window.speechSynthesis;
+        let lessonPlanner = null;
+        let teacherBehavior = null;
+        let sessionStartTime = Date.now();
+
+        // ========== TEACHER PERSONAS ==========
+        const teachers = {
+            roy: {
+                name: "Roy Sir",
+                avatar: "/images/teacher-avatar2.png",
+                language: "english",
+                style: "structured",
+                personality: "friendly but strict",
+                greeting: "Hello! I'm Roy Sir, your AI teacher. Let's learn together today."
+            },
+            sapna: {
+                name: "Ms. Sapna",
+                avatar: "/images/teacher-avatar1.png", 
+                language: "hinglish",
+                style: "nurturing",
+                personality: "empathetic and encouraging",
+                greeting: "Namaste! Main Ms. Sapna hun, aapki teacher. Aaj hum kya interesting seekhenge?"
             }
-            
-            isInitializing = true;
-            console.log('🚀 Starting app initialization...');
-            
+        };
+
+        // ========== INITIALIZATION ==========
+        async function initApp() {
             try {
-                // 1. Initialize Supabase (single instance)
+                console.log('🚀 Initializing TUTOR.AI...');
+                
+                // Initialize Supabase
                 await initSupabase();
                 
-                // 2. Check authentication status
-                const isAuthenticated = await checkAuthentication();
-                if (!isAuthenticated) {
-                    console.log('❌ Not authenticated, redirecting to login');
-                    redirectToLogin();
-                    return;
-                }
+                // Check authentication
+                await checkAuth();
                 
-                // 3. Load user profile
-                await loadUserProfile();
+                // Initialize teacher system
+                await initTeacherSystem();
                 
-                // 4. Initialize UI
-                initializeUI();
+                // Initialize UI
+                initUI();
                 
-                // 5. Start memory monitoring
-                startMemoryMonitoring();
+                // Hide loading screen
+                document.getElementById('loadingScreen').style.display = 'none';
                 
-                // 6. Hide loading overlay
-                hideLoadingOverlay();
-                
-                isInitialized = true;
-                isInitializing = false;
-                console.log('✅ App initialized successfully');
+                console.log('✅ TUTOR.AI initialized successfully');
                 
             } catch (error) {
                 console.error('❌ Initialization failed:', error);
-                isInitializing = false;
-                showError('Failed to initialize dashboard. Please try again.');
-                setTimeout(() => redirectToLogin(), 2000);
+                showError('Failed to initialize. Please refresh the page.');
             }
         }
-        
-        // ========== SUPABASE INITIALIZATION ==========
+
         async function initSupabase() {
-            if (supabaseClient) {
-                console.log('Supabase already initialized');
-                return supabaseClient;
-            }
-            
             try {
+                if (typeof window.supabase === 'undefined') {
+                    throw new Error('Supabase not loaded');
+                }
+                
                 const SUPABASE_URL = 'https://tutor-tq4v.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dG9yLXRxNHYiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNTU5NzI5MCwiZXhwIjoyMDUxMTczMjkwfQ.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
                 
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 console.log('✅ Supabase initialized');
-                return supabaseClient;
                 
             } catch (error) {
                 console.error('❌ Supabase initialization failed:', error);
                 throw error;
             }
         }
-        
-        // ========== AUTHENTICATION ==========
-        async function checkAuthentication() {
+
+        async function checkAuth() {
             try {
-                // Check session from Supabase
                 const { data: { session }, error } = await supabaseClient.auth.getSession();
                 
-                if (error) {
-                    console.error('Session check error:', error);
-                    return false;
-                }
+                if (error) throw error;
                 
-                if (!session || !session.user) {
-                    console.log('No valid session found');
-                    return false;
+                if (!session?.user) {
+                    console.log('❌ No authenticated user found');
+                    window.location.href = '/login.html';
+                    return;
                 }
                 
                 currentUser = session.user;
                 console.log('✅ User authenticated:', currentUser.email);
-                return true;
+                
+                // Update UI with user info
+                updateUserInfo();
                 
             } catch (error) {
-                console.error('Authentication check failed:', error);
-                return false;
+                console.error('❌ Auth check failed:', error);
+                window.location.href = '/login.html';
             }
         }
-        
-        function redirectToLogin() {
-            // Clear any existing data
-            if (supabaseClient) {
-                supabaseClient.auth.signOut().catch(console.error);
-            }
-            localStorage.clear();
-            
-            // Redirect to login
-            window.location.href = window.location.origin + '/login.html';
-        }
-        
-        // ========== USER PROFILE ==========
-        async function loadUserProfile() {
+
+        async function initTeacherSystem() {
             try {
-                if (!currentUser) {
-                    console.error('No current user to load profile for');
-                    return;
+                // Load teacher personas and lesson planner
+                if (typeof LessonPlanner !== 'undefined' && currentUser) {
+                    lessonPlanner = new LessonPlanner({
+                        id: currentUser.id,
+                        class: 'class_8', // Default, will be updated from profile
+                        grade: 8
+                    });
+                    console.log('✅ Lesson planner initialized');
                 }
                 
-                // Try to get profile from database
-                const { data: profile, error } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUser.id)
-                    .single();
-                
-                // Use email as fallback if profile doesn't exist
-                const displayName = profile?.full_name || currentUser.email?.split('@')[0] || 'User';
-                const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                
-                // Update UI elements
-                updateUserDisplay(displayName, currentUser.email, initials);
-                
-                console.log('✅ User profile loaded');
-                
-            } catch (error) {
-                console.error('Error loading user profile:', error);
-                // Continue with basic user info
-                const fallbackName = currentUser.email?.split('@')[0] || 'User';
-                updateUserDisplay(fallbackName, currentUser.email, fallbackName[0].toUpperCase());
-            }
-        }
-        
-        function updateUserDisplay(name, email, initials) {
-            // Update all user display elements
-            const elements = {
-                'topBarUserName': name,
-                'mobileUserName': name,
-                'topBarUserClass': 'Student',
-                'mobileUserClass': 'Student',
-                'topBarInitials': initials,
-                'mobileInitials': initials
-            };
-            
-            Object.entries(elements).forEach(([id, value]) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = value;
+                if (typeof TeacherBehavior !== 'undefined') {
+                    teacherBehavior = new TeacherBehavior(teachers[currentTeacher], lessonPlanner);
+                    console.log('✅ Teacher behavior initialized');
                 }
-            });
-        }
-        
-        // ========== UI INITIALIZATION ==========
-        function initializeUI() {
-            try {
-                // Initialize navigation
-                setupNavigation();
                 
-                // Initialize chat
-                setupChat();
-                
-                // Initialize mobile sidebar
-                setupMobileSidebar();
-                
-                // Setup error handling
-                setupErrorHandling();
-                
-                console.log('✅ UI initialized');
+                // Initialize current teacher
+                selectTeacher('roy');
                 
             } catch (error) {
-                console.error('UI initialization failed:', error);
+                console.error('❌ Teacher system initialization failed:', error);
+                // Continue without advanced features
             }
         }
-        
-        function setupNavigation() {
-            // Desktop navigation
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                    e.target.classList.add('active');
-                });
-            });
-        }
-        
-        function setupChat() {
-            const sendButton = document.getElementById('sendButton');
-            const chatInput = document.getElementById('chatInput');
-            
-            if (sendButton) {
-                sendButton.addEventListener('click', handleSendMessage);
-            }
-            
-            if (chatInput) {
-                chatInput.addEventListener('keypress', handleChatKeyPress);
-            }
-        }
-        
-        function setupMobileSidebar() {
-            const overlay = document.getElementById('mobileSidebarOverlay');
-            if (overlay) {
-                overlay.addEventListener('click', closeMobileSidebar);
-            }
-        }
-        
-        // ========== CHAT FUNCTIONALITY ==========
-        function handleChatKeyPress(event) {
-            if (event.key === 'Enter') {
-                handleSendMessage();
-            }
-        }
-        
-        async function handleSendMessage() {
-            const chatInput = document.getElementById('chatInput');
-            const message = chatInput.value.trim();
-            
-            if (!message) return;
-            
-            // Add user message
-            addMessageToChat('user', message);
-            chatInput.value = '';
-            
-            // Show typing indicator
-            showTypingIndicator();
-            
+
+        function initUI() {
+            // Initialize speech recognition (optional, non-blocking)
             try {
-                // Simulate AI response (replace with actual API call)
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                const response = `I understand you said: "${message}". This is a simplified response for mobile optimization.`;
-                
-                hideTypingIndicator();
-                addMessageToChat('ai', response);
-                
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    recognition.continuous = false;
+                    recognition.interimResults = false;
+                    recognition.lang = 'en-US';
+                    
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        document.getElementById('chatInput').value = transcript;
+                        isRecording = false;
+                        updateVoiceButton();
+                    };
+                    
+                    recognition.onerror = () => {
+                        isRecording = false;
+                        updateVoiceButton();
+                    };
+                    
+                    recognition.onend = () => {
+                        isRecording = false;
+                        updateVoiceButton();
+                    };
+                }
             } catch (error) {
-                hideTypingIndicator();
-                addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
-                console.error('Chat error:', error);
+                console.log('Voice recognition not available:', error);
             }
-        }
-        
-        function addMessageToChat(sender, message) {
-            const chatContainer = document.getElementById('chatMessages');
-            if (!chatContainer) return;
             
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message-${sender}`;
-            messageDiv.textContent = message;
+            // Set default teacher as selected
+            document.querySelector('.teacher-card[data-teacher="roy"]')?.classList.add('border-blue-500');
+        }
+
+        // ========== USER INTERFACE ==========
+        function updateUserInfo() {
+            const name = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'Student';
+            const initials = name.charAt(0).toUpperCase();
             
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-        
-        function showTypingIndicator() {
-            const chatContainer = document.getElementById('chatMessages');
-            if (!chatContainer) return;
+            // Update mobile
+            const mobileUserName = document.getElementById('mobileUserName');
+            const userInitials = document.getElementById('userInitials');
             
-            const typingDiv = document.createElement('div');
-            typingDiv.id = 'typingIndicator';
-            typingDiv.className = 'typing-indicator';
-            typingDiv.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+            if (mobileUserName) mobileUserName.textContent = name;
+            if (userInitials) userInitials.textContent = initials;
             
-            chatContainer.appendChild(typingDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            // Update desktop
+            const desktopUserName = document.getElementById('desktopUserName');
+            if (desktopUserName) desktopUserName.textContent = name;
         }
-        
-        function hideTypingIndicator() {
-            const typingIndicator = document.getElementById('typingIndicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-        }
-        
-        function sendQuickMessage(message) {
-            const chatInput = document.getElementById('chatInput');
-            if (chatInput) {
-                chatInput.value = message;
-                handleSendMessage();
-            }
-        }
-        
-        // ========== NAVIGATION ==========
+
         function showSection(sectionName) {
             // Hide all sections
             document.querySelectorAll('.section-content').forEach(section => {
                 section.classList.add('hidden');
             });
             
-            // Show target section
-            const targetSection = document.getElementById(sectionName + 'Section');
-            if (targetSection) {
-                targetSection.classList.remove('hidden');
-            }
+            // Show selected section
+            document.getElementById(sectionName + 'Section').classList.remove('hidden');
             
-            // Update navigation active state
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.classList.remove('active');
             });
             
-            const activeNav = document.getElementById('nav' + sectionName.charAt(0).toUpperCase() + sectionName.slice(1));
-            if (activeNav) {
-                activeNav.classList.add('active');
-            }
+            // Activate current nav items
+            document.getElementById('nav' + sectionName.charAt(0).toUpperCase() + sectionName.slice(1))?.classList.add('active');
+            document.getElementById('nav' + sectionName.charAt(0).toUpperCase() + sectionName.slice(1) + 'Desktop')?.classList.add('active');
+            
+            // Close mobile sidebar
+            closeMobileSidebar();
         }
-        
-        // ========== MOBILE SIDEBAR ==========
+
         function openMobileSidebar() {
-            const sidebar = document.getElementById('mobileSidebar');
-            const overlay = document.getElementById('mobileSidebarOverlay');
-            
-            if (sidebar) sidebar.classList.add('open');
-            if (overlay) overlay.classList.add('open');
+            document.getElementById('mobileSidebar').classList.remove('-translate-x-full');
+            document.getElementById('mobileOverlay').classList.remove('hidden');
         }
-        
+
         function closeMobileSidebar() {
-            const sidebar = document.getElementById('mobileSidebar');
-            const overlay = document.getElementById('mobileSidebarOverlay');
-            
-            if (sidebar) sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('open');
+            document.getElementById('mobileSidebar').classList.add('-translate-x-full');
+            document.getElementById('mobileOverlay').classList.add('hidden');
         }
-        
-        // ========== MEMORY MANAGEMENT ==========
-        function startMemoryMonitoring() {
-            if (!('memory' in performance)) return;
+
+        // ========== TEACHER SYSTEM ==========
+        function selectTeacher(teacherId) {
+            currentTeacher = teacherId;
+            const teacher = teachers[teacherId];
             
-            memoryCheckInterval = setInterval(() => {
-                const usedMB = performance.memory.usedJSHeapSize / (1024 * 1024);
-                
-                if (usedMB > MAX_MEMORY_MB) {
-                    console.warn(`High memory usage: ${usedMB.toFixed(1)}MB`);
-                    optimizeMemory();
-                }
-            }, 10000); // Check every 10 seconds
-        }
-        
-        function optimizeMemory() {
-            // Clear old chat messages if too many
-            const chatContainer = document.getElementById('chatMessages');
-            if (chatContainer && chatContainer.children.length > 50) {
-                const messages = Array.from(chatContainer.children);
-                messages.slice(0, 25).forEach(msg => msg.remove());
-            }
+            // Update UI
+            document.getElementById('currentTeacherName').textContent = teacher.name;
+            document.getElementById('currentTeacherAvatar').src = teacher.avatar;
             
-            // Force garbage collection if available
-            if (window.gc) {
-                window.gc();
-            }
-        }
-        
-        function cleanup() {
-            if (memoryCheckInterval) {
-                clearInterval(memoryCheckInterval);
-            }
-            
-            // Remove event listeners
-            document.querySelectorAll('button').forEach(btn => {
-                btn.replaceWith(btn.cloneNode(true));
+            // Update selection in settings
+            document.querySelectorAll('.teacher-card').forEach(card => {
+                card.classList.remove('border-blue-500');
             });
+            document.querySelector(`.teacher-card[data-teacher="${teacherId}"]`)?.classList.add('border-blue-500');
+            
+            // Update language
+            currentLanguage = teacher.language === 'hinglish' ? 'hinglish' : (teacher.language === 'english' ? 'en' : 'hi');
+            document.getElementById('languageSelect').value = currentLanguage;
+            
+            // Add greeting message
+            addAIMessage(teacher.greeting);
+            
+            // Update teacher behavior if available
+            if (teacherBehavior) {
+                teacherBehavior.persona = teacher;
+            }
+            
+            console.log('✅ Teacher selected:', teacher.name);
         }
-        
-        // ========== AUTHENTICATION ACTIONS ==========
-        async function signOut() {
+
+        function changeLanguage(language) {
+            currentLanguage = language;
+            
+            // Auto-select appropriate teacher
+            if (language === 'hi' || language === 'hinglish') {
+                selectTeacher('sapna');
+            } else {
+                selectTeacher('roy');
+            }
+        }
+
+        // ========== CHAT SYSTEM ==========
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addUserMessage(message);
+            input.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
             try {
-                showLoadingOverlay();
+                // Get AI response
+                let response;
                 
-                if (supabaseClient) {
-                    await supabaseClient.auth.signOut();
+                if (teacherBehavior) {
+                    // Use advanced teacher behavior
+                    const result = teacherBehavior.getResponse(message, {
+                        currentSubject: getCurrentSubject(message),
+                        sessionTime: (Date.now() - sessionStartTime) / 60000 // minutes
+                    });
+                    response = result.message;
+                    
+                    // Add special content if available
+                    if (result.vedic_tip) {
+                        response += `\n\n🪔 Vedic Math Tip: ${result.vedic_tip.explanation}\nExample: ${result.vedic_tip.example}`;
+                    }
+                    
+                    if (result.story) {
+                        response += `\n\n📚 Story Time: ${result.story.introduction}\n${result.story.title}\nMoral: ${result.story.moral}`;
+                    }
+                    
+                    if (result.progress_update) {
+                        updateLessonProgress(result.progress_update);
+                    }
+                } else {
+                    // Fallback simple response
+                    response = generateFallbackResponse(message);
                 }
                 
-                // Clear all data
-                localStorage.clear();
-                sessionStorage.clear();
+                hideTypingIndicator();
+                addAIMessage(response);
                 
-                // Clean up
-                cleanup();
-                
-                // Redirect
-                window.location.href = window.location.origin + '/login.html';
+                // Text-to-speech if available
+                speakText(response);
                 
             } catch (error) {
-                console.error('Sign out error:', error);
-                // Force redirect anyway
-                window.location.href = window.location.origin + '/login.html';
+                console.error('Chat error:', error);
+                hideTypingIndicator();
+                addAIMessage("Sorry, I encountered an error. Please try again.");
             }
         }
-        
-        // ========== UTILITY FUNCTIONS ==========
-        function showLoadingOverlay() {
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay) {
-                overlay.style.display = 'flex';
-            }
+
+        function addUserMessage(message) {
+            const chatContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-user';
+            messageDiv.textContent = message;
+            chatContainer.appendChild(messageDiv);
+            scrollToBottom();
         }
-        
-        function hideLoadingOverlay() {
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
-        }
-        
-        function showError(message) {
-            const errorToast = document.createElement('div');
-            errorToast.className = 'error-toast';
-            errorToast.textContent = message;
+
+        function addAIMessage(message) {
+            const chatContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-ai';
             
-            document.body.appendChild(errorToast);
+            const teacher = teachers[currentTeacher];
+            messageDiv.innerHTML = `
+                <img class="teacher-avatar talking" src="${teacher.avatar}" alt="${teacher.name}">
+                <div>${message}</div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const chatContainer = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'typing-indicator message-ai';
+            typingDiv.innerHTML = `
+                <img class="teacher-avatar" src="${teachers[currentTeacher].avatar}" alt="Typing">
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            chatContainer.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            const chatContainer = document.getElementById('chatMessages');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // ========== VOICE FEATURES ==========
+        function toggleVoice() {
+            if (!recognition) {
+                showError('Voice input not available in this browser');
+                return;
+            }
+            
+            if (isRecording) {
+                recognition.stop();
+                isRecording = false;
+            } else {
+                try {
+                    recognition.start();
+                    isRecording = true;
+                    showSuccess('Listening... speak now!');
+                } catch (error) {
+                    showError('Could not start voice recording');
+                }
+            }
+            
+            updateVoiceButton();
+        }
+
+        function updateVoiceButton() {
+            const voiceButton = document.getElementById('voiceButton');
+            if (isRecording) {
+                voiceButton.textContent = '🔴';
+                voiceButton.classList.add('voice-recording');
+            } else {
+                voiceButton.textContent = '🎤';
+                voiceButton.classList.remove('voice-recording');
+            }
+        }
+
+        function speakText(text) {
+            if (!speechSynthesis) return;
+            
+            try {
+                speechSynthesis.cancel(); // Stop any current speech
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                utterance.volume = 0.8;
+                
+                // Try to use appropriate voice
+                const voices = speechSynthesis.getVoices();
+                const preferredVoice = voices.find(voice => 
+                    voice.lang.includes('en-IN') || 
+                    voice.lang.includes('hi-IN') ||
+                    voice.name.includes('Indian')
+                );
+                
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                }
+                
+                speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.log('Text-to-speech error:', error);
+            }
+        }
+
+        function testVoice() {
+            const teacher = teachers[currentTeacher];
+            speakText(`Hello, this is ${teacher.name}. Voice test successful!`);
+        }
+
+        function testMicrophone() {
+            if (!recognition) {
+                showError('Voice input not supported in this browser');
+                return;
+            }
+            
+            toggleVoice();
+            setTimeout(() => {
+                if (isRecording) {
+                    recognition.stop();
+                    showSuccess('Microphone test completed!');
+                }
+            }, 3000);
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+        function quickStudy(subject) {
+            const message = `Help me study ${subject}`;
+            document.getElementById('chatInput').value = message;
+            sendMessage();
+        }
+
+        function showProgress() {
+            if (lessonPlanner) {
+                const progress = lessonPlanner.getProgressUpdate();
+                updateLessonProgress(progress);
+                showSection('progress');
+            } else {
+                showSection('progress');
+            }
+        }
+
+        function updateLessonProgress(progressData) {
+            const lessonProgress = document.getElementById('lessonProgress');
+            const lessonProgressText = document.getElementById('lessonProgressText');
+            
+            if (progressData && lessonProgressText) {
+                lessonProgressText.textContent = `Progress: ${progressData.overall_progress}% | Days remaining: ${progressData.days_remaining}`;
+                lessonProgress.classList.remove('hidden');
+            }
+        }
+
+        function getCurrentSubject(message) {
+            const subjects = ['math', 'science', 'english', 'hindi', 'history', 'geography'];
+            const messageLower = message.toLowerCase();
+            
+            for (const subject of subjects) {
+                if (messageLower.includes(subject)) {
+                    return subject;
+                }
+            }
+            return 'general';
+        }
+
+        function generateFallbackResponse(message) {
+            const teacher = teachers[currentTeacher];
+            const messageLower = message.toLowerCase();
+            
+            if (messageLower.includes('math') || messageLower.includes('गणित')) {
+                return teacher.name === 'Roy Sir' 
+                    ? "Mathematics is a fundamental subject. Which topic would you like to explore?"
+                    : "गणित एक महत्वपूर्ण विषय है। कौन सा topic आपको पढ़ना है?";
+            }
+            
+            if (messageLower.includes('science') || messageLower.includes('विज्ञान')) {
+                return teacher.name === 'Roy Sir'
+                    ? "Science helps us understand the world around us. What would you like to learn?"
+                    : "Science हमें duniya को समझने में help करता है। क्या सीखना चाहते हैं?";
+            }
+            
+            return teacher.name === 'Roy Sir'
+                ? "That's an interesting question. Let me help you understand this topic better."
+                : "Ye ek अच्छा question है। Main aapko इसे समझाने में help करूंगी।";
+        }
+
+        function showProfile() {
+            const name = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'Student';
+            const email = currentUser?.email || 'Not available';
+            
+            showSuccess(`Profile: ${name} (${email})`);
+        }
+
+        async function signOut() {
+            try {
+                await supabaseClient.auth.signOut();
+                window.location.href = '/index.html';
+            } catch (error) {
+                console.error('Sign out error:', error);
+                window.location.href = '/index.html';
+            }
+        }
+
+        function showError(message) {
+            const toast = document.createElement('div');
+            toast.className = 'error-toast';
+            toast.innerHTML = `<span>❌</span><span>${message}</span>`;
+            document.body.appendChild(toast);
             
             setTimeout(() => {
-                errorToast.remove();
+                toast.remove();
             }, 5000);
         }
-        
-        // ========== ERROR HANDLING ==========
-        function setupErrorHandling() {
-            // Global error handler
-            window.addEventListener('error', (event) => {
-                console.error('Global error:', event.error);
-                showError('An error occurred. Trying to recover...');
-                event.preventDefault();
-            });
+
+        function showSuccess(message) {
+            const toast = document.createElement('div');
+            toast.className = 'success-toast';
+            toast.innerHTML = `<span>✅</span><span>${message}</span>`;
+            document.body.appendChild(toast);
             
-            // Unhandled promise rejections
-            window.addEventListener('unhandledrejection', (event) => {
-                console.error('Unhandled rejection:', event.reason);
-                showError('A system error occurred.');
-                event.preventDefault();
-            });
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
         }
-        
-        // ========== EVENT LISTENERS ==========
-        
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM loaded, starting initialization...');
-            initializeApp();
+
+        // ========== ERROR HANDLING ==========
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            event.preventDefault();
         });
-        
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', cleanup);
-        
-        // Handle visibility change (mobile optimization)
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                // Page is hidden, pause non-essential operations
-                if (memoryCheckInterval) {
-                    clearInterval(memoryCheckInterval);
-                }
-            } else {
-                // Page is visible, resume operations
-                if (isInitialized) {
-                    startMemoryMonitoring();
-                }
-            }
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled rejection:', event.reason);
+            event.preventDefault();
         });
-        
+
+        // ========== INITIALIZATION ==========
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
