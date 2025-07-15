@@ -1,14 +1,47 @@
 {
-  "appId": "com.tutorai.app",
+  "appId": "com.tutorai.mobile",
   "appName": "TUTOR.AI",
-  "webDir": "dist",
+  "webDir": "public",
+  "bundledWebRuntime": false,
   "server": {
-    "androidScheme": "https", "server": { "url": "https://tutor-tq4v.vercel.app" }
+    "allowNavigation": [
+      "*.supabase.co",
+      "xhuljxuxnlwtocfmwiid.supabase.co",
+      "fonts.googleapis.com",
+      "cdn.tailwindcss.com",
+      "cdn.jsdelivr.net"
+    ],
+    "hostname": "localhost",
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true,
+    "appendUserAgent": "TutorAI-Mobile"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scrollEnabled": true,
+    "allowsLinkPreview": false
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
-      "backgroundColor": "#7c3aed"
+      "backgroundColor": "#667eea",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "dark",
+      "backgroundColor": "#667eea"
+    },
+    "Keyboard": {
+      "resize": "ionic",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    },
+    "App": {
+      "launchUrl": "index.html"
     }
   }
 } 
