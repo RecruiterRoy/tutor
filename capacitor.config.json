@@ -1,29 +1,17 @@
 {
-  "appId": "com.tutorai.mobile",
+  "appId": "com.tutorai.app",
   "appName": "TUTOR.AI",
   "webDir": "public",
   "bundledWebRuntime": false,
+  "backgroundColor": "#667eea",
   "server": {
+    "androidScheme": "https",
     "allowNavigation": [
-      "*.supabase.co",
-      "xhuljxuxnlwtocfmwiid.supabase.co",
-      "fonts.googleapis.com",
-      "cdn.tailwindcss.com",
-      "cdn.jsdelivr.net"
-    ],
-    "hostname": "localhost",
-    "androidScheme": "https"
-  },
-  "android": {
-    "allowMixedContent": true,
-    "captureInput": true,
-    "webContentsDebuggingEnabled": true,
-    "appendUserAgent": "TutorAI-Mobile"
-  },
-  "ios": {
-    "contentInset": "automatic",
-    "scrollEnabled": true,
-    "allowsLinkPreview": false
+      "https://xhuljxuxnlwtocfmwiid.supabase.co",
+      "https://cdn.jsdelivr.net",
+      "https://fonts.googleapis.com",
+      "https://cdn.tailwindcss.com"
+    ]
   },
   "plugins": {
     "SplashScreen": {
@@ -31,17 +19,16 @@
       "backgroundColor": "#667eea",
       "showSpinner": false
     },
-    "StatusBar": {
-      "style": "dark",
-      "backgroundColor": "#667eea"
-    },
     "Keyboard": {
-      "resize": "ionic",
-      "style": "dark",
-      "resizeOnFullScreen": true
-    },
-    "App": {
-      "launchUrl": "index.html"
+      "resize": "body",
+      "style": "dark"
     }
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "",
+      "keystoreAlias": ""
+    },
+    "webContentsDebuggingEnabled": true
   }
 } 
