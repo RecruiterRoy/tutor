@@ -228,6 +228,89 @@
     </div>
 
     <script>
+        // ========== ALPINE.JS APP INITIALIZATION ==========
+        
+        function authApp() {
+            return {
+                // Form data
+                email: '',
+                password: '',
+                phone: '',
+                otp: '',
+                fullName: '',
+                countryCode: '+91',
+                
+                // UI state
+                currentTab: 'email',
+                isMagicLink: false,
+                otpSent: false,
+                showPassword: false,
+                loading: false,
+                
+                // Messages
+                message: '',
+                messageType: 'error',
+                
+                // Methods
+                signInWithEmail() {
+                    if (!this.email || !this.password) {
+                        this.showMessage('Please fill in all fields', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    this.message = '';
+                    
+                    // Call the existing handleLogin function
+                    const event = { preventDefault: () => {} };
+                    handleLogin(event);
+                },
+                
+                sendOTP() {
+                    if (!this.phone) {
+                        this.showMessage('Please enter phone number', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    this.message = '';
+                    
+                    // Call existing OTP function
+                    const event = { preventDefault: () => {} };
+                    handleOTPVerification(event);
+                },
+                
+                verifyOTP() {
+                    if (!this.otp) {
+                        this.showMessage('Please enter OTP', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    this.message = '';
+                    
+                    // Call existing OTP verification
+                    const event = { preventDefault: () => {} };
+                    handleOTPVerification(event);
+                },
+                
+                signInWithGoogle() {
+                    this.loading = true;
+                    handleGoogleLogin();
+                },
+                
+                showMessage(message, type = 'error') {
+                    this.message = message;
+                    this.messageType = type;
+                    this.loading = false;
+                },
+                
+                togglePassword() {
+                    this.showPassword = !this.showPassword;
+                }
+            }
+        }
+
         // ========== SUPABASE INITIALIZATION ==========
 
         async function initSupabase() {
