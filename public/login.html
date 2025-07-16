@@ -231,7 +231,7 @@
         // ========== ALPINE.JS APP INITIALIZATION ==========
         
         function authApp() {
-            return {
+            const appData = {
                 // Form data
                 email: '',
                 password: '',
@@ -261,9 +261,13 @@
                     this.loading = true;
                     this.message = '';
                     
-                    // Call the existing handleLogin function
-                    const event = { preventDefault: () => {} };
-                    handleLogin(event);
+                    // Call handleLogin directly with the data
+                    handleLoginWithData(this.email, this.password).then(() => {
+                        this.loading = false;
+                    }).catch((error) => {
+                        this.loading = false;
+                        this.showMessage(error.message || 'Login failed', 'error');
+                    });
                 },
                 
                 sendOTP() {
@@ -274,10 +278,9 @@
                     
                     this.loading = true;
                     this.message = '';
-                    
-                    // Call existing OTP function
-                    const event = { preventDefault: () => {} };
-                    handleOTPVerification(event);
+                    // TODO: Implement OTP sending
+                    this.showMessage('OTP feature coming soon', 'error');
+                    this.loading = false;
                 },
                 
                 verifyOTP() {
@@ -288,15 +291,19 @@
                     
                     this.loading = true;
                     this.message = '';
-                    
-                    // Call existing OTP verification
-                    const event = { preventDefault: () => {} };
-                    handleOTPVerification(event);
+                    // TODO: Implement OTP verification
+                    this.showMessage('OTP feature coming soon', 'error');
+                    this.loading = false;
                 },
                 
                 signInWithGoogle() {
                     this.loading = true;
-                    handleGoogleLogin();
+                    handleGoogleLogin().then(() => {
+                        this.loading = false;
+                    }).catch((error) => {
+                        this.loading = false;
+                        this.showMessage(error.message || 'Google login failed', 'error');
+                    });
                 },
                 
                 showMessage(message, type = 'error') {
@@ -494,16 +501,56 @@
 
         // ========== FORM HANDLERS ==========
 
+        async function handleLoginWithData(emailOrMobile, password) {
+            try {
+                showLoading('loginBtn', 'Signing in...');
+                
+                // Determine if input is email or mobile
+                const isEmail = emailOrMobile.includes('@');
+                let email = emailOrMobile;
+                
+                // If mobile, add +91 prefix if not present
+                if (!isEmail) {
+                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                }
+
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    // Store session data
+                    localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+                    console.log('✅ Login successful, redirecting to dashboard');
+                    
+                    // Redirect to dashboard
+                    window.location.href = './dashboard.html';
+                }
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Login failed. Please try again.');
+            } finally {
+                hideLoading('loginBtn', 'Sign In');
+            }
+        }
+
         async function handleLogin(e) {
             e.preventDefault();
             
-            const emailOrMobile = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
+            // Get values from Alpine.js data instead of DOM elements
+            const emailOrMobile = window.authAppData?.email || '';
+            const password = window.authAppData?.password || '';
             
             if (!emailOrMobile || !password) {
                 showError('Please fill in all fields');
-                        return;
-                    }
+                return;
+            }
                     
             try {
                 showLoading('loginBtn', 'Signing in...');
@@ -715,8 +762,35 @@
 
         function showError(message) {
             console.error(message);
-            // You can implement a toast notification here
-            alert(message); // Temporary fallback
+            // Try to show error in Alpine.js if available
+            if (window.Alpine && window.Alpine.store) {
+                // If Alpine.js is available, show error there
+                const app = document.querySelector('[x-data]').__x.$data;
+                if (app && app.showMessage) {
+                    app.showMessage(message, 'error');
+                } else {
+                    // Fallback to a simple notification
+                    showNotification(message, 'error');
+                }
+            } else {
+                // Fallback to simple notification
+                showNotification(message, 'error');
+            }
+        }
+
+        function showNotification(message, type = 'error') {
+            // Create a simple notification instead of alert
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
+                type === 'error' ? 'bg-red-600' : 'bg-green-600'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
         }
 
         // ========== ERROR HANDLING ==========
