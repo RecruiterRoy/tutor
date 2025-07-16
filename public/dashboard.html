@@ -7,10 +7,10 @@
     
     <!-- Preload essential resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
-    <link rel="preload" href="./images/teacher-avatar2.png" as="image">
+    <link rel="preload" href="/public/images/teacher-avatar2.png" as="image">
     
     <!-- Load Tailwind CSS with reduced size -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -187,7 +187,7 @@
             height: 60px;
             position: relative;
         }
-        
+
         .avatar-image-chat {
             width: 100%;
             height: 100%;
@@ -195,7 +195,7 @@
             border: 1px solid rgba(255,255,255,0.2);
             object-fit: cover;
         }
-        
+
         /* Input optimizations */
         .chat-input {
             font-size: 16px; /* Prevent iOS zoom */
@@ -270,7 +270,7 @@
         <div class="p-4 border-b border-white/10">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-2">
-                    <img src="./images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
+                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
                     <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
                 </div>
                 <button class="text-white text-2xl" onclick="closeMobileSidebar()">×</button>
@@ -324,19 +324,19 @@
             <div class="md:hidden flex items-center justify-between p-3 bg-slate-800/90 border-b border-white/10">
                 <button class="text-white text-2xl" onclick="openMobileSidebar()">☰</button>
                 <div class="flex items-center space-x-2">
-                    <img src="./images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-6">
+                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-6">
                     <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
-                </div>
+                        </div>
                 <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                     <span id="mobileInitials" class="text-white font-bold text-xs">L</span>
-                </div>
+                    </div>
             </div>
             
             <!-- Desktop Header -->
             <div class="hidden md:block bg-slate-800/90 border-b border-white/10 p-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <img src="./images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
+                        <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
                         <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
                     </div>
                     <div class="flex items-center space-x-3">
@@ -360,37 +360,37 @@
                         <div class="glass-effect rounded-xl p-3">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center space-x-3">
-                                    <div class="avatar-container-chat">
-                                        <img id="teacher-avatar-chat" class="avatar-image-chat" 
-                                             src="./images/teacher-avatar2.png" alt="Teacher Avatar">
-                                    </div>
+                                        <div class="avatar-container-chat">
+                                            <img id="teacher-avatar-chat" class="avatar-image-chat" 
+                                             src="/public/images/teacher-avatar2.png" alt="Teacher Avatar">
+                                            </div>
                                     <div class="teacher-info">
                                         <h2 id="teacher-name-chat" class="text-lg font-bold text-white">Roy Sir</h2>
                                         <p class="text-gray-300 text-xs">Ask me anything about your studies!</p>
-                                    </div>
-                                </div>
+                                        </div>
+                                            </div>
                                 <div class="flex items-center space-x-1">
                                     <div class="w-2 h-2 bg-green-500 rounded-full"></div>
                                     <span class="text-green-400 text-xs font-medium">AI Online</span>
-                                </div>
-                            </div>
-
-                            <!-- Chat Container -->
-                            <div class="gradient-border mb-4">
-                                <div class="gradient-border-content">
-                                    <div id="chatMessages" class="chat-container space-y-3 mb-3">
-                                        <!-- Messages will be inserted here -->
                                     </div>
+                                </div>
+
+                                <!-- Chat Container -->
+                            <div class="gradient-border mb-4">
+                                    <div class="gradient-border-content">
+                                    <div id="chatMessages" class="chat-container space-y-3 mb-3">
+                                            <!-- Messages will be inserted here -->
+                </div>
                                     
-                                    <!-- Chat Input -->
+                                        <!-- Chat Input -->
                                     <div class="chat-input-container flex flex-col space-y-2">
-                                        <input 
-                                            type="text" 
-                                            id="chatInput" 
-                                            placeholder="Type your question here..." 
+                                            <input 
+                                                type="text" 
+                                                id="chatInput" 
+                                                placeholder="Type your question here..." 
                                             class="chat-input w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                            onkeypress="handleChatKeyPress(event)"
-                                        >
+                                                onkeypress="handleChatKeyPress(event)"
+                                            >
                                         <div class="chat-buttons flex space-x-2">
                                             <button id="voiceButton" class="voice-button flex-1 px-3 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg font-medium flex items-center justify-center">
                                                 <span id="voiceIcon">🎤</span>
@@ -400,37 +400,37 @@
                                                 Send
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
+                                        </div>
+                    </div>
+                </div>
 
-                            <!-- Quick Actions -->
+                                <!-- Quick Actions -->
                             <div class="quick-actions grid grid-cols-2 gap-2 mb-3">
                                 <button onclick="sendQuickMessage('Help me with Math problems', 'Math')" class="glass-effect p-3 rounded-lg text-center hover:bg-white/20 transition-colors">
                                     <div class="text-xl mb-1">🔢</div>
                                     <p class="text-white text-xs font-medium">Math Help</p>
-                                </button>
+                                    </button>
                                 <button onclick="sendQuickMessage('Explain this Science concept', 'Science')" class="glass-effect p-3 rounded-lg text-center hover:bg-white/20 transition-colors">
                                     <div class="text-xl mb-1">🧪</div>
                                     <p class="text-white text-xs font-medium">Science</p>
-                                </button>
+                                    </button>
                                 <button onclick="sendQuickMessage('Help with English grammar', 'English')" class="glass-effect p-3 rounded-lg text-center hover:bg-white/20 transition-colors">
                                     <div class="text-xl mb-1">📝</div>
                                     <p class="text-white text-xs font-medium">English</p>
-                                </button>
+                    </button>
                                 <button onclick="sendQuickMessage('Create a study plan for me')" class="glass-effect p-3 rounded-lg text-center hover:bg-white/20 transition-colors">
                                     <div class="text-xl mb-1">📅</div>
                                     <p class="text-white text-xs font-medium">Study Plan</p>
-                                </button>
-                            </div>
+                    </button>
+                </div>
 
-                            <!-- Study Materials Panel -->
+                                <!-- Study Materials Panel -->
                             <div class="study-materials glass-effect rounded-lg p-3">
                                 <h3 class="text-white font-bold text-sm mb-2">Study Materials</h3>
                                 <div id="bookList" class="book-list grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
                                     <p class="text-gray-400 text-sm">Loading books for your class...</p>
                                 </div>
-                            </div>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -464,7 +464,7 @@
                                 <label class="text-white text-xs">Subjects:</label>
                                 <div id="subjectsList" class="flex flex-col space-y-2 mt-1"></div>
                                 <button id="addSubjectBtn" class="mt-2 px-2 py-1 bg-blue-600 text-white rounded text-xs">Add Subject</button>
-                            </div>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -481,14 +481,14 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="english" onclick="handleAvatarSelection('english')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="./images/teacher-avatar2.png" alt="Roy Sir">
+                                            <img class="avatar-image-settings" src="/public/images/teacher-avatar2.png" alt="Roy Sir">
                                         </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Roy Sir</h3>
-                                    </div>
+                                        </div>
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="hindi" onclick="handleAvatarSelection('hindi')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="./images/teacher-avatar1.png" alt="Ms. Sapana">
-                                        </div>
+                                            <img class="avatar-image-settings" src="/public/images/teacher-avatar1.png" alt="Ms. Sapana">
+                                    </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Ms. Sapana</h3>
                                     </div>
                                 </div>
@@ -545,9 +545,9 @@
         
         // Simple mermaid config (only initialize if needed)
         if (typeof mermaid !== 'undefined') {
-            mermaid.initialize({ 
-                startOnLoad: false,
-                theme: 'dark',
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
                 securityLevel: 'loose'
             });
         }
@@ -560,8 +560,8 @@
         let isRecording = false;
         let recognition = null;
         let currentTeacher = {
-            name: "Roy Sir",
-            image: "./images/teacher-avatar2.png",
+                name: "Roy Sir",
+            image: "/public/images/teacher-avatar2.png",
             language: "en"
         };
         
@@ -609,7 +609,7 @@
         async function initSupabase() {
             try {
                 const supabaseUrl = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
-                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4';
                 return window.supabase.createClient(supabaseUrl, supabaseKey);
             } catch (error) {
                 console.error('Supabase init failed:', error);
@@ -660,7 +660,7 @@
                 sendMessage: async function(userMessage) {
                     // Mock response for demo purposes
                     return new Promise(resolve => {
-                        setTimeout(() => {
+                    setTimeout(() => {
                             const responses = [
                                 "I can help you learn about this topic. What specifically would you like to know?",
                                 "That's an interesting question. Let me explain it to you step by step...",
@@ -668,7 +668,7 @@
                                 "I understand you're asking about this concept. Here's a simple explanation..."
                             ];
                             resolve(responses[Math.floor(Math.random() * responses.length)]);
-                        }, 1000);
+                    }, 1000);
                     });
                 }
             };
@@ -688,29 +688,29 @@
                     document.getElementById('voiceButton').style.display = 'none';
                     return;
                 }
-                
+
                 recognition = new SpeechRecognition();
                 recognition.continuous = false;
                 recognition.interimResults = false;
                 recognition.lang = 'en-US';
-                
+
                 recognition.onstart = () => {
                     isRecording = true;
                     document.getElementById('voiceIcon').textContent = '🔴';
                     document.getElementById('voiceButton').classList.add('bg-red-600');
                 };
-                
+
                 recognition.onresult = (event) => {
                     const transcript = event.results[0][0].transcript;
                     document.getElementById('chatInput').value = transcript;
-                    handleSendMessage();
+                                handleSendMessage();
                 };
-                
+
                 recognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
-                    stopRecording();
+                            stopRecording();
                 };
-                
+
                 recognition.onend = () => {
                     stopRecording();
                 };
@@ -718,7 +718,7 @@
                 // Connect voice button
                 document.getElementById('voiceButton').addEventListener('click', toggleVoiceRecording);
                 
-            } catch (error) {
+                } catch (error) {
                 console.error('Voice initialization failed:', error);
                 document.getElementById('voiceButton').style.display = 'none';
             }
@@ -875,7 +875,7 @@
             chatMessages.appendChild(typingDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-        
+
         function removeTypingIndicator() {
             const typingDiv = document.getElementById('typingIndicator');
             if (typingDiv) typingDiv.remove();
@@ -894,7 +894,7 @@
             } else {
                 try {
                     recognition.start();
-                } catch (error) {
+            } catch (error) {
                     console.error('Recognition error:', error);
                     showError('Could not start voice recording');
                 }
@@ -1033,7 +1033,7 @@
         function removeSubject(index) {
             if (window.progressSubjects && window.progressSubjects.length > index) {
                 window.progressSubjects.splice(index, 1);
-                renderSubjects();
+        renderSubjects();
             }
         }
         
@@ -1046,13 +1046,13 @@
             if (teacher === 'hindi') {
                 currentTeacher = {
                     name: "Ms. Sapana",
-                    image: "./images/teacher-avatar1.png",
+                    image: "/public/images/teacher-avatar1.png",
                     language: "hi"
                 };
             } else {
                 currentTeacher = {
                     name: "Roy Sir",
-                    image: "./images/teacher-avatar2.png",
+                    image: "/public/images/teacher-avatar2.png",
                     language: "en"
                 };
             }
@@ -1113,7 +1113,7 @@
             toast.textContent = message;
             document.body.appendChild(toast);
             
-            setTimeout(() => {
+                setTimeout(() => {
                 toast.remove();
             }, duration);
         }

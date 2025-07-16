@@ -1,9 +1,8 @@
 // public/js/config.js
 // Configuration for TUTOR.AI mobile app
-window.appConfig = {
-  // Supabase Configuration
-  supabaseUrl: "https://xhuljxuxnlwtocfmwiid.supabase.co",
-  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU",
+window.TUTOR_CONFIG = {
+    SUPABASE_URL: 'https://xhuljxuxnlwtocfmwiid.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4',
   
   // API Configuration
   apiBaseUrl: window.location.origin,
@@ -59,8 +58,8 @@ window.appConfig = {
 window.addEventListener('DOMContentLoaded', function() {
   if (typeof window.supabase !== 'undefined') {
     window.supabaseClient = window.supabase.createClient(
-      window.appConfig.supabaseUrl,
-      window.appConfig.supabaseAnonKey
+      window.TUTOR_CONFIG.SUPABASE_URL,
+      window.TUTOR_CONFIG.SUPABASE_ANON_KEY
     );
     console.log('Supabase client initialized from config');
   }
@@ -68,6 +67,6 @@ window.addEventListener('DOMContentLoaded', function() {
 
 // Export for modules
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = window.appConfig;
+  module.exports = window.TUTOR_CONFIG;
 }
 
