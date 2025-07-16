@@ -231,7 +231,7 @@
         // ========== ALPINE.JS APP INITIALIZATION ==========
         
         function authApp() {
-            const appData = {
+            return {
                 // Form data
                 email: '',
                 password: '',
@@ -315,7 +315,7 @@
                 togglePassword() {
                     this.showPassword = !this.showPassword;
                 }
-            }
+            };
         }
 
         // ========== SUPABASE INITIALIZATION ==========
