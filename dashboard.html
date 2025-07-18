@@ -7,7 +7,7 @@
     
     <!-- Preload essential resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
-    <link rel="preload" href="/public/images/teacher-avatar2.png" as="image">
+    <link rel="preload" href="public/images/teacher-avatar2.png" as="image">
     
     <!-- Load Tailwind CSS with reduced size -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,6 +22,12 @@
     
     <!-- Load essential scripts with defer -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    
+    <!-- Load Configuration -->
+    <script src="public/js/config.js" defer></script>
+    
+    <!-- Load Supabase Client -->
+    <script src="public/js/supabaseClient.js" defer></script>
     
     <!-- Load GPT Service -->
     <script src="public/js/gptService.js" defer></script>
@@ -727,9 +733,32 @@
         
         async function initSupabase() {
             try {
-                const supabaseUrl = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
-                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4';
-                return window.supabase.createClient(supabaseUrl, supabaseKey);
+                // Wait for config to be loaded
+                if (!window.TUTOR_CONFIG) {
+                    console.log('Waiting for config to load...');
+                    await new Promise(resolve => {
+                        const checkConfig = () => {
+                            if (window.TUTOR_CONFIG) {
+                                resolve();
+                            } else {
+                                setTimeout(checkConfig, 100);
+                            }
+                        };
+                        checkConfig();
+                    });
+                }
+                
+                const config = window.TUTOR_CONFIG;
+                console.log('Using Supabase config:', config.SUPABASE_URL);
+                
+                // Check if Supabase is loaded
+                if (typeof window.supabase === 'undefined') {
+                    throw new Error('Supabase CDN not loaded');
+                }
+                
+                const client = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+                console.log('✅ Supabase client initialized successfully');
+                return client;
             } catch (error) {
                 console.error('Supabase init failed:', error);
                 throw error;
@@ -867,6 +896,19 @@
             try {
                 console.log('Loading user profile from Supabase...');
                 console.log('User ID:', currentUser.id);
+                console.log('Supabase client:', !!supabaseClient);
+                
+                // First, let's test the connection
+                try {
+                    const { data: testData, error: testError } = await supabaseClient
+                        .from('profiles')
+                        .select('count')
+                        .limit(1);
+                    
+                    console.log('Supabase connection test:', { testData, testError });
+                } catch (e) {
+                    console.error('Supabase connection failed:', e);
+                }
                 
                 // Try multiple table names and query formats
                 let profile = null;
@@ -874,60 +916,72 @@
                 
                 // First try: user_profiles table
                 try {
+                    console.log('Trying user_profiles table...');
                     const { data, error: err } = await supabaseClient
                         .from('user_profiles')
                         .select('*')
                         .eq('user_id', currentUser.id)
                         .single();
                     
+                    console.log('user_profiles result:', { data, error: err });
+                    
                     if (!err && data) {
                         profile = data;
                         console.log('Profile found in user_profiles table:', profile);
                     }
                 } catch (e) {
-                    console.log('user_profiles table not found or empty');
+                    console.log('user_profiles table not found or empty:', e.message);
                 }
                 
                 // Second try: profiles table with user_id
                 if (!profile) {
                     try {
+                        console.log('Trying profiles table with user_id...');
                         const { data, error: err } = await supabaseClient
                             .from('profiles')
                             .select('*')
                             .eq('user_id', currentUser.id)
                             .single();
                         
+                        console.log('profiles (user_id) result:', { data, error: err });
+                        
                         if (!err && data) {
                             profile = data;
                             console.log('Profile found in profiles table (user_id):', profile);
                         }
                     } catch (e) {
-                        console.log('profiles table with user_id not found');
+                        console.log('profiles table with user_id not found:', e.message);
                     }
                 }
                 
                 // Third try: profiles table with id
                 if (!profile) {
                     try {
+                        console.log('Trying profiles table with id...');
                         const { data, error: err } = await supabaseClient
                             .from('profiles')
                             .select('*')
                             .eq('id', currentUser.id)
                             .single();
                         
+                        console.log('profiles (id) result:', { data, error: err });
+                        
                         if (!err && data) {
                             profile = data;
                             console.log('Profile found in profiles table (id):', profile);
                         }
                     } catch (e) {
-                        console.log('profiles table with id not found');
+                        console.log('profiles table with id not found:', e.message);
                     }
                 }
                 
                 // Fourth try: auth.users metadata
                 if (!profile) {
                     try {
+                        console.log('Trying auth metadata...');
                         const { data: { user }, error: err } = await supabaseClient.auth.getUser();
+                        console.log('Auth user result:', { user, error: err });
+                        
                         if (!err && user) {
                             profile = {
                                 full_name: user.user_metadata?.full_name,
@@ -937,7 +991,7 @@
                             console.log('Profile from auth metadata:', profile);
                         }
                     } catch (e) {
-                        console.log('Auth metadata not available');
+                        console.log('Auth metadata not available:', e.message);
                     }
                 }
                 
