@@ -5,29 +5,29 @@ export async function getSupabaseClient() {
     if (supabase) return supabase;
     
     try {
-        // Use the new config.js functions
-        if (typeof getSupabaseClient === 'function') {
-            supabase = await getSupabaseClient();
-        } else {
-            // Fallback to direct API call
-            const response = await fetch('/api/supabase-config');
-            const config = await response.json();
-            
-            if (!config.supabaseUrl || !config.supabaseKey) {
-                throw new Error('Supabase configuration not available');
-            }
-            
-            // Use the global Supabase client that should be loaded via CDN
-            if (typeof window.supabase !== 'undefined') {
-                supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-            } else {
-                throw new Error('Supabase CDN not loaded');
-            }
+        // Check if Supabase is loaded globally
+        if (typeof window.supabase === 'undefined') {
+            throw new Error('Supabase CDN not loaded');
         }
+        
+        // Use the configuration from config.js
+        const config = window.TUTOR_CONFIG;
+        if (!config || !config.SUPABASE_URL || !config.SUPABASE_ANON_KEY) {
+            throw new Error('Supabase configuration not available');
+        }
+        
+        // Create the client
+        supabase = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+        console.log('✅ Supabase client initialized successfully');
         
         return supabase;
     } catch (error) {
         console.error('Failed to initialize Supabase client:', error);
         throw error;
     }
+}
+
+// Initialize immediately if possible
+if (typeof window !== 'undefined' && typeof window.supabase !== 'undefined' && window.TUTOR_CONFIG) {
+    getSupabaseClient();
 } 
