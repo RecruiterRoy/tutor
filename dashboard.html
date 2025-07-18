@@ -698,13 +698,13 @@
                 currentUser = session.user;
                 console.log('User authenticated:', currentUser.email);
                 
-                // Load user profile
+                // Load user profile FIRST
                 await loadUserProfile();
                 
                 // Initialize UI components
                 initUI();
                 
-                // Initialize chat service
+                // Initialize chat service AFTER user profile is loaded
                 initChatService();
                 
                 // Initialize voice features (enabled for both web and mobile)
@@ -758,15 +758,24 @@
         }
         
         function initChatService() {
+            console.log('🔄 Initializing chat service...');
+            console.log('User data available:', !!userData);
+            console.log('User class:', userData?.class);
+            
             // Wait for gptService to be loaded
             if (typeof window.gptService === 'undefined') {
+                console.log('⏳ gptService not loaded yet, retrying...');
                 setTimeout(initChatService, 100);
                 return;
             }
             
+            console.log('✅ gptService found, setting up context...');
+            
             // Set context for the GPT service
             const userGrade = userData?.class || 'Class 6';
             const gradeNumber = userGrade.replace('Class ', '');
+            console.log('Setting grade context:', gradeNumber);
+            
             window.gptService.setContext(gradeNumber, null);
             
             // Set default teacher
@@ -780,6 +789,7 @@
             addMessage('ai', welcomeMessage);
             
             console.log('✅ Chat service initialized with external gptService and teacher:', currentTeacher.name);
+            console.log('✅ User class set to:', userGrade);
         }
         
         function initVoiceFeatures() {
@@ -851,23 +861,42 @@
         
         async function loadUserProfile() {
             try {
-                // Simple profile loading for demo
-                const profileData = {
-                    full_name: currentUser.user_metadata?.full_name || 'Student',
-                    class: 'Class 6',
-                    board: 'CBSE',
-                    email: currentUser.email
-                };
+                console.log('Loading user profile from Supabase...');
                 
-                userData = profileData;
+                // Fetch user profile from Supabase
+                const { data: profile, error } = await supabaseClient
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .single();
+                
+                if (error) {
+                    console.error('Profile fetch error:', error);
+                    // Fallback to user metadata
+                    userData = {
+                        full_name: currentUser.user_metadata?.full_name || 'Student',
+                        class: currentUser.user_metadata?.class || 'Class 6',
+                        board: currentUser.user_metadata?.board || 'CBSE',
+                        email: currentUser.email
+                    };
+                } else {
+                    console.log('Profile loaded from Supabase:', profile);
+                    userData = {
+                        full_name: profile.full_name || currentUser.user_metadata?.full_name || 'Student',
+                        class: profile.class || 'Class 6',
+                        board: profile.board || 'CBSE',
+                        email: currentUser.email
+                    };
+                }
+                
                 updateUserInterface();
                 
             } catch (error) {
                 console.error('Profile load error:', error);
                 userData = {
-                    full_name: 'Student',
-                    class: 'Class 6',
-                    board: 'CBSE',
+                    full_name: currentUser.user_metadata?.full_name || 'Student',
+                    class: currentUser.user_metadata?.class || 'Class 6',
+                    board: currentUser.user_metadata?.board || 'CBSE',
                     email: currentUser.email
                 };
                 updateUserInterface();
@@ -996,9 +1025,13 @@
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
-            // Store last AI message for TTS
+            // Store last AI message for TTS and auto-play
             if (role === 'ai') {
                 lastAIMessage = content;
+                // Auto-play TTS for AI messages
+                setTimeout(() => {
+                    playTTS();
+                }, 500); // Small delay to ensure message is rendered
             }
         }
         
@@ -1321,23 +1354,16 @@
         
         let currentSpeech = null;
         let lastAIMessage = '';
+        let ttsEnabled = true; // Auto-play enabled by default
         
         function playTTS() {
-            if (!lastAIMessage) {
-                showError('No AI message to play. Please chat with the AI first.');
+            if (!lastAIMessage || !ttsEnabled) {
                 return;
             }
             
-            if (currentSpeech && !speechSynthesis.speaking) {
-                speechSynthesis.resume();
-                updateTTSButtons(true);
-                return;
-            }
-            
+            // Stop any existing speech first
             if (speechSynthesis.speaking) {
-                speechSynthesis.pause();
-                updateTTSButtons(false);
-                return;
+                speechSynthesis.cancel();
             }
             
             // Create new speech utterance
@@ -1359,7 +1385,7 @@
                 if (englishVoice) currentSpeech.voice = englishVoice;
             }
             
-            // Set speech properties
+            // Set speech properties for better mobile compatibility
             currentSpeech.rate = 0.9;
             currentSpeech.pitch = 1.0;
             currentSpeech.volume = 1.0;
@@ -1377,8 +1403,8 @@
             
             currentSpeech.onerror = (event) => {
                 console.error('TTS Error:', event);
-                showError('Text-to-speech failed. Please try again.');
                 updateTTSButtons(false);
+                // Don't show error for auto-play, only for manual play
             };
             
             // Start speaking
@@ -1401,6 +1427,14 @@
             speechSynthesis.cancel();
             updateTTSButtons(false);
             console.log('🎤 TTS stopped');
+        }
+        
+        function toggleTTS() {
+            ttsEnabled = !ttsEnabled;
+            if (!ttsEnabled) {
+                stopTTS();
+            }
+            console.log('TTS Auto-play:', ttsEnabled ? 'Enabled' : 'Disabled');
         }
         
         function updateTTSButtons(isPlaying) {
