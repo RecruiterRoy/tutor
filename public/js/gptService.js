@@ -4,7 +4,8 @@ class GPTService {
         this.currentSubject = null;
         this.currentTeacher = null;
         this.chatHistory = [];
-        this.baseUrl = '/api/enhanced-chat'; // Use enhanced chat API
+        // Use the new domain for the API endpoint
+        this.baseUrl = 'https://tutor-nine-puce.vercel.app/api/chat';
     }
     
     setContext(grade, subject) {
@@ -24,16 +25,16 @@ class GPTService {
         try {
             this.chatHistory.push({ role: 'user', content: userMessage });
             
+            // Format request for the simple chat API
             const requestBody = {
-                message: userMessage,
+                messages: this.chatHistory, // Send full chat history
                 grade: this.currentGrade || '6',
                 subject: this.currentSubject || 'General',
-                teacher: this.currentTeacher || 'Roy Sir',
-                userProfile: userProfile, // Send user profile to API
-                action: 'chat'
+                language: this.currentTeacher === 'Ms. Sapana' ? 'hi' : 'en',
+                user_profile: userProfile // Send user profile to API
             };
 
-            console.log('Sending request to enhanced chat:', JSON.stringify(requestBody, null, 2));
+            console.log('Sending request to chat API:', JSON.stringify(requestBody, null, 2));
 
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
