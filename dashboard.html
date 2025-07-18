@@ -24,7 +24,28 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     
     <!-- Load GPT Service -->
-    <script src="/public/js/gptService.js" defer></script>
+    <script src="public/js/gptService.js" defer></script>
+    <script>
+        // Test if gptService loads properly
+        window.addEventListener('load', function() {
+            console.log('Page loaded, checking gptService...');
+            if (typeof window.gptService !== 'undefined') {
+                console.log('✅ gptService loaded successfully:', window.gptService);
+            } else {
+                console.error('❌ gptService failed to load');
+                // Try to load it manually
+                const script = document.createElement('script');
+                script.src = 'public/js/gptService.js';
+                script.onload = function() {
+                    console.log('✅ gptService loaded manually');
+                };
+                script.onerror = function() {
+                    console.error('❌ Failed to load gptService manually');
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
     
     <!-- Load non-critical scripts after page load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
@@ -847,6 +868,11 @@
             try {
                 showTypingIndicator();
                 
+                // Check if gptService is available
+                if (typeof window.gptService === 'undefined') {
+                    throw new Error('GPT Service not loaded. Please refresh the page.');
+                }
+                
                 // Use the external gptService
                 const aiResponse = await window.gptService.sendMessage(message, userData);
                 
@@ -856,7 +882,7 @@
             } catch (error) {
                 removeTypingIndicator();
                 console.error('Chat error:', error);
-                addMessage('ai', "Sorry, I encountered an error. Please try again.");
+                addMessage('ai', `Sorry, I encountered an error: ${error.message}. Please try refreshing the page.`);
             }
         }
         
