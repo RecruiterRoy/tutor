@@ -1,32 +1,21 @@
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Use pdfjs-dist for reliable PDF parsing with Node.js polyfills
 let pdfjsLib = null;
 const loadPdfJs = async () => {
-  if (!pdfjsLib) {
-    try {
-      // Set up Node.js environment for pdfjs-dist
-      const { createCanvas } = await import('canvas');
-      global.DOMMatrix = class DOMMatrix {
-        constructor(matrix) {
-          this.a = matrix?.[0] || 1;
-          this.b = matrix?.[1] || 0;
-          this.c = matrix?.[2] || 0;
-          this.d = matrix?.[3] || 1;
-          this.e = matrix?.[4] || 0;
-          this.f = matrix?.[5] || 0;
-        }
-      };
-      
-      pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
-      // Use Node.js worker
-      pdfjsLib.GlobalWorkerOptions.workerSrc = false;
-      console.log('PDF.js loaded successfully with Node.js polyfills');
-    } catch (error) {
-      console.error('Failed to load PDF.js:', error);
-      throw new Error('PDF parsing is not available in this environment');
-    }
+  if (pdfjsLib) return pdfjsLib;
+  
+  try {
+    // Import the main pdfjs-dist module instead of legacy path
+    pdfjsLib = await import('pdfjs-dist');
+    // Disable worker for Node.js environment
+    pdfjsLib.GlobalWorkerOptions.workerSrc = false;
+    console.log('PDF.js loaded successfully');
+  } catch (error) {
+    console.error('Failed to load PDF.js:', error);
+    // Return null instead of throwing to allow app to continue without PDF processing
+    return null;
   }
   return pdfjsLib;
 };
