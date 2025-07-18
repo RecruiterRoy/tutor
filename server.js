@@ -658,7 +658,7 @@ const regionalAvatars = [
     // West India
     { id: 'gujarati-male', name: 'Gujarati Male', region: 'Gujarat', gender: 'male', image: '👨‍🦳' },
     { id: 'gujarati-female', name: 'Gujarati Female', region: 'Gujarat', gender: 'female', image: '👩‍🦳' },
-    { id: 'marathi-male', name: 'Marathi Male', region: 'Maharashtra', gender: 'male', image: '👨‍��' },
+    { id: 'marathi-male', name: 'Marathi Male', region: 'Maharashtra', gender: 'male', image: '��‍🦱' },
     { id: 'marathi-female', name: 'Marathi Female', region: 'Maharashtra', gender: 'female', image: '👩‍🦱' },
     
     // Central India
@@ -854,13 +854,16 @@ async function loadBooks() {
             console.log('No processed_books.json found, skipping book loading');
         }
         
+        // PDF processing temporarily disabled to prevent errors - will fix later
         // Only process PDFs if we have a books directory and no existing content
+        /*
         if (pdfProc.bookContent.size === 0 && fs.existsSync('./books')) {
             console.log('Processing PDFs from books directory...');
             await pdfProc.processAllPDFs('./books');
             await pdfProc.saveToFile('./processed_books.json');
             console.log(`Processed and saved ${pdfProc.bookContent.size} books`);
         }
+        */
         
         console.log(`Total books loaded: ${pdfProc.bookContent.size}`);
     } catch (error) {

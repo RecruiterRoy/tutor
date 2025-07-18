@@ -23,6 +23,9 @@
     <!-- Load essential scripts with defer -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     
+    <!-- Load GPT Service -->
+    <script src="/public/js/gptService.js" defer></script>
+    
     <!-- Load non-critical scripts after page load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js" defer></script>
@@ -540,8 +543,8 @@
         
         // Disable heavy features on mobile by default
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const enableVoiceFeatures = !isMobile; // Disable voice on mobile by default
-        const enableAnimations = !isMobile; // Disable animations on mobile
+        const enableVoiceFeatures = true; // Enable voice on both web and mobile
+        const enableAnimations = !isMobile; // Keep animations disabled on mobile for performance
         
         // Simple mermaid config (only initialize if needed)
         if (typeof mermaid !== 'undefined') {
@@ -593,10 +596,8 @@
                 // Initialize chat service
                 initChatService();
                 
-                // Check if we should initialize voice features
-                if (enableVoiceFeatures) {
-                    initVoiceFeatures();
-                }
+                // Initialize voice features (enabled for both web and mobile)
+                initVoiceFeatures();
                 
                 console.log('App initialized successfully');
                 
@@ -646,45 +647,38 @@
         }
         
         function initChatService() {
-            // Simple GPT service mock
-            window.gptService = {
-                currentGrade: null,
-                currentSubject: null,
-                chatHistory: [],
-                
-                setContext: function(grade, subject) {
-                    if (grade) this.currentGrade = grade;
-                    if (subject) this.currentSubject = subject;
-                },
-                
-                sendMessage: async function(userMessage) {
-                    // Mock response for demo purposes
-                    return new Promise(resolve => {
-                    setTimeout(() => {
-                            const responses = [
-                                "I can help you learn about this topic. What specifically would you like to know?",
-                                "That's an interesting question. Let me explain it to you step by step...",
-                                "Here's how I would approach this problem...",
-                                "I understand you're asking about this concept. Here's a simple explanation..."
-                            ];
-                            resolve(responses[Math.floor(Math.random() * responses.length)]);
-                    }, 1000);
-                    });
-                }
-            };
+            // Wait for gptService to be loaded
+            if (typeof window.gptService === 'undefined') {
+                setTimeout(initChatService, 100);
+                return;
+            }
+            
+            // Set context for the GPT service
+            const userGrade = userData?.class || 'Class 6';
+            const gradeNumber = userGrade.replace('Class ', '');
+            window.gptService.setContext(gradeNumber, null);
+            
+            // Set default teacher
+            window.gptService.setTeacher(currentTeacher.name);
+            
+            // Add welcome message from current teacher
+            const welcomeMessage = currentTeacher.name === 'Ms. Sapana' ? 
+                'Namaste! Main Ms. Sapana hun. Aaj hum kya padhenge? Main aapko Hindi aur English dono mein help kar sakti hun!' :
+                'Hello! I\'m Roy Sir, your AI tutor. I\'m here to help you with your studies. What would you like to learn today?';
+            
+            addMessage('ai', welcomeMessage);
+            
+            console.log('✅ Chat service initialized with external gptService and teacher:', currentTeacher.name);
         }
         
         function initVoiceFeatures() {
-            if (!enableVoiceFeatures) {
-                console.log('Voice features disabled for mobile');
-                document.getElementById('voiceButton').style.display = 'none';
-                return;
-            }
+            // Enable voice features for both web and mobile
+            console.log('Initializing voice features...');
             
             try {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SpeechRecognition) {
-                    console.warn('Speech recognition not supported');
+                    console.warn('Speech recognition not supported on this browser');
                     document.getElementById('voiceButton').style.display = 'none';
                     return;
                 }
@@ -692,33 +686,51 @@
                 recognition = new SpeechRecognition();
                 recognition.continuous = false;
                 recognition.interimResults = false;
-                recognition.lang = 'en-US';
+                recognition.lang = currentTeacher.language === 'hi' ? 'hi-IN' : 'en-US';
 
                 recognition.onstart = () => {
+                    console.log('Voice recognition started');
                     isRecording = true;
                     document.getElementById('voiceIcon').textContent = '🔴';
+                    document.getElementById('voiceStatus').textContent = 'Listening...';
                     document.getElementById('voiceButton').classList.add('bg-red-600');
+                    document.getElementById('voiceButton').classList.remove('bg-gradient-to-r', 'from-green-500', 'to-blue-500');
                 };
 
                 recognition.onresult = (event) => {
                     const transcript = event.results[0][0].transcript;
+                    console.log('Voice transcript:', transcript);
                     document.getElementById('chatInput').value = transcript;
-                                handleSendMessage();
+                    handleSendMessage();
                 };
 
                 recognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
-                            stopRecording();
+                    
+                    if (event.error === 'not-allowed') {
+                        showError('Microphone permission denied. Please allow microphone access and try again.');
+                    } else if (event.error === 'no-speech') {
+                        showError('No speech detected. Please try again.');
+                    } else {
+                        showError(`Voice recognition error: ${event.error}`);
+                    }
+                    
+                    stopRecording();
                 };
 
                 recognition.onend = () => {
+                    console.log('Voice recognition ended');
                     stopRecording();
                 };
                 
                 // Connect voice button
                 document.getElementById('voiceButton').addEventListener('click', toggleVoiceRecording);
                 
-                } catch (error) {
+                // Show voice button
+                document.getElementById('voiceButton').style.display = 'flex';
+                console.log('✅ Voice features initialized successfully');
+                
+            } catch (error) {
                 console.error('Voice initialization failed:', error);
                 document.getElementById('voiceButton').style.display = 'none';
             }
@@ -809,7 +821,9 @@
         // ========== CHAT FUNCTIONS ==========
         
         function sendQuickMessage(message, subject = null) {
-            if (subject) window.gptService.setContext(null, subject);
+            if (subject && window.gptService) {
+                window.gptService.setContext(null, subject);
+            }
             document.getElementById('chatInput').value = message;
             handleSendMessage();
         }
@@ -833,7 +847,8 @@
             try {
                 showTypingIndicator();
                 
-                const aiResponse = await window.gptService.sendMessage(message);
+                // Use the external gptService
+                const aiResponse = await window.gptService.sendMessage(message, userData);
                 
                 removeTypingIndicator();
                 addMessage('ai', aiResponse);
@@ -883,20 +898,49 @@
         
         // ========== VOICE FUNCTIONS ==========
         
-        function toggleVoiceRecording() {
+        async function toggleVoiceRecording() {
             if (!recognition) {
-                showError('Voice input not available');
+                showError('Voice input not available on this device');
                 return;
             }
             
             if (isRecording) {
                 recognition.stop();
-            } else {
-                try {
+                return;
+            }
+            
+            try {
+                // Request microphone permission first
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    console.log('Requesting microphone permission...');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    console.log('✅ Microphone permission granted');
+                    
+                    // Stop the stream immediately as we just needed permission
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // Update recognition language based on current teacher
+                    recognition.lang = currentTeacher.language === 'hi' ? 'hi-IN' : 'en-US';
+                    
+                    // Start recognition
                     recognition.start();
+                    console.log('🎤 Starting voice recognition...');
+                    
+                } else {
+                    // Fallback for older browsers
+                    recognition.start();
+                }
+                
             } catch (error) {
-                    console.error('Recognition error:', error);
-                    showError('Could not start voice recording');
+                console.error('Microphone access error:', error);
+                
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    showError('Microphone permission denied. Please allow microphone access in your browser settings and try again.');
+                } else if (error.name === 'NotFoundError') {
+                    showError('No microphone found. Please connect a microphone and try again.');
+                } else {
+                    showError('Could not access microphone. Please check your device settings.');
                 }
             }
         }
@@ -905,6 +949,8 @@
             isRecording = false;
             document.getElementById('voiceIcon').textContent = '🎤';
             document.getElementById('voiceButton').classList.remove('bg-red-600');
+            document.getElementById('voiceStatus').textContent = 'Voice';
+            document.getElementById('voiceButton').classList.add('bg-gradient-to-r', 'from-green-500', 'to-blue-500');
         }
         
         // ========== STUDY MATERIALS ==========
@@ -1063,6 +1109,27 @@
             
             // Update language dropdown
             document.getElementById('preferredLanguage').value = currentTeacher.language;
+            
+            // Update voice recognition language
+            if (recognition) {
+                recognition.lang = currentTeacher.language === 'hi' ? 'hi-IN' : 'en-US';
+            }
+            
+            // Connect to AI service
+            if (window.gptService) {
+                window.gptService.setTeacher(currentTeacher.name);
+                console.log(`✅ Switched to ${currentTeacher.name} persona`);
+                
+                // Add a teacher introduction message to chat
+                const introMessage = currentTeacher.name === 'Ms. Sapana' ? 
+                    'Namaste! Main Ms. Sapana hun. Ab main aapki teacher hun. Koi bhi sawal puchiye - main Hindi aur English dono mein help kar sakti hun!' :
+                    'Hello! I\'m Roy Sir, your new AI tutor. I\'m here to help you with your studies using structured, clear explanations. What would you like to learn?';
+                
+                addMessage('ai', introMessage);
+                
+                // Show success message
+                showSuccess(`Successfully switched to ${currentTeacher.name}!`);
+            }
         }
         
         // ========== SECTION MANAGEMENT ==========

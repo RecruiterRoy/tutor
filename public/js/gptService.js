@@ -2,6 +2,7 @@ class GPTService {
     constructor() {
         this.currentGrade = null;
         this.currentSubject = null;
+        this.currentTeacher = null;
         this.chatHistory = [];
         this.baseUrl = '/api/enhanced-chat'; // Use enhanced chat API
     }
@@ -12,6 +13,13 @@ class GPTService {
         console.log(`GPT Service Context Updated: Grade=${grade}, Subject=${subject}`);
     }
     
+    setTeacher(teacherName) {
+        this.currentTeacher = teacherName;
+        console.log(`GPT Service Teacher Updated: ${teacherName}`);
+        // Clear chat history when switching teachers for fresh context
+        this.chatHistory = [];
+    }
+    
     async sendMessage(userMessage, userProfile = null) {
         try {
             this.chatHistory.push({ role: 'user', content: userMessage });
@@ -20,6 +28,7 @@ class GPTService {
                 message: userMessage,
                 grade: this.currentGrade || '6',
                 subject: this.currentSubject || 'General',
+                teacher: this.currentTeacher || 'Roy Sir',
                 userProfile: userProfile, // Send user profile to API
                 action: 'chat'
             };
