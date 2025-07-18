@@ -262,15 +262,15 @@
         }
 
         .tts-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
             border: none;
-            min-width: 44px;
-            min-height: 32px;
+            min-width: 60px;
+            min-height: 40px;
         }
 
         .tts-play {
@@ -297,6 +297,21 @@
             transform: translateY(0);
         }
 
+        /* Mobile optimizations for TTS */
+        @media (max-width: 640px) {
+            .tts-controls {
+                gap: 6px;
+                margin-top: 12px;
+            }
+            
+            .tts-btn {
+                padding: 10px 14px;
+                font-size: 12px;
+                min-width: 50px;
+                min-height: 44px;
+            }
+        }
+        
         /* Input optimizations */
         .chat-input {
             font-size: 16px; /* Prevent iOS zoom */
@@ -463,7 +478,7 @@
                                 <div class="flex items-center space-x-3">
                                         <div class="avatar-container-chat">
                                             <img id="teacher-avatar-chat" class="avatar-image-chat" 
-                                             src="/public/images/teacher-avatar2.png" alt="Teacher Avatar">
+                                             src="public/images/teacher-avatar2.png" alt="Teacher Avatar">
                                             </div>
                                     <div class="teacher-info">
                                         <h2 id="teacher-name-chat" class="text-lg font-bold text-white">Roy Sir</h2>
@@ -491,7 +506,7 @@
 
                                 <!-- Chat Container -->
                             <div class="gradient-border mb-4">
-                                    <div class="gradient-border-content">
+                                    <div class="gradient-border-content p-3">
                                     <div id="chatMessages" class="chat-container space-y-3 mb-3">
                                             <!-- Messages will be inserted here -->
                 </div>
@@ -537,14 +552,6 @@
                                     <p class="text-white text-xs font-medium">Study Plan</p>
                     </button>
                 </div>
-
-                                <!-- Study Materials Panel -->
-                            <div class="study-materials glass-effect rounded-lg p-3">
-                                <h3 class="text-white font-bold text-sm mb-2">Study Materials</h3>
-                                <div id="bookList" class="book-list grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
-                                    <p class="text-gray-400 text-sm">Loading books for your class...</p>
-                                </div>
-                        </div>
                         </div>
                     </div>
                 </div>
@@ -595,13 +602,13 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="english" onclick="handleAvatarSelection('english')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="/public/images/teacher-avatar2.png" alt="Roy Sir">
+                                            <img class="avatar-image-settings" src="public/images/teacher-avatar2.png" alt="Roy Sir">
                                         </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Roy Sir</h3>
                                         </div>
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="hindi" onclick="handleAvatarSelection('hindi')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="/public/images/teacher-avatar1.png" alt="Ms. Sapana">
+                                            <img class="avatar-image-settings" src="public/images/teacher-avatar1.png" alt="Ms. Sapana">
                                     </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Ms. Sapana</h3>
                                     </div>
@@ -675,7 +682,7 @@
         let recognition = null;
         let currentTeacher = {
                 name: "Roy Sir",
-            image: "/public/images/teacher-avatar2.png",
+            image: "public/images/teacher-avatar2.png",
             language: "en"
         };
         
@@ -752,9 +759,6 @@
             
             // Update UI with user data
             updateUserInterface();
-            
-            // Load initial books
-            loadClassBooks();
         }
         
         function initChatService() {
@@ -864,53 +868,96 @@
                 console.log('Loading user profile from Supabase...');
                 console.log('User ID:', currentUser.id);
                 
-                // Fetch user profile from Supabase
-                const { data: profile, error } = await supabaseClient
-                    .from('user_profiles')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .single();
+                // Try multiple table names and query formats
+                let profile = null;
+                let error = null;
                 
-                console.log('Supabase response:', { profile, error });
-                
-                if (error) {
-                    console.error('Profile fetch error:', error);
-                    
-                    // Try alternative query - maybe the table name is different
-                    const { data: altProfile, error: altError } = await supabaseClient
-                        .from('profiles')
+                // First try: user_profiles table
+                try {
+                    const { data, error: err } = await supabaseClient
+                        .from('user_profiles')
                         .select('*')
-                        .eq('id', currentUser.id)
+                        .eq('user_id', currentUser.id)
                         .single();
                     
-                    console.log('Alternative query response:', { altProfile, altError });
-                    
-                    if (altError) {
-                        // Fallback to user metadata
-                        userData = {
-                            full_name: currentUser.user_metadata?.full_name || 'Student',
-                            class: currentUser.user_metadata?.class || 'Class 6',
-                            board: currentUser.user_metadata?.board || 'CBSE',
-                            email: currentUser.email
-                        };
-                        console.log('Using fallback data:', userData);
-                    } else {
-                        console.log('Profile loaded from alternative table:', altProfile);
-                        userData = {
-                            full_name: altProfile.full_name || altProfile.name || currentUser.user_metadata?.full_name || 'Student',
-                            class: altProfile.class || altProfile.grade || 'Class 6',
-                            board: altProfile.board || 'CBSE',
-                            email: currentUser.email
-                        };
+                    if (!err && data) {
+                        profile = data;
+                        console.log('Profile found in user_profiles table:', profile);
                     }
-                } else {
-                    console.log('Profile loaded from Supabase:', profile);
+                } catch (e) {
+                    console.log('user_profiles table not found or empty');
+                }
+                
+                // Second try: profiles table with user_id
+                if (!profile) {
+                    try {
+                        const { data, error: err } = await supabaseClient
+                            .from('profiles')
+                            .select('*')
+                            .eq('user_id', currentUser.id)
+                            .single();
+                        
+                        if (!err && data) {
+                            profile = data;
+                            console.log('Profile found in profiles table (user_id):', profile);
+                        }
+                    } catch (e) {
+                        console.log('profiles table with user_id not found');
+                    }
+                }
+                
+                // Third try: profiles table with id
+                if (!profile) {
+                    try {
+                        const { data, error: err } = await supabaseClient
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', currentUser.id)
+                            .single();
+                        
+                        if (!err && data) {
+                            profile = data;
+                            console.log('Profile found in profiles table (id):', profile);
+                        }
+                    } catch (e) {
+                        console.log('profiles table with id not found');
+                    }
+                }
+                
+                // Fourth try: auth.users metadata
+                if (!profile) {
+                    try {
+                        const { data: { user }, error: err } = await supabaseClient.auth.getUser();
+                        if (!err && user) {
+                            profile = {
+                                full_name: user.user_metadata?.full_name,
+                                class: user.user_metadata?.class,
+                                board: user.user_metadata?.board
+                            };
+                            console.log('Profile from auth metadata:', profile);
+                        }
+                    } catch (e) {
+                        console.log('Auth metadata not available');
+                    }
+                }
+                
+                // Set user data with fallbacks
+                if (profile) {
                     userData = {
                         full_name: profile.full_name || profile.name || currentUser.user_metadata?.full_name || 'Student',
-                        class: profile.class || profile.grade || 'Class 6',
-                        board: profile.board || 'CBSE',
+                        class: profile.class || profile.grade || currentUser.user_metadata?.class || 'Class 6',
+                        board: profile.board || currentUser.user_metadata?.board || 'CBSE',
                         email: currentUser.email
                     };
+                } else {
+                    // Final fallback
+                    userData = {
+                        full_name: currentUser.user_metadata?.full_name || 'Student',
+                        class: currentUser.user_metadata?.class || 'Class 6',
+                        board: currentUser.user_metadata?.board || 'CBSE',
+                        email: currentUser.email
+                    };
+                    console.log('Using fallback data:', userData);
                 }
                 
                 console.log('Final user data:', userData);
@@ -1134,58 +1181,6 @@
         
         // ========== STUDY MATERIALS ==========
         
-        async function loadClassBooks() {
-            try {
-                const bookList = document.getElementById('bookList');
-                bookList.innerHTML = '<p class="text-gray-400 text-sm">Loading books...</p>';
-                
-                // Mock data for demo
-                const mockBooks = [
-                    { subject: 'Math', book_name: 'Mathematics Textbook', chapter_number: 1, chapter_name: 'Algebra Basics' },
-                    { subject: 'Science', book_name: 'Science Textbook', chapter_number: 3, chapter_name: 'Chemical Reactions' },
-                    { subject: 'English', book_name: 'English Reader', chapter_number: 2, chapter_name: 'Grammar Fundamentals' }
-                ];
-                
-                // Group by subject
-                const booksBySubject = {};
-                mockBooks.forEach(book => {
-                    if (!booksBySubject[book.subject]) {
-                        booksBySubject[book.subject] = [];
-                    }
-                    booksBySubject[book.subject].push(book);
-                });
-                
-                // Render book cards
-                bookList.innerHTML = '';
-                Object.entries(booksBySubject).forEach(([subject, books]) => {
-                    const bookCard = document.createElement('div');
-                    bookCard.className = 'bg-indigo-600/50 p-2 rounded-lg text-white text-xs mb-2';
-                    bookCard.innerHTML = `
-                        <div class="flex items-center mb-1">
-                            <span class="mr-1">${getSubjectIcon(subject)}</span>
-                            <span class="font-medium">${subject}</span>
-                        </div>
-                        <div class="text-gray-300">${books.length} chapters available</div>
-                    `;
-                    bookList.appendChild(bookCard);
-                });
-                
-            } catch (error) {
-                console.error('Book load error:', error);
-                document.getElementById('bookList').innerHTML = '<p class="text-gray-400 text-sm">Failed to load books</p>';
-            }
-        }
-        
-        function getSubjectIcon(subject) {
-            const icons = {
-                'Math': '🔢',
-                'Science': '🧪',
-                'English': '📝',
-                'Hindi': '🇮🇳'
-            };
-            return icons[subject] || '📚';
-        }
-        
         // ========== PROGRESS SECTION ==========
         
         function initProgressSection() {
@@ -1271,13 +1266,13 @@
             if (teacher === 'hindi') {
                 currentTeacher = {
                     name: "Ms. Sapana",
-                    image: "/public/images/teacher-avatar1.png",
+                    image: "public/images/teacher-avatar1.png",
                     language: "hi"
                 };
             } else {
                 currentTeacher = {
                     name: "Roy Sir",
-                    image: "/public/images/teacher-avatar2.png",
+                    image: "public/images/teacher-avatar2.png",
                     language: "en"
                 };
             }
