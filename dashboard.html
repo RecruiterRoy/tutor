@@ -220,6 +220,83 @@
             object-fit: cover;
         }
 
+        .avatar-container-settings {
+            width: 48px;
+            height: 48px;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .avatar-image-settings {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            object-fit: cover;
+        }
+
+        .avatar-selection-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .avatar-selection-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .avatar-selection-card.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        /* TTS Controls */
+        .tts-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            justify-content: center;
+        }
+
+        .tts-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            min-width: 44px;
+            min-height: 32px;
+        }
+
+        .tts-play {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .tts-pause {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .tts-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .tts-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .tts-btn:active {
+            transform: translateY(0);
+        }
+
         /* Input optimizations */
         .chat-input {
             font-size: 16px; /* Prevent iOS zoom */
@@ -397,6 +474,19 @@
                                     <div class="w-2 h-2 bg-green-500 rounded-full"></div>
                                     <span class="text-green-400 text-xs font-medium">AI Online</span>
                                     </div>
+                                </div>
+
+                                <!-- TTS Controls -->
+                                <div class="tts-controls mb-3">
+                                    <button id="ttsPlayBtn" class="tts-btn tts-play" onclick="playTTS()" title="Play">
+                                        ▶️ Play
+                                    </button>
+                                    <button id="ttsPauseBtn" class="tts-btn tts-pause" onclick="pauseTTS()" title="Pause" style="display: none;">
+                                        ⏸️ Pause
+                                    </button>
+                                    <button id="ttsStopBtn" class="tts-btn tts-stop" onclick="stopTTS()" title="Stop">
+                                        ⏹️ Stop
+                                    </button>
                                 </div>
 
                                 <!-- Chat Container -->
@@ -905,6 +995,11 @@
             
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Store last AI message for TTS
+            if (role === 'ai') {
+                lastAIMessage = content;
+            }
         }
         
         function showTypingIndicator() {
@@ -1220,6 +1315,115 @@
             setTimeout(() => {
                 toast.remove();
             }, duration);
+        }
+        
+        // ========== TTS FUNCTIONS ==========
+        
+        let currentSpeech = null;
+        let lastAIMessage = '';
+        
+        function playTTS() {
+            if (!lastAIMessage) {
+                showError('No AI message to play. Please chat with the AI first.');
+                return;
+            }
+            
+            if (currentSpeech && !speechSynthesis.speaking) {
+                speechSynthesis.resume();
+                updateTTSButtons(true);
+                return;
+            }
+            
+            if (speechSynthesis.speaking) {
+                speechSynthesis.pause();
+                updateTTSButtons(false);
+                return;
+            }
+            
+            // Create new speech utterance
+            currentSpeech = new SpeechSynthesisUtterance(lastAIMessage);
+            
+            // Set voice based on teacher
+            const voices = speechSynthesis.getVoices();
+            if (currentTeacher.language === 'hi') {
+                // Try to find Hindi voice
+                const hindiVoice = voices.find(voice => 
+                    voice.lang.includes('hi') || voice.lang.includes('IN')
+                );
+                if (hindiVoice) currentSpeech.voice = hindiVoice;
+            } else {
+                // Try to find English voice
+                const englishVoice = voices.find(voice => 
+                    voice.lang.includes('en') && voice.lang.includes('US')
+                );
+                if (englishVoice) currentSpeech.voice = englishVoice;
+            }
+            
+            // Set speech properties
+            currentSpeech.rate = 0.9;
+            currentSpeech.pitch = 1.0;
+            currentSpeech.volume = 1.0;
+            
+            // Event handlers
+            currentSpeech.onstart = () => {
+                updateTTSButtons(true);
+                console.log('🎤 TTS started');
+            };
+            
+            currentSpeech.onend = () => {
+                updateTTSButtons(false);
+                console.log('🎤 TTS ended');
+            };
+            
+            currentSpeech.onerror = (event) => {
+                console.error('TTS Error:', event);
+                showError('Text-to-speech failed. Please try again.');
+                updateTTSButtons(false);
+            };
+            
+            // Start speaking
+            speechSynthesis.speak(currentSpeech);
+        }
+        
+        function pauseTTS() {
+            if (speechSynthesis.speaking) {
+                if (speechSynthesis.paused) {
+                    speechSynthesis.resume();
+                    updateTTSButtons(true);
+                } else {
+                    speechSynthesis.pause();
+                    updateTTSButtons(false);
+                }
+            }
+        }
+        
+        function stopTTS() {
+            speechSynthesis.cancel();
+            updateTTSButtons(false);
+            console.log('🎤 TTS stopped');
+        }
+        
+        function updateTTSButtons(isPlaying) {
+            const playBtn = document.getElementById('ttsPlayBtn');
+            const pauseBtn = document.getElementById('ttsPauseBtn');
+            
+            if (isPlaying) {
+                playBtn.style.display = 'none';
+                pauseBtn.style.display = 'inline-block';
+            } else {
+                playBtn.style.display = 'inline-block';
+                pauseBtn.style.display = 'none';
+            }
+        }
+        
+        // Initialize speech synthesis
+        let speechSynthesis = window.speechSynthesis;
+        
+        // Wait for voices to load
+        if (speechSynthesis) {
+            speechSynthesis.onvoiceschanged = () => {
+                console.log('🎤 Voices loaded:', speechSynthesis.getVoices().length);
+            };
         }
         
         // ========== START APPLICATION ==========
