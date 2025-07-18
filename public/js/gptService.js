@@ -114,37 +114,4 @@ class GPTService {
 const gptService = new GPTService();
 window.gptService = gptService;
 
-// Export utility functions
-export const updateContext = () => {
-    const grade = document.getElementById('grade-select').value;
-    const subject = document.getElementById('subject-select').value;
-    gptService.setContext(grade, subject);
-};
-
-export const handleChat = async () => {
-    const messageInput = document.getElementById('message-input');
-    const userMessage = messageInput.value;
-    if (!userMessage.trim()) return;
-    addMessage('user', userMessage);
-    messageInput.value = '';
-    const response = await gptService.sendMessage(userMessage);
-    addMessage('ai', response);
-};
-
-// Initialize event listeners
-if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', () => {
-        const sendButton = document.getElementById('send-button');
-        const messageInput = document.getElementById('message-input');
-
-        if (sendButton) {
-            sendButton.addEventListener('click', handleChat);
-        }
-
-        if (messageInput) {
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') handleChat();
-            });
-        }
-    });
-} 
+console.log('✅ GPT Service initialized successfully'); 
