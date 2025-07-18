@@ -862,6 +862,7 @@
         async function loadUserProfile() {
             try {
                 console.log('Loading user profile from Supabase...');
+                console.log('User ID:', currentUser.id);
                 
                 // Fetch user profile from Supabase
                 const { data: profile, error } = await supabaseClient
@@ -870,25 +871,49 @@
                     .eq('user_id', currentUser.id)
                     .single();
                 
+                console.log('Supabase response:', { profile, error });
+                
                 if (error) {
                     console.error('Profile fetch error:', error);
-                    // Fallback to user metadata
-                    userData = {
-                        full_name: currentUser.user_metadata?.full_name || 'Student',
-                        class: currentUser.user_metadata?.class || 'Class 6',
-                        board: currentUser.user_metadata?.board || 'CBSE',
-                        email: currentUser.email
-                    };
+                    
+                    // Try alternative query - maybe the table name is different
+                    const { data: altProfile, error: altError } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', currentUser.id)
+                        .single();
+                    
+                    console.log('Alternative query response:', { altProfile, altError });
+                    
+                    if (altError) {
+                        // Fallback to user metadata
+                        userData = {
+                            full_name: currentUser.user_metadata?.full_name || 'Student',
+                            class: currentUser.user_metadata?.class || 'Class 6',
+                            board: currentUser.user_metadata?.board || 'CBSE',
+                            email: currentUser.email
+                        };
+                        console.log('Using fallback data:', userData);
+                    } else {
+                        console.log('Profile loaded from alternative table:', altProfile);
+                        userData = {
+                            full_name: altProfile.full_name || altProfile.name || currentUser.user_metadata?.full_name || 'Student',
+                            class: altProfile.class || altProfile.grade || 'Class 6',
+                            board: altProfile.board || 'CBSE',
+                            email: currentUser.email
+                        };
+                    }
                 } else {
                     console.log('Profile loaded from Supabase:', profile);
                     userData = {
-                        full_name: profile.full_name || currentUser.user_metadata?.full_name || 'Student',
-                        class: profile.class || 'Class 6',
+                        full_name: profile.full_name || profile.name || currentUser.user_metadata?.full_name || 'Student',
+                        class: profile.class || profile.grade || 'Class 6',
                         board: profile.board || 'CBSE',
                         email: currentUser.email
                     };
                 }
                 
+                console.log('Final user data:', userData);
                 updateUserInterface();
                 
             } catch (error) {
@@ -1369,20 +1394,29 @@
             // Create new speech utterance
             currentSpeech = new SpeechSynthesisUtterance(lastAIMessage);
             
-            // Set voice based on teacher
+            // Set specific voices based on teacher
             const voices = speechSynthesis.getVoices();
+            console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+            
             if (currentTeacher.language === 'hi') {
-                // Try to find Hindi voice
+                // Use Google Hindi voice
                 const hindiVoice = voices.find(voice => 
-                    voice.lang.includes('hi') || voice.lang.includes('IN')
+                    voice.name.includes('Google') && voice.lang.includes('hi')
                 );
-                if (hindiVoice) currentSpeech.voice = hindiVoice;
+                if (hindiVoice) {
+                    currentSpeech.voice = hindiVoice;
+                    console.log('Using Hindi voice:', hindiVoice.name);
+                }
             } else {
-                // Try to find English voice
+                // Use Microsoft Ravi India English voice
                 const englishVoice = voices.find(voice => 
-                    voice.lang.includes('en') && voice.lang.includes('US')
+                    voice.name.includes('Microsoft Ravi') || 
+                    (voice.name.includes('Ravi') && voice.lang.includes('en-IN'))
                 );
-                if (englishVoice) currentSpeech.voice = englishVoice;
+                if (englishVoice) {
+                    currentSpeech.voice = englishVoice;
+                    console.log('Using English voice:', englishVoice.name);
+                }
             }
             
             // Set speech properties for better mobile compatibility
