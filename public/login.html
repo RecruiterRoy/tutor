@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TUTOR.AI</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Load Supabase CDN first -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Use Tailwind via CDN with config (production ready) -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
+    <style>
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+        }
+        
+        /* Fix input field visibility */
+        input[type="email"], 
+        input[type="password"], 
+        input[type="tel"], 
+        input[type="text"],
+        select {
+            background: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        }
+        
+        input[type="email"]::placeholder, 
+        input[type="password"]::placeholder, 
+        input[type="tel"]::placeholder, 
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+        
+        input[type="email"]:focus, 
+        input[type="password"]:focus, 
+        input[type="tel"]:focus, 
+        input[type="text"]:focus,
+        select:focus {
+            background: rgba(0, 0, 0, 0.5) !important;
+            border-color: rgba(139, 92, 246, 0.8) !important;
+            outline: none !important;
+        }
+        
+        /* Fix select dropdown */
+        select option {
+            background: #1f2937;
+            color: white;
+        }
+        
+        /* Fix checkbox */
+        input[type="checkbox"] {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="glass-effect rounded-2xl p-8 w-full max-w-md shadow-2xl" x-data="authApp()">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-4">
+                <a href="index.html" class="cursor-pointer">
+                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" style="height: 60px; width: auto; filter: brightness(0) invert(1);">
+                </a>
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-2">Welcome Back!</h1>
+            <p class="text-gray-200">Sign in to continue your learning journey</p>
+        </div>
+
+        <!-- Auth Method Tabs -->
+        <div class="flex mb-6 bg-white/10 rounded-lg p-1">
+            <button @click="currentTab = 'email'" 
+                    :class="currentTab === 'email' ? 'bg-white/20 text-white' : 'text-gray-300'"
+                    class="flex-1 py-2 px-4 rounded-md transition-all duration-200 text-sm font-medium">
+                Email
+            </button>
+            <button @click="currentTab = 'phone'" 
+                    :class="currentTab === 'phone' ? 'bg-white/20 text-white' : 'text-gray-300'"
+                    class="flex-1 py-2 px-4 rounded-md transition-all duration-200 text-sm font-medium">
+                Phone
+            </button>
+        </div>
+
+        <!-- Email/Password Login -->
+        <div x-show="currentTab === 'email'" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-200 mb-2">Email or Mobile Number</label>
+                <input x-model="email" 
+                       type="text" 
+                       placeholder="Enter your email or mobile number"
+                       class="w-full px-4 py-3 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+            </div>
+            
+            <div x-show="!isMagicLink">
+                <label class="block text-sm font-medium text-gray-200 mb-2">Password</label>
+                <div class="relative">
+                <input x-model="password" 
+                           x-ref="passwordField"
+                       type="password" 
+                       placeholder="Enter your password"
+                           class="w-full px-4 py-3 pr-12 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+                    <button type="button" 
+                            @click="togglePassword()"
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                        <span x-text="showPassword ? '🙈' : '👁️'"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <label class="flex items-center text-sm text-gray-200">
+                    <input x-model="isMagicLink" type="checkbox" class="mr-2">
+                    Use Magic Link (No Password)
+                </label>
+                <button @click="resetPassword" class="text-sm text-purple-300 hover:text-purple-100">
+                    Forgot Password?
+                </button>
+            </div>
+
+            <button @click="signInWithEmail" 
+                    :disabled="loading"
+                    class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200 disabled:opacity-50">
+                <span x-show="!loading" x-text="isMagicLink ? 'Send Magic Link' : 'Sign In'"></span>
+                <span x-show="loading">Processing...</span>
+            </button>
+        </div>
+
+        <!-- Phone/OTP Login -->
+        <div x-show="currentTab === 'phone'" class="space-y-4">
+            <div x-show="!otpSent">
+                <label class="block text-sm font-medium text-gray-200 mb-2">Phone Number</label>
+                <div class="flex">
+                    <select x-model="countryCode" class="px-3 py-3 rounded-l-lg glass-effect text-white">
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                    </select>
+                    <input x-model="phone" 
+                           type="tel" 
+                           placeholder="Enter phone number"
+                           class="flex-1 px-4 py-3 rounded-r-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+                </div>
+            </div>
+
+            <div x-show="otpSent">
+                <label class="block text-sm font-medium text-gray-200 mb-2">OTP Code</label>
+                <input x-model="otp" 
+                       type="text" 
+                       placeholder="Enter 6-digit OTP"
+                       maxlength="6"
+                       class="w-full px-4 py-3 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+                <p class="text-sm text-gray-300 mt-2">
+                    OTP sent to <span x-text="countryCode + phone"></span>
+                    <button @click="resendOTP" class="text-purple-300 hover:text-purple-100 ml-2">Resend</button>
+                </p>
+            </div>
+
+            <button @click="otpSent ? verifyOTP() : sendOTP()" 
+                    :disabled="loading"
+                    class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-3 rounded-lg font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-200 disabled:opacity-50">
+                <span x-show="!loading" x-text="otpSent ? 'Verify OTP' : 'Send OTP'"></span>
+                <span x-show="loading">Processing...</span>
+            </button>
+        </div>
+
+        <!-- Social Login -->
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300/30"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-transparent text-gray-300">Or continue with</span>
+                </div>
+            </div>
+
+            <button @click="signInWithGoogle" 
+                    :disabled="loading"
+                    class="w-full mt-4 bg-white text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 flex items-center justify-center disabled:opacity-50">
+                <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+            </button>
+        </div>
+
+        <!-- Sign Up Link -->
+        <div class="mt-6 text-center">
+            <p class="text-gray-300">
+                Don't have an account? 
+                <a href="register.html" class="text-purple-300 hover:text-purple-100 font-medium">Sign up</a>
+            </p>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div x-show="message" 
+             :class="messageType === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'"
+             class="mt-4 p-3 rounded-lg text-sm" 
+             x-text="message"></div>
+    </div>
+
+    <script>
+        // ========== ALPINE.JS APP INITIALIZATION ==========
+        
+        function authApp() {
+            return {
+                // Form data
+                email: '',
+                password: '',
+                phone: '',
+                otp: '',
+                fullName: '',
+                countryCode: '+91',
+                
+                // UI state
+                currentTab: 'email',
+                isMagicLink: false,
+                otpSent: false,
+                showPassword: false,
+                loading: false,
+                
+                // Messages
+                message: '',
+                messageType: 'error',
+                
+                // Methods
+                signInWithEmail() {
+                    if (!this.email || !this.password) {
+                        this.showMessage('Please fill in all fields', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    this.message = '';
+                    
+                    // Call handleLogin directly with the data
+                    handleLoginWithData(this.email, this.password).then(() => {
+                        this.loading = false;
+                    }).catch((error) => {
+                        this.loading = false;
+                        this.showMessage(error.message || 'Login failed', 'error');
+                    });
+                },
+                
+                sendOTP() {
+                    if (!this.phone) {
+                        this.showMessage('Please enter phone number', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    this.message = '';
+                    // TODO: Implement OTP sending
+                    this.showMessage('OTP feature coming soon', 'error');
+                    this.loading = false;
+                },
+                
+                verifyOTP() {
+                    if (!this.otp) {
+                        this.showMessage('Please enter OTP', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    this.message = '';
+                    // TODO: Implement OTP verification
+                    this.showMessage('OTP feature coming soon', 'error');
+                    this.loading = false;
+                },
+                
+                signInWithGoogle() {
+                    this.loading = true;
+                    handleGoogleLogin().then(() => {
+                        this.loading = false;
+                    }).catch((error) => {
+                        this.loading = false;
+                        this.showMessage(error.message || 'Google login failed', 'error');
+                    });
+                },
+                
+                showMessage(message, type = 'error') {
+                    this.message = message;
+                    this.messageType = type;
+                    this.loading = false;
+                },
+                
+                togglePassword() {
+                    this.showPassword = !this.showPassword;
+                }
+            };
+        }
+
+        // ========== SUPABASE INITIALIZATION ==========
+
+        async function initSupabase() {
+            try {
+                // Check if already initialized
+                if (window.supabaseClient) {
+                    return window.supabaseClient;
+                }
+                
+                // Configuration
+                const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4';
+                
+                // Initialize
+                window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('✅ Supabase initialized');
+                
+                return window.supabaseClient;
+                
+            } catch (error) {
+                console.error('❌ Supabase initialization failed:', error);
+                throw error;
+            }
+        }
+
+        // ========== SESSION CHECKING ==========
+
+        async function checkIfLoggedIn() {
+            try {
+                console.log('🔍 Checking if user is already logged in...');
+                
+                const sessionData = localStorage.getItem('supabase.auth.token');
+                if (!sessionData) {
+                    console.log('❌ No session data found');
+                    return false;
+                }
+                
+                // Parse session data safely
+                let session;
+                try {
+                    session = JSON.parse(sessionData);
+                } catch (e) {
+                    console.error('Invalid session data:', e);
+                    localStorage.removeItem('supabase.auth.token');
+                    return false;
+                }
+                
+                // Initialize Supabase if not already done
+                if (!window.supabaseClient) {
+                    await initSupabase();
+                }
+                
+                // Verify session with Supabase
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                
+                if (error || !user) {
+                    console.error('Session validation failed:', error);
+                    localStorage.removeItem('supabase.auth.token');
+                    return false;
+                }
+                
+                console.log('✅ Valid session found for user:', user.email);
+                return true;
+                
+            } catch (error) {
+                console.error('Session check error:', error);
+                return false;
+            }
+        }
+
+        // ========== MAIN INITIALIZATION ==========
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('🚀 Login page initializing...');
+                
+                // Initialize Supabase first
+                await initSupabase();
+                
+                // Check if user is already logged in
+                const isLoggedIn = await checkIfLoggedIn();
+                if (isLoggedIn) {
+                    console.log('🔄 User already logged in, redirecting to dashboard');
+                    window.location.href = window.location.origin + '/dashboard.html';
+                        return;
+                    }
+                    
+                // Proceed with normal login page initialization
+                console.log('✅ Proceeding with login page setup...');
+                initializeLoginPage();
+                
+            } catch (error) {
+                console.error('❌ Login page initialization error:', error);
+                showError('Failed to initialize. Please refresh the page.');
+            }
+        });
+
+        // ========== LOGIN PAGE INITIALIZATION ==========
+
+        async function initializeLoginPage() {
+            try {
+                // Initialize form elements
+                initializeForms();
+                
+                // Initialize OAuth
+                initializeOAuth();
+                
+                // Initialize password toggles
+                initializePasswordToggles();
+                
+                console.log('✅ Login page initialized');
+                
+            } catch (error) {
+                console.error('❌ Login page initialization error:', error);
+                showError('Failed to initialize login page. Please refresh.');
+            }
+        }
+
+        // ========== FORM INITIALIZATION ==========
+
+        function initializeForms() {
+            // Login form
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+
+            // Register form
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', handleRegistration);
+            }
+
+            // OTP form
+            const otpForm = document.getElementById('otpForm');
+            if (otpForm) {
+                otpForm.addEventListener('submit', handleOTPVerification);
+            }
+        }
+
+        function initializePasswordToggles() {
+            // Login password toggle
+            const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+            const loginPasswordInput = document.getElementById('loginPassword');
+
+            if (loginPasswordToggle && loginPasswordInput) {
+                loginPasswordToggle.addEventListener('click', () => {
+                    togglePasswordVisibility(loginPasswordInput, loginPasswordToggle);
+                });
+            }
+
+            // Register password toggle
+            const registerPasswordToggle = document.getElementById('registerPasswordToggle');
+            const registerPasswordInput = document.getElementById('registerPassword');
+
+            if (registerPasswordToggle && registerPasswordInput) {
+                registerPasswordToggle.addEventListener('click', () => {
+                    togglePasswordVisibility(registerPasswordInput, registerPasswordToggle);
+                });
+            }
+        }
+
+        function togglePasswordVisibility(input, toggle) {
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                        } else {
+                input.type = 'password';
+                toggle.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+
+        // ========== OAuth INITIALIZATION ==========
+
+        function initializeOAuth() {
+            const googleLoginBtn = document.getElementById('googleLogin');
+            if (googleLoginBtn) {
+                googleLoginBtn.addEventListener('click', handleGoogleLogin);
+            }
+        }
+
+        // ========== FORM HANDLERS ==========
+
+        async function handleLoginWithData(emailOrMobile, password) {
+            try {
+                showLoading('loginBtn', 'Signing in...');
+                
+                // Determine if input is email or mobile
+                const isEmail = emailOrMobile.includes('@');
+                let email = emailOrMobile;
+                
+                // If mobile, add +91 prefix if not present
+                if (!isEmail) {
+                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                }
+
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    // Store session data
+                    localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+                    console.log('✅ Login successful, redirecting to dashboard');
+                    
+                    // Redirect to dashboard
+                    window.location.href = './dashboard.html';
+                }
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Login failed. Please try again.');
+            } finally {
+                hideLoading('loginBtn', 'Sign In');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            // Get values from Alpine.js data instead of DOM elements
+            const emailOrMobile = window.authAppData?.email || '';
+            const password = window.authAppData?.password || '';
+            
+            if (!emailOrMobile || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+                    
+            try {
+                showLoading('loginBtn', 'Signing in...');
+                
+                // Determine if input is email or mobile
+                const isEmail = emailOrMobile.includes('@');
+                let email = emailOrMobile;
+                
+                // If mobile, add +91 prefix if not present
+                if (!isEmail) {
+                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                }
+
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    // Store session data
+                    localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+                    console.log('✅ Login successful, redirecting to dashboard');
+                    
+                    // Redirect to dashboard
+                    window.location.href = window.location.origin + '/dashboard.html';
+                }
+
+                    } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Login failed. Please try again.');
+                    } finally {
+                hideLoading('loginBtn', 'Sign In');
+            }
+        }
+
+        async function handleRegistration(e) {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('registerName').value.trim();
+            const emailOrMobile = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            
+            if (!fullName || !emailOrMobile || !password) {
+                showError('Please fill in all fields');
+                        return;
+                    }
+                    
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+
+            try {
+                showLoading('registerBtn', 'Creating account...');
+                
+                // Determine if input is email or mobile
+                const isEmail = emailOrMobile.includes('@');
+                let email = emailOrMobile;
+                
+                // If mobile, add +91 prefix if not present
+                if (!isEmail) {
+                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                }
+
+                const { data, error } = await window.supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName
+                        }
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    // Store session data
+                    localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+                    console.log('✅ Registration successful, redirecting to dashboard');
+                    
+                    // Redirect to dashboard
+                    window.location.href = window.location.origin + '/dashboard.html';
+                }
+
+                    } catch (error) {
+                console.error('Registration error:', error);
+                showError(error.message || 'Registration failed. Please try again.');
+                    } finally {
+                hideLoading('registerBtn', 'Create Account');
+            }
+        }
+
+        async function handleOTPVerification(e) {
+            e.preventDefault();
+            
+            const emailOrMobile = document.getElementById('otpEmail').value.trim();
+            const otp = document.getElementById('otpCode').value.trim();
+            
+            if (!emailOrMobile || !otp) {
+                showError('Please fill in all fields');
+                        return;
+                    }
+                    
+            try {
+                showLoading('otpBtn', 'Verifying...');
+                
+                // Determine if input is email or mobile
+                const isEmail = emailOrMobile.includes('@');
+                let email = emailOrMobile;
+                
+                // If mobile, add +91 prefix if not present
+                if (!isEmail) {
+                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                }
+
+                const { data, error } = await window.supabaseClient.auth.verifyOtp({
+                    email: email,
+                    token: otp,
+                    type: 'email'
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    // Store session data
+                    localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+                    console.log('✅ OTP verification successful, redirecting to dashboard');
+                    
+                    // Redirect to dashboard
+                    window.location.href = window.location.origin + '/dashboard.html';
+                }
+
+                    } catch (error) {
+                console.error('OTP verification error:', error);
+                showError(error.message || 'OTP verification failed. Please try again.');
+                    } finally {
+                hideLoading('otpBtn', 'Verify OTP');
+            }
+        }
+
+        async function handleGoogleLogin() {
+            try {
+                showLoading('googleLogin', 'Connecting...');
+                
+                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/dashboard.html'
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                // OAuth redirect will handle the rest
+                console.log('✅ Google OAuth initiated');
+
+            } catch (error) {
+                console.error('Google login error:', error);
+                showError(error.message || 'Google login failed. Please try again.');
+            } finally {
+                hideLoading('googleLogin', '<i class="fab fa-google"></i> Continue with Google');
+            }
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+
+        function showForm(formType) {
+            // Hide all forms
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('otpForm').style.display = 'none';
+
+            // Show selected form
+            document.getElementById(formType + 'Form').style.display = 'block';
+
+            // Update active tab
+            document.querySelectorAll('.form-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-form="${formType}"]`).classList.add('active');
+        }
+
+        function showLoading(buttonId, text) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + text;
+            }
+        }
+
+        function hideLoading(buttonId, text) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = text;
+            }
+        }
+
+        function showError(message) {
+            console.error(message);
+            // Try to show error in Alpine.js if available
+            if (window.Alpine && window.Alpine.store) {
+                // If Alpine.js is available, show error there
+                const app = document.querySelector('[x-data]').__x.$data;
+                if (app && app.showMessage) {
+                    app.showMessage(message, 'error');
+                } else {
+                    // Fallback to a simple notification
+                    showNotification(message, 'error');
+                }
+            } else {
+                // Fallback to simple notification
+                showNotification(message, 'error');
+            }
+        }
+
+        function showNotification(message, type = 'error') {
+            // Create a simple notification instead of alert
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
+                type === 'error' ? 'bg-red-600' : 'bg-green-600'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // ========== ERROR HANDLING ==========
+
+        // Global error handler - only catch actual errors, not Alpine.js warnings
+        window.addEventListener('error', (event) => {
+            // Ignore Alpine.js expression errors and null errors
+            if (event.error === null || event.message.includes('Alpine Expression Error')) {
+                return;
+            }
+            console.error('Global error:', event.error);
+            event.preventDefault();
+            showError('An unexpected error occurred. Please refresh the page.');
+        });
+
+        // Unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled rejection:', event.reason);
+            event.preventDefault();
+            showError('A system error occurred. Please try again.');
+        });
+    </script>
+
+</body>
+</html>
