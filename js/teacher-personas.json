@@ -1,0 +1,212 @@
+{
+  "personas": {
+    "roy_sir": {
+      "name": "Roy Sir",
+      "avatar": "/images/teacher-avatar2.png",
+      "language": "english",
+      "teaching_style": "structured",
+      "personality": "gentleman, friendly but strict",
+      "strictness": 8,
+      "feedback_style": "constructive",
+      "specialties": ["mathematics", "science", "logical_reasoning", "physics", "chemistry"],
+      "communication_style": {
+        "greeting": "Good morning! Let's dive into today's lesson.",
+        "encouragement": "Excellent work! You're making great progress.",
+        "correction": "That's not quite right. Let me help you understand this better.",
+        "challenge": "I know you can do better. Let's try a more challenging problem."
+      },
+      "behavior_triggers": {
+        "low_performance": "strict_encouragement",
+        "high_performance": "challenge_increase",
+        "distraction": "gentle_redirect",
+        "confusion": "step_by_step_explanation"
+      },
+      "daily_story_limit": 1,
+      "story_trigger_minutes": 35,
+      "vedic_math_frequency": "high",
+      "lesson_preferences": {
+        "warmup_duration": 5,
+        "main_lesson_duration": 25,
+        "practice_duration": 15,
+        "recap_duration": 5
+      }
+    },
+    "miss_sapna": {
+      "name": "Miss Sapna",
+      "avatar": "/images/teacher-avatar1.png",
+      "language": "hinglish",
+      "teaching_style": "nurturing",
+      "personality": "lovable, empathetic, favorite teacher",
+      "strictness": 4,
+      "feedback_style": "empathetic",
+      "specialties": ["literature", "hindi", "english", "creative_thinking", "social_studies"],
+      "communication_style": {
+        "greeting": "Namaste beta! Aaj hum kya interesting cheez seekhenge?",
+        "encouragement": "Waah! Tumne bahut accha kiya! You're doing wonderful!",
+        "correction": "Koi baat nahi beta, mistakes se hi hum learn karte hain. Let me explain this differently.",
+        "challenge": "I think tumhara brain ready hai for something more challenging!"
+      },
+      "behavior_triggers": {
+        "low_performance": "comfort_first",
+        "high_performance": "playful_challenge",
+        "distraction": "engaging_redirect",
+        "confusion": "patient_explanation"
+      },
+      "daily_story_limit": 2,
+      "story_trigger_minutes": 30,
+      "vedic_math_frequency": "medium",
+      "lesson_preferences": {
+        "warmup_duration": 3,
+        "main_lesson_duration": 20,
+        "practice_duration": 20,
+        "recap_duration": 7
+      }
+    }
+  },
+  "story_library": {
+    "panchatantra": [
+      {
+        "id": "monkey_crocodile",
+        "title": "The Monkey and the Crocodile",
+        "moral": "Wit and presence of mind can save you from danger",
+        "duration": 4,
+        "subject_relevance": ["english", "moral_science"],
+        "age_group": "8-15"
+      },
+      {
+        "id": "lion_mouse",
+        "title": "The Lion and the Mouse",
+        "moral": "Small acts of kindness are never wasted",
+        "duration": 3,
+        "subject_relevance": ["english", "moral_science"],
+        "age_group": "6-12"
+      },
+      {
+        "id": "crow_pitcher",
+        "title": "The Thirsty Crow",
+        "moral": "Necessity is the mother of invention",
+        "duration": 3,
+        "subject_relevance": ["science", "english"],
+        "age_group": "6-10"
+      }
+    ],
+    "ramayana": [
+      {
+        "id": "hanuman_courage",
+        "title": "Hanuman's Leap to Lanka",
+        "moral": "Courage and devotion can overcome any obstacle",
+        "duration": 5,
+        "subject_relevance": ["hindi", "moral_science"],
+        "age_group": "8-16"
+      },
+      {
+        "id": "rama_setu",
+        "title": "Building the Bridge to Lanka",
+        "moral": "Teamwork and determination achieve impossible goals",
+        "duration": 6,
+        "subject_relevance": ["science", "hindi"],
+        "age_group": "10-16"
+      }
+    ],
+    "mahabharata": [
+      {
+        "id": "abhimanyu_chakravyuh",
+        "title": "Abhimanyu and the Chakravyuh",
+        "moral": "Knowledge without complete understanding can be dangerous",
+        "duration": 7,
+        "subject_relevance": ["mathematics", "strategy"],
+        "age_group": "12-18"
+      },
+      {
+        "id": "eklavya_dedication",
+        "title": "Eklavya's Dedication",
+        "moral": "True learning comes from dedication and practice",
+        "duration": 5,
+        "subject_relevance": ["any"],
+        "age_group": "10-18"
+      }
+    ],
+    "krishna_stories": [
+      {
+        "id": "krishna_mathematics",
+        "title": "Krishna and the Butter Calculation",
+        "moral": "Mathematics is everywhere in daily life",
+        "duration": 4,
+        "subject_relevance": ["mathematics"],
+        "age_group": "8-14"
+      },
+      {
+        "id": "govardhan_physics",
+        "title": "Krishna Lifts Govardhan Hill",
+        "moral": "Understanding physics helps us understand divine leelas",
+        "duration": 5,
+        "subject_relevance": ["physics", "science"],
+        "age_group": "10-16"
+      }
+    ]
+  },
+  "vedic_math_tricks": {
+    "multiplication": {
+      "ekadhikena": {
+        "name": "Ekadhikena Purvena (One More Than Previous)",
+        "formula": "For numbers ending in 5: (ab5)² = a(a+1)25",
+        "example": "25² = 2×3=6, so 625 | 35² = 3×4=12, so 1225",
+        "applicability": "Squares of numbers ending with 5",
+        "difficulty": "easy"
+      },
+      "nikhilam": {
+        "name": "Nikhilam Navatashcharamam Dashatah",
+        "formula": "For numbers close to base: Use deficiencies",
+        "example": "97×98 = (97-3)(98-2) = 94, 3×2=6, so 9406",
+        "applicability": "Numbers close to powers of 10",
+        "difficulty": "medium"
+      },
+      "urdhva_tiryak": {
+        "name": "Urdhva Tiryakbyham (Vertically and Crosswise)",
+        "formula": "Cross multiplication method",
+        "example": "23×45 = 2×4=8, (2×5+3×4)=22, 3×5=15, so 1035",
+        "applicability": "General multiplication",
+        "difficulty": "medium"
+      }
+    },
+    "division": {
+      "paravartya": {
+        "name": "Paravartya Yojayet",
+        "formula": "Transform and apply",
+        "example": "1÷19 = 1÷(20-1) = use flag method",
+        "applicability": "Division by numbers close to powers of 10",
+        "difficulty": "hard"
+      }
+    },
+    "squares": {
+      "duplex": {
+        "name": "Duplex Method",
+        "formula": "For any number: use duplex calculation",
+        "example": "43² = (4+3)²-2×4×3 = 49-24 = 25, then 1849",
+        "applicability": "Any number squares",
+        "difficulty": "medium"
+      }
+    }
+  },
+  "lesson_templates": {
+    "mathematics": {
+      "warmup": [
+        "Let's start with a quick mental math exercise",
+        "Today we'll use some amazing Vedic math tricks",
+        "Can you solve this quick problem to warm up your brain?"
+      ],
+      "vedic_integration": [
+        "Here's a Vedic math trick that will make this super easy!",
+        "Ancient Indian mathematicians had a beautiful way to solve this",
+        "Let me show you how our ancestors calculated this in seconds"
+      ]
+    },
+    "literature": {
+      "story_transition": [
+        "You've been working hard for {minutes} minutes. Time for an inspiring story!",
+        "This reminds me of a beautiful story from our heritage",
+        "Let me tell you a story that connects to what we just learned"
+      ]
+    }
+  }
+} 

@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard - TUTOR.AI</title>
+    
+    <!-- Preload essential resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="public/images/teacher-avatar2.png" as="image">
+    
+    <!-- Load Tailwind CSS with reduced size -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            corePlugins: {
+                preflight: false, // Disable default styles to reduce size
+            }
+        }
+    </script>
+    
+    <!-- Load essential scripts with defer -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    
+    <!-- Load Configuration -->
+    <script src="public/js/config.js" defer></script>
+    
+    <!-- Load Supabase Client -->
+    <script src="public/js/supabaseClient.js" defer></script>
+    
+    <!-- Load GPT Service -->
+    <script src="public/js/gptService.js" defer></script>
+    <script>
+        // Test if gptService loads properly
+        window.addEventListener('load', function() {
+            console.log('Page loaded, checking gptService...');
+            if (typeof window.gptService !== 'undefined') {
+                console.log('✅ gptService loaded successfully:', window.gptService);
+            } else {
+                console.error('❌ gptService failed to load');
+                // Try to load it manually
+                const script = document.createElement('script');
+                script.src = 'public/js/gptService.js';
+                script.onload = function() {
+                    console.log('✅ gptService loaded manually');
+                };
+                script.onerror = function() {
+                    console.error('❌ Failed to load gptService manually');
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    
+    <!-- Load non-critical scripts after page load -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js" defer></script>
+    
+    <!-- Load fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { 
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        body {
+            overscroll-behavior-y: contain;
+            touch-action: manipulation;
+        }
+        
+        /* Simplified glass effect for mobile */
+        .glass-effect {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-border {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1px;
+            border-radius: 12px;
+        }
+        
+        .gradient-border-content {
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 11px;
+            padding: 1rem;
+        }
+        
+        /* Optimized chat container */
+        .chat-container {
+            height: 50vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            contain: strict;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+        
+        /* Simplified message styles */
+        .message-user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-left: auto;
+            max-width: 90%;
+            animation: slideInRight 0.2s ease-out;
+        }
+        
+        .message-ai {
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: auto;
+            max-width: 90%;
+            animation: slideInLeft 0.2s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* Simplified typing indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin-right: auto;
+            max-width: 80px;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+        
+        /* Simplified navigation */
+        .nav-item {
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        /* Optimized for mobile */
+        .mobile-sidebar {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.98);
+            z-index: 1000;
+            transition: left 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .mobile-sidebar.open {
+            left: 0;
+        }
+        
+        .mobile-sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-sidebar-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Avatar optimizations */
+        .avatar-container-chat {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+
+        .avatar-image-chat {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            object-fit: cover;
+        }
+
+        .avatar-container-settings {
+            width: 48px;
+            height: 48px;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .avatar-image-settings {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            object-fit: cover;
+        }
+
+        .avatar-selection-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .avatar-selection-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .avatar-selection-card.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        /* TTS Controls */
+        .tts-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            justify-content: center;
+        }
+
+        .tts-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            min-width: 60px;
+            min-height: 40px;
+        }
+
+        .tts-play {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .tts-pause {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .tts-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .tts-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .tts-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Mobile optimizations for TTS */
+        @media (max-width: 640px) {
+            .tts-controls {
+                gap: 6px;
+                margin-top: 12px;
+            }
+            
+            .tts-btn {
+                padding: 10px 14px;
+                font-size: 12px;
+                min-width: 50px;
+                min-height: 44px;
+            }
+        }
+        
+        /* Input optimizations */
+        .chat-input {
+            font-size: 16px; /* Prevent iOS zoom */
+            min-height: 44px; /* Better touch target */
+        }
+        
+        /* Button optimizations */
+        .btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        /* Media queries for mobile */
+        @media (max-width: 640px) {
+            .chat-container {
+                height: 55vh;
+            }
+            
+            .gradient-border-content {
+                padding: 0.75rem;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+            
+            .book-list {
+                grid-template-columns: repeat(1, 1fr);
+            }
+            
+            .chat-input-container {
+                flex-direction: column;
+            }
+            
+            .chat-buttons {
+                width: 100%;
+                margin-top: 8px;
+            }
+            
+            .send-button, .voice-button {
+                width: 100%;
+            }
+        }
+        
+        /* Performance optimizations */
+        .will-change-transform {
+            will-change: transform;
+        }
+        
+        .content-visibility-auto {
+            content-visibility: auto;
+        }
+        
+        /* Disable animations when user prefers reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-x-hidden">
+    <!-- Mobile Sidebar Overlay -->
+    <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+    
+    <!-- Mobile Sidebar -->
+    <div class="mobile-sidebar" id="mobileSidebar">
+        <div class="p-4 border-b border-white/10">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-2">
+                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
+                    <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
+                </div>
+                <button class="text-white text-2xl" onclick="closeMobileSidebar()">×</button>
+            </div>
+            <div class="text-right">
+                <p class="text-white text-sm font-medium" id="mobileUserName">Loading...</p>
+                <p class="text-gray-400 text-xs" id="mobileUserClass">Loading...</p>
+            </div>
+        </div>
+        
+        <nav class="p-4 space-y-1">
+            <a href="#" class="block py-2 px-3 bg-blue-600/20 rounded-lg text-white" onclick="showSection('dashboard'); closeMobileSidebar();">
+                <span class="mr-2">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="block py-2 px-3 hover:bg-white/10 rounded-lg text-white" onclick="showSection('progress'); closeMobileSidebar();">
+                <span class="mr-2">📈</span>
+                <span>Progress</span>
+            </a>
+            <a href="#" class="block py-2 px-3 hover:bg-white/10 rounded-lg text-white" onclick="showSection('settings'); closeMobileSidebar();">
+                <span class="mr-2">⚙️</span>
+                <span>Settings</span>
+            </a>
+            <a href="#" class="block py-2 px-3 hover:bg-white/10 rounded-lg text-white" onclick="signOut(); closeMobileSidebar();">
+                <span class="mr-2">🚪</span>
+                <span>Sign Out</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="flex h-screen">
+        <!-- Desktop Sidebar (hidden on mobile) -->
+        <div class="hidden md:flex md:w-20 lg:w-56 bg-slate-800/90 flex-col items-center py-4 space-y-2">
+            <button class="nav-item active w-full py-2 px-2 text-white text-center md:text-left font-medium rounded-lg" onclick="showSection('dashboard')" id="navDashboard">
+                <span class="inline-block w-6">🏠</span>
+                <span class="hidden lg:inline">Dashboard</span>
+            </button>
+            <button class="nav-item w-full py-2 px-2 text-white text-center md:text-left font-medium rounded-lg" onclick="showSection('progress')" id="navProgress">
+                <span class="inline-block w-6">📈</span>
+                <span class="hidden lg:inline">Progress</span>
+            </button>
+            <button class="nav-item w-full py-2 px-2 text-white text-center md:text-left font-medium rounded-lg" onclick="showSection('settings')" id="navSettings">
+                <span class="inline-block w-6">⚙️</span>
+                <span class="hidden lg:inline">Settings</span>
+            </button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content flex-1 flex flex-col h-full overflow-hidden">
+            <!-- Mobile Header -->
+            <div class="md:hidden flex items-center justify-between p-3 bg-slate-800/90 border-b border-white/10">
+                <button class="text-white text-2xl" onclick="openMobileSidebar()">☰</button>
+                <div class="flex items-center space-x-2">
+                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-6">
+                    <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
+                        </div>
+                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <span id="mobileInitials" class="text-white font-bold text-xs">L</span>
+                    </div>
+            </div>
+            
+            <!-- Desktop Header -->
+            <div class="hidden md:block bg-slate-800/90 border-b border-white/10 p-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
+                        <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right">
+                            <p class="text-white text-sm font-medium" id="topBarUserName">Loading...</p>
+                            <p class="text-gray-400 text-xs" id="topBarUserClass">Loading...</p>
+                        </div>
+                        <div class="w-9 h-9 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <span id="topBarInitials" class="text-white font-bold text-sm">L</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section Content -->
+            <div class="flex-1 flex flex-col overflow-y-auto content-visibility-auto">
+                <!-- Dashboard Section -->
+                <div id="dashboardSection" class="section-content flex-1 flex flex-col p-3 overflow-y-auto">
+                    <!-- Chat Section -->
+                    <div class="max-w-4xl mx-auto w-full">
+                        <div class="glass-effect rounded-xl p-3">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-3">
+                                        <div class="avatar-container-chat">
+                                            <img id="teacher-avatar-chat" class="avatar-image-chat" 
+                                             src="public/images/teacher-avatar2.png" alt="Teacher Avatar">
+                                            </div>
+                                    <div class="teacher-info">
+                                        <h2 id="teacher-name-chat" class="text-lg font-bold text-white">Roy Sir</h2>
+                                        <p class="text-gray-300 text-xs">Ask me anything about your studies!</p>
+                                        </div>
+                                            </div>
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span class="text-green-400 text-xs font-medium">AI Online</span>
+                                    </div>
+                                </div>
+
+                                <!-- TTS Controls -->
+                                <div class="tts-controls mb-3">
+                                    <button id="ttsPlayBtn" class="tts-btn tts-play" onclick="playTTS()" title="Play">
+                                        ▶️ Play
+                                    </button>
+                                    <button id="ttsPauseBtn" class="tts-btn tts-pause" onclick="pauseTTS()" title="Pause" style="display: none;">
+                                        ⏸️ Pause
+                                    </button>
+                                    <button id="ttsStopBtn" class="tts-btn tts-stop" onclick="stopTTS()" title="Stop">
+                                        ⏹️ Stop
+                                    </button>
+                                </div>
+
+                                <!-- Chat Container -->
+                            <div class="gradient-border mb-4">
+                                    <div class="gradient-border-content p-3">
+                                    <div id="chatMessages" class="chat-container space-y-3 mb-3">
+                                            <!-- Messages will be inserted here -->
+                </div>
+                                    
+                                        <!-- Chat Input -->
+                                    <div class="chat-input-container flex flex-col space-y-2">
+                                            <input 
+                                                type="text" 
+                                                id="chatInput" 
+                                                placeholder="Type your question here..." 
+                                            class="chat-input w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                                onkeypress="handleChatKeyPress(event)"
+                                            >
+                                        <div class="chat-buttons flex space-x-2">
+                                            <button id="voiceButton" class="voice-button flex-1 px-3 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg font-medium flex items-center justify-center">
+                                                <span id="voiceIcon">🎤</span>
+                                                <span id="voiceStatus" class="ml-1 text-xs">Voice</span>
+                                            </button>
+                                            <button id="sendButton" class="send-button flex-1 px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium">
+                                                Send
+                                            </button>
+                                        </div>
+                                        </div>
+                    </div>
+                </div>
+
+                                <!-- Quick Actions -->
+                            <div class="quick-actions grid grid-cols-2 gap-2 mb-3">
+                                <button onclick="sendQuickMessage('Help me with Math problems', 'Math')" class="glass-effect p-3 rounded-lg text-center hover:bg-white/20 transition-colors">
+                                    <div class="text-xl mb-1">🔢</div>
+                                    <p class="text-white text-xs font-medium">Math Help</p>
+                                    </button>
+                                <button onclick="sendQuickMessage('Explain this Science concept', 'Science')" class="glass-effect p-3 rounded-lg text-center hover:bg-white/20 transition-colors">
+                                    <div class="text-xl mb-1">🧪</div>
+                                    <p class="text-white text-xs font-medium">Science</p>
+                                    </button>
+                                <button onclick="sendQuickMessage('Help with English grammar', 'English')" class="glass-effect p-3 rounded-lg text-center hover:bg-white/20 transition-colors">
+                                    <div class="text-xl mb-1">📝</div>
+                                    <p class="text-white text-xs font-medium">English</p>
+                    </button>
+                                <button onclick="sendQuickMessage('Create a study plan for me')" class="glass-effect p-3 rounded-lg text-center hover:bg-white/20 transition-colors">
+                                    <div class="text-xl mb-1">📅</div>
+                                    <p class="text-white text-xs font-medium">Study Plan</p>
+                    </button>
+                </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Section -->
+                <div id="progressSection" class="section-content flex-1 flex-col p-3 hidden overflow-y-auto">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="glass-effect rounded-xl p-4">
+                            <h2 class="text-xl font-bold text-white mb-3">Learning Progress</h2>
+                            <div class="mb-3 flex items-center space-x-2">
+                                <label class="text-white text-xs">Final Exam in:</label>
+                                <select id="examMonth" class="bg-purple-700 text-white rounded px-2 py-1 text-xs">
+                                    <option value="1">Jan</option>
+                                    <option value="2">Feb</option>
+                                    <option value="3">Mar</option>
+                                    <option value="4" selected>Apr</option>
+                                    <option value="5">May</option>
+                                    <option value="6">Jun</option>
+                                    <option value="7">Jul</option>
+                                    <option value="8">Aug</option>
+                                    <option value="9">Sep</option>
+                                    <option value="10">Oct</option>
+                                    <option value="11">Nov</option>
+                                    <option value="12">Dec</option>
+                                </select>
+                                <select id="examYear" class="bg-purple-700 text-white rounded px-2 py-1 text-xs"></select>
+                            </div>
+                            <div class="mb-2 text-white text-xs" id="monthsTillExam">Months till final exam: </div>
+                            <div class="mb-3 text-white text-xs" id="progressTillDate">Progress made till date: 0%</div>
+                            <div class="mb-3">
+                                <label class="text-white text-xs">Subjects:</label>
+                                <div id="subjectsList" class="flex flex-col space-y-2 mt-1"></div>
+                                <button id="addSubjectBtn" class="mt-2 px-2 py-1 bg-blue-600 text-white rounded text-xs">Add Subject</button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settingsSection" class="section-content flex-1 flex-col p-3 hidden overflow-y-auto">
+                    <div class="max-w-md mx-auto">
+                        <div class="glass-effect rounded-xl p-4">
+                            <h2 class="text-xl font-bold text-white mb-3">Settings</h2>
+                            
+                            <!-- Teacher Avatars -->
+                            <div class="mb-4">
+                                <label class="text-white text-xs font-medium mb-2 block">Choose Your Teacher:</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="avatar-selection-card p-3 rounded-lg" data-teacher="english" onclick="handleAvatarSelection('english')">
+                                        <div class="avatar-container-settings w-12 h-12 mx-auto">
+                                            <img class="avatar-image-settings" src="public/images/teacher-avatar2.png" alt="Roy Sir">
+                                        </div>
+                                        <h3 class="text-white text-center mt-1 text-sm">Roy Sir</h3>
+                                        </div>
+                                    <div class="avatar-selection-card p-3 rounded-lg" data-teacher="hindi" onclick="handleAvatarSelection('hindi')">
+                                        <div class="avatar-container-settings w-12 h-12 mx-auto">
+                                            <img class="avatar-image-settings" src="public/images/teacher-avatar1.png" alt="Ms. Sapana">
+                                    </div>
+                                        <h3 class="text-white text-center mt-1 text-sm">Ms. Sapana</h3>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Language Selection -->
+                            <div class="mb-3">
+                                <label for="preferredLanguage" class="text-white text-xs block mb-1">Preferred Language:</label>
+                                <select id="preferredLanguage" class="w-full bg-purple-700 text-white rounded px-2 py-1 text-sm">
+                                    <option value="en" selected>English</option>
+                                    <option value="hi">हिंदी (Hindi)</option>
+                                    <option value="hi-en">Hinglish</option>
+                                </select>
+                            </div>
+
+                            <!-- Learning Style -->
+                            <div class="mb-3">
+                                <label for="learningStyle" class="text-white text-xs block mb-1">Learning Style:</label>
+                                <select id="learningStyle" class="w-full bg-purple-700 text-white rounded px-2 py-1 text-sm">
+                                    <option value="visual">Visual</option>
+                                    <option value="auditory">Auditory</option>
+                                    <option value="reading">Reading/Writing</option>
+                                    <option value="kinesthetic">Kinesthetic</option>
+                                </select>
+                            </div>
+
+                            <!-- Account Management -->
+                            <div class="mt-4">
+                                <label class="text-white text-xs font-medium block mb-2">Account:</label>
+                                <div class="flex flex-col space-y-2">
+                                    <button onclick="signOut()" class="w-full px-3 py-2 bg-red-600 text-white rounded text-sm">
+                                        🚪 Sign Out
+                                    </button>
+                                    <button onclick="showUserProfile()" class="w-full px-3 py-2 bg-gray-600 text-white rounded text-sm">
+                                        👤 View Profile
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Script (loaded after DOM) -->
+    <script>
+        // ========== CORE APP CONFIGURATION ==========
+        
+        // Disable heavy features on mobile by default
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const enableVoiceFeatures = true; // Enable voice on both web and mobile
+        const enableAnimations = !isMobile; // Keep animations disabled on mobile for performance
+        
+        // Simple mermaid config (only initialize if needed)
+        if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+                securityLevel: 'loose'
+            });
+        }
+        
+        // ========== GLOBAL VARIABLES ==========
+        let supabaseClient = null;
+        let currentUser = null;
+        let userData = null;
+        let chatHistory = [];
+        let isRecording = false;
+        let recognition = null;
+        let currentTeacher = {
+                name: "Roy Sir",
+            image: "public/images/teacher-avatar2.png",
+            language: "en"
+        };
+        
+        // ========== INITIALIZATION ==========
+        
+        async function initApp() {
+            try {
+                // Initialize Supabase first
+                supabaseClient = await initSupabase();
+                
+                // Check authentication
+                const { data: { session }, error: authError } = await supabaseClient.auth.getSession();
+                
+                if (authError || !session?.user) {
+                    console.error('Auth error or no session:', authError);
+                    window.location.href = './login.html';
+                    return;
+                }
+                
+                currentUser = session.user;
+                console.log('User authenticated:', currentUser.email);
+                
+                // Load user profile FIRST
+                await loadUserProfile();
+                
+                // Initialize UI components
+                initUI();
+                
+                // Initialize chat service AFTER user profile is loaded
+                initChatService();
+                
+                // Initialize voice features (enabled for both web and mobile)
+                initVoiceFeatures();
+                
+                console.log('App initialized successfully');
+                
+            } catch (error) {
+                console.error('App initialization failed:', error);
+                showError('Failed to initialize app. Please try again.');
+            }
+        }
+        
+        async function initSupabase() {
+            try {
+                // Wait for config to be loaded
+                if (!window.TUTOR_CONFIG) {
+                    console.log('Waiting for config to load...');
+                    await new Promise(resolve => {
+                        const checkConfig = () => {
+                            if (window.TUTOR_CONFIG) {
+                                resolve();
+                            } else {
+                                setTimeout(checkConfig, 100);
+                            }
+                        };
+                        checkConfig();
+                    });
+                }
+                
+                const config = window.TUTOR_CONFIG;
+                console.log('Using Supabase config:', config.SUPABASE_URL);
+                
+                // Check if Supabase is loaded
+                if (typeof window.supabase === 'undefined') {
+                    throw new Error('Supabase CDN not loaded');
+                }
+                
+                const client = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+                console.log('✅ Supabase client initialized successfully');
+                return client;
+            } catch (error) {
+                console.error('Supabase init failed:', error);
+                throw error;
+            }
+        }
+        
+        function initUI() {
+            // Set up event listeners
+            document.getElementById('sendButton').addEventListener('click', handleSendMessage);
+            
+            // Chat input handling
+            const chatInput = document.getElementById('chatInput');
+            chatInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            });
+            
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const section = this.getAttribute('onclick').match(/showSection\('(.+?)'\)/)[1];
+                    showSection(section);
+                });
+            });
+            
+            // Update UI with user data
+            updateUserInterface();
+        }
+        
+        function initChatService() {
+            console.log('🔄 Initializing chat service...');
+            console.log('User data available:', !!userData);
+            console.log('User class:', userData?.class);
+            
+            // Wait for gptService to be loaded
+            if (typeof window.gptService === 'undefined') {
+                console.log('⏳ gptService not loaded yet, retrying...');
+                setTimeout(initChatService, 100);
+                return;
+            }
+            
+            console.log('✅ gptService found, setting up context...');
+            
+            // Set context for the GPT service
+            const userGrade = userData?.class || 'Class 6';
+            const gradeNumber = userGrade.replace('Class ', '');
+            console.log('Setting grade context:', gradeNumber);
+            
+            window.gptService.setContext(gradeNumber, null);
+            
+            // Set default teacher
+            window.gptService.setTeacher(currentTeacher.name);
+            
+            // Add welcome message from current teacher
+            const welcomeMessage = currentTeacher.name === 'Ms. Sapana' ? 
+                'Namaste! Main Ms. Sapana hun. Aaj hum kya padhenge? Main aapko Hindi aur English dono mein help kar sakti hun!' :
+                'Hello! I\'m Roy Sir, your AI tutor. I\'m here to help you with your studies. What would you like to learn today?';
+            
+            addMessage('ai', welcomeMessage);
+            
+            console.log('✅ Chat service initialized with external gptService and teacher:', currentTeacher.name);
+            console.log('✅ User class set to:', userGrade);
+        }
+        
+        function initVoiceFeatures() {
+            // Enable voice features for both web and mobile
+            console.log('Initializing voice features...');
+            
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    console.warn('Speech recognition not supported on this browser');
+                    document.getElementById('voiceButton').style.display = 'none';
+                    return;
+                }
+
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = currentTeacher.language === 'hi' ? 'hi-IN' : 'en-US';
+
+                recognition.onstart = () => {
+                    console.log('Voice recognition started');
+                    isRecording = true;
+                    document.getElementById('voiceIcon').textContent = '🔴';
+                    document.getElementById('voiceStatus').textContent = 'Listening...';
+                    document.getElementById('voiceButton').classList.add('bg-red-600');
+                    document.getElementById('voiceButton').classList.remove('bg-gradient-to-r', 'from-green-500', 'to-blue-500');
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    console.log('Voice transcript:', transcript);
+                    document.getElementById('chatInput').value = transcript;
+                    handleSendMessage();
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    
+                    if (event.error === 'not-allowed') {
+                        showError('Microphone permission denied. Please allow microphone access and try again.');
+                    } else if (event.error === 'no-speech') {
+                        showError('No speech detected. Please try again.');
+                    } else {
+                        showError(`Voice recognition error: ${event.error}`);
+                    }
+                    
+                    stopRecording();
+                };
+
+                recognition.onend = () => {
+                    console.log('Voice recognition ended');
+                    stopRecording();
+                };
+                
+                // Connect voice button
+                document.getElementById('voiceButton').addEventListener('click', toggleVoiceRecording);
+                
+                // Show voice button
+                document.getElementById('voiceButton').style.display = 'flex';
+                console.log('✅ Voice features initialized successfully');
+                
+            } catch (error) {
+                console.error('Voice initialization failed:', error);
+                document.getElementById('voiceButton').style.display = 'none';
+            }
+        }
+        
+        // ========== USER MANAGEMENT ==========
+        
+        async function loadUserProfile() {
+            try {
+                console.log('Loading user profile from Supabase...');
+                console.log('User ID:', currentUser.id);
+                console.log('Supabase client:', !!supabaseClient);
+                
+                // First, let's test the connection
+                try {
+                    const { data: testData, error: testError } = await supabaseClient
+                        .from('profiles')
+                        .select('count')
+                        .limit(1);
+                    
+                    console.log('Supabase connection test:', { testData, testError });
+                } catch (e) {
+                    console.error('Supabase connection failed:', e);
+                }
+                
+                // Try multiple table names and query formats
+                let profile = null;
+                let error = null;
+                
+                // First try: user_profiles table
+                try {
+                    console.log('Trying user_profiles table...');
+                    const { data, error: err } = await supabaseClient
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .single();
+                    
+                    console.log('user_profiles result:', { data, error: err });
+                    
+                    if (!err && data) {
+                        profile = data;
+                        console.log('Profile found in user_profiles table:', profile);
+                    }
+                } catch (e) {
+                    console.log('user_profiles table not found or empty:', e.message);
+                }
+                
+                // Second try: profiles table with user_id
+                if (!profile) {
+                    try {
+                        console.log('Trying profiles table with user_id...');
+                        const { data, error: err } = await supabaseClient
+                            .from('profiles')
+                            .select('*')
+                            .eq('user_id', currentUser.id)
+                            .single();
+                        
+                        console.log('profiles (user_id) result:', { data, error: err });
+                        
+                        if (!err && data) {
+                            profile = data;
+                            console.log('Profile found in profiles table (user_id):', profile);
+                        }
+                    } catch (e) {
+                        console.log('profiles table with user_id not found:', e.message);
+                    }
+                }
+                
+                // Third try: profiles table with id
+                if (!profile) {
+                    try {
+                        console.log('Trying profiles table with id...');
+                        const { data, error: err } = await supabaseClient
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', currentUser.id)
+                            .single();
+                        
+                        console.log('profiles (id) result:', { data, error: err });
+                        
+                        if (!err && data) {
+                            profile = data;
+                            console.log('Profile found in profiles table (id):', profile);
+                        }
+                    } catch (e) {
+                        console.log('profiles table with id not found:', e.message);
+                    }
+                }
+                
+                // Fourth try: auth.users metadata
+                if (!profile) {
+                    try {
+                        console.log('Trying auth metadata...');
+                        const { data: { user }, error: err } = await supabaseClient.auth.getUser();
+                        console.log('Auth user result:', { user, error: err });
+                        
+                        if (!err && user) {
+                            profile = {
+                                full_name: user.user_metadata?.full_name,
+                                class: user.user_metadata?.class,
+                                board: user.user_metadata?.board
+                            };
+                            console.log('Profile from auth metadata:', profile);
+                        }
+                    } catch (e) {
+                        console.log('Auth metadata not available:', e.message);
+                    }
+                }
+                
+                // Set user data with fallbacks
+                if (profile) {
+                    userData = {
+                        full_name: profile.full_name || profile.name || currentUser.user_metadata?.full_name || 'Student',
+                        class: profile.class || profile.grade || currentUser.user_metadata?.class || 'Class 6',
+                        board: profile.board || currentUser.user_metadata?.board || 'CBSE',
+                        email: currentUser.email
+                    };
+                } else {
+                    // Final fallback
+                    userData = {
+                        full_name: currentUser.user_metadata?.full_name || 'Student',
+                        class: currentUser.user_metadata?.class || 'Class 6',
+                        board: currentUser.user_metadata?.board || 'CBSE',
+                        email: currentUser.email
+                    };
+                    console.log('Using fallback data:', userData);
+                }
+                
+                console.log('Final user data:', userData);
+                updateUserInterface();
+                
+            } catch (error) {
+                console.error('Profile load error:', error);
+                userData = {
+                    full_name: currentUser.user_metadata?.full_name || 'Student',
+                    class: currentUser.user_metadata?.class || 'Class 6',
+                    board: currentUser.user_metadata?.board || 'CBSE',
+                    email: currentUser.email
+                };
+                updateUserInterface();
+            }
+        }
+        
+        function updateUserInterface() {
+            if (!userData) return;
+            
+            const name = userData.full_name || 'Student';
+            const className = userData.class || 'Class 6';
+            const initials = name.charAt(0).toUpperCase();
+            
+            // Update desktop UI
+            document.getElementById('topBarUserName').textContent = name;
+            document.getElementById('topBarUserClass').textContent = className;
+            document.getElementById('topBarInitials').textContent = initials;
+            
+            // Update mobile UI
+            document.getElementById('mobileUserName').textContent = name;
+            document.getElementById('mobileUserClass').textContent = className;
+            document.getElementById('mobileInitials').textContent = initials;
+            
+            // Update GPT context
+            if (window.gptService) {
+                window.gptService.setContext(className, null);
+            }
+        }
+        
+        async function signOut() {
+            try {
+                await supabaseClient.auth.signOut();
+                window.location.href = './login.html';
+            } catch (error) {
+                console.error('Sign out error:', error);
+                window.location.href = './login.html';
+            }
+        }
+        
+        function showUserProfile() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="glass-effect rounded-xl p-4 max-w-xs w-full mx-4">
+                    <h3 class="text-white text-lg font-bold mb-3">👤 User Profile</h3>
+                    <div class="space-y-2 text-white text-sm">
+                        <div><strong>Name:</strong> ${userData?.full_name || 'Student'}</div>
+                        <div><strong>Email:</strong> ${currentUser?.email || ''}</div>
+                        <div><strong>Class:</strong> ${userData?.class || ''}</div>
+                        <div><strong>Board:</strong> ${userData?.board || ''}</div>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-600 text-white px-3 py-2 rounded">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // ========== CHAT FUNCTIONS ==========
+        
+        function sendQuickMessage(message, subject = null) {
+            if (subject && window.gptService) {
+                window.gptService.setContext(null, subject);
+            }
+            document.getElementById('chatInput').value = message;
+            handleSendMessage();
+        }
+        
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleSendMessage();
+            }
+        }
+        
+        async function handleSendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage('user', message);
+            input.value = '';
+            
+            try {
+                showTypingIndicator();
+                
+                // Check if gptService is available
+                if (typeof window.gptService === 'undefined') {
+                    throw new Error('GPT Service not loaded. Please refresh the page.');
+                }
+                
+                // Use the external gptService
+                const aiResponse = await window.gptService.sendMessage(message, userData);
+                
+                removeTypingIndicator();
+                addMessage('ai', aiResponse);
+                
+            } catch (error) {
+                removeTypingIndicator();
+                console.error('Chat error:', error);
+                addMessage('ai', `Sorry, I encountered an error: ${error.message}. Please try refreshing the page.`);
+            }
+        }
+        
+        function addMessage(role, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-${role} p-3 rounded-lg mb-2`;
+            
+            messageDiv.innerHTML = `
+                <div class="flex items-start space-x-2">
+                    <div class="w-8 h-8 ${role === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gradient-to-r from-green-500 to-blue-600'} rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-xs">${role === 'user' ? 'You' : 'AI'}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-white text-sm whitespace-pre-wrap">${content}</div>
+                        <p class="text-gray-400 text-xs mt-1">Just now</p>
+                    </div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Store last AI message for TTS and auto-play
+            if (role === 'ai') {
+                lastAIMessage = content;
+                // Auto-play TTS for AI messages
+                setTimeout(() => {
+                    playTTS();
+                }, 500); // Small delay to ensure message is rendered
+            }
+        }
+        
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `<div class='typing-dot'></div><div class='typing-dot'></div><div class='typing-dot'></div>`;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingDiv = document.getElementById('typingIndicator');
+            if (typingDiv) typingDiv.remove();
+        }
+        
+        // ========== VOICE FUNCTIONS ==========
+        
+        async function toggleVoiceRecording() {
+            if (!recognition) {
+                showError('Voice input not available on this device');
+                return;
+            }
+            
+            if (isRecording) {
+                recognition.stop();
+                return;
+            }
+            
+            try {
+                // Request microphone permission first
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    console.log('Requesting microphone permission...');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    console.log('✅ Microphone permission granted');
+                    
+                    // Stop the stream immediately as we just needed permission
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // Update recognition language based on current teacher
+                    recognition.lang = currentTeacher.language === 'hi' ? 'hi-IN' : 'en-US';
+                    
+                    // Start recognition
+                    recognition.start();
+                    console.log('🎤 Starting voice recognition...');
+                    
+                } else {
+                    // Fallback for older browsers
+                    recognition.start();
+                }
+                
+            } catch (error) {
+                console.error('Microphone access error:', error);
+                
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    showError('Microphone permission denied. Please allow microphone access in your browser settings and try again.');
+                } else if (error.name === 'NotFoundError') {
+                    showError('No microphone found. Please connect a microphone and try again.');
+                } else {
+                    showError('Could not access microphone. Please check your device settings.');
+                }
+            }
+        }
+        
+        function stopRecording() {
+            isRecording = false;
+            document.getElementById('voiceIcon').textContent = '🎤';
+            document.getElementById('voiceButton').classList.remove('bg-red-600');
+            document.getElementById('voiceStatus').textContent = 'Voice';
+            document.getElementById('voiceButton').classList.add('bg-gradient-to-r', 'from-green-500', 'to-blue-500');
+        }
+        
+        // ========== STUDY MATERIALS ==========
+        
+        // ========== PROGRESS SECTION ==========
+        
+        function initProgressSection() {
+            updateExamYearDropdown();
+            updateMonthsTillExam();
+            renderSubjects();
+            
+            document.getElementById('examMonth').addEventListener('change', updateMonthsTillExam);
+            document.getElementById('examYear').addEventListener('change', updateMonthsTillExam);
+            document.getElementById('addSubjectBtn').addEventListener('click', addNewSubject);
+        }
+        
+        function updateExamYearDropdown() {
+            const examYear = document.getElementById('examYear');
+            const now = new Date();
+            const nextYear = now.getMonth() >= 3 ? now.getFullYear() + 1 : now.getFullYear();
+            
+            examYear.innerHTML = '';
+            for (let y = nextYear; y <= nextYear + 2; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                if (y === nextYear) opt.selected = true;
+                examYear.appendChild(opt);
+            }
+        }
+        
+        function updateMonthsTillExam() {
+            const month = parseInt(document.getElementById('examMonth').value) - 1;
+            const year = parseInt(document.getElementById('examYear').value);
+            const now = new Date();
+            const examDate = new Date(year, month, 1);
+            
+            let months = (examDate.getFullYear() - now.getFullYear()) * 12 + (examDate.getMonth() - now.getMonth());
+            if (months < 0) months = 0;
+            
+            document.getElementById('monthsTillExam').textContent = `Months till final exam: ${months}`;
+        }
+        
+        function renderSubjects() {
+            const subjectsList = document.getElementById('subjectsList');
+            window.progressSubjects = window.progressSubjects || [
+                { name: 'Math', progress: 30 },
+                { name: 'Science', progress: 45 },
+                { name: 'English', progress: 20 }
+            ];
+            
+            subjectsList.innerHTML = '';
+            window.progressSubjects.forEach((subj, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center space-x-2';
+                row.innerHTML = `
+                    <input type="text" value="${subj.name}" class="bg-white/10 text-white rounded px-2 py-1 w-20 text-xs" 
+                           onchange="window.progressSubjects[${idx}].name=this.value">
+                    <input type="number" min="0" max="100" value="${subj.progress}" class="bg-white/10 text-white rounded px-2 py-1 w-16 text-xs" 
+                           onchange="window.progressSubjects[${idx}].progress=parseInt(this.value)">
+                    <span class="text-white text-xs">%</span>
+                    <button onclick="removeSubject(${idx})" class="text-red-400 text-xs">&times;</button>
+                `;
+                subjectsList.appendChild(row);
+            });
+        }
+        
+        function addNewSubject() {
+            if (!window.progressSubjects) window.progressSubjects = [];
+            window.progressSubjects.push({ name: 'New Subject', progress: 0 });
+            renderSubjects();
+        }
+        
+        function removeSubject(index) {
+            if (window.progressSubjects && window.progressSubjects.length > index) {
+                window.progressSubjects.splice(index, 1);
+        renderSubjects();
+            }
+        }
+        
+        // ========== SETTINGS SECTION ==========
+        
+        function handleAvatarSelection(teacher) {
+            document.querySelectorAll('.avatar-selection-card').forEach(c => c.classList.remove('selected'));
+            document.querySelector(`.avatar-selection-card[data-teacher="${teacher}"]`).classList.add('selected');
+            
+            if (teacher === 'hindi') {
+                currentTeacher = {
+                    name: "Ms. Sapana",
+                    image: "public/images/teacher-avatar1.png",
+                    language: "hi"
+                };
+            } else {
+                currentTeacher = {
+                    name: "Roy Sir",
+                    image: "public/images/teacher-avatar2.png",
+                    language: "en"
+                };
+            }
+            
+            // Update UI
+            document.getElementById('teacher-name-chat').textContent = currentTeacher.name;
+            document.getElementById('teacher-avatar-chat').src = currentTeacher.image;
+            
+            // Update language dropdown
+            document.getElementById('preferredLanguage').value = currentTeacher.language;
+            
+            // Update voice recognition language
+            if (recognition) {
+                recognition.lang = currentTeacher.language === 'hi' ? 'hi-IN' : 'en-US';
+            }
+            
+            // Connect to AI service
+            if (window.gptService) {
+                window.gptService.setTeacher(currentTeacher.name);
+                console.log(`✅ Switched to ${currentTeacher.name} persona`);
+                
+                // Add a teacher introduction message to chat
+                const introMessage = currentTeacher.name === 'Ms. Sapana' ? 
+                    'Namaste! Main Ms. Sapana hun. Ab main aapki teacher hun. Koi bhi sawal puchiye - main Hindi aur English dono mein help kar sakti hun!' :
+                    'Hello! I\'m Roy Sir, your new AI tutor. I\'m here to help you with your studies using structured, clear explanations. What would you like to learn?';
+                
+                addMessage('ai', introMessage);
+                
+                // Show success message
+                showSuccess(`Successfully switched to ${currentTeacher.name}!`);
+            }
+        }
+        
+        // ========== SECTION MANAGEMENT ==========
+        
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(`${section}Section`).classList.remove('hidden');
+            
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`nav${section.charAt(0).toUpperCase() + section.slice(1)}`).classList.add('active');
+            
+            // Initialize section if needed
+            if (section === 'progress') {
+                initProgressSection();
+            }
+        }
+        
+        // ========== MOBILE SIDEBAR ==========
+        
+        function openMobileSidebar() {
+            document.getElementById('mobileSidebar').classList.add('open');
+            document.getElementById('mobileSidebarOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileSidebar() {
+            document.getElementById('mobileSidebar').classList.remove('open');
+            document.getElementById('mobileSidebarOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        
+        // Close sidebar when clicking overlay
+        document.getElementById('mobileSidebarOverlay').addEventListener('click', closeMobileSidebar);
+        
+        // ========== UTILITY FUNCTIONS ==========
+        
+        function showError(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 left-4 right-4 bg-red-600 text-white p-3 rounded-lg text-sm font-medium text-center z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+                setTimeout(() => {
+                toast.remove();
+            }, duration);
+        }
+        
+        function showSuccess(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 left-4 right-4 bg-green-600 text-white p-3 rounded-lg text-sm font-medium text-center z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, duration);
+        }
+        
+        // ========== TTS FUNCTIONS ==========
+        
+        let currentSpeech = null;
+        let lastAIMessage = '';
+        let ttsEnabled = true; // Auto-play enabled by default
+        
+        function playTTS() {
+            if (!lastAIMessage || !ttsEnabled) {
+                return;
+            }
+            
+            // Stop any existing speech first
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+            }
+            
+            // Create new speech utterance
+            currentSpeech = new SpeechSynthesisUtterance(lastAIMessage);
+            
+            // Set specific voices based on teacher
+            const voices = speechSynthesis.getVoices();
+            console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+            
+            if (currentTeacher.language === 'hi') {
+                // Use Google Hindi voice
+                const hindiVoice = voices.find(voice => 
+                    voice.name.includes('Google') && voice.lang.includes('hi')
+                );
+                if (hindiVoice) {
+                    currentSpeech.voice = hindiVoice;
+                    console.log('Using Hindi voice:', hindiVoice.name);
+                }
+            } else {
+                // Use Microsoft Ravi India English voice
+                const englishVoice = voices.find(voice => 
+                    voice.name.includes('Microsoft Ravi') || 
+                    (voice.name.includes('Ravi') && voice.lang.includes('en-IN'))
+                );
+                if (englishVoice) {
+                    currentSpeech.voice = englishVoice;
+                    console.log('Using English voice:', englishVoice.name);
+                }
+            }
+            
+            // Set speech properties for better mobile compatibility
+            currentSpeech.rate = 0.9;
+            currentSpeech.pitch = 1.0;
+            currentSpeech.volume = 1.0;
+            
+            // Event handlers
+            currentSpeech.onstart = () => {
+                updateTTSButtons(true);
+                console.log('🎤 TTS started');
+            };
+            
+            currentSpeech.onend = () => {
+                updateTTSButtons(false);
+                console.log('🎤 TTS ended');
+            };
+            
+            currentSpeech.onerror = (event) => {
+                console.error('TTS Error:', event);
+                updateTTSButtons(false);
+                // Don't show error for auto-play, only for manual play
+            };
+            
+            // Start speaking
+            speechSynthesis.speak(currentSpeech);
+        }
+        
+        function pauseTTS() {
+            if (speechSynthesis.speaking) {
+                if (speechSynthesis.paused) {
+                    speechSynthesis.resume();
+                    updateTTSButtons(true);
+                } else {
+                    speechSynthesis.pause();
+                    updateTTSButtons(false);
+                }
+            }
+        }
+        
+        function stopTTS() {
+            speechSynthesis.cancel();
+            updateTTSButtons(false);
+            console.log('🎤 TTS stopped');
+        }
+        
+        function toggleTTS() {
+            ttsEnabled = !ttsEnabled;
+            if (!ttsEnabled) {
+                stopTTS();
+            }
+            console.log('TTS Auto-play:', ttsEnabled ? 'Enabled' : 'Disabled');
+        }
+        
+        function updateTTSButtons(isPlaying) {
+            const playBtn = document.getElementById('ttsPlayBtn');
+            const pauseBtn = document.getElementById('ttsPauseBtn');
+            
+            if (isPlaying) {
+                playBtn.style.display = 'none';
+                pauseBtn.style.display = 'inline-block';
+            } else {
+                playBtn.style.display = 'inline-block';
+                pauseBtn.style.display = 'none';
+            }
+        }
+        
+        // Initialize speech synthesis
+        let speechSynthesis = window.speechSynthesis;
+        
+        // Wait for voices to load
+        if (speechSynthesis) {
+            speechSynthesis.onvoiceschanged = () => {
+                console.log('🎤 Voices loaded:', speechSynthesis.getVoices().length);
+            };
+        }
+        
+        // ========== START APPLICATION ==========
+        
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
