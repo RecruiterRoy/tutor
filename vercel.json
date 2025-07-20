@@ -2,15 +2,31 @@
   "version": 2,
   "builds": [
     {
-      "src": "index.html",
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api-*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**/*",
       "use": "@vercel/static"
     },
     {
-      "src": "server.js",
-      "use": "@vercel/node"
+      "src": "*.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/api/chat",
+      "dest": "/api-chat.js"
+    },
+    {
+      "src": "/api/health",
+      "dest": "/api-health.js"
+    },
     {
       "src": "/api/(.*)",
       "dest": "/server.js"
@@ -20,8 +36,36 @@
       "dest": "/public/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "/login.html",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/register.html",
+      "dest": "/register.html"
+    },
+    {
+      "src": "/dashboard.html",
+      "dest": "/dashboard.html"
+    },
+    {
+      "src": "/admin.html", 
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/public/favicon.ico"
+    },
+    {
+      "src": "/",
       "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
     }
   ],
   "functions": {
@@ -29,19 +73,25 @@
       "maxDuration": 30
     }
   },
-  "env": {
-    "NODE_ENV": "production"
-  },
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/index.html",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "no-cache, no-store, must-revalidate, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control", 
+          "value": "no-cache, no-store, must-revalidate, max-age=0"
         }
       ]
     }
   ],
-  "comment": "Cache invalidation: 2024-12-19-15:30"
+  "comment": "Fixed routing: 2024-12-19-updated"
 }
