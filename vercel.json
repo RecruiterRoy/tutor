@@ -2,6 +2,10 @@
   "version": 2,
   "builds": [
     {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "server.js",
       "use": "@vercel/node"
     },
@@ -12,28 +16,16 @@
     {
       "src": "public/**/*",
       "use": "@vercel/static"
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/chat",
-      "dest": "/api-chat.js"
+      "src": "/",
+      "dest": "/index.html"
     },
     {
-      "src": "/api/health",
-      "dest": "/api-health.js"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/public/(.*)",
-      "dest": "/public/$1"
+      "src": "/index.html",
+      "dest": "/index.html"
     },
     {
       "src": "/login.html",
@@ -56,15 +48,23 @@
       "dest": "/manifest.json"
     },
     {
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
+    },
+    {
       "src": "/favicon.ico",
       "dest": "/public/favicon.ico"
     },
     {
-      "src": "/",
-      "dest": "/index.html"
+      "src": "/api/chat",
+      "dest": "/api-chat.js"
     },
     {
-      "src": "/(.*)",
+      "src": "/api/health",
+      "dest": "/api-health.js"
+    },
+    {
+      "src": "/api/(.*)",
       "dest": "/server.js"
     }
   ],
@@ -75,20 +75,36 @@
   },
   "headers": [
     {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
       "source": "/",
       "headers": [
         {
           "key": "Cache-Control", 
           "value": "no-cache, no-store, must-revalidate, max-age=0"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate, max-age=0"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
         }
       ]
     }
