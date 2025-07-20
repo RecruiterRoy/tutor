@@ -53,6 +53,12 @@
         });
     </script>
     
+    <!-- Load Razorpay for payments -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <!-- Load payment system -->
+    <script src="/public/js/paymentSystem.js" defer></script>
+    
     <!-- Load non-critical scripts after page load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js" defer></script>
@@ -465,6 +471,13 @@
                         <div class="text-right">
                             <p class="text-white text-sm font-medium" id="topBarUserName">Loading...</p>
                             <p class="text-gray-400 text-xs" id="topBarUserClass">Loading...</p>
+                            <div class="text-xs">
+                                <span id="subscriptionBadge" class="px-2 py-1 bg-gray-500 text-white rounded-full text-xs">Free</span>
+                                <button id="upgradeButton" onclick="window.location.href='/public/payment.html'" 
+                                        class="ml-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded text-xs hover:from-purple-600 hover:to-pink-600">
+                                    Upgrade
+                                </button>
+                            </div>
                         </div>
                         <div class="w-9 h-9 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                             <span id="topBarInitials" class="text-white font-bold text-sm">L</span>

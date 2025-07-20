@@ -751,10 +751,8 @@ ${persona.name === 'Ms. Sapana' ?
                 },
                 
                 callClaudeAPI: async function(systemPrompt, history, userMessage) {
-                    // Use the correct API endpoint
-                    const apiUrl = window.location.hostname === 'localhost' ? 
-                        'http://localhost:3001/api/chat' : 
-                        '/api/chat';
+                    // Use the correct API endpoint for mobile
+                    const apiUrl = 'https://tutor-nine-puce.vercel.app/api/chat';
                     
                     const response = await fetch(apiUrl, {
                         method: 'POST',

@@ -261,13 +261,48 @@
                     this.loading = true;
                     this.message = '';
                     
-                    // Call handleLogin directly with the data
-                    handleLoginWithData(this.email, this.password).then(() => {
+                    // Handle login directly in Alpine.js
+                    this.performLogin(this.email, this.password).then(() => {
                         this.loading = false;
                     }).catch((error) => {
                         this.loading = false;
                         this.showMessage(error.message || 'Login failed', 'error');
                     });
+                },
+                
+                async performLogin(emailOrMobile, password) {
+                    try {
+                        // Determine if input is email or mobile
+                        const isEmail = emailOrMobile.includes('@');
+                        let email = emailOrMobile;
+                        
+                        // If mobile, add +91 prefix if not present
+                        if (!isEmail) {
+                            email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                        }
+
+                        const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                            email: email,
+                            password: password
+                        });
+
+                        if (error) {
+                            throw error;
+                        }
+
+                        if (data.user) {
+                            // Store session data
+                            localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+                            console.log('✅ Login successful, redirecting to dashboard');
+                            
+                            // Redirect to dashboard
+                            window.location.href = './dashboard.html';
+                        }
+
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        throw error;
+                    }
                 },
                 
                 sendOTP() {
@@ -543,9 +578,10 @@
         async function handleLogin(e) {
             e.preventDefault();
             
-            // Get values from Alpine.js data instead of DOM elements
-            const emailOrMobile = window.authAppData?.email || '';
-            const password = window.authAppData?.password || '';
+            // Get values from Alpine.js data correctly
+            const authApp = document.querySelector('[x-data="authApp()"]').__x.$data;
+            const emailOrMobile = authApp.email || '';
+            const password = authApp.password || '';
             
             if (!emailOrMobile || !password) {
                 showError('Please fill in all fields');
@@ -579,13 +615,13 @@
                     console.log('✅ Login successful, redirecting to dashboard');
                     
                     // Redirect to dashboard
-                    window.location.href = window.location.origin + '/dashboard.html';
+                    window.location.href = './dashboard.html';
                 }
 
-                    } catch (error) {
+            } catch (error) {
                 console.error('Login error:', error);
                 showError(error.message || 'Login failed. Please try again.');
-                    } finally {
+            } finally {
                 hideLoading('loginBtn', 'Sign In');
             }
         }
