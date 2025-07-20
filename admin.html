@@ -822,7 +822,17 @@
             if (!confirm('Are you sure you want to approve this verification?')) return;
 
             try {
-                const { error } = await supabase
+                // Get verification details first
+                const { data: verification, error: fetchError } = await supabase
+                    .from('bpl_apl_verifications')
+                    .select('*')
+                    .eq('id', verificationId)
+                    .single();
+
+                if (fetchError) throw fetchError;
+
+                // Update verification status
+                const { error: updateError } = await supabase
                     .from('bpl_apl_verifications')
                     .update({
                         verification_status: 'approved',
@@ -831,15 +841,32 @@
                     })
                     .eq('id', verificationId);
 
-                if (error) throw error;
+                if (updateError) throw updateError;
 
-                alert('Verification approved successfully!');
+                // Update user profile to activate subscription
+                const { error: profileError } = await supabase
+                    .from('user_profiles')
+                    .update({
+                        subscription_status: 'active',
+                        subscription_plan: 'free_bpl_apl',
+                        subscription_start: new Date().toISOString(),
+                        subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', verification.user_id);
+
+                if (profileError) throw profileError;
+
+                // Send email notification (you can implement this later)
+                console.log('User approved - email notification should be sent to:', verification.user_id);
+
+                alert('Verification approved successfully! User now has free access.');
                 await loadVerificationRequests();
                 await loadStats();
 
             } catch (error) {
                 console.error('Error approving verification:', error);
-                alert('Failed to approve verification');
+                alert('Failed to approve verification: ' + error.message);
             }
         }
 
