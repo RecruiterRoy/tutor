@@ -192,7 +192,44 @@
                 <!-- Users Tab -->
                 <div id="users-tab" class="tab-content hidden">
                     <div class="admin-card p-6">
-                        <h3 class="text-xl font-semibold mb-4">All Users</h3>
+                        <h3 class="text-xl font-semibold mb-4">User Management</h3>
+                        
+                        <!-- User Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-green-500/20 border border-green-500/50 rounded-lg p-4">
+                                <h4 class="text-green-300 font-semibold">Active Trials</h4>
+                                <p class="text-white text-2xl font-bold" id="activeTrials">0</p>
+                            </div>
+                            <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4">
+                                <h4 class="text-blue-300 font-semibold">Paid Users</h4>
+                                <p class="text-white text-2xl font-bold" id="paidUsers">0</p>
+                            </div>
+                            <div class="bg-orange-500/20 border border-orange-500/50 rounded-lg p-4">
+                                <h4 class="text-orange-300 font-semibold">Expired Trials</h4>
+                                <p class="text-white text-2xl font-bold" id="expiredTrials">0</p>
+                            </div>
+                            <div class="bg-purple-500/20 border border-purple-500/50 rounded-lg p-4">
+                                <h4 class="text-purple-300 font-semibold">Conversion Rate</h4>
+                                <p class="text-white text-2xl font-bold" id="conversionRate">0%</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Tabs -->
+                        <div class="flex space-x-2 mb-4">
+                            <button onclick="filterUsers('all')" id="filter-all" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
+                                All Users
+                            </button>
+                            <button onclick="filterUsers('trial')" id="filter-trial" class="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm">
+                                Trial Users
+                            </button>
+                            <button onclick="filterUsers('paid')" id="filter-paid" class="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm">
+                                Paid Users
+                            </button>
+                            <button onclick="filterUsers('expired')" id="filter-expired" class="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm">
+                                Expired Trials
+                            </button>
+                        </div>
+                        
                         <div class="mb-4">
                             <input type="text" id="userSearch" placeholder="Search users..." class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white">
                         </div>
@@ -203,10 +240,10 @@
                                         <th class="p-3 text-left">Name</th>
                                         <th class="p-3 text-left">Email</th>
                                         <th class="p-3 text-left">Class</th>
-                                        <th class="p-3 text-left">Board</th>
-                                        <th class="p-3 text-left">Location</th>
                                         <th class="p-3 text-left">Status</th>
+                                        <th class="p-3 text-left">Trial End</th>
                                         <th class="p-3 text-left">Joined</th>
+                                        <th class="p-3 text-left">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="usersTable">
@@ -619,48 +656,13 @@
 
                 console.log(`✅ Loaded ${users.length} users from database`);
                 
-                if (users.length === 0) {
-                    console.log('⚠️  No users found in database');
-                } else {
-                    console.log('📋 Users found:');
-                    users.forEach((user, index) => {
-                        console.log(`${index + 1}. ${user.full_name || 'No name'} (${user.email || 'No email'})`);
-                    });
-                }
-
-                const tableBody = document.getElementById('usersTable');
-                tableBody.innerHTML = '';
-
-                if (users.length === 0) {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="7" class="p-6 text-center text-gray-400">
-                                No users found in the system
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                users.forEach(user => {
-                    const row = document.createElement('tr');
-                    row.className = 'border-b border-white/10 hover:bg-white/5';
-                    row.innerHTML = `
-                        <td class="p-3 font-semibold">${user.full_name || 'No name'}</td>
-                        <td class="p-3">${user.email || 'N/A'}</td>
-                        <td class="p-3">${user.class || 'Not set'}</td>
-                        <td class="p-3">${user.board || 'Not set'}</td>
-                        <td class="p-3">${user.city || 'N/A'}, ${user.state || 'N/A'}</td>
-                        <td class="p-3">
-                            <span class="px-2 py-1 rounded text-xs ${user.economic_status === 'Premium' ? 'bg-green-600' : 'bg-blue-600'}">
-                                ${user.economic_status || 'Free'}
-                            </span>
-                        </td>
-                        <td class="p-3 text-sm">${new Date(user.created_at).toLocaleDateString()}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-
+                // Calculate stats
+                const stats = calculateUserStats(users);
+                updateUserStats(stats);
+                
+                // Filter and display users
+                filterAndDisplayUsers(users, 'all');
+                
                 console.log('✅ Users table updated successfully');
 
             } catch (error) {
@@ -676,6 +678,170 @@
                     </tr>
                 `;
             }
+        }
+
+        // Calculate user statistics
+        function calculateUserStats(users) {
+            const now = new Date();
+            const stats = {
+                total: users.length,
+                activeTrials: 0,
+                paidUsers: 0,
+                expiredTrials: 0,
+                conversionRate: 0
+            };
+
+            users.forEach(user => {
+                if (user.subscription_status === 'trial') {
+                    const trialEnd = new Date(user.trial_end);
+                    if (trialEnd > now) {
+                        stats.activeTrials++;
+                    } else {
+                        stats.expiredTrials++;
+                    }
+                } else if (user.subscription_status === 'active' && user.subscription_plan !== 'free_trial') {
+                    stats.paidUsers++;
+                }
+            });
+
+            // Calculate conversion rate
+            const totalTrials = stats.activeTrials + stats.expiredTrials;
+            if (totalTrials > 0) {
+                stats.conversionRate = ((stats.paidUsers / totalTrials) * 100).toFixed(1);
+            }
+
+            return stats;
+        }
+
+        // Update user statistics display
+        function updateUserStats(stats) {
+            document.getElementById('activeTrials').textContent = stats.activeTrials;
+            document.getElementById('paidUsers').textContent = stats.paidUsers;
+            document.getElementById('expiredTrials').textContent = stats.expiredTrials;
+            document.getElementById('conversionRate').textContent = stats.conversionRate + '%';
+        }
+
+        // Filter and display users
+        async function filterAndDisplayUsers(users, filter) {
+            const tableBody = document.getElementById('usersTable');
+            tableBody.innerHTML = '';
+
+            if (users.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="p-6 text-center text-gray-400">
+                            No users found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Apply filter
+            let filteredUsers = users;
+            const now = new Date();
+
+            switch (filter) {
+                case 'trial':
+                    filteredUsers = users.filter(user => 
+                        user.subscription_status === 'trial' && 
+                        new Date(user.trial_end) > now
+                    );
+                    break;
+                case 'paid':
+                    filteredUsers = users.filter(user => 
+                        user.subscription_status === 'active' && 
+                        user.subscription_plan !== 'free_trial'
+                    );
+                    break;
+                case 'expired':
+                    filteredUsers = users.filter(user => 
+                        user.subscription_status === 'trial' && 
+                        new Date(user.trial_end) <= now
+                    );
+                    break;
+            }
+
+            // Update filter buttons
+            document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+                btn.classList.remove('bg-blue-600');
+                btn.classList.add('bg-gray-600');
+            });
+            document.getElementById(`filter-${filter}`).classList.remove('bg-gray-600');
+            document.getElementById(`filter-${filter}`).classList.add('bg-blue-600');
+
+            // Display users
+            filteredUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-white/10 hover:bg-white/5';
+                
+                const trialEnd = user.trial_end ? new Date(user.trial_end) : null;
+                const isTrialExpired = trialEnd && trialEnd <= now;
+                const daysLeft = trialEnd ? Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24)) : 0;
+                
+                let statusBadge = '';
+                if (user.subscription_status === 'trial') {
+                    if (isTrialExpired) {
+                        statusBadge = '<span class="px-2 py-1 rounded text-xs bg-red-600">Trial Expired</span>';
+                    } else {
+                        statusBadge = `<span class="px-2 py-1 rounded text-xs bg-green-600">Trial (${daysLeft}d)</span>`;
+                    }
+                } else if (user.subscription_status === 'active') {
+                    statusBadge = '<span class="px-2 py-1 rounded text-xs bg-blue-600">Premium</span>';
+                } else {
+                    statusBadge = '<span class="px-2 py-1 rounded text-xs bg-gray-600">Inactive</span>';
+                }
+
+                row.innerHTML = `
+                    <td class="p-3 font-semibold">${user.full_name || 'No name'}</td>
+                    <td class="p-3">${user.email || 'N/A'}</td>
+                    <td class="p-3">${user.class || 'Not set'}</td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3 text-sm">${trialEnd ? trialEnd.toLocaleDateString() : 'N/A'}</td>
+                    <td class="p-3 text-sm">${new Date(user.created_at).toLocaleDateString()}</td>
+                    <td class="p-3">
+                        <div class="flex space-x-2">
+                            <button onclick="viewUserDetails('${user.id}')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs">
+                                View
+                            </button>
+                            ${user.subscription_status === 'trial' && isTrialExpired ? 
+                                `<button onclick="sendTrialReminder('${user.id}')" class="bg-orange-600 hover:bg-orange-700 px-3 py-1 rounded text-xs">
+                                    Remind
+                                </button>` : ''
+                            }
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Filter users
+        async function filterUsers(filter) {
+            // This will be called by the filter buttons
+            // The actual filtering is done in filterAndDisplayUsers
+            // We need to reload users and apply the filter
+            await loadUsers().then(() => {
+                // Re-apply the filter after loading
+                const { data: users } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                filterAndDisplayUsers(users, filter);
+            });
+        }
+
+        // View user details
+        function viewUserDetails(userId) {
+            // Implement user details modal
+            console.log('View details for user:', userId);
+        }
+
+        // Send trial reminder
+        function sendTrialReminder(userId) {
+            // Implement trial reminder functionality
+            console.log('Send reminder to user:', userId);
+            alert('Trial reminder sent! (Email functionality to be implemented)');
         }
 
         // Load feedback messages

@@ -36,15 +36,15 @@
             background: rgba(255, 255, 255, 0.15);
             border-color: #667eea;
         }
-        .card-option {
+        .trial-card {
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        .card-option:hover {
+        .trial-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
-        .card-option.selected {
+        .trial-card.selected {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-color: #667eea;
         }
@@ -58,7 +58,7 @@
                 <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="TUTOR.AI Logo" class="h-12">
                 <h1 class="text-white text-2xl font-bold ml-2">TUTOR.AI</h1>
             </div>
-            <p class="text-gray-200">Create your account and start learning</p>
+            <p class="text-gray-200">Start your learning journey with a free trial</p>
         </div>
 
         <!-- Registration Form -->
@@ -128,69 +128,32 @@
                     </div>
                 </div>
 
-                <!-- Access Type Selection -->
+                <!-- Free Trial Information -->
                 <div class="space-y-3">
-                    <h3 class="text-white font-semibold text-lg">Choose Your Access</h3>
+                    <h3 class="text-white font-semibold text-lg">Start Your Free Trial</h3>
                     
-                    <div class="grid grid-cols-1 gap-3">
-                        <!-- BPL/APL Card Option -->
-                        <div class="card-option glass-effect rounded-lg p-4 border-2 border-transparent" 
-                             onclick="selectAccessType('bpl')" id="bplOption">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
-                                    <div class="w-3 h-3 rounded-full bg-white hidden" id="bplRadio"></div>
-                                </div>
-                                <div class="flex-1">
-                                    <h4 class="text-white font-semibold">BPL/APL Card Holder</h4>
-                                    <p class="text-gray-300 text-sm">Free access for government card holders</p>
-                                    <p class="text-green-400 text-xs mt-1">✓ Subject to admin approval</p>
-                                </div>
-                            </div>
+                    <div class="trial-card glass-effect rounded-lg p-4 border-2 border-green-500 relative">
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                            <span class="bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium">
+                                🎉 1 Week Free Trial
+                            </span>
                         </div>
-                        
-                        <!-- Premium Option -->
-                        <div class="card-option glass-effect rounded-lg p-4 border-2 border-transparent" 
-                             onclick="selectAccessType('premium')" id="premiumOption">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
-                                    <div class="w-3 h-3 rounded-full bg-white hidden" id="premiumRadio"></div>
-                                </div>
-                                <div class="flex-1">
-                                    <h4 class="text-white font-semibold">Premium Access</h4>
-                                    <p class="text-gray-300 text-sm">₹99/month - Instant access</p>
-                                    <p class="text-blue-400 text-xs mt-1">✓ Unlimited AI Chat ✓ Voice Features</p>
-                                </div>
-                            </div>
+                        <div class="text-center mb-4">
+                            <h4 class="text-white font-semibold text-lg mb-2">Try TUTOR.AI Free</h4>
+                            <p class="text-gray-300 text-sm">Experience all premium features for 7 days</p>
                         </div>
-                    </div>
-                </div>
-
-                <!-- BPL/APL Card Details (Hidden by default) -->
-                <div id="bplDetails" class="space-y-3 hidden">
-                    <h4 class="text-white font-semibold">Card Details</h4>
-                    
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1">Card Type</label>
-                        <select id="cardType" name="cardType"
-                                class="form-input w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Select card type</option>
-                            <option value="BPL">BPL Card</option>
-                            <option value="APL">APL Card</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1">Card Number</label>
-                        <input type="text" id="cardNumber" name="cardNumber"
-                               class="form-input w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="Enter card number">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1">Upload Card Image</label>
-                        <input type="file" id="cardImage" name="cardImage" accept="image/*"
-                               class="form-input w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <p class="text-gray-300 text-xs mt-1">Upload a clear image of your card for verification</p>
+                        <ul class="text-gray-200 text-sm space-y-2 mb-4">
+                            <li>✅ Unlimited AI Chat</li>
+                            <li>✅ Voice Input & Output</li>
+                            <li>✅ Advanced AI Models</li>
+                            <li>✅ Personalized Learning</li>
+                            <li>✅ No Credit Card Required</li>
+                        </ul>
+                        <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-3">
+                            <p class="text-blue-300 text-xs">
+                                <strong>After 7 days:</strong> Continue with ₹99/month or cancel anytime
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -206,14 +169,14 @@
 
                 <!-- Submit Button -->
                 <button type="submit" id="submitBtn"
-                        class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all">
-                    Create Account
+                        class="w-full py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-blue-700 transition-all">
+                    Start Free Trial
                 </button>
 
                 <!-- Loading State -->
                 <div id="loadingState" class="hidden text-center">
                     <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    <p class="text-white text-sm mt-2">Processing your registration...</p>
+                    <p class="text-white text-sm mt-2">Creating your account...</p>
                 </div>
 
                 <!-- Error Message -->
@@ -236,7 +199,6 @@
     <script src="/public/js/config.js"></script>
     
     <script>
-        let selectedAccessType = null;
         let supabase = null;
 
         // Initialize Supabase
@@ -247,41 +209,9 @@
             );
         });
 
-        // Access type selection
-        function selectAccessType(type) {
-            selectedAccessType = type;
-            
-            // Reset all options
-            document.querySelectorAll('.card-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            document.querySelectorAll('.card-option .w-3').forEach(radio => {
-                radio.classList.add('hidden');
-            });
-            
-            // Select clicked option
-            const selectedOption = document.getElementById(type + 'Option');
-            const selectedRadio = document.getElementById(type + 'Radio');
-            selectedOption.classList.add('selected');
-            selectedRadio.classList.remove('hidden');
-            
-            // Show/hide BPL details
-            const bplDetails = document.getElementById('bplDetails');
-            if (type === 'bpl') {
-                bplDetails.classList.remove('hidden');
-            } else {
-                bplDetails.classList.add('hidden');
-            }
-        }
-
         // Form submission
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            if (!selectedAccessType) {
-                showError('Please select an access type');
-                return;
-            }
             
             const formData = new FormData(e.target);
             const userData = {
@@ -289,24 +219,14 @@
                 email: formData.get('email'),
                 password: formData.get('password'),
                 class: formData.get('class'),
-                board: formData.get('board'),
-                accessType: selectedAccessType,
-                cardType: formData.get('cardType'),
-                cardNumber: formData.get('cardNumber')
+                board: formData.get('board')
             };
             
             try {
                 showLoading(true);
                 
-                if (selectedAccessType === 'premium') {
-                    // Premium flow - create account and redirect to payment
-                    await createAccount(userData);
-                    await initiatePayment(userData);
-                } else {
-                    // BPL/APL flow - create account and submit for approval
-                    await createAccount(userData);
-                    await submitForApproval(userData);
-                }
+                // Create account with free trial
+                await createAccountWithTrial(userData);
                 
             } catch (error) {
                 console.error('Registration error:', error);
@@ -315,8 +235,8 @@
             }
         });
 
-        // Create user account
-        async function createAccount(userData) {
+        // Create user account with free trial
+        async function createAccountWithTrial(userData) {
             const { data, error } = await supabase.auth.signUp({
                 email: userData.email,
                 password: userData.password,
@@ -324,8 +244,7 @@
                     data: {
                         full_name: userData.fullName,
                         class: userData.class,
-                        board: userData.board,
-                        access_type: userData.accessType
+                        board: userData.board
                     }
                 }
             });
@@ -334,24 +253,24 @@
                 throw new Error(error.message);
             }
 
-            return data.user;
-        }
+            // Create user profile with trial
+            const trialStart = new Date();
+            const trialEnd = new Date(trialStart.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-        // Submit BPL/APL for approval
-        async function submitForApproval(userData) {
-            const { data: { user } } = await supabase.auth.getUser();
-            
-            // First create user profile
             const { error: profileError } = await supabase
                 .from('user_profiles')
                 .insert({
-                    id: user.id,
+                    id: data.user.id,
                     full_name: userData.fullName,
                     email: userData.email,
                     class: userData.class,
                     board: userData.board,
-                    access_type: userData.accessType,
-                    subscription_status: 'pending_approval',
+                    subscription_status: 'trial',
+                    subscription_plan: 'free_trial',
+                    subscription_start: trialStart.toISOString(),
+                    subscription_end: trialEnd.toISOString(),
+                    trial_start: trialStart.toISOString(),
+                    trial_end: trialEnd.toISOString(),
                     created_at: new Date().toISOString()
                 });
 
@@ -359,125 +278,36 @@
                 throw new Error('Failed to create user profile: ' + profileError.message);
             }
 
-            // Then create verification request
-            const { error: verificationError } = await supabase
-                .from('bpl_apl_verifications')
-                .insert({
-                    user_id: user.id,
-                    document_type: userData.cardType === 'BPL' ? 'bpl_card' : 'apl_card',
-                    card_number: userData.cardNumber,
-                    document_url: null, // Will be updated when file upload is implemented
-                    verification_status: 'pending',
-                    created_at: new Date().toISOString()
-                });
-
-            if (verificationError) {
-                throw new Error('Failed to submit verification: ' + verificationError.message);
-            }
-
-            // Show approval pending message
-            showApprovalPending();
+            // Show success message
+            showTrialSuccess(userData);
         }
 
-        // Initiate payment for premium users
-        async function initiatePayment(userData) {
-            const { data: { user } } = await supabase.auth.getUser();
-            
-            try {
-                const response = await fetch('/api/create-payment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        userId: user.id,
-                        planType: 'monthly',
-                        amount: 9900
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Payment creation failed');
-                }
-
-                const paymentData = await response.json();
-                
-                // Initialize Razorpay
-                const options = {
-                    key: paymentData.key,
-                    amount: paymentData.amount,
-                    currency: paymentData.currency,
-                    name: 'TUTOR.AI',
-                    description: 'Monthly Premium Subscription',
-                    order_id: paymentData.orderId,
-                    handler: async (response) => {
-                        await handlePaymentSuccess(response, userData);
-                    },
-                    prefill: {
-                        name: userData.fullName,
-                        email: userData.email
-                    },
-                    theme: {
-                        color: '#667eea'
-                    }
-                };
-
-                const rzp = new Razorpay(options);
-                rzp.open();
-                
-            } catch (error) {
-                throw new Error('Payment initiation failed: ' + error.message);
-            }
-        }
-
-        // Handle successful payment
-        async function handlePaymentSuccess(response, userData) {
-            try {
-                const verifyResponse = await fetch('/api/verify-payment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature
-                    })
-                });
-
-                if (!verifyResponse.ok) {
-                    throw new Error('Payment verification failed');
-                }
-
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
-                
-            } catch (error) {
-                showError('Payment verification failed: ' + error.message);
-            }
-        }
-
-        // Show approval pending message
-        function showApprovalPending() {
+        // Show trial success message
+        function showTrialSuccess(userData) {
             const form = document.getElementById('registrationForm');
             form.innerHTML = `
                 <div class="text-center py-8">
-                    <div class="text-6xl mb-4">📋</div>
-                    <h3 class="text-white text-xl font-bold mb-2">Application Submitted!</h3>
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h3 class="text-white text-xl font-bold mb-2">Welcome to TUTOR.AI!</h3>
                     <p class="text-gray-300 mb-4">
-                        Your BPL/APL card application has been submitted for admin approval.
-                        You will receive an email once your account is approved.
+                        Your free trial has started. Enjoy unlimited access to all premium features for 7 days.
                     </p>
-                    <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mb-4">
-                        <p class="text-blue-300 text-sm">
-                            <strong>What happens next?</strong><br>
-                            1. Admin will verify your card details<br>
-                            2. You'll receive approval email<br>
-                            3. Login to access your free account
+                    <div class="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-4">
+                        <p class="text-green-300 text-sm">
+                            <strong>Trial Details:</strong><br>
+                            • Start Date: ${new Date().toLocaleDateString()}<br>
+                            • End Date: ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}<br>
+                            • Features: Unlimited AI Chat, Voice Features, Advanced AI
                         </p>
                     </div>
-                    <a href="login.html" class="inline-block px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium">
-                        Go to Login
+                    <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mb-4">
+                        <p class="text-blue-300 text-sm">
+                            <strong>After 7 days:</strong><br>
+                            Continue with ₹99/month or cancel anytime. No hidden charges.
+                        </p>
+                    </div>
+                    <a href="dashboard.html" class="inline-block px-6 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg font-medium">
+                        Start Learning Now
                     </a>
                 </div>
             `;

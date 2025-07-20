@@ -1558,6 +1558,107 @@
         // ========== START APPLICATION ==========
         
         document.addEventListener('DOMContentLoaded', initApp);
+
+        // Update subscription UI
+        function updateSubscriptionUI(subscription) {
+            // Update subscription badge
+            const subscriptionBadge = document.getElementById('subscriptionBadge');
+            if (subscriptionBadge) {
+                if (subscription.is_active) {
+                    if (subscription.plan_type === 'free_trial') {
+                        const daysLeft = subscription.days_remaining;
+                        subscriptionBadge.textContent = `Trial (${daysLeft}d)`;
+                        subscriptionBadge.className = 'px-2 py-1 bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs rounded-full';
+                    } else {
+                        subscriptionBadge.textContent = 'Premium';
+                        subscriptionBadge.className = 'px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs rounded-full';
+                    }
+                } else {
+                    subscriptionBadge.textContent = 'Expired';
+                    subscriptionBadge.className = 'px-2 py-1 bg-red-500 text-white text-xs rounded-full';
+                }
+            }
+
+            // Update payment button
+            const paymentButton = document.getElementById('upgradeButton');
+            if (paymentButton) {
+                if (subscription.is_active) {
+                    if (subscription.plan_type === 'free_trial') {
+                        const daysLeft = subscription.days_remaining;
+                        if (daysLeft <= 3) {
+                            paymentButton.textContent = `Upgrade Now (${daysLeft}d left)`;
+                            paymentButton.className = 'ml-2 px-2 py-1 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded text-xs hover:from-red-600 hover:to-orange-600';
+                        } else {
+                            paymentButton.textContent = `Upgrade (${daysLeft}d left)`;
+                            paymentButton.className = 'ml-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded text-xs hover:from-purple-600 hover:to-pink-600';
+                        }
+                    } else {
+                        paymentButton.textContent = 'Premium Active';
+                        paymentButton.disabled = true;
+                        paymentButton.className = 'ml-2 px-2 py-1 bg-green-600 text-white rounded text-xs disabled:opacity-50';
+                    }
+                } else {
+                    paymentButton.textContent = 'Upgrade to Premium';
+                    paymentButton.disabled = false;
+                    paymentButton.className = 'ml-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded text-xs hover:from-purple-600 hover:to-pink-600';
+                }
+            }
+
+            // Show trial expiry warning
+            if (subscription.is_active && subscription.plan_type === 'free_trial' && subscription.days_remaining <= 1) {
+                showTrialExpiryWarning(subscription.days_remaining);
+            }
+        }
+
+        // Show trial expiry warning
+        function showTrialExpiryWarning(daysLeft) {
+            // Check if warning already shown
+            if (localStorage.getItem('trialWarningShown')) return;
+            
+            const warning = document.createElement('div');
+            warning.id = 'trialWarning';
+            warning.className = 'fixed top-4 right-4 bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm';
+            warning.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="text-2xl">⚠️</div>
+                    <div>
+                        <h4 class="font-semibold mb-1">Trial Ending Soon!</h4>
+                        <p class="text-sm mb-3">Your free trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}. Upgrade now to continue learning.</p>
+                        <div class="flex space-x-2">
+                            <button onclick="upgradeNow()" class="bg-white text-orange-600 px-3 py-1 rounded text-sm font-medium">
+                                Upgrade Now
+                            </button>
+                            <button onclick="dismissWarning()" class="text-white/80 text-sm">
+                                Dismiss
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(warning);
+            localStorage.setItem('trialWarningShown', 'true');
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (warning.parentNode) {
+                    warning.remove();
+                }
+            }, 10000);
+        }
+
+        // Upgrade function
+        function upgradeNow() {
+            window.location.href = '/public/payment.html';
+        }
+
+        // Dismiss warning
+        function dismissWarning() {
+            const warning = document.getElementById('trialWarning');
+            if (warning) {
+                warning.remove();
+            }
+        }
     </script>
 </body>
 </html>
