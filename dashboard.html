@@ -723,6 +723,13 @@
                 currentUser = session.user;
                 console.log('User authenticated:', currentUser.email);
                 
+                // Check trial status first
+                const trialActive = await checkTrialStatus();
+                if (!trialActive) {
+                    console.log('❌ Trial expired, access blocked');
+                    return;
+                }
+                
                 // Load user profile FIRST
                 await loadUserProfile();
                 
@@ -1113,33 +1120,44 @@
             }
         }
         
+        // Handle sending messages
         async function handleSendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
             
             if (!message) return;
             
+            // Check trial status before allowing messages
+            const trialActive = await checkTrialStatus();
+            if (!trialActive) {
+                console.log('❌ Trial expired, message blocked');
+                return;
+            }
+            
+            // Clear input
+            chatInput.value = '';
+            
+            // Add user message to chat
             addMessage('user', message);
-            input.value = '';
+            
+            // Show loading state
+            showLoading(true);
             
             try {
-                showTypingIndicator();
+                // Get AI response
+                const response = await getAIResponse(message);
                 
-                // Check if gptService is available
-                if (typeof window.gptService === 'undefined') {
-                    throw new Error('GPT Service not loaded. Please refresh the page.');
-                }
+                // Add AI response to chat
+                addMessage('ai', response);
                 
-                // Use the external gptService
-                const aiResponse = await window.gptService.sendMessage(message, userData);
-                
-                removeTypingIndicator();
-                addMessage('ai', aiResponse);
+                // Save to chat history
+                await saveChatMessage(message, response);
                 
             } catch (error) {
-                removeTypingIndicator();
-                console.error('Chat error:', error);
-                addMessage('ai', `Sorry, I encountered an error: ${error.message}. Please try refreshing the page.`);
+                console.error('Error getting AI response:', error);
+                addMessage('ai', 'Sorry, I encountered an error. Please try again.');
+            } finally {
+                showLoading(false);
             }
         }
         
@@ -1657,6 +1675,129 @@
             const warning = document.getElementById('trialWarning');
             if (warning) {
                 warning.remove();
+            }
+        }
+
+        // Check trial status and block access if expired
+        async function checkTrialStatus() {
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) return;
+
+                const { data: profile, error } = await supabaseClient
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching profile:', error);
+                    return;
+                }
+
+                if (profile.subscription_status === 'trial') {
+                    const trialEnd = new Date(profile.trial_end);
+                    const now = new Date();
+                    
+                    if (trialEnd <= now) {
+                        // Trial expired - show blocking overlay
+                        showTrialExpiredOverlay();
+                        return false;
+                    }
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Error checking trial status:', error);
+                return true;
+            }
+        }
+
+        // Show trial expired overlay
+        function showTrialExpiredOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'trialExpiredOverlay';
+            overlay.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
+            
+            // Get teacher name for personalized message
+            const teacherName = currentTeacher?.name || 'your teacher';
+            const isHindiTeacher = currentTeacher?.language === 'hi';
+            
+            const hindiMessage = isHindiTeacher ? 
+                `Mujhe aapko padhane mai achha lgta hai, kripya ₹99 ka payment kar ke apni padhai jari rakhein.` :
+                `I enjoyed teaching you, please pay ₹99 to continue studying with me.`;
+            
+            const englishMessage = isHindiTeacher ?
+                `I enjoyed teaching you, please pay ₹99 to continue studying with me.` :
+                `I enjoyed teaching you, please pay ₹99 to continue studying with me.`;
+            
+            overlay.innerHTML = `
+                <div class="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
+                    <div class="text-6xl mb-4">⏰</div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Trial Period Ended</h2>
+                    
+                    <!-- Teacher's personalized message -->
+                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-center justify-center mb-3">
+                            <img src="${currentTeacher?.image || '/public/images/teacher-avatar1.png'}" 
+                                 alt="${teacherName}" 
+                                 class="w-12 h-12 rounded-full mr-3">
+                            <h3 class="font-semibold text-blue-800">${teacherName}</h3>
+                        </div>
+                        <p class="text-blue-700 text-lg mb-2 font-medium">${hindiMessage}</p>
+                        <p class="text-gray-600 text-sm">${englishMessage}</p>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h3 class="font-semibold text-blue-800 mb-2">Premium Features:</h3>
+                        <ul class="text-blue-700 text-sm space-y-1">
+                            <li>✅ Unlimited AI Chat</li>
+                            <li>✅ Voice Input & Output</li>
+                            <li>✅ Advanced AI Models</li>
+                            <li>✅ Personalized Learning</li>
+                            <li>✅ Priority Support</li>
+                        </ul>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="upgradeToPremium()" 
+                                class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all">
+                            Pay Now - ₹99/month
+                        </button>
+                        <button onclick="logout()" 
+                                class="px-4 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-all">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Prevent scrolling
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Upgrade to premium function
+        function upgradeToPremium() {
+            window.location.href = '/public/payment.html';
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                await supabaseClient.auth.signOut();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Remove trial expired overlay
+        function removeTrialExpiredOverlay() {
+            const overlay = document.getElementById('trialExpiredOverlay');
+            if (overlay) {
+                overlay.remove();
+                document.body.style.overflow = 'auto';
             }
         }
     </script>
