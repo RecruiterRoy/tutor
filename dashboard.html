@@ -99,7 +99,7 @@
         
         /* Optimized chat container */
         .chat-container {
-            height: 50vh;
+            height: 60vh;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
@@ -270,19 +270,17 @@
             display: flex;
             gap: 8px;
             margin-top: 8px;
-            justify-content: center;
         }
 
         .tts-btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
-            border: none;
             min-width: 60px;
-            min-height: 40px;
+            min-height: 36px;
         }
 
         .tts-play {
@@ -328,6 +326,7 @@
         .chat-input {
             font-size: 16px; /* Prevent iOS zoom */
             min-height: 44px; /* Better touch target */
+            width: 90% !important; /* Reduce width by 10% */
         }
         
         /* Button optimizations */
@@ -339,7 +338,7 @@
         /* Media queries for mobile */
         @media (max-width: 640px) {
             .chat-container {
-                height: 55vh;
+                height: 65vh;
             }
             
             .gradient-border-content {
@@ -461,15 +460,15 @@
             </div>
             
             <!-- Desktop Header -->
-            <div class="hidden md:block bg-slate-800/90 border-b border-white/10 p-3">
+            <div class="hidden md:block bg-slate-800/90 border-b border-white/10 p-2">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
-                        <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
+                    <div class="flex items-center space-x-2">
+                        <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-6">
+                        <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
                     </div>
-                    <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2">
                         <div class="text-right">
-                            <p class="text-white text-sm font-medium" id="topBarUserName">Loading...</p>
+                            <p class="text-white text-xs font-medium" id="topBarUserName">Loading...</p>
                             <p class="text-gray-400 text-xs" id="topBarUserClass">Loading...</p>
                             <div class="text-xs">
                                 <span id="subscriptionBadge" class="px-2 py-1 bg-gray-500 text-white rounded-full text-xs">Free</span>
@@ -479,8 +478,8 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="w-9 h-9 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                            <span id="topBarInitials" class="text-white font-bold text-sm">L</span>
+                        <div class="w-7 h-7 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <span id="topBarInitials" class="text-white font-bold text-xs">L</span>
                         </div>
                     </div>
                 </div>
@@ -536,7 +535,7 @@
                                                 type="text" 
                                                 id="chatInput" 
                                                 placeholder="Type your question here..." 
-                                            class="chat-input w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                            class="chat-input w-11/12 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                                 onkeypress="handleChatKeyPress(event)"
                                             >
                                         <div class="chat-buttons flex space-x-2">
