@@ -39,10 +39,6 @@ jobs:
       
     - name: Set up Android SDK
       uses: android-actions/setup-android@v2
-      with:
-        api-level: 34
-        build-tools: 34.0.0
-        platform: android-34
       
     - name: Accept Android licenses
       run: |
@@ -65,21 +61,13 @@ jobs:
       run: |
         find android -name "*.apk" -type f
         ls -la android/app/build/outputs/apk/debug/ || echo "Debug folder not found"
-        ls -la android/app/build/outputs/apk/release/ || echo "Release folder not found"
       
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
         path: android/app/build/outputs/apk/debug/app-debug.apk
-        if-no-files-found: warn
-      
-    - name: Upload Release APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release
-        path: android/app/build/outputs/apk/release/app-release.apk
-        if-no-files-found: warn 
+        if-no-files-found: error 
 
 
 

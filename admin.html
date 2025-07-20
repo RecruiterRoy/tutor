@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - TUTOR.AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/public/js/config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .admin-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .verification-card {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .feedback-card {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .table-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen text-white">
+    <!-- Navigation -->
+    <nav class="glass-effect p-4 mb-8">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" style="height: 40px; width: auto; filter: brightness(0) invert(1);">
+                <h1 class="text-2xl font-bold">TUTOR.AI Admin Dashboard</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="adminName" class="text-lg">Admin</span>
+                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4">
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-20">
+            <div class="spinner mx-auto mb-4"></div>
+            <p class="text-xl">Loading Admin Dashboard...</p>
+            <p class="text-gray-300 mt-2">Checking authentication and permissions...</p>
+        </div>
+
+        <!-- Main Content (hidden until loaded) -->
+        <div id="mainContent" class="hidden">
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stats-card p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold">Total Users</h3>
+                            <p id="totalUsers" class="text-3xl font-bold">0</p>
+                        </div>
+                        <div class="text-4xl">👥</div>
+                    </div>
+                </div>
+                <div class="stats-card p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold">Paid Users</h3>
+                            <p id="paidUsers" class="text-3xl font-bold">0</p>
+                        </div>
+                        <div class="text-4xl">💎</div>
+                    </div>
+                </div>
+                <div class="verification-card p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold">Pending Verification</h3>
+                            <p id="pendingVerification" class="text-3xl font-bold">0</p>
+                        </div>
+                        <div class="text-4xl">⏳</div>
+                    </div>
+                </div>
+                <div class="feedback-card p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold">New Messages</h3>
+                            <p id="newMessages" class="text-3xl font-bold">0</p>
+                        </div>
+                        <div class="text-4xl">💬</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="admin-card p-6">
+                    <h3 class="text-xl font-semibold mb-4">User Growth</h3>
+                    <canvas id="userGrowthChart" width="400" height="200"></canvas>
+                </div>
+                <div class="admin-card p-6">
+                    <h3 class="text-xl font-semibold mb-4">User Distribution by Class</h3>
+                    <canvas id="classDistributionChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="mb-6">
+                <div class="flex space-x-4 border-b border-white/20">
+                    <button onclick="showTab('verification')" id="tab-verification" class="tab-button active px-4 py-2 rounded-t-lg bg-blue-600">
+                        🔍 Verification Requests
+                    </button>
+                    <button onclick="showTab('users')" id="tab-users" class="tab-button px-4 py-2 rounded-t-lg bg-gray-600">
+                        👥 All Users
+                    </button>
+                    <button onclick="showTab('feedback')" id="tab-feedback" class="tab-button px-4 py-2 rounded-t-lg bg-gray-600">
+                        💬 User Messages
+                    </button>
+                    <button onclick="showTab('analytics')" id="tab-analytics" class="tab-button px-4 py-2 rounded-t-lg bg-gray-600">
+                        📊 Analytics
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab-content">
+                <!-- Verification Tab -->
+                <div id="verification-tab" class="tab-content">
+                    <div class="admin-card p-6">
+                        <h3 class="text-xl font-semibold mb-4">Pending Verification Requests</h3>
+                        <div class="table-container">
+                            <table class="w-full text-sm">
+                                <thead class="bg-white/10">
+                                    <tr>
+                                        <th class="p-3 text-left">User</th>
+                                        <th class="p-3 text-left">Class</th>
+                                        <th class="p-3 text-left">Location</th>
+                                        <th class="p-3 text-left">Card Type</th>
+                                        <th class="p-3 text-left">Card Number</th>
+                                        <th class="p-3 text-left">Card Image</th>
+                                        <th class="p-3 text-left">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="verificationTable">
+                                    <!-- Verification requests will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Tab -->
+                <div id="users-tab" class="tab-content hidden">
+                    <div class="admin-card p-6">
+                        <h3 class="text-xl font-semibold mb-4">All Users</h3>
+                        <div class="mb-4">
+                            <input type="text" id="userSearch" placeholder="Search users..." class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white">
+                        </div>
+                        <div class="table-container">
+                            <table class="w-full text-sm">
+                                <thead class="bg-white/10">
+                                    <tr>
+                                        <th class="p-3 text-left">Name</th>
+                                        <th class="p-3 text-left">Email</th>
+                                        <th class="p-3 text-left">Class</th>
+                                        <th class="p-3 text-left">Board</th>
+                                        <th class="p-3 text-left">Location</th>
+                                        <th class="p-3 text-left">Status</th>
+                                        <th class="p-3 text-left">Joined</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTable">
+                                    <!-- Users will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Tab -->
+                <div id="feedback-tab" class="tab-content hidden">
+                    <div class="admin-card p-6">
+                        <h3 class="text-xl font-semibold mb-4">User Messages & Feedback</h3>
+                        <div class="table-container">
+                            <table class="w-full text-sm">
+                                <thead class="bg-white/10">
+                                    <tr>
+                                        <th class="p-3 text-left">User</th>
+                                        <th class="p-3 text-left">Subject</th>
+                                        <th class="p-3 text-left">Message</th>
+                                        <th class="p-3 text-left">Status</th>
+                                        <th class="p-3 text-left">Date</th>
+                                        <th class="p-3 text-left">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="feedbackTable">
+                                    <!-- Feedback will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analytics-tab" class="tab-content hidden">
+                    <div class="admin-card p-6">
+                        <h3 class="text-xl font-semibold mb-4">Analytics & Reports</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white/10 p-4 rounded-lg">
+                                <h4 class="font-semibold mb-2">User Registration Trends</h4>
+                                <p class="text-gray-300">Coming soon...</p>
+                            </div>
+                            <div class="bg-white/10 p-4 rounded-lg">
+                                <h4 class="font-semibold mb-2">Verification Success Rate</h4>
+                                <p class="text-gray-300">Coming soon...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Card Image -->
+    <div id="cardImageModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Card Image</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <img id="modalCardImage" src="" alt="Card Image" class="w-full rounded-lg">
+        </div>
+    </div>
+
+    <script>
+        let supabase = null;
+        let currentTab = 'verification';
+
+        // Initialize Supabase
+        async function initializeSupabase() {
+            try {
+                // Show loading state
+                document.getElementById('loadingState').classList.remove('hidden');
+                document.getElementById('mainContent').classList.add('hidden');
+                
+                // Initialize Supabase client
+                const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU';
+                
+                // Wait for Supabase to load
+                let attempts = 0;
+                while (typeof window.supabase === 'undefined' && attempts < 30) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    attempts++;
+                }
+                
+                if (typeof window.supabase === 'undefined') {
+                    throw new Error('Supabase failed to load from CDN');
+                }
+                
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                window.supabase = supabase;
+                console.log('Supabase initialized for admin');
+                
+                // Check authentication and admin access
+                await checkAdminAccess();
+                
+                // Load initial data
+                await loadDashboardData();
+                
+                // Hide loading and show main content
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Admin initialization error:', error);
+                alert('Failed to initialize admin dashboard: ' + error.message);
+                // Redirect to login on error
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Check admin access
+        async function checkAdminAccess() {
+            try {
+                // First check if user is authenticated
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError) {
+                    console.error('Auth error:', authError);
+                    alert('Authentication error. Please log in again.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                if (!user) {
+                    console.log('No authenticated user found');
+                    alert('Please log in to access admin dashboard.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                console.log('User authenticated:', user.email, 'ID:', user.id);
+
+                // Try to get user profile with better error handling
+                let profile = null;
+                let profileError = null;
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    profile = data;
+                    profileError = error;
+                } catch (err) {
+                    console.error('Profile query error:', err);
+                    profileError = err;
+                }
+
+                // If profile not found, try to create one or check if user is admin by email
+                if (profileError || !profile) {
+                    console.log('Profile not found, checking alternative methods...');
+                    
+                    // Check if user email contains 'admin' or if user ID matches known admin
+                    const isAdminByEmail = user.email && (
+                        user.email.toLowerCase().includes('admin') ||
+                        user.email.toLowerCase().includes('tutor.ai')
+                    );
+                    
+                    // Check if this user ID matches the admin user we know exists
+                    const isAdminById = user.id === '97398100-890f-449e-b3f4-ee94485b98bd' || 
+                                      user.id === '802cec81-8fae-4639-9544-a2a15cd1445c' ||
+                                      user.id === 'admin';
+                    
+                    if (isAdminByEmail || isAdminById) {
+                        console.log('Admin access granted by email/ID check');
+                        document.getElementById('adminName').textContent = 'Admin';
+                        return; // Allow access
+                    }
+                    
+                    // Try to get all profiles to see if admin exists
+                    try {
+                        const { data: allProfiles, error: allProfilesError } = await supabase
+                            .from('user_profiles')
+                            .select('*')
+                            .eq('full_name', 'Admin');
+                        
+                        if (!allProfilesError && allProfiles && allProfiles.length > 0) {
+                            console.log('Admin profile exists but current user is not admin');
+                            alert('Access denied. Admin privileges required. Please log in with admin account.');
+                            window.location.href = '/login.html';
+                            return;
+                        }
+                    } catch (err) {
+                        console.log('Could not check for admin profiles:', err);
+                    }
+                    
+                    // If we get here, no admin profile exists, so create one for current user
+                    console.log('No admin profile found, creating one for current user...');
+                    try {
+                        const { error: createError } = await supabase
+                            .from('user_profiles')
+                            .upsert({
+                                id: user.id,
+                                full_name: 'Admin',
+                                email: user.email,
+                                class: 'Admin',
+                                board: 'Admin',
+                                economic_status: 'Premium',
+                                verification_status: 'approved'
+                            });
+                        
+                        if (createError) {
+                            console.error('Error creating admin profile:', createError);
+                            alert('Error setting up admin access. Please contact support.');
+                            window.location.href = '/login.html';
+                            return;
+                        }
+                        
+                        console.log('Admin profile created successfully');
+                        document.getElementById('adminName').textContent = 'Admin';
+                        return; // Allow access
+                        
+                    } catch (err) {
+                        console.error('Error creating admin profile:', err);
+                        alert('Error setting up admin access. Please contact support.');
+                        window.location.href = '/login.html';
+                        return;
+                    }
+                }
+
+                // Profile found, check if it's admin
+                console.log('Profile found:', profile.full_name);
+
+                if (profile.full_name !== 'Admin') {
+                    console.log('User is not admin:', profile.full_name);
+                    alert('Access denied. Admin privileges required. Your profile name is: ' + profile.full_name);
+                    window.location.href = '/dashboard.html';
+                    return;
+                }
+
+                console.log('Admin access granted for:', profile.full_name);
+                document.getElementById('adminName').textContent = profile.full_name || 'Admin';
+                
+            } catch (error) {
+                console.error('Admin access check error:', error);
+                alert('Error checking admin access: ' + error.message);
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            await Promise.all([
+                loadStats(),
+                loadVerificationRequests(),
+                loadUsers(),
+                loadFeedback(),
+                loadCharts()
+            ]);
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                console.log('🔄 Loading statistics...');
+                
+                // Get total users
+                const { count: totalUsers, error: totalError } = await supabase
+                    .from('user_profiles')
+                    .select('*', { count: 'exact' });
+
+                if (totalError) {
+                    console.error('❌ Error getting total users:', totalError);
+                } else {
+                    console.log(`📊 Total users: ${totalUsers || 0}`);
+                }
+
+                // Get paid users (premium status)
+                const { count: paidUsers, error: paidError } = await supabase
+                    .from('user_profiles')
+                    .select('*', { count: 'exact' })
+                    .eq('economic_status', 'Premium');
+
+                if (paidError) {
+                    console.error('❌ Error getting paid users:', paidError);
+                } else {
+                    console.log(`💎 Paid users: ${paidUsers || 0}`);
+                }
+
+                // Get pending verification
+                const { count: pendingVerification, error: verError } = await supabase
+                    .from('bpl_apl_verifications')
+                    .select('*', { count: 'exact' })
+                    .eq('verification_status', 'pending');
+
+                if (verError) {
+                    console.error('❌ Error getting pending verifications:', verError);
+                } else {
+                    console.log(`⏳ Pending verifications: ${pendingVerification || 0}`);
+                }
+
+                // Get new messages
+                const { count: newMessages, error: msgError } = await supabase
+                    .from('user_feedback')
+                    .select('*', { count: 'exact' })
+                    .eq('status', 'unread');
+
+                if (msgError) {
+                    console.error('❌ Error getting new messages:', msgError);
+                } else {
+                    console.log(`💬 New messages: ${newMessages || 0}`);
+                }
+
+                // Update UI
+                document.getElementById('totalUsers').textContent = totalUsers || 0;
+                document.getElementById('paidUsers').textContent = paidUsers || 0;
+                document.getElementById('pendingVerification').textContent = pendingVerification || 0;
+                document.getElementById('newMessages').textContent = newMessages || 0;
+
+                console.log('✅ Statistics updated successfully');
+
+            } catch (error) {
+                console.error('❌ Error loading stats:', error);
+                
+                // Set default values on error
+                document.getElementById('totalUsers').textContent = 'Error';
+                document.getElementById('paidUsers').textContent = 'Error';
+                document.getElementById('pendingVerification').textContent = 'Error';
+                document.getElementById('newMessages').textContent = 'Error';
+            }
+        }
+
+        // Load verification requests
+        async function loadVerificationRequests() {
+            try {
+                const { data: verifications, error } = await supabase
+                    .from('bpl_apl_verifications')
+                    .select(`
+                        *,
+                        user_profiles!inner(
+                            full_name,
+                            class,
+                            city,
+                            state,
+                            board
+                        )
+                    `)
+                    .eq('verification_status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const tableBody = document.getElementById('verificationTable');
+                tableBody.innerHTML = '';
+
+                verifications.forEach(verification => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-white/10 hover:bg-white/5';
+                    row.innerHTML = `
+                        <td class="p-3">
+                            <div>
+                                <div class="font-semibold">${verification.user_profiles.full_name}</div>
+                                <div class="text-sm text-gray-300">${verification.user_profiles.email || 'N/A'}</div>
+                            </div>
+                        </td>
+                        <td class="p-3">${verification.user_profiles.class}</td>
+                        <td class="p-3">${verification.user_profiles.city}, ${verification.user_profiles.state}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded text-xs ${verification.document_type === 'bpl_card' ? 'bg-red-600' : 'bg-blue-600'}">
+                                ${verification.document_type === 'bpl_card' ? 'BPL' : 'APL'}
+                            </span>
+                        </td>
+                        <td class="p-3">${verification.card_number}</td>
+                        <td class="p-3">
+                            ${verification.document_url ? 
+                                `<button onclick="viewCardImage('${verification.document_url}')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs">
+                                    View Image
+                                </button>` : 
+                                '<span class="text-gray-400">No image</span>'
+                            }
+                        </td>
+                        <td class="p-3">
+                            <div class="flex space-x-2">
+                                <button onclick="approveVerification('${verification.id}')" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs">
+                                    Approve
+                                </button>
+                                <button onclick="rejectVerification('${verification.id}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs">
+                                    Reject
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error loading verification requests:', error);
+            }
+        }
+
+        // Load all users
+        async function loadUsers() {
+            try {
+                console.log('🔄 Loading users...');
+                
+                const { data: users, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('❌ Error loading users:', error);
+                    throw error;
+                }
+
+                console.log(`✅ Loaded ${users.length} users from database`);
+                
+                if (users.length === 0) {
+                    console.log('⚠️  No users found in database');
+                } else {
+                    console.log('📋 Users found:');
+                    users.forEach((user, index) => {
+                        console.log(`${index + 1}. ${user.full_name || 'No name'} (${user.email || 'No email'})`);
+                    });
+                }
+
+                const tableBody = document.getElementById('usersTable');
+                tableBody.innerHTML = '';
+
+                if (users.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="p-6 text-center text-gray-400">
+                                No users found in the system
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-white/10 hover:bg-white/5';
+                    row.innerHTML = `
+                        <td class="p-3 font-semibold">${user.full_name || 'No name'}</td>
+                        <td class="p-3">${user.email || 'N/A'}</td>
+                        <td class="p-3">${user.class || 'Not set'}</td>
+                        <td class="p-3">${user.board || 'Not set'}</td>
+                        <td class="p-3">${user.city || 'N/A'}, ${user.state || 'N/A'}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded text-xs ${user.economic_status === 'Premium' ? 'bg-green-600' : 'bg-blue-600'}">
+                                ${user.economic_status || 'Free'}
+                            </span>
+                        </td>
+                        <td class="p-3 text-sm">${new Date(user.created_at).toLocaleDateString()}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                console.log('✅ Users table updated successfully');
+
+            } catch (error) {
+                console.error('❌ Error loading users:', error);
+                
+                // Show error in table
+                const tableBody = document.getElementById('usersTable');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="p-6 text-center text-red-400">
+                            Error loading users: ${error.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Load feedback messages
+        async function loadFeedback() {
+            try {
+                const { data: feedback, error } = await supabase
+                    .from('user_feedback')
+                    .select(`
+                        *,
+                        user_profiles!inner(
+                            full_name,
+                            email
+                        )
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const tableBody = document.getElementById('feedbackTable');
+                tableBody.innerHTML = '';
+
+                feedback.forEach(message => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-white/10 hover:bg-white/5';
+                    row.innerHTML = `
+                        <td class="p-3">
+                            <div>
+                                <div class="font-semibold">${message.user_profiles.full_name}</div>
+                                <div class="text-sm text-gray-300">${message.user_profiles.email}</div>
+                            </div>
+                        </td>
+                        <td class="p-3">${message.subject}</td>
+                        <td class="p-3">
+                            <div class="max-w-xs truncate" title="${message.message}">
+                                ${message.message}
+                            </div>
+                        </td>
+                        <td class="p-3 text-sm">${new Date(message.created_at).toLocaleDateString()}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded text-xs ${message.status === 'unread' ? 'bg-yellow-600' : 'bg-green-600'}">
+                                ${message.status}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <button onclick="markAsRead('${message.id}')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs">
+                                Mark Read
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error loading feedback:', error);
+            }
+        }
+
+        // Load charts
+        async function loadCharts() {
+            // User Growth Chart
+            const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+            new Chart(userGrowthCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'New Users',
+                        data: [12, 19, 3, 5, 2, 3],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: 'white' }
+                        },
+                        x: {
+                            ticks: { color: 'white' }
+                        }
+                    }
+                }
+            });
+
+            // Class Distribution Chart
+            const classDistributionCtx = document.getElementById('classDistributionChart').getContext('2d');
+            new Chart(classDistributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'],
+                    datasets: [{
+                        data: [12, 19, 3, 5, 2],
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('bg-blue-600');
+                btn.classList.add('bg-gray-600');
+            });
+
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.remove('bg-gray-600');
+            document.getElementById(`tab-${tabName}`).classList.add('bg-blue-600');
+
+            currentTab = tabName;
+        }
+
+        // Verification actions
+        async function approveVerification(verificationId) {
+            if (!confirm('Are you sure you want to approve this verification?')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('bpl_apl_verifications')
+                    .update({
+                        verification_status: 'approved',
+                        verified_by: (await supabase.auth.getUser()).data.user.id,
+                        verified_at: new Date().toISOString()
+                    })
+                    .eq('id', verificationId);
+
+                if (error) throw error;
+
+                alert('Verification approved successfully!');
+                await loadVerificationRequests();
+                await loadStats();
+
+            } catch (error) {
+                console.error('Error approving verification:', error);
+                alert('Failed to approve verification');
+            }
+        }
+
+        async function rejectVerification(verificationId) {
+            if (!confirm('Are you sure you want to reject this verification?')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('bpl_apl_verifications')
+                    .update({
+                        verification_status: 'rejected',
+                        verified_by: (await supabase.auth.getUser()).data.user.id,
+                        verified_at: new Date().toISOString()
+                    })
+                    .eq('id', verificationId);
+
+                if (error) throw error;
+
+                alert('Verification rejected successfully!');
+                await loadVerificationRequests();
+                await loadStats();
+
+            } catch (error) {
+                console.error('Error rejecting verification:', error);
+                alert('Failed to reject verification');
+            }
+        }
+
+        // View card image
+        function viewCardImage(imageUrl) {
+            document.getElementById('modalCardImage').src = imageUrl;
+            document.getElementById('cardImageModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('cardImageModal').classList.add('hidden');
+        }
+
+        // Mark feedback as read
+        async function markAsRead(feedbackId) {
+            try {
+                const { error } = await supabase
+                    .from('user_feedback')
+                    .update({ status: 'read' })
+                    .eq('id', feedbackId);
+
+                if (error) throw error;
+
+                await loadFeedback();
+                await loadStats();
+
+            } catch (error) {
+                console.error('Error marking feedback as read:', error);
+                alert('Failed to mark as read');
+            }
+        }
+
+        // Logout
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.href = '/login.html';
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSupabase();
+        });
+
+        // Close modal on outside click
+        document.getElementById('cardImageModal').addEventListener('click', (e) => {
+            if (e.target.id === 'cardImageModal') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html> 
