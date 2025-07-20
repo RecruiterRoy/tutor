@@ -2,7 +2,6 @@
   "appId": "com.tutorai.app",
   "appName": "TUTOR.AI",
   "webDir": "public",
-  "bundledWebRuntime": false,
   "backgroundColor": "#667eea",
   "server": {
     "androidScheme": "https",
