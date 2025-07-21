@@ -12,6 +12,15 @@
     <!-- Load Razorpay -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
+    <!-- Error handling for missing resources -->
+    <script>
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT') {
+                console.log('Resource failed to load:', e.target.src);
+            }
+        });
+    </script>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     

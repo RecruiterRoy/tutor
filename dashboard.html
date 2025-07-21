@@ -7,7 +7,7 @@
     
     <!-- Preload essential resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
-    <link rel="preload" href="public/images/teacher-avatar2.png" as="image">
+    <link rel="preload" href="https://via.placeholder.com/60x60/667eea/ffffff?text=AI" as="image">
     
     <!-- Load Tailwind CSS with reduced size -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -496,7 +496,7 @@
                                 <div class="flex items-center space-x-3">
                                         <div class="avatar-container-chat">
                                             <img id="teacher-avatar-chat" class="avatar-image-chat" 
-                                             src="public/images/teacher-avatar2.png" alt="Teacher Avatar">
+                                             src="https://via.placeholder.com/60x60/667eea/ffffff?text=AI" alt="Teacher Avatar">
                                             </div>
                                     <div class="teacher-info">
                                         <h2 id="teacher-name-chat" class="text-lg font-bold text-white">Roy Sir</h2>
@@ -620,7 +620,7 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="english" onclick="handleAvatarSelection('english')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="public/images/teacher-avatar2.png" alt="Roy Sir">
+                                            <img class="avatar-image-settings" src="https://via.placeholder.com/60x60/667eea/ffffff?text=AI" alt="Roy Sir">
                                         </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Roy Sir</h3>
                                         </div>
@@ -700,7 +700,7 @@
         let recognition = null;
         let currentTeacher = {
                 name: "Roy Sir",
-            image: "public/images/teacher-avatar2.png",
+            image: "https://via.placeholder.com/60x60/667eea/ffffff?text=AI",
             language: "en"
         };
         
@@ -741,6 +741,9 @@
                 
                 // Initialize voice features (enabled for both web and mobile)
                 initVoiceFeatures();
+                
+                // Connect teacher avatar to AI
+                connectTeacherAvatar();
                 
                 console.log('App initialized successfully');
                 
@@ -1265,6 +1268,18 @@
         
         // ========== STUDY MATERIALS ==========
         
+        // Connect teacher avatar to AI
+        function connectTeacherAvatar() {
+            const avatar = document.querySelector('.avatar-image-chat');
+            if (avatar) {
+                avatar.addEventListener('click', function() {
+                    // Trigger AI chat
+                    document.getElementById('chatInput').focus();
+                    showSuccess('Click the chat input to start talking with your AI teacher!');
+                });
+            }
+        }
+        
         // ========== PROGRESS SECTION ==========
         
         function initProgressSection() {
@@ -1306,11 +1321,11 @@
         
         function renderSubjects() {
             const subjectsList = document.getElementById('subjectsList');
-            window.progressSubjects = window.progressSubjects || [
-                { name: 'Math', progress: 30 },
-                { name: 'Science', progress: 45 },
-                { name: 'English', progress: 20 }
-            ];
+                    window.progressSubjects = window.progressSubjects || [
+            { name: 'Math', progress: 0 },
+            { name: 'Science', progress: 0 },
+            { name: 'English', progress: 0 }
+        ];
             
             subjectsList.innerHTML = '';
             window.progressSubjects.forEach((subj, idx) => {
@@ -1356,7 +1371,7 @@
             } else {
                 currentTeacher = {
                     name: "Roy Sir",
-                    image: "public/images/teacher-avatar2.png",
+                    image: "https://via.placeholder.com/60x60/667eea/ffffff?text=AI",
                     language: "en"
                 };
             }
@@ -1575,7 +1590,21 @@
         
         // ========== START APPLICATION ==========
         
-        document.addEventListener('DOMContentLoaded', initApp);
+        // Request microphone permission on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Request microphone permission
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(function(stream) {
+                        console.log('Microphone permission granted');
+                    })
+                    .catch(function(err) {
+                        console.log('Microphone permission denied:', err);
+                    });
+            }
+            
+            initApp();
+        });
 
         // Update subscription UI
         function updateSubscriptionUI(subscription) {
