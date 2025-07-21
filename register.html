@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - TUTOR.AI</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     
     <!-- Load Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,10 +19,212 @@
                 console.log('Resource failed to load:', e.target.src);
             }
         });
+        
+        // Mobile-specific error handling
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            // Add mobile-specific styles
+            const mobileStyles = document.createElement('style');
+            mobileStyles.textContent = `
+                body { padding: 0.5rem; }
+                .max-w-md { max-width: 100%; }
+                .p-6 { padding: 1rem; }
+                .text-2xl { font-size: 1.25rem; }
+                .text-lg { font-size: 1rem; }
+            `;
+            document.head.appendChild(mobileStyles);
+        }
     </script>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <!-- Custom CSS instead of Tailwind CDN -->
+    <style>
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .w-full { width: 100%; }
+        .max-w-md { max-width: 28rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .ml-2 { margin-left: 0.5rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-4 { padding: 1rem; }
+        .p-3 { padding: 0.75rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .h-12 { height: 3rem; }
+        .h-6 { height: 1.5rem; }
+        .w-6 { width: 1.5rem; }
+        .w-4 { width: 1rem; }
+        .h-4 { height: 1rem; }
+        .text-center { text-align: center; }
+        .text-white { color: white; }
+        .text-gray-200 { color: #e5e7eb; }
+        .text-gray-300 { color: #d1d5db; }
+        .text-blue-400 { color: #60a5fa; }
+        .text-blue-300 { color: #93c5fd; }
+        .text-green-300 { color: #86efac; }
+        .text-red-300 { color: #fca5a5; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+        .rounded-2xl { border-radius: 1rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-full { border-radius: 9999px; }
+        .border-2 { border-width: 2px; }
+        .border-b-2 { border-bottom-width: 2px; }
+        .border-green-500 { border-color: #10b981; }
+        .border-blue-500 { border-color: #3b82f6; }
+        .border-red-500 { border-color: #ef4444; }
+        .border-gray-300 { border-color: #d1d5db; }
+        .space-y-4 > * + * { margin-top: 1rem; }
+        .space-y-3 > * + * { margin-top: 0.75rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .space-x-2 > * + * { margin-left: 0.5rem; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-center { justify-content: center; }
+        .block { display: block; }
+        .inline-block { display: inline-block; }
+        .hidden { display: none; }
+        .relative { position: relative; }
+        .absolute { position: absolute; }
+        .transform { transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y)); }
+        .-translate-x-1\/2 { --tw-translate-x: -50%; }
+        .-top-4 { top: -1rem; }
+        .left-1\/2 { left: 50%; }
+        .top-1\/2 { top: 50%; }
+        .animate-spin { animation: spin 1s linear infinite; }
+        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .hover\:underline:hover { text-decoration: underline; }
+        .hover\:from-green-600:hover { background: linear-gradient(to right, #059669, #1d4ed8); }
+        .hover\:to-blue-700:hover { background: linear-gradient(to right, #10b981, #1d4ed8); }
+        .focus\:outline-none:focus { outline: 2px solid transparent; outline-offset: 2px; }
+        .focus\:ring-2:focus { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+        .focus\:ring-blue-500:focus { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+        
+        /* Custom styles */
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5);
+        }
+        
+        /* Fix dropdown styling */
+        .form-input option {
+            background: #1f2937;
+            color: white;
+        }
+        
+        .trial-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .trial-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .trial-card.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+        
+        .bg-gradient-to-r {
+            background: linear-gradient(to right, var(--tw-gradient-stops));
+        }
+        
+        .from-green-500 {
+            --tw-gradient-from: #10b981;
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(16, 185, 129, 0));
+        }
+        
+        .to-blue-600 {
+            --tw-gradient-to: #2563eb;
+        }
+        
+        .bg-green-500\/20 {
+            background-color: rgba(16, 185, 129, 0.2);
+        }
+        
+        .bg-blue-500\/20 {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        .bg-red-500\/20 {
+            background-color: rgba(239, 68, 68, 0.2);
+        }
+        
+        .border-green-500\/50 {
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+        
+        .border-blue-500\/50 {
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        .border-red-500\/50 {
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        
+        .text-6xl {
+            font-size: 3.75rem;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
     
     <style>
         .glass-effect {
@@ -64,7 +266,8 @@
         <!-- Logo and Title -->
         <div class="text-center mb-8">
             <div class="flex items-center justify-center mb-4">
-                <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="TUTOR.AI Logo" class="h-12">
+                <img src="public/images/tutor logo/Tutor-logo-transparent.png" alt="TUTOR.AI Logo" class="h-12" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.marginLeft='0'; this.nextElementSibling.innerHTML='🎓 TUTOR.AI';">
                 <h1 class="text-white text-2xl font-bold ml-2">TUTOR.AI</h1>
             </div>
             <p class="text-gray-200">Start your learning journey with a free trial</p>
@@ -205,17 +408,23 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/public/js/config.js"></script>
+    <script src="public/js/config.js"></script>
     
     <script>
+        // Use existing Supabase client from config.js to prevent multiple instances
         let supabase = null;
 
-        // Initialize Supabase
+        // Initialize Supabase only if not already initialized
         document.addEventListener('DOMContentLoaded', function() {
-            supabase = window.supabase.createClient(
-                window.TUTOR_CONFIG.SUPABASE_URL,
-                window.TUTOR_CONFIG.SUPABASE_ANON_KEY
-            );
+            if (window.supabaseClient) {
+                supabase = window.supabaseClient;
+            } else {
+                supabase = window.supabase.createClient(
+                    window.TUTOR_CONFIG.SUPABASE_URL,
+                    window.TUTOR_CONFIG.SUPABASE_ANON_KEY
+                );
+                window.supabaseClient = supabase; // Store globally
+            }
         });
 
         // Form submission
@@ -231,15 +440,61 @@
                 board: formData.get('board')
             };
             
+            // Validate form data
+            if (!userData.fullName || !userData.email || !userData.password || !userData.class || !userData.board) {
+                showError('Please fill in all required fields');
+                return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(userData.email)) {
+                showError('Please enter a valid email address');
+                return;
+            }
+            
+            // Validate password length
+            if (userData.password.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+            
             try {
                 showLoading(true);
+                
+                // Wait for Supabase to be initialized
+                if (!supabase) {
+                    await new Promise(resolve => {
+                        const checkSupabase = () => {
+                            if (supabase) {
+                                resolve();
+                            } else {
+                                setTimeout(checkSupabase, 100);
+                            }
+                        };
+                        checkSupabase();
+                    });
+                }
                 
                 // Create account with free trial
                 await createAccountWithTrial(userData);
                 
             } catch (error) {
                 console.error('Registration error:', error);
-                showError(error.message);
+                let errorMessage = error.message;
+                
+                // Handle specific error cases
+                if (error.message.includes('User already registered')) {
+                    errorMessage = 'An account with this email already exists. Please try signing in instead.';
+                } else if (error.message.includes('Invalid email')) {
+                    errorMessage = 'Please enter a valid email address.';
+                } else if (error.message.includes('Password should be at least')) {
+                    errorMessage = 'Password must be at least 6 characters long.';
+                } else if (error.message.includes('network')) {
+                    errorMessage = 'Network error. Please check your internet connection and try again.';
+                }
+                
+                showError(errorMessage);
                 showLoading(false);
             }
         });
