@@ -4,13 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - TUTOR.AI</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
     
-    <!-- Load Supabase CDN -->
+    <!-- Inline Supabase config for mobile APK -->
+    <script>
+        // Supabase configuration - inline for mobile APK
+        window.TUTOR_CONFIG = {
+            SUPABASE_URL: 'https://xhuljxuxnlwtocfmwiid.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NzE5NzQsImV4cCI6MjA1MDU0Nzk3NH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8'
+        };
+    </script>
+    
+    <!-- Load Supabase CDN with fallback -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Load Razorpay -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        // Fallback if Supabase CDN fails
+        if (!window.supabase) {
+            console.error('Supabase CDN failed to load');
+            document.addEventListener('DOMContentLoaded', function() {
+                showError('Unable to load required resources. Please check your internet connection and try again.');
+            });
+        }
+    </script>
     
     <!-- Error handling for missing resources -->
     <script>
@@ -30,8 +44,40 @@
                 .p-6 { padding: 1rem; }
                 .text-2xl { font-size: 1.25rem; }
                 .text-lg { font-size: 1rem; }
+                
+                /* Mobile dropdown improvements */
+                select.form-input {
+                    font-size: 16px; /* Prevents zoom on iOS */
+                    background: rgba(255, 255, 255, 0.15);
+                    color: white;
+                }
+                
+                select.form-input option {
+                    background: #374151;
+                    color: white;
+                    font-size: 16px;
+                }
+                
+                /* APK-specific improvements */
+                .glass-effect {
+                    backdrop-filter: none;
+                    background: rgba(0, 0, 0, 0.3);
+                }
             `;
             document.head.appendChild(mobileStyles);
+            
+            // Add offline detection
+            window.addEventListener('offline', function() {
+                showError('You are offline. Please check your internet connection.');
+            });
+            
+            window.addEventListener('online', function() {
+                // Hide error message when back online
+                const errorMessage = document.getElementById('errorMessage');
+                if (errorMessage && !errorMessage.classList.contains('hidden')) {
+                    errorMessage.classList.add('hidden');
+                }
+            });
         }
     </script>
     
@@ -164,6 +210,26 @@
             color: white;
         }
         
+        /* Additional dropdown fixes for better visibility */
+        select.form-input {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        select.form-input option {
+            background: #374151;
+            color: white;
+            padding: 8px;
+        }
+        
+        select.form-input option:hover {
+            background: #4b5563;
+        }
+        
+        select.form-input:focus option:checked {
+            background: #667eea;
+        }
+        
         .trial-card {
             transition: all 0.3s ease;
             cursor: pointer;
@@ -266,8 +332,10 @@
         <!-- Logo and Title -->
         <div class="text-center mb-8">
             <div class="flex items-center justify-center mb-4">
-                <img src="public/images/tutor logo/Tutor-logo-transparent.png" alt="TUTOR.AI Logo" class="h-12" 
-                     onerror="this.style.display='none'; this.nextElementSibling.style.marginLeft='0'; this.nextElementSibling.innerHTML='🎓 TUTOR.AI';">
+                <a href="index.html" class="cursor-pointer">
+                    <img src="public/images/tutor logo/Tutor-logo-transparent.png" alt="TUTOR.AI Logo" class="h-12" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.marginLeft='0'; this.nextElementSibling.innerHTML='🎓 TUTOR.AI';">
+                </a>
                 <h1 class="text-white text-2xl font-bold ml-2">TUTOR.AI</h1>
             </div>
             <p class="text-gray-200">Start your learning journey with a free trial</p>
@@ -408,22 +476,28 @@
     </div>
 
     <!-- Scripts -->
-    <script src="public/js/config.js"></script>
-    
     <script>
         // Use existing Supabase client from config.js to prevent multiple instances
         let supabase = null;
 
         // Initialize Supabase only if not already initialized
         document.addEventListener('DOMContentLoaded', function() {
-            if (window.supabaseClient) {
-                supabase = window.supabaseClient;
-            } else {
-                supabase = window.supabase.createClient(
-                    window.TUTOR_CONFIG.SUPABASE_URL,
-                    window.TUTOR_CONFIG.SUPABASE_ANON_KEY
-                );
-                window.supabaseClient = supabase; // Store globally
+            try {
+                if (window.supabaseClient) {
+                    supabase = window.supabaseClient;
+                } else if (window.supabase && window.TUTOR_CONFIG) {
+                    supabase = window.supabase.createClient(
+                        window.TUTOR_CONFIG.SUPABASE_URL,
+                        window.TUTOR_CONFIG.SUPABASE_ANON_KEY
+                    );
+                    window.supabaseClient = supabase; // Store globally
+                } else {
+                    console.error('Supabase not available');
+                    showError('Unable to initialize application. Please check your internet connection.');
+                }
+            } catch (error) {
+                console.error('Supabase initialization error:', error);
+                showError('Failed to initialize application. Please try again.');
             }
         });
 
