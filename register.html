@@ -425,12 +425,14 @@
         // ========== SUPABASE CLIENT INITIALIZATION ==========
         
         function getSupabaseClient() {
+            // First check if config.js already created the client (web version)
             if (window.supabaseClient) {
                 return window.supabaseClient;
             }
             
+            // Fallback for mobile app (create our own)
             const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
-            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NzE5NzQsImV4cCI6MjA1MDU0Nzk3NH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4';
             
             window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             return window.supabaseClient;
