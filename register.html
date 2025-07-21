@@ -303,20 +303,20 @@
                     </select>
                 </div>
                 
-                <!-- Email field (mandatory if email OAuth selected) -->
-                <div x-show="oauthMethod === 'email'">
+                <!-- Email field (always visible) -->
+                <div>
                     <label class="block text-white text-sm font-medium mb-2">Email Address</label>
-                    <input type="email" x-model="email" :required="oauthMethod === 'email'" name="email"
+                    <input type="email" x-model="email" required name="email"
                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
                            placeholder="Enter your email address">
                 </div>
                 
-                <!-- Mobile field (mandatory if mobile OAuth selected) -->
-                <div x-show="oauthMethod === 'mobile'">
+                <!-- Mobile field (always visible) -->
+                <div>
                     <label class="block text-white text-sm font-medium mb-2">Mobile Number (10 digits)</label>
                     <div class="flex">
                         <span class="flex items-center px-3 text-white bg-purple-600 rounded-l-lg">+91</span>
-                        <input type="tel" x-model="mobile" :required="oauthMethod === 'mobile'" name="mobile"
+                        <input type="tel" x-model="mobile" required name="mobile"
                                pattern="[0-9]{10}" maxlength="10"
                                class="w-full px-4 py-3 rounded-r-lg focus:outline-none input-glow purple-input"
                                placeholder="Enter 10-digit mobile number">
@@ -439,7 +439,7 @@
 
             <!-- Terms and Conditions -->
             <div x-show="currentStep === 2" class="flex items-start space-x-3">
-                <input type="checkbox" x-model="agreeToTerms" required
+                <input type="checkbox" x-model="agreeToTerms" required name="agreeToTerms"
                        class="mt-1 w-4 h-4 text-purple-600 bg-purple-100 border-purple-300 rounded focus:ring-purple-500">
                 <label class="text-white text-sm">
                     I agree to the <a href="#" class="text-purple-400 hover:underline">Terms of Service</a> and 
@@ -527,7 +527,12 @@
                     // Methods
                     async handleStepSubmit() {
                         if (this.currentStep === 1) {
-                            await this.selectOAuth('google'); // Automatically select Google for step 1
+                            // Don't auto-select, user must choose OAuth method
+                            if (!this.oauthMethod) {
+                                this.showMessage('Please select a registration method', 'error');
+                                return;
+                            }
+                            this.currentStep = 2;
                         } else if (this.currentStep === 2) {
                             if (!this.validateStep2()) {
                                 return;
@@ -567,12 +572,12 @@
                             this.showMessage('Please fill in all required fields for Basic Information', 'error');
                             return false;
                         }
-                        if (this.oauthMethod === 'email' && !this.email) {
-                            this.showMessage('Email address is required for email registration', 'error');
+                        if (!this.email) {
+                            this.showMessage('Email address is required', 'error');
                             return false;
                         }
-                        if (this.oauthMethod === 'mobile' && !this.mobile) {
-                            this.showMessage('Mobile number is required for mobile registration', 'error');
+                        if (!this.mobile) {
+                            this.showMessage('Mobile number is required', 'error');
                             return false;
                         }
                         if (this.oauthMethod !== 'google' && this.password.length < 6) {
