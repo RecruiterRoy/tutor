@@ -7,7 +7,7 @@
     
     <!-- Preload essential resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
-    <link rel="preload" href="/public/images/teacher-avatar2.png" as="image">
+    <link rel="preload" href="images/roy_sir.jpg" as="image">
     
     <!-- Load Tailwind CSS with reduced size -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -270,8 +270,9 @@
         <div class="p-4 border-b border-white/10">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-2">
-                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
-                    <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
+                    <img src="images/tutor_logo.png" alt="Tutor.AI Logo" class="h-8"
+                         onerror="this.style.display='none'; this.nextElementSibling.innerHTML='🎓 Tutor.AI';">
+                    <span class="text-white font-bold text-lg">Tutor.AI</span>
                 </div>
                 <button class="text-white text-2xl" onclick="closeMobileSidebar()">×</button>
             </div>
@@ -324,7 +325,7 @@
             <div class="md:hidden flex items-center justify-between p-3 bg-slate-800/90 border-b border-white/10">
                 <button class="text-white text-2xl" onclick="openMobileSidebar()">☰</button>
                 <div class="flex items-center space-x-2">
-                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-6">
+                                            <img src="images/tutor_logo.png" alt="Tutor.AI Logo" class="h-6">
                     <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
                         </div>
                 <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -336,7 +337,7 @@
             <div class="hidden md:block bg-slate-800/90 border-b border-white/10 p-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
+                        <img src="images/tutor_logo.png" alt="Tutor.AI Logo" class="h-8">
                         <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
                     </div>
                     <div class="flex items-center space-x-3">
@@ -361,8 +362,9 @@
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center space-x-3">
                                         <div class="avatar-container-chat">
-                                            <img id="teacher-avatar-chat" class="avatar-image-chat" 
-                                             src="/public/images/teacher-avatar2.png" alt="Teacher Avatar">
+                                            <img id="teacher-avatar-chat" class="avatar-image-chat"
+                src="images/roy_sir.jpg" alt="Teacher Avatar"
+                onerror="this.src='images/miss_sapna.jpg';">
                                             </div>
                                     <div class="teacher-info">
                                         <h2 id="teacher-name-chat" class="text-lg font-bold text-white">Roy Sir</h2>
@@ -481,13 +483,15 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="english" onclick="handleAvatarSelection('english')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="/public/images/teacher-avatar2.png" alt="Roy Sir">
+                                            <img class="avatar-image-settings" src="images/roy_sir.jpg" alt="Roy Sir"
+                                                 onerror="this.src='images/miss_sapna.jpg';">
                                         </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Roy Sir</h3>
                                         </div>
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="hindi" onclick="handleAvatarSelection('hindi')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="/public/images/teacher-avatar1.png" alt="Ms. Sapana">
+                                            <img class="avatar-image-settings" src="images/miss_sapna.jpg" alt="Ms. Sapana"
+                                                 onerror="this.src='images/roy_sir.jpg';">
                                     </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Ms. Sapana</h3>
                                     </div>
@@ -561,7 +565,7 @@
         let recognition = null;
         let currentTeacher = {
                 name: "Roy Sir",
-            image: "/public/images/teacher-avatar2.png",
+            image: "images/roy_sir.jpg",
             language: "en"
         };
         
@@ -1207,13 +1211,13 @@ ${persona.name === 'Ms. Sapana' ?
             if (teacher === 'hindi') {
                 currentTeacher = {
                     name: "Ms. Sapana",
-                    image: "/public/images/teacher-avatar1.png",
+                    image: "images/miss_sapna.jpg",
                     language: "hi"
                 };
             } else {
                 currentTeacher = {
                     name: "Roy Sir",
-                    image: "/public/images/teacher-avatar2.png",
+                    image: "images/roy_sir.jpg",
                     language: "en"
                 };
             }
