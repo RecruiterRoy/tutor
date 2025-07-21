@@ -155,6 +155,23 @@
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
+
+        /* New styles for multi-step flow */
+        .purple-input {
+            background: rgba(102, 126, 234, 0.2) !important; /* Light purple background */
+            color: white !important;
+            border: 1px solid rgba(102, 126, 234, 0.5) !important; /* Light purple border */
+        }
+
+        .purple-input::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        .purple-input:focus {
+            background: rgba(102, 126, 234, 0.4) !important; /* Darker purple on focus */
+            border-color: rgba(102, 126, 234, 0.8) !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen flex items-center justify-center p-4">
@@ -163,50 +180,100 @@
         <div class="text-center mb-8">
             <div class="flex justify-center mb-4">
                 <a href="index.html" class="cursor-pointer">
-                    <img src="public/images/tutor logo/Tutor-logo-transparent.png" alt="TUTOR.AI Logo" style="height: 60px; width: auto; filter: brightness(0) invert(1);"
-                         onerror="this.style.display='none'; this.nextElementSibling.innerHTML='🎓 TUTOR.AI';">
+                    <div class="text-white text-3xl font-bold flex items-center gap-2">
+                        🎓 <span>TUTOR.AI</span>
+                    </div>
                 </a>
             </div>
             <h1 class="text-3xl font-bold text-white mb-2">Join TUTOR.AI</h1>
             <p class="text-gray-200">Start your learning journey with a free trial</p>
         </div>
 
+        <script>
+            // Try multiple logo paths
+            function tryAlternateLogo(img) {
+                const paths = [
+                    'public/images/tutor_logo.png',
+                    'images/tutor_logo.png',
+                    '/public/images/tutor_logo.png',
+                    '/images/tutor_logo.png'
+                ];
+                
+                const currentSrc = img.src;
+                let nextPath = null;
+                
+                for (let i = 0; i < paths.length; i++) {
+                    if (!currentSrc.includes(paths[i])) {
+                        nextPath = paths[i];
+                        break;
+                    }
+                }
+                
+                if (nextPath) {
+                    img.src = nextPath;
+                } else {
+                    // All paths failed, show text fallback
+                    img.style.display = 'none';
+                    img.parentElement.innerHTML = '<div class="text-white text-2xl font-bold">🎓 TUTOR.AI</div>';
+                }
+            }
+        </script>
+
         <!-- Registration Form -->
-        <form @submit.prevent="registerUser" class="space-y-6">
-            <!-- Basic Information -->
-            <div class="space-y-4">
+        <form @submit.prevent="handleStepSubmit" class="space-y-6">
+            <!-- Step 1: OAuth Selection -->
+            <div x-show="currentStep === 1" class="space-y-4">
+                <h3 class="text-white font-semibold text-lg">Choose Registration Method</h3>
+                
+                <!-- Google OAuth Option -->
+                <div class="space-y-4">
+                    <button type="button" @click="selectOAuth('google')" 
+                            class="w-full py-3 bg-white text-gray-800 rounded-lg font-medium hover:bg-gray-100 transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+                    
+                    <!-- Email Option -->
+                    <button type="button" @click="selectOAuth('email')" 
+                            class="w-full py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                        </svg>
+                        Continue with Email
+                    </button>
+                    
+                    <!-- Mobile Option -->
+                    <button type="button" @click="selectOAuth('mobile')" 
+                            class="w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                        </svg>
+                        Continue with Mobile
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Basic Information -->
+            <div x-show="currentStep === 2" class="space-y-4">
                 <h3 class="text-white font-semibold text-lg">Basic Information</h3>
                 
                 <div>
                     <label class="block text-white text-sm font-medium mb-2">Full Name</label>
                     <input type="text" x-model="fullName" required
-                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow"
+                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
                            placeholder="Enter your full name">
                 </div>
                 
                 <div>
-                    <label class="block text-white text-sm font-medium mb-2">Email</label>
-                    <input type="email" x-model="email" required
-                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow"
-                           placeholder="Enter your email">
-                </div>
-                
-                <div>
-                    <label class="block text-white text-sm font-medium mb-2">Password</label>
-                    <input type="password" x-model="password" required
-                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow"
-                           placeholder="Create a password">
-                </div>
-            </div>
-
-            <!-- Academic Information -->
-            <div class="space-y-4">
-                <h3 class="text-white font-semibold text-lg">Academic Information</h3>
-                
-                <div>
                     <label class="block text-white text-sm font-medium mb-2">Class</label>
                     <select x-model="selectedClass" required
-                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow">
+                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input">
                         <option value="">Select your class</option>
                         <option value="Class 1">Class 1</option>
                         <option value="Class 2">Class 2</option>
@@ -226,7 +293,7 @@
                 <div>
                     <label class="block text-white text-sm font-medium mb-2">Board</label>
                     <select x-model="selectedBoard" required
-                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow">
+                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input">
                         <option value="">Select your board</option>
                         <option value="CBSE">CBSE</option>
                         <option value="ICSE">ICSE</option>
@@ -235,9 +302,118 @@
                         <option value="IGCSE">IGCSE</option>
                     </select>
                 </div>
+                
+                <!-- Email field (mandatory if email OAuth selected) -->
+                <div x-show="oauthMethod === 'email'">
+                    <label class="block text-white text-sm font-medium mb-2">Email Address</label>
+                    <input type="email" x-model="email" :required="oauthMethod === 'email'"
+                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
+                           placeholder="Enter your email address">
+                </div>
+                
+                <!-- Mobile field (mandatory if mobile OAuth selected) -->
+                <div x-show="oauthMethod === 'mobile'">
+                    <label class="block text-white text-sm font-medium mb-2">Mobile Number (10 digits)</label>
+                    <div class="flex">
+                        <span class="flex items-center px-3 text-white bg-purple-600 rounded-l-lg">+91</span>
+                        <input type="tel" x-model="mobile" :required="oauthMethod === 'mobile'"
+                               pattern="[0-9]{10}" maxlength="10"
+                               class="w-full px-4 py-3 rounded-r-lg focus:outline-none input-glow purple-input"
+                               placeholder="Enter 10-digit mobile number">
+                    </div>
+                </div>
+                
+                <!-- Password (for email/mobile, not for Google) -->
+                <div x-show="oauthMethod !== 'google'">
+                    <label class="block text-white text-sm font-medium mb-2">Password</label>
+                    <input type="password" x-model="password" :required="oauthMethod !== 'google'"
+                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
+                           placeholder="Create a password (min 6 characters)">
+                </div>
             </div>
 
-            <!-- Free Trial Information -->
+            <!-- Step 3: Address Information -->
+            <div x-show="currentStep === 3" class="space-y-4">
+                <h3 class="text-white font-semibold text-lg">Address Information</h3>
+                
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Address</label>
+                    <input type="text" x-model="address" required
+                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
+                           placeholder="Enter your address">
+                </div>
+                
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">City</label>
+                    <input type="text" x-model="city" required
+                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
+                           placeholder="Enter your city">
+                </div>
+                
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">State</label>
+                    <input type="text" x-model="state" required
+                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
+                           placeholder="Enter your state">
+                </div>
+            </div>
+
+            <!-- Step 4: Verification -->
+            <div x-show="currentStep === 4" class="space-y-4">
+                <h3 class="text-white font-semibold text-lg">Verification</h3>
+                
+                <!-- Email Verification -->
+                <div x-show="oauthMethod === 'email'" class="text-center">
+                    <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mb-4">
+                        <p class="text-blue-300 text-sm">
+                            We've sent a verification email to <strong x-text="email"></strong>
+                        </p>
+                        <p class="text-blue-300 text-xs mt-2">
+                            Please check your email and click the verification link to continue.
+                        </p>
+                    </div>
+                    
+                    <button type="button" @click="resendEmailVerification" 
+                            class="text-blue-400 hover:underline text-sm">
+                        Didn't receive email? Resend verification
+                    </button>
+                </div>
+                
+                <!-- Mobile OTP Verification -->
+                <div x-show="oauthMethod === 'mobile'">
+                    <div class="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-4">
+                        <p class="text-green-300 text-sm">
+                            We've sent an OTP to <strong>+91<span x-text="mobile"></span></strong>
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white text-sm font-medium mb-2">Enter OTP</label>
+                        <input type="text" x-model="otp" required maxlength="6"
+                               class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input text-center"
+                               placeholder="Enter 6-digit OTP">
+                    </div>
+                    
+                    <button type="button" @click="resendOTP" 
+                            class="text-green-400 hover:underline text-sm w-full text-center mt-2">
+                        Resend OTP
+                    </button>
+                </div>
+                
+                <!-- Google OAuth Success -->
+                <div x-show="oauthMethod === 'google'" class="text-center">
+                    <div class="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-4">
+                        <p class="text-green-300 text-sm">
+                            Google account verified successfully!
+                        </p>
+                        <p class="text-green-300 text-xs mt-2">
+                            Click continue to complete your registration.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Free Trial Information (shown on all steps) -->
             <div class="space-y-4">
                 <h3 class="text-white font-semibold text-lg">Start Your Free Trial</h3>
                 
@@ -262,24 +438,37 @@
             </div>
 
             <!-- Terms and Conditions -->
-            <div class="flex items-start space-x-3">
+            <div x-show="currentStep === 2" class="flex items-start space-x-3">
                 <input type="checkbox" x-model="agreeToTerms" required
-                       class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                       class="mt-1 w-4 h-4 text-purple-600 bg-purple-100 border-purple-300 rounded focus:ring-purple-500">
                 <label class="text-white text-sm">
-                    I agree to the <a href="#" class="text-blue-400 hover:underline">Terms of Service</a> and 
-                    <a href="#" class="text-blue-400 hover:underline">Privacy Policy</a>
+                    I agree to the <a href="#" class="text-purple-400 hover:underline">Terms of Service</a> and 
+                    <a href="#" class="text-purple-400 hover:underline">Privacy Policy</a>
                 </label>
             </div>
 
-            <!-- Submit Button -->
-            <button type="submit" :disabled="loading"
-                    class="w-full py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-blue-700 transition-all disabled:opacity-50">
-                <span x-show="!loading">Start Free Trial</span>
-                <span x-show="loading" class="flex items-center justify-center">
-                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Creating your account...
-                </span>
-            </button>
+            <!-- Navigation Buttons -->
+            <div class="flex gap-4">
+                <!-- Back Button - Always visible -->
+                <button type="button" @click="goBack"
+                        class="flex-1 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-all">
+                    <span x-show="currentStep === 1">← Back to Home</span>
+                    <span x-show="currentStep > 1">← Previous</span>
+                </button>
+                
+                <!-- Next/Submit Button -->
+                <button type="submit" :disabled="loading"
+                        class="flex-1 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-blue-700 transition-all disabled:opacity-50">
+                    <span x-show="!loading">
+                        <span x-show="currentStep < 4">Next →</span>
+                        <span x-show="currentStep === 4">Complete Registration</span>
+                    </span>
+                    <span x-show="loading" class="flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Processing...
+                    </span>
+                </button>
+            </div>
 
             <!-- Error/Success Message -->
             <div x-show="message" x-text="message" 
@@ -323,76 +512,129 @@
                     
                     // UI state
                     loading: false,
+                    currentStep: 1, // Default to step 1
+                    oauthMethod: null, // 'google', 'email', 'mobile'
+                    address: '',
+                    city: '',
+                    state: '',
+                    otp: '',
                     
                     // Messages
                     message: '',
                     messageType: 'error',
                     
                     // Methods
-                    async registerUser() {
-                        try {
-                            if (!this.validateForm()) {
+                    async handleStepSubmit() {
+                        if (this.currentStep === 1) {
+                            await this.selectOAuth('google'); // Automatically select Google for step 1
+                        } else if (this.currentStep === 2) {
+                            if (!this.validateStep2()) {
                                 return;
                             }
-                            
                             this.loading = true;
                             this.message = '';
-                            
                             try {
                                 await this.createAccountWithTrial();
                             } catch (error) {
                                 this.loading = false;
                                 this.showMessage(error.message || 'Registration failed', 'error');
                             }
-                        } catch (error) {
-                            console.log('Registration error:', error);
-                            this.loading = false;
-                            this.showMessage('An error occurred. Please try again.', 'error');
+                        } else if (this.currentStep === 3) {
+                            if (!this.validateStep3()) {
+                                return;
+                            }
+                            this.loading = true;
+                            this.message = '';
+                            try {
+                                await this.createAccountWithTrial();
+                            } catch (error) {
+                                this.loading = false;
+                                this.showMessage(error.message || 'Registration failed', 'error');
+                            }
+                        } else if (this.currentStep === 4) {
+                            if (!this.validateStep4()) {
+                                return;
+                            }
+                            this.loading = true;
+                            this.message = '';
+                            try {
+                                await this.completeRegistration();
+                            } catch (error) {
+                                this.loading = false;
+                                this.showMessage(error.message || 'Registration failed', 'error');
+                            }
                         }
                     },
                 
-                    validateForm() {
-                        if (!this.fullName || !this.email || !this.password || !this.selectedClass || !this.selectedBoard) {
-                            this.showMessage('Please fill in all required fields', 'error');
+                    validateStep2() {
+                        if (!this.fullName || !this.selectedClass || !this.selectedBoard) {
+                            this.showMessage('Please fill in all required fields for Basic Information', 'error');
                             return false;
                         }
-                        
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!emailRegex.test(this.email)) {
-                            this.showMessage('Please enter a valid email address', 'error');
+                        if (this.oauthMethod === 'email' && !this.email) {
+                            this.showMessage('Email address is required for email registration', 'error');
                             return false;
                         }
-                        
-                        if (this.password.length < 6) {
+                        if (this.oauthMethod === 'mobile' && !this.mobile) {
+                            this.showMessage('Mobile number is required for mobile registration', 'error');
+                            return false;
+                        }
+                        if (this.oauthMethod !== 'google' && this.password.length < 6) {
                             this.showMessage('Password must be at least 6 characters long', 'error');
                             return false;
                         }
-                        
                         if (!this.agreeToTerms) {
                             this.showMessage('Please agree to the Terms of Service and Privacy Policy', 'error');
                             return false;
                         }
-                        
+                        return true;
+                    },
+
+                    validateStep3() {
+                        if (!this.address || !this.city || !this.state) {
+                            this.showMessage('Please fill in all required fields for Address Information', 'error');
+                            return false;
+                        }
+                        return true;
+                    },
+
+                    validateStep4() {
+                        if (this.oauthMethod === 'email') {
+                            if (!this.email) {
+                                this.showMessage('Email address is required for verification', 'error');
+                                return false;
+                            }
+                            if (!this.otp) {
+                                this.showMessage('OTP is required for verification', 'error');
+                                return false;
+                            }
+                        } else if (this.oauthMethod === 'mobile') {
+                            if (!this.mobile) {
+                                this.showMessage('Mobile number is required for verification', 'error');
+                                return false;
+                            }
+                            if (!this.otp) {
+                                this.showMessage('OTP is required for verification', 'error');
+                                return false;
+                            }
+                        }
                         return true;
                     },
                 
                     async createAccountWithTrial() {
                         const supabase = getSupabaseClient();
                         
-                        const { data, error } = await supabase.auth.signUp({
-                            email: this.email,
-                            password: this.password,
-                            options: {
-                                data: {
-                                    full_name: this.fullName,
-                                    class: this.selectedClass,
-                                    board: this.selectedBoard
-                                }
-                            }
-                        });
+                        let authData;
+                        if (this.oauthMethod === 'google') {
+                            authData = await this.handleGoogleOAuth();
+                        } else if (this.oauthMethod === 'email') {
+                            authData = await this.handleEmailOAuth();
+                        } else if (this.oauthMethod === 'mobile') {
+                            authData = await this.handleMobileOAuth();
+                        }
 
-                        if (error) {
-                            throw error;
+                        if (!authData || !authData.user) {
+                            throw new Error('Authentication failed or user not found.');
                         }
 
                         // Create user profile with trial
@@ -402,18 +644,13 @@
                         const { error: profileError } = await supabase
                             .from('user_profiles')
                             .insert({
-                                id: data.user.id,
+                                id: authData.user.id,
                                 full_name: this.fullName,
-                                email: this.email,
                                 class: this.selectedClass,
                                 board: this.selectedBoard,
-                                subscription_status: 'trial',
-                                subscription_plan: 'free_trial',
-                                subscription_start: trialStart.toISOString(),
-                                subscription_end: trialEnd.toISOString(),
-                                trial_start: trialStart.toISOString(),
-                                trial_end: trialEnd.toISOString(),
-                                created_at: new Date().toISOString()
+                                address: this.address,
+                                city: this.city,
+                                state: this.state
                             });
 
                         if (profileError) {
@@ -422,6 +659,86 @@
 
                         // Show success message
                         this.showTrialSuccess();
+                    },
+                
+                    async handleGoogleOAuth() {
+                        const supabase = getSupabaseClient();
+                        const { data, error } = await supabase.auth.signInWithOAuth({
+                            provider: 'google',
+                            options: {
+                                redirectTo: `${window.location.origin}/register.html?step=2` // Redirect to step 2
+                            }
+                        });
+                        if (error) throw error;
+                        return data;
+                    },
+
+                    async handleEmailOAuth() {
+                        const supabase = getSupabaseClient();
+                        const { data, error } = await supabase.auth.signUp({
+                            email: this.email,
+                            password: this.password,
+                            options: {
+                                data: {
+                                    full_name: this.fullName,
+                                    class: this.selectedClass,
+                                    board: this.selectedBoard,
+                                    address: this.address,
+                                    city: this.city,
+                                    state: this.state
+                                }
+                            }
+                        });
+                        if (error) throw error;
+                        return data;
+                    },
+
+                    async handleMobileOAuth() {
+                        const supabase = getSupabaseClient();
+                        const { data, error } = await supabase.auth.signUp({
+                            email: `${this.mobile}@tutor.ai`, // Generate a temporary email
+                            password: this.password,
+                            options: {
+                                data: {
+                                    full_name: this.fullName,
+                                    class: this.selectedClass,
+                                    board: this.selectedBoard,
+                                    address: this.address,
+                                    city: this.city,
+                                    state: this.state
+                                }
+                            }
+                        });
+                        if (error) throw error;
+                        return data;
+                    },
+
+                    async completeRegistration() {
+                        const supabase = getSupabaseClient();
+                        const { data, error } = await supabase.auth.verifyOtp({
+                            email: this.email,
+                            token: this.otp,
+                            type: 'recovery'
+                        });
+                        if (error) throw error;
+                        return data;
+                    },
+
+                    async resendEmailVerification() {
+                        const supabase = getSupabaseClient();
+                        const { error } = await supabase.auth.resendSignUp({ email: this.email });
+                        if (error) throw error;
+                        this.showMessage('Verification email resent. Please check your inbox.', 'success');
+                    },
+
+                    async resendOTP() {
+                        const supabase = getSupabaseClient();
+                        const { error } = await supabase.auth.resendOtp({
+                            email: this.email,
+                            type: 'recovery'
+                        });
+                        if (error) throw error;
+                        this.showMessage('OTP resent. Please check your mobile.', 'success');
                     },
                 
                     showTrialSuccess() {
@@ -436,6 +753,20 @@
                     showMessage(message, type = 'error') {
                         this.message = message;
                         this.messageType = type;
+                    },
+
+                    selectOAuth(method) {
+                        this.oauthMethod = method;
+                        this.currentStep = 2; // Move to step 2 for basic info
+                    },
+
+                    goBack() {
+                        if (this.currentStep === 1) {
+                            window.location.href = 'index.html';
+                        } else {
+                            this.currentStep--;
+                            this.oauthMethod = null; // Reset oauth method when going back
+                        }
                     }
                 }
             } catch (error) {
