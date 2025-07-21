@@ -4,12 +4,16 @@
   "webDir": "public",
   "backgroundColor": "#667eea",
   "server": {
+    "url": "https://tutor-padho-india.vercel.app",
+    "cleartext": true,
     "androidScheme": "https",
     "allowNavigation": [
+      "https://tutor-padho-india.vercel.app",
       "https://xhuljxuxnlwtocfmwiid.supabase.co",
       "https://cdn.jsdelivr.net",
       "https://fonts.googleapis.com",
-      "https://cdn.tailwindcss.com"
+      "https://cdn.tailwindcss.com",
+      "https://cdnjs.cloudflare.com"
     ]
   },
   "plugins": {
