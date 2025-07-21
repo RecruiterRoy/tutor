@@ -1,70 +1,38 @@
 {
   "version": 2,
-  "functions": {
-    "server.js": {
-      "maxDuration": 30
-    }
-  },
-  "routes": [
+  "builds": [
     {
-      "src": "/api/(.*)",
-      "dest": "/pages/api/$1"
+      "src": "server.js",
+      "use": "@vercel/node"
     },
     {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
+      "src": "api-*.js",
+      "use": "@vercel/node"
     },
     {
-      "src": "/manifest.json",
-      "dest": "/public/manifest.json"
+      "src": "public/**/*",
+      "use": "@vercel/static"
     },
     {
-      "src": "/public/(.*)",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "src": "*.html",
+      "use": "@vercel/static"
     }
   ],
-  "headers": [
-    {
-      "source": "/",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate, max-age=0"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        }
-      ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate, max-age=0"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        }
-      ]
-    }
+  "rewrites": [
+    { "source": "/api/chat", "destination": "/api-chat.js" },
+    { "source": "/api/health", "destination": "/api-health.js" },
+    { "source": "/api/:match*", "destination": "/server.js" },
+
+    { "source": "/login.html", "destination": "/login.html" },
+    { "source": "/register.html", "destination": "/register.html" },
+    { "source": "/dashboard.html", "destination": "/dashboard.html" },
+    { "source": "/admin.html", "destination": "/admin.html" },
+    { "source": "/verify-deployment.html", "destination": "/verify-deployment.html" },
+    { "source": "/test-localhost.html", "destination": "/test-localhost.html" },
+    { "source": "/test-api.html", "destination": "/test-api.html" },
+
+    { "source": "/favicon.ico", "destination": "/public/favicon.ico" },
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/:match*", "destination": "/server.js" }
   ]
 }
