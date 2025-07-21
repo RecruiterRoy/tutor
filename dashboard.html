@@ -7,7 +7,7 @@
     
     <!-- Preload essential resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
-    <link rel="preload" href="public/images/teacher-avatar2.png" as="image">
+    <link rel="preload" href="public/images/roy_sir.jpg" as="image">
     
     <!-- Load Tailwind CSS with reduced size -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -53,6 +53,11 @@
         });
     </script>
     
+    <!-- Load Razorpay for payments -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <!-- Load payment system -->
+    <script src="public/js/paymentSystem.js" defer></script>
     <!-- Load non-critical scripts after page load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js" defer></script>
@@ -93,7 +98,7 @@
         
         /* Optimized chat container */
         .chat-container {
-            height: 50vh;
+            height: 60vh;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
@@ -268,15 +273,14 @@
         }
 
         .tts-btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
-            border: none;
             min-width: 60px;
-            min-height: 40px;
+            min-height: 36px;
         }
 
         .tts-play {
@@ -322,6 +326,7 @@
         .chat-input {
             font-size: 16px; /* Prevent iOS zoom */
             min-height: 44px; /* Better touch target */
+            width: 90% !important; /* Reduce width by 10% */
         }
         
         /* Button optimizations */
@@ -333,7 +338,7 @@
         /* Media queries for mobile */
         @media (max-width: 640px) {
             .chat-container {
-                height: 55vh;
+                height: 65vh;
             }
             
             .gradient-border-content {
@@ -392,8 +397,9 @@
         <div class="p-4 border-b border-white/10">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-2">
-                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
-                    <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
+                    <img src="public/images/tutor_logo.png" alt="Tutor.AI Logo" class="h-8"
+                         onerror="this.style.display='none'; this.nextElementSibling.innerHTML='🎓 Tutor.AI';">
+                    <span class="text-white font-bold text-lg">Tutor.AI</span>
                 </div>
                 <button class="text-white text-2xl" onclick="closeMobileSidebar()">×</button>
             </div>
@@ -446,7 +452,7 @@
             <div class="md:hidden flex items-center justify-between p-3 bg-slate-800/90 border-b border-white/10">
                 <button class="text-white text-2xl" onclick="openMobileSidebar()">☰</button>
                 <div class="flex items-center space-x-2">
-                    <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-6">
+                    <img src="public/images/tutor_logo.png" alt="Tutor.AI Logo" class="h-6">
                     <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
                         </div>
                 <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -455,19 +461,26 @@
             </div>
             
             <!-- Desktop Header -->
-            <div class="hidden md:block bg-slate-800/90 border-b border-white/10 p-3">
+            <div class="hidden md:block bg-slate-800/90 border-b border-white/10 p-2">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <img src="/public/images/tutor logo/Tutor-logo-transparent.png" alt="Tutor.AI Logo" class="h-8">
-                        <h1 class="text-white text-xl font-bold">TUTOR.AI</h1>
+                    <div class="flex items-center space-x-2">
+                        <img src="public/images/tutor_logo.png" alt="Tutor.AI Logo" class="h-6">
+                        <h1 class="text-white text-lg font-bold">TUTOR.AI</h1>
                     </div>
-                    <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2">
                         <div class="text-right">
-                            <p class="text-white text-sm font-medium" id="topBarUserName">Loading...</p>
+                            <p class="text-white text-xs font-medium" id="topBarUserName">Loading...</p>
                             <p class="text-gray-400 text-xs" id="topBarUserClass">Loading...</p>
+                            <div class="text-xs">
+                                <span id="subscriptionBadge" class="px-2 py-1 bg-gray-500 text-white rounded-full text-xs">Free</span>
+                                                                <button id="upgradeButton" onclick="window.location.href='public/payment.html'"
+                                        class="ml-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded text-xs hover:from-purple-600 hover:to-pink-600">
+                                    Upgrade
+                                </button>
+                            </div>
                         </div>
-                        <div class="w-9 h-9 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                            <span id="topBarInitials" class="text-white font-bold text-sm">L</span>
+                        <div class="w-7 h-7 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <span id="topBarInitials" class="text-white font-bold text-xs">L</span>
                         </div>
                     </div>
                 </div>
@@ -484,7 +497,7 @@
                                 <div class="flex items-center space-x-3">
                                         <div class="avatar-container-chat">
                                             <img id="teacher-avatar-chat" class="avatar-image-chat" 
-                                             src="public/images/teacher-avatar2.png" alt="Teacher Avatar">
+                                             src="public/images/roy_sir.jpg" alt="Teacher Avatar">
                                             </div>
                                     <div class="teacher-info">
                                         <h2 id="teacher-name-chat" class="text-lg font-bold text-white">Roy Sir</h2>
@@ -523,7 +536,7 @@
                                                 type="text" 
                                                 id="chatInput" 
                                                 placeholder="Type your question here..." 
-                                            class="chat-input w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                            class="chat-input w-11/12 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                                 onkeypress="handleChatKeyPress(event)"
                                             >
                                         <div class="chat-buttons flex space-x-2">
@@ -608,13 +621,13 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="english" onclick="handleAvatarSelection('english')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="public/images/teacher-avatar2.png" alt="Roy Sir">
+                                            <img class="avatar-image-settings" src="public/images/roy_sir.jpg" alt="Roy Sir">
                                         </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Roy Sir</h3>
                                         </div>
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="hindi" onclick="handleAvatarSelection('hindi')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="public/images/teacher-avatar1.png" alt="Ms. Sapana">
+                                            <img class="avatar-image-settings" src="public/images/miss_sapna.jpg" alt="Ms. Sapana">
                                     </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Ms. Sapana</h3>
                                     </div>
@@ -688,9 +701,14 @@
         let recognition = null;
         let currentTeacher = {
                 name: "Roy Sir",
-            image: "public/images/teacher-avatar2.png",
+            image: "public/images/roy_sir.jpg",
             language: "en"
         };
+        
+        // TTS Variables
+        let currentSpeech = null;
+        let lastAIMessage = '';
+        let ttsEnabled = true; // Auto-play enabled by default
         
         // ========== INITIALIZATION ==========
         
@@ -711,6 +729,13 @@
                 currentUser = session.user;
                 console.log('User authenticated:', currentUser.email);
                 
+                // Check trial status first
+                const trialActive = await checkTrialStatus();
+                if (!trialActive) {
+                    console.log('❌ Trial expired, access blocked');
+                    return;
+                }
+                
                 // Load user profile FIRST
                 await loadUserProfile();
                 
@@ -722,6 +747,9 @@
                 
                 // Initialize voice features (enabled for both web and mobile)
                 initVoiceFeatures();
+                
+                // Connect teacher avatar to AI
+                connectTeacherAvatar();
                 
                 console.log('App initialized successfully');
                 
@@ -778,16 +806,14 @@
                 }
             });
             
-            // Navigation
-            document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const section = this.getAttribute('onclick').match(/showSection\('(.+?)'\)/)[1];
-                    showSection(section);
-                });
-            });
+            // Navigation - Remove duplicate event listeners since onclick handlers are already set
+            // The onclick handlers in HTML will handle navigation
             
             // Update UI with user data
             updateUserInterface();
+            
+            // Close sidebar when clicking overlay
+            document.getElementById('mobileSidebarOverlay').addEventListener('click', closeMobileSidebar);
         }
         
         function initChatService() {
@@ -1101,33 +1127,125 @@
             }
         }
         
+        // Handle sending messages
         async function handleSendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
             
             if (!message) return;
             
+            // Check trial status before allowing messages
+            const trialActive = await checkTrialStatus();
+            if (!trialActive) {
+                console.log('❌ Trial expired, message blocked');
+                return;
+            }
+            
+            // Clear input
+            chatInput.value = '';
+            
+            // Add user message to chat
             addMessage('user', message);
-            input.value = '';
+            
+            // Show loading state
+            showLoading(true);
             
             try {
-                showTypingIndicator();
+                // Get AI response
+                const response = await getAIResponse(message);
                 
-                // Check if gptService is available
-                if (typeof window.gptService === 'undefined') {
-                    throw new Error('GPT Service not loaded. Please refresh the page.');
-                }
+                // Add AI response to chat
+                addMessage('ai', response);
                 
-                // Use the external gptService
-                const aiResponse = await window.gptService.sendMessage(message, userData);
-                
-                removeTypingIndicator();
-                addMessage('ai', aiResponse);
+                // Save to chat history
+                await saveChatMessage(message, response);
                 
             } catch (error) {
-                removeTypingIndicator();
-                console.error('Chat error:', error);
-                addMessage('ai', `Sorry, I encountered an error: ${error.message}. Please try refreshing the page.`);
+                console.error('Error getting AI response:', error);
+                addMessage('ai', 'Sorry, I encountered an error. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Get AI response using gptService
+        async function getAIResponse(message) {
+            if (!window.gptService) {
+                throw new Error('GPT Service not available');
+            }
+            
+            try {
+                const response = await window.gptService.sendMessage(message, userData);
+                return response;
+            } catch (error) {
+                console.error('Error getting AI response:', error);
+                throw error;
+            }
+        }
+        
+        // Save chat message to history
+        async function saveChatMessage(userMessage, aiResponse) {
+            try {
+                // Add to local chat history
+                chatHistory.push({
+                    user: userMessage,
+                    ai: aiResponse,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Keep only last 50 messages to prevent memory issues
+                if (chatHistory.length > 50) {
+                    chatHistory = chatHistory.slice(-50);
+                }
+                
+                // Save to Supabase if available
+                if (supabaseClient && currentUser) {
+                    const { error } = await supabaseClient
+                        .from('chat_history')
+                        .insert({
+                            user_id: currentUser.id,
+                            user_message: userMessage,
+                            ai_response: aiResponse,
+                            created_at: new Date().toISOString()
+                        });
+                    
+                    if (error) {
+                        console.warn('Failed to save chat to database:', error);
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to save chat message:', error);
+            }
+        }
+        
+        // Show/hide loading indicator
+        function showLoading(show) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            if (show) {
+                // Remove existing loading indicator
+                const existingIndicator = document.getElementById('loadingIndicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                
+                // Add new loading indicator
+                const loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loadingIndicator';
+                loadingDiv.className = 'typing-indicator';
+                loadingDiv.innerHTML = `
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                `;
+                chatMessages.appendChild(loadingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } else {
+                // Remove loading indicator
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
             }
         }
         
@@ -1235,6 +1353,18 @@
         
         // ========== STUDY MATERIALS ==========
         
+        // Connect teacher avatar to AI
+        function connectTeacherAvatar() {
+            const avatar = document.querySelector('.avatar-image-chat');
+            if (avatar) {
+                avatar.addEventListener('click', function() {
+                    // Trigger AI chat
+                    document.getElementById('chatInput').focus();
+                    showSuccess('Click the chat input to start talking with your AI teacher!');
+                });
+            }
+        }
+        
         // ========== PROGRESS SECTION ==========
         
         function initProgressSection() {
@@ -1277,9 +1407,9 @@
         function renderSubjects() {
             const subjectsList = document.getElementById('subjectsList');
             window.progressSubjects = window.progressSubjects || [
-                { name: 'Math', progress: 30 },
-                { name: 'Science', progress: 45 },
-                { name: 'English', progress: 20 }
+                { name: 'Math', progress: 0 },
+                { name: 'Science', progress: 0 },
+                { name: 'English', progress: 0 }
             ];
             
             subjectsList.innerHTML = '';
@@ -1320,13 +1450,13 @@
             if (teacher === 'hindi') {
                 currentTeacher = {
                     name: "Ms. Sapana",
-                    image: "public/images/teacher-avatar1.png",
+                    image: "public/images/miss_sapna.jpg",
                     language: "hi"
                 };
             } else {
                 currentTeacher = {
                     name: "Roy Sir",
-                    image: "public/images/teacher-avatar2.png",
+                    image: "public/images/roy_sir.jpg",
                     language: "en"
                 };
             }
@@ -1397,8 +1527,7 @@
             document.body.style.overflow = '';
         }
         
-        // Close sidebar when clicking overlay
-        document.getElementById('mobileSidebarOverlay').addEventListener('click', closeMobileSidebar);
+
         
         // ========== UTILITY FUNCTIONS ==========
         
@@ -1425,10 +1554,6 @@
         }
         
         // ========== TTS FUNCTIONS ==========
-        
-        let currentSpeech = null;
-        let lastAIMessage = '';
-        let ttsEnabled = true; // Auto-play enabled by default
         
         function playTTS() {
             if (!lastAIMessage || !ttsEnabled) {
@@ -1545,7 +1670,245 @@
         
         // ========== START APPLICATION ==========
         
-        document.addEventListener('DOMContentLoaded', initApp);
+        // Request microphone permission on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Request microphone permission
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(function(stream) {
+                        console.log('Microphone permission granted');
+                    })
+                    .catch(function(err) {
+                        console.log('Microphone permission denied:', err);
+                    });
+            }
+            
+            initApp();
+        });
+
+        // Update subscription UI
+        function updateSubscriptionUI(subscription) {
+            // Update subscription badge
+            const subscriptionBadge = document.getElementById('subscriptionBadge');
+            if (subscriptionBadge) {
+                if (subscription.is_active) {
+                    if (subscription.plan_type === 'free_trial') {
+                        const daysLeft = subscription.days_remaining;
+                        subscriptionBadge.textContent = `Trial (${daysLeft}d)`;
+                        subscriptionBadge.className = 'px-2 py-1 bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs rounded-full';
+                    } else {
+                        subscriptionBadge.textContent = 'Premium';
+                        subscriptionBadge.className = 'px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs rounded-full';
+                    }
+                } else {
+                    subscriptionBadge.textContent = 'Expired';
+                    subscriptionBadge.className = 'px-2 py-1 bg-red-500 text-white text-xs rounded-full';
+                }
+            }
+
+            // Update payment button
+            const paymentButton = document.getElementById('upgradeButton');
+            if (paymentButton) {
+                if (subscription.is_active) {
+                    if (subscription.plan_type === 'free_trial') {
+                        const daysLeft = subscription.days_remaining;
+                        if (daysLeft <= 3) {
+                            paymentButton.textContent = `Upgrade Now (${daysLeft}d left)`;
+                            paymentButton.className = 'ml-2 px-2 py-1 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded text-xs hover:from-red-600 hover:to-orange-600';
+                        } else {
+                            paymentButton.textContent = `Upgrade (${daysLeft}d left)`;
+                            paymentButton.className = 'ml-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded text-xs hover:from-purple-600 hover:to-pink-600';
+                        }
+                    } else {
+                        paymentButton.textContent = 'Premium Active';
+                        paymentButton.disabled = true;
+                        paymentButton.className = 'ml-2 px-2 py-1 bg-green-600 text-white rounded text-xs disabled:opacity-50';
+                    }
+                } else {
+                    paymentButton.textContent = 'Upgrade to Premium';
+                    paymentButton.disabled = false;
+                    paymentButton.className = 'ml-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded text-xs hover:from-purple-600 hover:to-pink-600';
+                }
+            }
+
+            // Show trial expiry warning
+            if (subscription.is_active && subscription.plan_type === 'free_trial' && subscription.days_remaining <= 1) {
+                showTrialExpiryWarning(subscription.days_remaining);
+            }
+        }
+
+        // Show trial expiry warning
+        function showTrialExpiryWarning(daysLeft) {
+            // Check if warning already shown
+            if (localStorage.getItem('trialWarningShown')) return;
+            
+            const warning = document.createElement('div');
+            warning.id = 'trialWarning';
+            warning.className = 'fixed top-4 right-4 bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm';
+            warning.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="text-2xl">⚠️</div>
+                    <div>
+                        <h4 class="font-semibold mb-1">Trial Ending Soon!</h4>
+                        <p class="text-sm mb-3">Your free trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}. Upgrade now to continue learning.</p>
+                        <div class="flex space-x-2">
+                            <button onclick="upgradeNow()" class="bg-white text-orange-600 px-3 py-1 rounded text-sm font-medium">
+                                Upgrade Now
+                            </button>
+                            <button onclick="dismissWarning()" class="text-white/80 text-sm">
+                                Dismiss
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(warning);
+            localStorage.setItem('trialWarningShown', 'true');
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (warning.parentNode) {
+                    warning.remove();
+                }
+            }, 10000);
+        }
+
+        // Upgrade function
+        function upgradeNow() {
+            window.location.href = 'public/payment.html';
+        }
+
+        // Dismiss warning
+        function dismissWarning() {
+            const warning = document.getElementById('trialWarning');
+            if (warning) {
+                warning.remove();
+            }
+        }
+
+        // Check trial status and block access if expired
+        async function checkTrialStatus() {
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) return;
+
+                const { data: profile, error } = await supabaseClient
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching profile:', error);
+                    return;
+                }
+
+                if (profile.subscription_status === 'trial') {
+                    const trialEnd = new Date(profile.trial_end);
+                    const now = new Date();
+                    
+                    if (trialEnd <= now) {
+                        // Trial expired - show blocking overlay
+                        showTrialExpiredOverlay();
+                        return false;
+                    }
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Error checking trial status:', error);
+                return true;
+            }
+        }
+
+        // Show trial expired overlay
+        function showTrialExpiredOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'trialExpiredOverlay';
+            overlay.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
+            
+            // Get teacher name for personalized message
+            const teacherName = currentTeacher?.name || 'your teacher';
+            const isHindiTeacher = currentTeacher?.language === 'hi';
+            
+            const hindiMessage = isHindiTeacher ? 
+                `Mujhe aapko padhane mai achha lgta hai, kripya ₹99 ka payment kar ke apni padhai jari rakhein.` :
+                `I enjoyed teaching you, please pay ₹99 to continue studying with me.`;
+            
+            const englishMessage = isHindiTeacher ?
+                `I enjoyed teaching you, please pay ₹99 to continue studying with me.` :
+                `I enjoyed teaching you, please pay ₹99 to continue studying with me.`;
+            
+            overlay.innerHTML = `
+                <div class="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
+                    <div class="text-6xl mb-4">⏰</div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Trial Period Ended</h2>
+                    
+                    <!-- Teacher's personalized message -->
+                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-center justify-center mb-3">
+                            <img src="${currentTeacher?.image || 'public/images/miss_sapna.jpg'}" 
+                                 alt="${teacherName}" 
+                                 class="w-12 h-12 rounded-full mr-3">
+                            <h3 class="font-semibold text-blue-800">${teacherName}</h3>
+                        </div>
+                        <p class="text-blue-700 text-lg mb-2 font-medium">${hindiMessage}</p>
+                        <p class="text-gray-600 text-sm">${englishMessage}</p>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h3 class="font-semibold text-blue-800 mb-2">Premium Features:</h3>
+                        <ul class="text-blue-700 text-sm space-y-1">
+                            <li>✅ Unlimited AI Chat</li>
+                            <li>✅ Voice Input & Output</li>
+                            <li>✅ Advanced AI Models</li>
+                            <li>✅ Personalized Learning</li>
+                            <li>✅ Priority Support</li>
+                        </ul>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="upgradeToPremium()" 
+                                class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all">
+                            Pay Now - ₹99/month
+                        </button>
+                        <button onclick="logout()" 
+                                class="px-4 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-all">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Prevent scrolling
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Upgrade to premium function
+        function upgradeToPremium() {
+            window.location.href = 'public/payment.html';
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                await supabaseClient.auth.signOut();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Remove trial expired overlay
+        function removeTrialExpiredOverlay() {
+            const overlay = document.getElementById('trialExpiredOverlay');
+            if (overlay) {
+                overlay.remove();
+                document.body.style.overflow = 'auto';
+            }
+        }
     </script>
 </body>
 </html>

@@ -28,6 +28,7 @@
     "marked": "^16.0.0",
     "mermaid": "^11.8.0",
     "pdfjs-dist": "^5.3.93",
+    "razorpay": "^2.9.2",
     "tailwindcss": "^3.4.1",
     "node-fetch": "^2.7.0"
   },
