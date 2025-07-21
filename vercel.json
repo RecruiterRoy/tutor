@@ -1,84 +1,42 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api-*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
+  "functions": {
+    "server.js": {
+      "maxDuration": 30
     }
-  ],
+  },
   "routes": [
     {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/index.html",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/login.html",
-      "dest": "/login.html"
-    },
-    {
-      "src": "/register.html",
-      "dest": "/register.html"
-    },
-    {
-      "src": "/dashboard.html",
-      "dest": "/dashboard.html"
-    },
-    {
-      "src": "/admin.html", 
-      "dest": "/admin.html"
-    },
-    {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/public/(.*)",
-      "dest": "/public/$1"
+      "src": "/api/(.*)",
+      "dest": "/pages/api/$1"
     },
     {
       "src": "/favicon.ico",
       "dest": "/public/favicon.ico"
     },
     {
-      "src": "/api/chat",
-      "dest": "/api-chat.js"
+      "src": "/manifest.json",
+      "dest": "/public/manifest.json"
     },
     {
-      "src": "/api/health",
-      "dest": "/api-health.js"
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/server.js"
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
   ],
-  "functions": {
-    "server.js": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/",
       "headers": [
         {
-          "key": "Cache-Control", 
+          "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate, max-age=0"
         },
         {
@@ -108,5 +66,7 @@
         }
       ]
     }
-  ]
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }
