@@ -4,294 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - TUTOR.AI</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     
-    <!-- Inline Supabase config for mobile APK -->
-    <script>
-        // Supabase configuration - inline for mobile APK
-        window.TUTOR_CONFIG = {
-            SUPABASE_URL: 'https://xhuljxuxnlwtocfmwiid.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NzE5NzQsImV4cCI6MjA1MDU0Nzk3NH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8'
-        };
-    </script>
-    
-    <!-- Load Supabase CDN with fallback -->
+    <!-- Load Supabase CDN first -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // Fallback if Supabase CDN fails
-        if (!window.supabase) {
-            console.error('Supabase CDN failed to load');
-            document.addEventListener('DOMContentLoaded', function() {
-                showError('Unable to load required resources. Please check your internet connection and try again.');
-            });
-        }
-    </script>
     
-    <!-- Error handling for missing resources -->
+    <!-- Use Tailwind via CDN with config (production ready) -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <script>
-        window.addEventListener('error', function(e) {
-            if (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT') {
-                console.log('Resource failed to load:', e.target.src);
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2'
+                    }
+                }
             }
-        });
-        
-        // Mobile-specific error handling
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            // Add mobile-specific styles
-            const mobileStyles = document.createElement('style');
-            mobileStyles.textContent = `
-                body { padding: 0.5rem; }
-                .max-w-md { max-width: 100%; }
-                .p-6 { padding: 1rem; }
-                .text-2xl { font-size: 1.25rem; }
-                .text-lg { font-size: 1rem; }
-                
-                /* Mobile dropdown improvements */
-                select.form-input {
-                    font-size: 16px; /* Prevents zoom on iOS */
-                    background: rgba(255, 255, 255, 0.15);
-                    color: white;
-                }
-                
-                select.form-input option {
-                    background: #374151;
-                    color: white;
-                    font-size: 16px;
-                }
-                
-                /* APK-specific improvements */
-                .glass-effect {
-                    backdrop-filter: none;
-                    background: rgba(0, 0, 0, 0.3);
-                }
-            `;
-            document.head.appendChild(mobileStyles);
-            
-            // Add offline detection
-            window.addEventListener('offline', function() {
-                showError('You are offline. Please check your internet connection.');
-            });
-            
-            window.addEventListener('online', function() {
-                // Hide error message when back online
-                const errorMessage = document.getElementById('errorMessage');
-                if (errorMessage && !errorMessage.classList.contains('hidden')) {
-                    errorMessage.classList.add('hidden');
-                }
-            });
         }
     </script>
     
-    <!-- Custom CSS instead of Tailwind CDN -->
-    <style>
-        /* Base styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        
-        .w-full { width: 100%; }
-        .max-w-md { max-width: 28rem; }
-        .mb-8 { margin-bottom: 2rem; }
-        .mb-4 { margin-bottom: 1rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
-        .mb-1 { margin-bottom: 0.25rem; }
-        .mt-6 { margin-top: 1.5rem; }
-        .mt-2 { margin-top: 0.5rem; }
-        .mt-1 { margin-top: 0.25rem; }
-        .ml-2 { margin-left: 0.5rem; }
-        .p-6 { padding: 1.5rem; }
-        .p-4 { padding: 1rem; }
-        .p-3 { padding: 0.75rem; }
-        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-        .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
-        .px-4 { padding-left: 1rem; padding-right: 1rem; }
-        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
-        .h-12 { height: 3rem; }
-        .h-6 { height: 1.5rem; }
-        .w-6 { width: 1.5rem; }
-        .w-4 { width: 1rem; }
-        .h-4 { height: 1rem; }
-        .text-center { text-align: center; }
-        .text-white { color: white; }
-        .text-gray-200 { color: #e5e7eb; }
-        .text-gray-300 { color: #d1d5db; }
-        .text-blue-400 { color: #60a5fa; }
-        .text-blue-300 { color: #93c5fd; }
-        .text-green-300 { color: #86efac; }
-        .text-red-300 { color: #fca5a5; }
-        .text-2xl { font-size: 1.5rem; }
-        .text-xl { font-size: 1.25rem; }
-        .text-lg { font-size: 1.125rem; }
-        .text-sm { font-size: 0.875rem; }
-        .text-xs { font-size: 0.75rem; }
-        .font-bold { font-weight: 700; }
-        .font-semibold { font-weight: 600; }
-        .font-medium { font-weight: 500; }
-        .rounded-2xl { border-radius: 1rem; }
-        .rounded-lg { border-radius: 0.5rem; }
-        .rounded-full { border-radius: 9999px; }
-        .border-2 { border-width: 2px; }
-        .border-b-2 { border-bottom-width: 2px; }
-        .border-green-500 { border-color: #10b981; }
-        .border-blue-500 { border-color: #3b82f6; }
-        .border-red-500 { border-color: #ef4444; }
-        .border-gray-300 { border-color: #d1d5db; }
-        .space-y-4 > * + * { margin-top: 1rem; }
-        .space-y-3 > * + * { margin-top: 0.75rem; }
-        .space-y-2 > * + * { margin-top: 0.5rem; }
-        .space-x-2 > * + * { margin-left: 0.5rem; }
-        .flex { display: flex; }
-        .items-center { align-items: center; }
-        .items-start { align-items: flex-start; }
-        .justify-center { justify-content: center; }
-        .block { display: block; }
-        .inline-block { display: inline-block; }
-        .hidden { display: none; }
-        .relative { position: relative; }
-        .absolute { position: absolute; }
-        .transform { transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y)); }
-        .-translate-x-1\/2 { --tw-translate-x: -50%; }
-        .-top-4 { top: -1rem; }
-        .left-1\/2 { left: 50%; }
-        .top-1\/2 { top: 50%; }
-        .animate-spin { animation: spin 1s linear infinite; }
-        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-        .hover\:underline:hover { text-decoration: underline; }
-        .hover\:from-green-600:hover { background: linear-gradient(to right, #059669, #1d4ed8); }
-        .hover\:to-blue-700:hover { background: linear-gradient(to right, #10b981, #1d4ed8); }
-        .focus\:outline-none:focus { outline: 2px solid transparent; outline-offset: 2px; }
-        .focus\:ring-2:focus { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
-        .focus\:ring-blue-500:focus { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
-        
-        /* Custom styles */
-        .glass-effect {
-            backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .form-input {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-        }
-        
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .form-input:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #667eea;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5);
-        }
-        
-        /* Fix dropdown styling */
-        .form-input option {
-            background: #1f2937;
-            color: white;
-        }
-        
-        /* Additional dropdown fixes for better visibility */
-        select.form-input {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-        
-        select.form-input option {
-            background: #374151;
-            color: white;
-            padding: 8px;
-        }
-        
-        select.form-input option:hover {
-            background: #4b5563;
-        }
-        
-        select.form-input:focus option:checked {
-            background: #667eea;
-        }
-        
-        .trial-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .trial-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-        
-        .trial-card.selected {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #667eea;
-        }
-        
-        .bg-gradient-to-r {
-            background: linear-gradient(to right, var(--tw-gradient-stops));
-        }
-        
-        .from-green-500 {
-            --tw-gradient-from: #10b981;
-            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(16, 185, 129, 0));
-        }
-        
-        .to-blue-600 {
-            --tw-gradient-to: #2563eb;
-        }
-        
-        .bg-green-500\/20 {
-            background-color: rgba(16, 185, 129, 0.2);
-        }
-        
-        .bg-blue-500\/20 {
-            background-color: rgba(59, 130, 246, 0.2);
-        }
-        
-        .bg-red-500\/20 {
-            background-color: rgba(239, 68, 68, 0.2);
-        }
-        
-        .border-green-500\/50 {
-            border-color: rgba(16, 185, 129, 0.5);
-        }
-        
-        .border-blue-500\/50 {
-            border-color: rgba(59, 130, 246, 0.5);
-        }
-        
-        .border-red-500\/50 {
-            border-color: rgba(239, 68, 68, 0.5);
-        }
-        
-        .text-6xl {
-            font-size: 3.75rem;
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-    </style>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
     <style>
         .glass-effect {
             backdrop-filter: blur(20px);
@@ -301,381 +34,414 @@
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        .form-input {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
         }
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+        
+        /* Fix input field visibility */
+        input[type="email"], 
+        input[type="password"], 
+        input[type="tel"], 
+        input[type="text"],
+        select {
+            background: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
         }
-        .form-input:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #667eea;
+        
+        input[type="email"]::placeholder, 
+        input[type="password"]::placeholder, 
+        input[type="tel"]::placeholder, 
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
         }
-        .trial-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
+        
+        input[type="email"]:focus, 
+        input[type="password"]:focus, 
+        input[type="tel"]:focus, 
+        input[type="text"]:focus,
+        select:focus {
+            background: rgba(0, 0, 0, 0.5) !important;
+            border-color: rgba(139, 92, 246, 0.8) !important;
+            outline: none !important;
         }
-        .trial-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        
+        /* Fix select dropdown */
+        select option {
+            background: #1f2937 !important;
+            color: white !important;
         }
-        .trial-card.selected {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #667eea;
+        
+        /* Stronger dropdown fixes */
+        select {
+            background: rgba(0, 0, 0, 0.5) !important;
+            color: white !important;
+        }
+        
+        select option {
+            background-color: #374151 !important;
+            color: white !important;
+            padding: 8px !important;
+        }
+        
+        select option:hover {
+            background-color: #4b5563 !important;
+        }
+        
+        select option:checked {
+            background-color: #667eea !important;
+        }
+        
+        /* Force dropdown styling for all browsers */
+        select.w-full option {
+            background: #374151 !important;
+            color: white !important;
+        }
+        
+        /* WebKit specific fixes */
+        select::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        select::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        
+        select::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        
+        /* Ultra aggressive dropdown styling - force override everything */
+        body select,
+        body select option,
+        div select,
+        div select option,
+        form select,
+        form select option {
+            background-color: #374151 !important;
+            color: white !important;
+        }
+        
+        /* Mobile specific dropdown fixes */
+        @media (max-width: 768px) {
+            select {
+                background-color: #374151 !important;
+                color: white !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                appearance: none !important;
+            }
+            
+            select option {
+                background-color: #374151 !important;
+                color: white !important;
+            }
+        }
+        
+        /* Force override for Tailwind classes */
+        .w-full.px-4.py-3.rounded-lg.focus\\:outline-none.input-glow {
+            background: rgba(0, 0, 0, 0.5) !important;
+            color: white !important;
+        }
+        
+        .w-full.px-4.py-3.rounded-lg.focus\\:outline-none.input-glow option {
+            background: #374151 !important;
+            color: white !important;
+        }
+        
+        /* Fix checkbox */
+        input[type="checkbox"] {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 <body class="gradient-bg min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
-        <!-- Logo and Title -->
+    <div class="glass-effect rounded-2xl p-8 w-full max-w-md shadow-2xl" x-data="registerApp()">
+        <!-- Header -->
         <div class="text-center mb-8">
-            <div class="flex items-center justify-center mb-4">
+            <div class="flex justify-center mb-4">
                 <a href="index.html" class="cursor-pointer">
-                    <img src="public/images/tutor logo/Tutor-logo-transparent.png" alt="TUTOR.AI Logo" class="h-12" 
-                         onerror="this.style.display='none'; this.nextElementSibling.style.marginLeft='0'; this.nextElementSibling.innerHTML='🎓 TUTOR.AI';">
+                    <img src="public/images/tutor logo/Tutor-logo-transparent.png" alt="TUTOR.AI Logo" style="height: 60px; width: auto; filter: brightness(0) invert(1);"
+                         onerror="this.style.display='none'; this.nextElementSibling.innerHTML='🎓 TUTOR.AI';">
                 </a>
-                <h1 class="text-white text-2xl font-bold ml-2">TUTOR.AI</h1>
             </div>
+            <h1 class="text-3xl font-bold text-white mb-2">Join TUTOR.AI</h1>
             <p class="text-gray-200">Start your learning journey with a free trial</p>
         </div>
 
         <!-- Registration Form -->
-        <div class="glass-effect rounded-2xl p-6">
-            <form id="registrationForm" class="space-y-4">
-                <!-- Basic Information -->
-                <div class="space-y-3">
-                    <h3 class="text-white font-semibold text-lg">Basic Information</h3>
-                    
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1">Full Name</label>
-                        <input type="text" id="fullName" name="fullName" required
-                               class="form-input w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="Enter your full name">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1">Email</label>
-                        <input type="email" id="email" name="email" required
-                               class="form-input w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="Enter your email">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1">Password</label>
-                        <input type="password" id="password" name="password" required
-                               class="form-input w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="Create a password">
-                    </div>
+        <form @submit.prevent="registerUser" class="space-y-6">
+            <!-- Basic Information -->
+            <div class="space-y-4">
+                <h3 class="text-white font-semibold text-lg">Basic Information</h3>
+                
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Full Name</label>
+                    <input type="text" x-model="fullName" required
+                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow"
+                           placeholder="Enter your full name">
                 </div>
-
-                <!-- Academic Information -->
-                <div class="space-y-3">
-                    <h3 class="text-white font-semibold text-lg">Academic Information</h3>
-                    
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1">Class</label>
-                        <select id="class" name="class" required
-                                class="form-input w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Select your class</option>
-                            <option value="Class 1">Class 1</option>
-                            <option value="Class 2">Class 2</option>
-                            <option value="Class 3">Class 3</option>
-                            <option value="Class 4">Class 4</option>
-                            <option value="Class 5">Class 5</option>
-                            <option value="Class 6">Class 6</option>
-                            <option value="Class 7">Class 7</option>
-                            <option value="Class 8">Class 8</option>
-                            <option value="Class 9">Class 9</option>
-                            <option value="Class 10">Class 10</option>
-                            <option value="Class 11">Class 11</option>
-                            <option value="Class 12">Class 12</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-white text-sm font-medium mb-1">Board</label>
-                        <select id="board" name="board" required
-                                class="form-input w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Select your board</option>
-                            <option value="CBSE">CBSE</option>
-                            <option value="ICSE">ICSE</option>
-                            <option value="State Board">State Board</option>
-                            <option value="IB">IB</option>
-                            <option value="IGCSE">IGCSE</option>
-                        </select>
-                    </div>
+                
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Email</label>
+                    <input type="email" x-model="email" required
+                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow"
+                           placeholder="Enter your email">
                 </div>
-
-                <!-- Free Trial Information -->
-                <div class="space-y-3">
-                    <h3 class="text-white font-semibold text-lg">Start Your Free Trial</h3>
-                    
-                    <div class="trial-card glass-effect rounded-lg p-4 border-2 border-green-500 relative">
-                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                            <span class="bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-                                🎉 1 Week Free Trial
-                            </span>
-                        </div>
-                        <div class="text-center mb-4">
-                            <h4 class="text-white font-semibold text-lg mb-2">Try TUTOR.AI Free</h4>
-                            <p class="text-gray-300 text-sm">Experience all premium features for 7 days</p>
-                        </div>
-                        <ul class="text-gray-200 text-sm space-y-2 mb-4">
-                            <li>✅ Unlimited AI Chat</li>
-                            <li>✅ Voice Input & Output</li>
-                            <li>✅ Advanced AI Models</li>
-                            <li>✅ Personalized Learning</li>
-                            <li>✅ No Credit Card Required</li>
-                        </ul>
-                        <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-3">
-                            <p class="text-blue-300 text-xs">
-                                <strong>After 7 days:</strong> Continue with ₹99/month or cancel anytime
-                            </p>
-                        </div>
-                    </div>
+                
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Password</label>
+                    <input type="password" x-model="password" required
+                           class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow"
+                           placeholder="Create a password">
                 </div>
-
-                <!-- Terms and Conditions -->
-                <div class="flex items-start space-x-2">
-                    <input type="checkbox" id="terms" name="terms" required
-                           class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
-                    <label for="terms" class="text-white text-sm">
-                        I agree to the <a href="#" class="text-blue-400 hover:underline">Terms of Service</a> and 
-                        <a href="#" class="text-blue-400 hover:underline">Privacy Policy</a>
-                    </label>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" id="submitBtn"
-                        class="w-full py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-blue-700 transition-all">
-                    Start Free Trial
-                </button>
-
-                <!-- Loading State -->
-                <div id="loadingState" class="hidden text-center">
-                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    <p class="text-white text-sm mt-2">Creating your account...</p>
-                </div>
-
-                <!-- Error Message -->
-                <div id="errorMessage" class="hidden bg-red-500/20 border border-red-500/50 rounded-lg p-3">
-                    <p id="errorText" class="text-red-300 text-sm"></p>
-                </div>
-            </form>
-
-            <!-- Login Link -->
-            <div class="text-center mt-6">
-                <p class="text-gray-300 text-sm">
-                    Already have an account? 
-                    <a href="login.html" class="text-blue-400 hover:underline font-medium">Sign In</a>
-                </p>
             </div>
+
+            <!-- Academic Information -->
+            <div class="space-y-4">
+                <h3 class="text-white font-semibold text-lg">Academic Information</h3>
+                
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Class</label>
+                    <select x-model="selectedClass" required
+                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow">
+                        <option value="">Select your class</option>
+                        <option value="Class 1">Class 1</option>
+                        <option value="Class 2">Class 2</option>
+                        <option value="Class 3">Class 3</option>
+                        <option value="Class 4">Class 4</option>
+                        <option value="Class 5">Class 5</option>
+                        <option value="Class 6">Class 6</option>
+                        <option value="Class 7">Class 7</option>
+                        <option value="Class 8">Class 8</option>
+                        <option value="Class 9">Class 9</option>
+                        <option value="Class 10">Class 10</option>
+                        <option value="Class 11">Class 11</option>
+                        <option value="Class 12">Class 12</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Board</label>
+                    <select x-model="selectedBoard" required
+                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow">
+                        <option value="">Select your board</option>
+                        <option value="CBSE">CBSE</option>
+                        <option value="ICSE">ICSE</option>
+                        <option value="State Board">State Board</option>
+                        <option value="IB">IB</option>
+                        <option value="IGCSE">IGCSE</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Free Trial Information -->
+            <div class="space-y-4">
+                <h3 class="text-white font-semibold text-lg">Start Your Free Trial</h3>
+                
+                <div class="bg-green-500/20 border border-green-500/50 rounded-lg p-4">
+                    <div class="text-center mb-4">
+                        <h4 class="text-white font-semibold text-lg mb-2">Try TUTOR.AI Free</h4>
+                        <p class="text-gray-300 text-sm">Experience all premium features for 7 days</p>
+                    </div>
+                    <ul class="text-gray-200 text-sm space-y-2 mb-4">
+                        <li>✅ Unlimited AI Chat</li>
+                        <li>✅ Voice Input & Output</li>
+                        <li>✅ Advanced AI Models</li>
+                        <li>✅ Personalized Learning</li>
+                        <li>✅ No Credit Card Required</li>
+                    </ul>
+                    <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-3">
+                        <p class="text-blue-300 text-xs">
+                            <strong>After 7 days:</strong> Continue with ₹99/month or cancel anytime
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="flex items-start space-x-3">
+                <input type="checkbox" x-model="agreeToTerms" required
+                       class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                <label class="text-white text-sm">
+                    I agree to the <a href="#" class="text-blue-400 hover:underline">Terms of Service</a> and 
+                    <a href="#" class="text-blue-400 hover:underline">Privacy Policy</a>
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" :disabled="loading"
+                    class="w-full py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-blue-700 transition-all disabled:opacity-50">
+                <span x-show="!loading">Start Free Trial</span>
+                <span x-show="loading" class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Creating your account...
+                </span>
+            </button>
+
+            <!-- Error/Success Message -->
+            <div x-show="message" x-text="message" 
+                 :class="messageType === 'error' ? 'bg-red-500/20 border border-red-500/50 text-red-300' : 'bg-green-500/20 border border-green-500/50 text-green-300'"
+                 class="rounded-lg p-3 text-sm"></div>
+        </form>
+
+        <!-- Login Link -->
+        <div class="text-center mt-6">
+            <p class="text-gray-300 text-sm">
+                Already have an account? 
+                <a href="login.html" class="text-blue-400 hover:underline font-medium">Sign In</a>
+            </p>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script>
-        // Use existing Supabase client from config.js to prevent multiple instances
-        let supabase = null;
-
-        // Initialize Supabase only if not already initialized
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                if (window.supabaseClient) {
-                    supabase = window.supabaseClient;
-                } else if (window.supabase && window.TUTOR_CONFIG) {
-                    supabase = window.supabase.createClient(
-                        window.TUTOR_CONFIG.SUPABASE_URL,
-                        window.TUTOR_CONFIG.SUPABASE_ANON_KEY
-                    );
-                    window.supabaseClient = supabase; // Store globally
-                } else {
-                    console.error('Supabase not available');
-                    showError('Unable to initialize application. Please check your internet connection.');
-                }
-            } catch (error) {
-                console.error('Supabase initialization error:', error);
-                showError('Failed to initialize application. Please try again.');
-            }
-        });
-
-        // Form submission
-        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const userData = {
-                fullName: formData.get('fullName'),
-                email: formData.get('email'),
-                password: formData.get('password'),
-                class: formData.get('class'),
-                board: formData.get('board')
-            };
-            
-            // Validate form data
-            if (!userData.fullName || !userData.email || !userData.password || !userData.class || !userData.board) {
-                showError('Please fill in all required fields');
-                return;
-            }
-            
-            // Validate email format
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(userData.email)) {
-                showError('Please enter a valid email address');
-                return;
-            }
-            
-            // Validate password length
-            if (userData.password.length < 6) {
-                showError('Password must be at least 6 characters long');
-                return;
-            }
-            
-            try {
-                showLoading(true);
+        // ========== ALPINE.JS APP INITIALIZATION ==========
+        
+        function registerApp() {
+            return {
+                // Form data
+                fullName: '',
+                email: '',
+                password: '',
+                selectedClass: '',
+                selectedBoard: '',
+                agreeToTerms: false,
                 
-                // Wait for Supabase to be initialized
-                if (!supabase) {
-                    await new Promise(resolve => {
-                        const checkSupabase = () => {
-                            if (supabase) {
-                                resolve();
-                            } else {
-                                setTimeout(checkSupabase, 100);
-                            }
-                        };
-                        checkSupabase();
-                    });
-                }
+                // UI state
+                loading: false,
                 
-                // Create account with free trial
-                await createAccountWithTrial(userData);
+                // Messages
+                message: '',
+                messageType: 'error',
                 
-            } catch (error) {
-                console.error('Registration error:', error);
-                let errorMessage = error.message;
-                
-                // Handle specific error cases
-                if (error.message.includes('User already registered')) {
-                    errorMessage = 'An account with this email already exists. Please try signing in instead.';
-                } else if (error.message.includes('Invalid email')) {
-                    errorMessage = 'Please enter a valid email address.';
-                } else if (error.message.includes('Password should be at least')) {
-                    errorMessage = 'Password must be at least 6 characters long.';
-                } else if (error.message.includes('network')) {
-                    errorMessage = 'Network error. Please check your internet connection and try again.';
-                }
-                
-                showError(errorMessage);
-                showLoading(false);
-            }
-        });
-
-        // Create user account with free trial
-        async function createAccountWithTrial(userData) {
-            const { data, error } = await supabase.auth.signUp({
-                email: userData.email,
-                password: userData.password,
-                options: {
-                    data: {
-                        full_name: userData.fullName,
-                        class: userData.class,
-                        board: userData.board
+                // Methods
+                async registerUser() {
+                    if (!this.validateForm()) {
+                        return;
                     }
+                    
+                    this.loading = true;
+                    this.message = '';
+                    
+                    try {
+                        await this.createAccountWithTrial();
+                    } catch (error) {
+                        this.loading = false;
+                        this.showMessage(error.message || 'Registration failed', 'error');
+                    }
+                },
+                
+                validateForm() {
+                    if (!this.fullName || !this.email || !this.password || !this.selectedClass || !this.selectedBoard) {
+                        this.showMessage('Please fill in all required fields', 'error');
+                        return false;
+                    }
+                    
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(this.email)) {
+                        this.showMessage('Please enter a valid email address', 'error');
+                        return false;
+                    }
+                    
+                    if (this.password.length < 6) {
+                        this.showMessage('Password must be at least 6 characters long', 'error');
+                        return false;
+                    }
+                    
+                    if (!this.agreeToTerms) {
+                        this.showMessage('Please agree to the Terms of Service and Privacy Policy', 'error');
+                        return false;
+                    }
+                    
+                    return true;
+                },
+                
+                async createAccountWithTrial() {
+                    const supabase = getSupabaseClient();
+                    
+                    const { data, error } = await supabase.auth.signUp({
+                        email: this.email,
+                        password: this.password,
+                        options: {
+                            data: {
+                                full_name: this.fullName,
+                                class: this.selectedClass,
+                                board: this.selectedBoard
+                            }
+                        }
+                    });
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    // Create user profile with trial
+                    const trialStart = new Date();
+                    const trialEnd = new Date(trialStart.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+                    const { error: profileError } = await supabase
+                        .from('user_profiles')
+                        .insert({
+                            id: data.user.id,
+                            full_name: this.fullName,
+                            email: this.email,
+                            class: this.selectedClass,
+                            board: this.selectedBoard,
+                            subscription_status: 'trial',
+                            subscription_plan: 'free_trial',
+                            subscription_start: trialStart.toISOString(),
+                            subscription_end: trialEnd.toISOString(),
+                            trial_start: trialStart.toISOString(),
+                            trial_end: trialEnd.toISOString(),
+                            created_at: new Date().toISOString()
+                        });
+
+                    if (profileError) {
+                        throw new Error('Failed to create user profile: ' + profileError.message);
+                    }
+
+                    // Show success message
+                    this.showTrialSuccess();
+                },
+                
+                showTrialSuccess() {
+                    this.messageType = 'success';
+                    this.message = '🎉 Welcome to TUTOR.AI! Your free trial has started. Redirecting to dashboard...';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                },
+                
+                showMessage(message, type = 'error') {
+                    this.message = message;
+                    this.messageType = type;
                 }
-            });
-
-            if (error) {
-                throw new Error(error.message);
-            }
-
-            // Create user profile with trial
-            const trialStart = new Date();
-            const trialEnd = new Date(trialStart.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-            const { error: profileError } = await supabase
-                .from('user_profiles')
-                .insert({
-                    id: data.user.id,
-                    full_name: userData.fullName,
-                    email: userData.email,
-                    class: userData.class,
-                    board: userData.board,
-                    subscription_status: 'trial',
-                    subscription_plan: 'free_trial',
-                    subscription_start: trialStart.toISOString(),
-                    subscription_end: trialEnd.toISOString(),
-                    trial_start: trialStart.toISOString(),
-                    trial_end: trialEnd.toISOString(),
-                    created_at: new Date().toISOString()
-                });
-
-            if (profileError) {
-                throw new Error('Failed to create user profile: ' + profileError.message);
-            }
-
-            // Show success message
-            showTrialSuccess(userData);
-        }
-
-        // Show trial success message
-        function showTrialSuccess(userData) {
-            const form = document.getElementById('registrationForm');
-            form.innerHTML = `
-                <div class="text-center py-8">
-                    <div class="text-6xl mb-4">🎉</div>
-                    <h3 class="text-white text-xl font-bold mb-2">Welcome to TUTOR.AI!</h3>
-                    <p class="text-gray-300 mb-4">
-                        Your free trial has started. Enjoy unlimited access to all premium features for 7 days.
-                    </p>
-                    <div class="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-4">
-                        <p class="text-green-300 text-sm">
-                            <strong>Trial Details:</strong><br>
-                            • Start Date: ${new Date().toLocaleDateString()}<br>
-                            • End Date: ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}<br>
-                            • Features: Unlimited AI Chat, Voice Features, Advanced AI
-                        </p>
-                    </div>
-                    <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mb-4">
-                        <p class="text-blue-300 text-sm">
-                            <strong>After 7 days:</strong><br>
-                            Continue with ₹99/month or cancel anytime. No hidden charges.
-                        </p>
-                    </div>
-                    <a href="dashboard.html" class="inline-block px-6 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg font-medium">
-                        Start Learning Now
-                    </a>
-                </div>
-            `;
-        }
-
-        // Utility functions
-        function showLoading(show) {
-            const submitBtn = document.getElementById('submitBtn');
-            const loadingState = document.getElementById('loadingState');
-            
-            if (show) {
-                submitBtn.classList.add('hidden');
-                loadingState.classList.remove('hidden');
-            } else {
-                submitBtn.classList.remove('hidden');
-                loadingState.classList.add('hidden');
             }
         }
 
-        function showError(message) {
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
+        // ========== SUPABASE CLIENT INITIALIZATION ==========
+        
+        function getSupabaseClient() {
+            if (window.supabaseClient) {
+                return window.supabaseClient;
+            }
             
-            errorText.textContent = message;
-            errorMessage.classList.remove('hidden');
+            const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NzE5NzQsImV4cCI6MjA1MDU0Nzk3NH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
             
-            setTimeout(() => {
-                errorMessage.classList.add('hidden');
-            }, 5000);
+            window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            return window.supabaseClient;
         }
+
+        // ========== PAGE INITIALIZATION ==========
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Supabase client
+            getSupabaseClient();
+        });
     </script>
 </body>
 </html>
