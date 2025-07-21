@@ -297,128 +297,155 @@
     </div>
 
     <script>
+        // Error handling to prevent page crashes
+        window.addEventListener('error', function(e) {
+            console.log('Error caught:', e.error);
+            return true; // Prevent default error handling
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.log('Promise rejection:', e.reason);
+            e.preventDefault();
+        });
+        
         // ========== ALPINE.JS APP INITIALIZATION ==========
         
         function registerApp() {
-            return {
-                // Form data
-                fullName: '',
-                email: '',
-                password: '',
-                selectedClass: '',
-                selectedBoard: '',
-                agreeToTerms: false,
-                
-                // UI state
-                loading: false,
-                
-                // Messages
-                message: '',
-                messageType: 'error',
-                
-                // Methods
-                async registerUser() {
-                    if (!this.validateForm()) {
-                        return;
-                    }
+            try {
+                return {
+                    // Form data
+                    fullName: '',
+                    email: '',
+                    password: '',
+                    selectedClass: '',
+                    selectedBoard: '',
+                    agreeToTerms: false,
                     
-                    this.loading = true;
-                    this.message = '';
+                    // UI state
+                    loading: false,
                     
-                    try {
-                        await this.createAccountWithTrial();
-                    } catch (error) {
-                        this.loading = false;
-                        this.showMessage(error.message || 'Registration failed', 'error');
-                    }
-                },
-                
-                validateForm() {
-                    if (!this.fullName || !this.email || !this.password || !this.selectedClass || !this.selectedBoard) {
-                        this.showMessage('Please fill in all required fields', 'error');
-                        return false;
-                    }
+                    // Messages
+                    message: '',
+                    messageType: 'error',
                     
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(this.email)) {
-                        this.showMessage('Please enter a valid email address', 'error');
-                        return false;
-                    }
-                    
-                    if (this.password.length < 6) {
-                        this.showMessage('Password must be at least 6 characters long', 'error');
-                        return false;
-                    }
-                    
-                    if (!this.agreeToTerms) {
-                        this.showMessage('Please agree to the Terms of Service and Privacy Policy', 'error');
-                        return false;
-                    }
-                    
-                    return true;
-                },
-                
-                async createAccountWithTrial() {
-                    const supabase = getSupabaseClient();
-                    
-                    const { data, error } = await supabase.auth.signUp({
-                        email: this.email,
-                        password: this.password,
-                        options: {
-                            data: {
-                                full_name: this.fullName,
-                                class: this.selectedClass,
-                                board: this.selectedBoard
+                    // Methods
+                    async registerUser() {
+                        try {
+                            if (!this.validateForm()) {
+                                return;
                             }
+                            
+                            this.loading = true;
+                            this.message = '';
+                            
+                            try {
+                                await this.createAccountWithTrial();
+                            } catch (error) {
+                                this.loading = false;
+                                this.showMessage(error.message || 'Registration failed', 'error');
+                            }
+                        } catch (error) {
+                            console.log('Registration error:', error);
+                            this.loading = false;
+                            this.showMessage('An error occurred. Please try again.', 'error');
                         }
-                    });
-
-                    if (error) {
-                        throw error;
-                    }
-
-                    // Create user profile with trial
-                    const trialStart = new Date();
-                    const trialEnd = new Date(trialStart.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-                    const { error: profileError } = await supabase
-                        .from('user_profiles')
-                        .insert({
-                            id: data.user.id,
-                            full_name: this.fullName,
+                    },
+                
+                    validateForm() {
+                        if (!this.fullName || !this.email || !this.password || !this.selectedClass || !this.selectedBoard) {
+                            this.showMessage('Please fill in all required fields', 'error');
+                            return false;
+                        }
+                        
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(this.email)) {
+                            this.showMessage('Please enter a valid email address', 'error');
+                            return false;
+                        }
+                        
+                        if (this.password.length < 6) {
+                            this.showMessage('Password must be at least 6 characters long', 'error');
+                            return false;
+                        }
+                        
+                        if (!this.agreeToTerms) {
+                            this.showMessage('Please agree to the Terms of Service and Privacy Policy', 'error');
+                            return false;
+                        }
+                        
+                        return true;
+                    },
+                
+                    async createAccountWithTrial() {
+                        const supabase = getSupabaseClient();
+                        
+                        const { data, error } = await supabase.auth.signUp({
                             email: this.email,
-                            class: this.selectedClass,
-                            board: this.selectedBoard,
-                            subscription_status: 'trial',
-                            subscription_plan: 'free_trial',
-                            subscription_start: trialStart.toISOString(),
-                            subscription_end: trialEnd.toISOString(),
-                            trial_start: trialStart.toISOString(),
-                            trial_end: trialEnd.toISOString(),
-                            created_at: new Date().toISOString()
+                            password: this.password,
+                            options: {
+                                data: {
+                                    full_name: this.fullName,
+                                    class: this.selectedClass,
+                                    board: this.selectedBoard
+                                }
+                            }
                         });
 
-                    if (profileError) {
-                        throw new Error('Failed to create user profile: ' + profileError.message);
-                    }
+                        if (error) {
+                            throw error;
+                        }
 
-                    // Show success message
-                    this.showTrialSuccess();
-                },
+                        // Create user profile with trial
+                        const trialStart = new Date();
+                        const trialEnd = new Date(trialStart.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+                        const { error: profileError } = await supabase
+                            .from('user_profiles')
+                            .insert({
+                                id: data.user.id,
+                                full_name: this.fullName,
+                                email: this.email,
+                                class: this.selectedClass,
+                                board: this.selectedBoard,
+                                subscription_status: 'trial',
+                                subscription_plan: 'free_trial',
+                                subscription_start: trialStart.toISOString(),
+                                subscription_end: trialEnd.toISOString(),
+                                trial_start: trialStart.toISOString(),
+                                trial_end: trialEnd.toISOString(),
+                                created_at: new Date().toISOString()
+                            });
+
+                        if (profileError) {
+                            throw new Error('Failed to create user profile: ' + profileError.message);
+                        }
+
+                        // Show success message
+                        this.showTrialSuccess();
+                    },
                 
-                showTrialSuccess() {
-                    this.messageType = 'success';
-                    this.message = '🎉 Welcome to TUTOR.AI! Your free trial has started. Redirecting to dashboard...';
-                    
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 2000);
-                },
+                    showTrialSuccess() {
+                        this.messageType = 'success';
+                        this.message = '🎉 Welcome to TUTOR.AI! Your free trial has started. Redirecting to dashboard...';
+                        
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 2000);
+                    },
                 
-                showMessage(message, type = 'error') {
-                    this.message = message;
-                    this.messageType = type;
+                    showMessage(message, type = 'error') {
+                        this.message = message;
+                        this.messageType = type;
+                    }
                 }
+            } catch (error) {
+                console.error('Alpine.js initialization error:', error);
+                // Optionally, display an error message to the user
+                document.querySelector('.glass-effect').innerHTML = `
+                    <div class="bg-red-500/20 border border-red-500/50 text-red-300 rounded-lg p-3 text-sm text-center">
+                        Error initializing TUTOR.AI. Please try again later.
+                    </div>
+                `;
             }
         }
 
