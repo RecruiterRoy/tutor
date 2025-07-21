@@ -89,7 +89,7 @@
         }
         
         select option:checked {
-            background-color: #667eea !important;
+            background-color: rgba(102, 126, 234, 0.4) !important;
         }
         
         /* Force dropdown styling for all browsers */
@@ -119,14 +119,14 @@
         div select option,
         form select,
         form select option {
-            background-color: #667eea !important;
+            background-color: rgba(102, 126, 234, 0.2) !important;
             color: white !important;
         }
         
         /* Mobile specific dropdown fixes */
         @media (max-width: 768px) {
             select {
-                background-color: #667eea !important;
+                background-color: rgba(102, 126, 234, 0.2) !important;
                 color: white !important;
                 -webkit-appearance: none !important;
                 -moz-appearance: none !important;
@@ -134,19 +134,19 @@
             }
             
             select option {
-                background-color: #667eea !important;
+                background-color: rgba(102, 126, 234, 0.2) !important;
                 color: white !important;
             }
         }
         
         /* Force override for Tailwind classes */
         .w-full.px-4.py-3.rounded-lg.focus\\:outline-none.input-glow {
-            background: rgba(102, 126, 234, 0.8) !important;
+            background: rgba(102, 126, 234, 0.2) !important;
             color: white !important;
         }
         
         .w-full.px-4.py-3.rounded-lg.focus\\:outline-none.input-glow option {
-            background: #667eea !important;
+            background: rgba(102, 126, 234, 0.2) !important;
             color: white !important;
         }
         
@@ -265,14 +265,14 @@
                 
                 <div>
                     <label class="block text-white text-sm font-medium mb-2">Full Name</label>
-                    <input type="text" x-model="fullName" required
+                    <input type="text" x-model="fullName" required name="fullName"
                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
                            placeholder="Enter your full name">
                 </div>
                 
                 <div>
                     <label class="block text-white text-sm font-medium mb-2">Class</label>
-                    <select x-model="selectedClass" required
+                    <select x-model="selectedClass" required name="selectedClass"
                             class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input">
                         <option value="">Select your class</option>
                         <option value="Class 1">Class 1</option>
@@ -292,7 +292,7 @@
                 
                 <div>
                     <label class="block text-white text-sm font-medium mb-2">Board</label>
-                    <select x-model="selectedBoard" required
+                    <select x-model="selectedBoard" required name="selectedBoard"
                             class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input">
                         <option value="">Select your board</option>
                         <option value="CBSE">CBSE</option>
@@ -306,7 +306,7 @@
                 <!-- Email field (mandatory if email OAuth selected) -->
                 <div x-show="oauthMethod === 'email'">
                     <label class="block text-white text-sm font-medium mb-2">Email Address</label>
-                    <input type="email" x-model="email" :required="oauthMethod === 'email'"
+                    <input type="email" x-model="email" :required="oauthMethod === 'email'" name="email"
                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
                            placeholder="Enter your email address">
                 </div>
@@ -316,7 +316,7 @@
                     <label class="block text-white text-sm font-medium mb-2">Mobile Number (10 digits)</label>
                     <div class="flex">
                         <span class="flex items-center px-3 text-white bg-purple-600 rounded-l-lg">+91</span>
-                        <input type="tel" x-model="mobile" :required="oauthMethod === 'mobile'"
+                        <input type="tel" x-model="mobile" :required="oauthMethod === 'mobile'" name="mobile"
                                pattern="[0-9]{10}" maxlength="10"
                                class="w-full px-4 py-3 rounded-r-lg focus:outline-none input-glow purple-input"
                                placeholder="Enter 10-digit mobile number">
@@ -326,7 +326,7 @@
                 <!-- Password (for email/mobile, not for Google) -->
                 <div x-show="oauthMethod !== 'google'">
                     <label class="block text-white text-sm font-medium mb-2">Password</label>
-                    <input type="password" x-model="password" :required="oauthMethod !== 'google'"
+                    <input type="password" x-model="password" :required="oauthMethod !== 'google'" name="password"
                            class="w-full px-4 py-3 rounded-lg focus:outline-none input-glow purple-input"
                            placeholder="Create a password (min 6 characters)">
                 </div>
@@ -506,6 +506,7 @@
                     fullName: '',
                     email: '',
                     password: '',
+                    mobile: '',
                     selectedClass: '',
                     selectedBoard: '',
                     agreeToTerms: false,
@@ -531,14 +532,9 @@
                             if (!this.validateStep2()) {
                                 return;
                             }
-                            this.loading = true;
+                            // Just move to next step, don't create account yet
+                            this.currentStep = 3;
                             this.message = '';
-                            try {
-                                await this.createAccountWithTrial();
-                            } catch (error) {
-                                this.loading = false;
-                                this.showMessage(error.message || 'Registration failed', 'error');
-                            }
                         } else if (this.currentStep === 3) {
                             if (!this.validateStep3()) {
                                 return;
