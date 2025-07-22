@@ -6,6 +6,38 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/register",
+      "destination": "/register.html"
+    },
+    {
+      "source": "/register.html",
+      "destination": "/register.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/login.html",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/dashboard.html",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/admin.html",
+      "destination": "/admin.html"
+    },
+    {
       "source": "/favicon.ico",
       "destination": "/public/favicon.ico"
     },
@@ -18,8 +50,8 @@
       "destination": "/public/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/public/$1"
+      "source": "/",
+      "destination": "/index.html"
     }
   ],
   "cleanUrls": true,
