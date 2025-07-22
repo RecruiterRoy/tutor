@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - TUTOR.AI</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Inter', sans-serif; }
@@ -310,10 +310,7 @@
                             <div class="error-message" id="cityError"></div>
                         </div>
                         
-                        <div class="md:col-span-2">
-                            <input type="text" id="address" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Full Address (Village/Town/Area)">
-                            <div class="error-message" id="addressError"></div>
-                        </div>
+
                         
                         <div>
                             <select id="language" class="input-style w-full px-4 py-3 rounded-lg">
@@ -594,7 +591,6 @@
             const board = document.getElementById('board').value;
             const state = document.getElementById('state').value;
             const city = document.getElementById('city').value.trim();
-            const address = document.getElementById('address').value.trim();
 
             if (!classValue) {
                 showFieldError('classError', 'Please select your class');
@@ -780,7 +776,6 @@
                 const board = document.getElementById('board').value;
                 const city = document.getElementById('city').value.trim();
                 const state = document.getElementById('state').value;
-                    const address = document.getElementById('address').value.trim();
                     const language = document.getElementById('language').value;
                     
                     const { error: profileError } = await supabase
@@ -793,8 +788,7 @@
                             phone: document.getElementById('phone').value.trim(),
                             city: city,
                             state: state,
-                            address: address,
-                            language: language,
+                            preferred_language: language,
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
                         });
