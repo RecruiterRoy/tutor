@@ -137,7 +137,6 @@
                     <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">2</div>
                     <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">3</div>
                     <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">4</div>
-                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">5</div>
                 </div>
             </div>
             
@@ -335,67 +334,8 @@
                     </div>
                 </div>
                 
-                <!-- Step 4: Economic Status -->
+                <!-- Step 4: Confirmation -->
                 <div id="step4" class="step-content hidden">
-                    <h2 class="text-2xl font-semibold text-white mb-6">Economic Status Verification</h2>
-                    <p class="text-gray-300 mb-6">To provide free access to eligible students, please select your economic status:</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div class="plan-card p-4 rounded-lg cursor-pointer" onclick="selectPlan('BPL')">
-                            <div class="text-center">
-                                <h3 class="text-white font-semibold mb-2">Below Poverty Line (BPL)</h3>
-                                <p class="text-green-400 text-sm mb-2">Free Access</p>
-                                <p class="text-gray-300 text-xs">Requires ration card verification</p>
-                            </div>
-                            </div>
-                        
-                        <div class="plan-card p-4 rounded-lg cursor-pointer" onclick="selectPlan('APL')">
-                            <div class="text-center">
-                                <h3 class="text-white font-semibold mb-2">Above Poverty Line (APL)</h3>
-                                <p class="text-green-400 text-sm mb-2">Free Access</p>
-                                <p class="text-gray-300 text-xs">Requires ration card verification</p>
-                            </div>
-                        </div>
-                        
-                        <div class="plan-card p-4 rounded-lg cursor-pointer" onclick="selectPlan('Premium')">
-                            <div class="text-center">
-                                <h3 class="text-white font-semibold mb-2">Premium Plan</h3>
-                                <p class="text-yellow-400 text-sm mb-2">₹99/month</p>
-                                <p class="text-gray-300 text-xs">Full access, no verification needed</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- BPL/APL Card Details -->
-                    <div id="cardDetails" class="hidden">
-                        <div class="bg-blue-900/30 p-4 rounded-lg mb-4">
-                            <h3 class="text-white font-semibold mb-2">Ration Card Verification</h3>
-                            <p class="text-gray-300 text-sm">Please provide your ration card details for verification</p>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <input type="text" id="cardNumber" maxlength="10" class="input-style w-full px-4 py-3 rounded-lg" placeholder="Ration Card Number (10 characters)">
-                                <div class="error-message" id="cardNumberError"></div>
-                            </div>
-                            <div>
-                                <input type="file" id="cardPic" accept="image/*" class="input-style w-full px-4 py-3 rounded-lg">
-                                <div class="error-message" id="cardPicError"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between mt-6">
-                        <button onclick="prevStep()" class="btn-secondary px-6 py-3 rounded-lg font-semibold text-white">
-                            ← Previous
-                        </button>
-                        <button onclick="nextStep()" class="btn-primary px-6 py-3 rounded-lg font-semibold text-white">
-                            Next Step →
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 5: Confirmation -->
-                <div id="step5" class="step-content hidden">
                     <h2 class="text-2xl font-semibold text-white mb-6">Confirm Your Details</h2>
                     <div id="confirmationDetails" class="space-y-4 mb-6">
                         <!-- Details will be populated by JavaScript -->
@@ -431,7 +371,7 @@
 
         // Supabase configuration
         const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4';
 
         // Initialize Supabase
         async function initSupabase() {
@@ -590,7 +530,7 @@
                 case 3:
                     return validateStep3();
                 case 4:
-                    return validateStep4();
+                    return true; // Skip step 4 validation since we removed BPL/APL
                 default:
                     return true;
             }
@@ -865,54 +805,13 @@
                     }
                 }
                 
-                // Economic status handling
-                if (selectedPlan === 'BPL' || selectedPlan === 'APL') {
-                    const document_type = selectedPlan === 'BPL' ? 'bpl_card' : 'apl_card';
-                        const cardNumber = document.getElementById('cardNumber').value.trim();
-                        
-                    // Upload card image
-                        let document_url = '';
-                        const cardPic = document.getElementById('cardPic').files[0];
-                        if (cardPic) {
-                            const { data: uploadData, error: uploadError } = await supabase.storage
-                                .from('verification-docs')
-                                .upload(`${user.id}/card_${Date.now()}`, cardPic);
-                            if (uploadError) throw uploadError;
-                            document_url = supabase.storage
-                                .from('verification-docs')
-                                .getPublicUrl(uploadData.path).data.publicUrl;
-                        }
-                        
-                    // Insert verification request
-                        await supabase.from('bpl_apl_verifications').insert({
-                            user_id: user.id,
-                            document_type,
-                            document_url,
-                            verification_status: 'pending',
-                            admin_notes: '',
-                            verified_by: null,
-                            card_number: cardNumber
-                        });
-
-                    // Update user profile
-                    await supabase.from('user_profiles')
-                        .update({
-                            verification_status: 'pending',
-                            economic_status: selectedPlan
-                        })
-                        .eq('id', user.id);
-
-                    showMessage('Your verification request has been submitted successfully! Your account will be accessible within 1-3 working days after verification.', 'success');
-                    
-                } else if (selectedPlan === 'Premium') {
-                    // Premium plan handling
-                    await supabase.from('user_profiles')
-                        .update({
-                            economic_status: 'Premium',
-                            verification_status: 'approved'
-                        })
-                        .eq('id', user.id);
-                }
+                // Set all users to Premium plan by default
+                await supabase.from('user_profiles')
+                    .update({
+                        economic_status: 'Premium',
+                        verification_status: 'approved'
+                    })
+                    .eq('id', user.id);
                 
                 // Assign class access
                 const userClassAccess = `class${document.getElementById('class').value}`;
