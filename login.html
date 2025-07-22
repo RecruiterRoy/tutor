@@ -419,6 +419,79 @@
 
         // ========== LOGIN PAGE INITIALIZATION ==========
 
+        // Ensure user profile exists after login
+        async function ensureUserProfile(user) {
+            try {
+                // Check if profile already exists
+                const { data: existingProfile, error: profileError } = await window.supabaseClient
+                    .from('user_profiles')
+                    .select('id')
+                    .eq('id', user.id)
+                    .limit(1);
+                
+                if (profileError) {
+                    console.warn('Could not check user profile:', profileError);
+                    return;
+                }
+                
+                if (existingProfile && existingProfile.length > 0) {
+                    console.log('User profile already exists');
+                    return;
+                }
+                
+                // Profile doesn't exist, try to create from registered_profiles
+                console.log('Creating user profile from registration data...');
+                
+                const { data: regData, error: regError } = await window.supabaseClient
+                    .from('registered_profiles')
+                    .select('*')
+                    .eq('email', user.email)
+                    .limit(1);
+                
+                if (regError) {
+                    console.warn('Could not fetch registration data:', regError);
+                    return;
+                }
+                
+                if (regData && regData.length > 0) {
+                    const registrationData = regData[0];
+                    
+                    // Create user profile from registration data
+                    const { error: createError } = await window.supabaseClient
+                        .from('user_profiles')
+                        .insert({
+                            id: user.id,
+                            full_name: registrationData.full_name,
+                            class: registrationData.class,
+                            board: registrationData.board,
+                            phone: registrationData.phone,
+                            city: registrationData.city,
+                            state: registrationData.state,
+                            preferred_language: registrationData.preferred_language,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    
+                    if (createError) {
+                        console.error('Could not create user profile:', createError);
+                    } else {
+                        console.log('✅ User profile created successfully');
+                        
+                        // Mark registration as moved
+                        await window.supabaseClient
+                            .from('registered_profiles')
+                            .update({ verification_status: 'moved' })
+                            .eq('id', registrationData.id);
+                    }
+                } else {
+                    console.warn('No registration data found for user');
+                }
+                
+            } catch (error) {
+                console.error('Error ensuring user profile:', error);
+            }
+        }
+
         async function initializeLoginPage() {
             try {
                 // Initialize form elements
@@ -578,7 +651,10 @@
                 if (data.user) {
                     // Store session data
                     localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
-                    console.log('✅ Login successful, redirecting to dashboard');
+                    console.log('✅ Login successful');
+                    
+                    // Check if user profile exists, if not create it from registered_profiles
+                    await ensureUserProfile(data.user);
                     
                     // Redirect to dashboard
                     window.location.href = window.location.origin + '/dashboard.html';
