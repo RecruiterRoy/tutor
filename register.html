@@ -196,7 +196,7 @@
                         </div>
                         
                         <div>
-                            <input type="email" id="email" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Email Address">
+                            <input type="email" id="email" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Email Address" onblur="validateEmailOnBlur(this)">
                             <div class="error-message" id="emailError"></div>
                                 </div>
                         
@@ -204,7 +204,7 @@
                             <label class="block text-sm font-medium text-gray-200 mb-2">Phone Number</label>
                             <div class="flex">
                                 <span class="px-3 py-3 bg-gray-700 text-white rounded-l-lg border border-gray-600 flex items-center">+91</span>
-                                <input type="tel" id="phone" required class="input-style flex-1 px-4 py-3 rounded-r-lg" placeholder="10-digit mobile number" maxlength="10" pattern="[6-9][0-9]{9}" oninput="validatePhoneInput(this)">
+                                <input type="tel" id="phone" required class="input-style flex-1 px-4 py-3 rounded-r-lg" placeholder="10-digit mobile number" maxlength="10" pattern="[6-9][0-9]{9}" oninput="validatePhoneInput(this)" onblur="validatePhoneOnBlur(this)">
                             </div>
                             <div class="error-message" id="phoneError"></div>
                         </div>
@@ -838,7 +838,10 @@
                 const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
-                    options: { data: { full_name, phone, temp_user_id: tempUserId } }
+                    options: { 
+                        data: { full_name, phone, temp_user_id: tempUserId },
+                        emailRedirectTo: 'https://tutor-padho-india.vercel.app/dashboard.html'
+                    }
                 });
                 
                 if (error) throw error;
@@ -990,6 +993,81 @@
                 showMessage('Registration failed: ' + errorMessage, 'error');
             } finally {
                 setLoading(false);
+            }
+        }
+
+        // Real-time validation functions
+        async function validateEmailOnBlur(input) {
+            const email = input.value.trim();
+            if (!email) return;
+            
+            try {
+                // Check if email exists in user_profiles (verified users)
+                const { data: existingUsers, error } = await supabase
+                    .from('user_profiles')
+                    .select('id')
+                    .limit(1);
+                
+                if (error && error.code !== 'PGRST116') {
+                    console.warn('Could not check email:', error);
+                    return; // Skip check if table doesn't exist
+                }
+                
+                // Check if email exists in registered_profiles
+                const { data: registeredUsers, error: regError } = await supabase
+                    .from('registered_profiles')
+                    .select('id, verification_status')
+                    .eq('email', email)
+                    .limit(1);
+                
+                if (regError && regError.code !== 'PGRST116') {
+                    console.warn('Could not check registered emails:', regError);
+                    return;
+                }
+                
+                if (registeredUsers && registeredUsers.length > 0) {
+                    const user = registeredUsers[0];
+                    if (user.verification_status === 'pending') {
+                        showFieldError('emailError', 'Email already registered but not verified. Check your email for verification link.');
+                    } else {
+                        showFieldError('emailError', 'Email already registered. Try logging in instead.');
+                    }
+                    input.style.borderColor = '#ef4444';
+                } else {
+                    hideFieldError('emailError');
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }
+            } catch (error) {
+                console.warn('Email validation error:', error);
+            }
+        }
+        
+        async function validatePhoneOnBlur(input) {
+            const phone = input.value.trim();
+            if (!phone || phone.length !== 10) return;
+            
+            try {
+                // Check if phone exists in user_profiles
+                const { data: existingUsers, error } = await supabase
+                    .from('user_profiles')
+                    .select('id')
+                    .eq('phone', phone)
+                    .limit(1);
+                
+                if (error && error.code !== 'PGRST116') {
+                    console.warn('Could not check phone:', error);
+                    return;
+                }
+                
+                if (existingUsers && existingUsers.length > 0) {
+                    showFieldError('phoneError', 'Phone number already registered. Try logging in instead.');
+                    input.style.borderColor = '#ef4444';
+                } else {
+                    hideFieldError('phoneError');
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }
+            } catch (error) {
+                console.warn('Phone validation error:', error);
             }
         }
 
