@@ -2,9 +2,16 @@ const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
 
-// Load Supabase configuration
-const supabaseUrl = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4NjA5MywiZXhwIjoyMDY3OTYyMDkzfQ.hnyaZ_vFjflVJSRqYf1y85-sVHTJFnP3sNxDnJ9aRrI'; // Service role key for admin operations
+// Load Supabase configuration from environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xhuljxuxnlwtocfmwiid.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+if (!supabaseServiceKey) {
+    console.error('❌ SUPABASE_SERVICE_KEY environment variable is required');
+    console.log('Please set your Supabase service role key as an environment variable:');
+    console.log('export SUPABASE_SERVICE_KEY="your_service_role_key_here"');
+    process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
