@@ -739,6 +739,63 @@
             confirmationDiv.innerHTML = details;
         }
 
+        // Check for duplicate email/phone
+        async function checkDuplicateUser(email, phone) {
+            try {
+                // Check if phone already exists in user_profiles
+                const { data: phoneUsers, error: phoneError } = await supabase
+                    .from('user_profiles')
+                    .select('id, full_name, phone')
+                    .eq('phone', phone)
+                    .limit(1);
+                
+                if (phoneError) {
+                    console.warn('Could not check phone in user profiles:', phoneError);
+                } else if (phoneUsers && phoneUsers.length > 0) {
+                    throw new Error(`Phone number +91${phone} is already registered. Please use a different phone number or try logging in.`);
+                }
+                
+                // Check if email/phone exists in registered_profiles (pending registrations)
+                const { data: pendingUsers, error: pendingError } = await supabase
+                    .from('registered_profiles')
+                    .select('id, email, phone, verification_status')
+                    .or(`email.eq.${email},phone.eq.${phone}`)
+                    .in('verification_status', ['pending', 'verified'])
+                    .limit(1);
+                
+                if (pendingError) {
+                    console.warn('Could not check pending registrations:', pendingError);
+                } else if (pendingUsers && pendingUsers.length > 0) {
+                    const pendingUser = pendingUsers[0];
+                    if (pendingUser.email === email) {
+                        if (pendingUser.verification_status === 'pending') {
+                            throw new Error(`Email ${email} is already registered but not verified. Please check your email for the verification link or try logging in.`);
+                        } else {
+                            throw new Error(`Email ${email} is already registered. Please try logging in instead.`);
+                        }
+                    }
+                    if (pendingUser.phone === phone) {
+                        if (pendingUser.verification_status === 'pending') {
+                            throw new Error(`Phone number +91${phone} is already registered but not verified. Please complete the previous registration or try logging in.`);
+                        } else {
+                            throw new Error(`Phone number +91${phone} is already registered. Please try logging in instead.`);
+                        }
+                    }
+                }
+                
+                // Try to sign up temporarily to check if email exists in auth.users
+                // This will fail if email already exists, which is what we want
+                console.log('Checking if email exists in auth system...');
+                
+            } catch (error) {
+                if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+                    throw error; // Re-throw validation errors
+                }
+                console.warn('Duplicate check warning:', error);
+                // Continue with registration if check fails due to technical issues
+            }
+        }
+
         // Registration
         async function registerUser() {
             if (!supabase) {
@@ -755,6 +812,12 @@
             setLoading(true);
             
             try {
+                // Check for duplicate email/phone before registration
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                
+                await checkDuplicateUser(email, phone);
+                
                 let user = null;
                 
                 // Handle different OAuth methods
@@ -917,7 +980,40 @@
                 
             } catch (err) {
                 console.error('Registration error:', err);
-                showMessage('Registration failed: ' + (err.message || err), 'error');
+                
+                let errorMessage = err.message || err;
+                
+                // Handle specific Supabase auth errors
+                if (errorMessage.includes('User already registered') || errorMessage.includes('already registered')) {
+                    errorMessage = `Email is already registered. Please try logging in instead or use a different email address.`;
+                    
+                    // Add login link to the error message
+                    setTimeout(() => {
+                        const errorDiv = document.getElementById('globalMessage');
+                        if (errorDiv) {
+                            errorDiv.innerHTML = `
+                                <div class="bg-red-500/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg">
+                                    ${errorMessage}
+                                    <div class="mt-3">
+                                        <a href="login.html" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors inline-block">
+                                            Go to Login
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }, 100);
+                } else if (errorMessage.includes('already taken') || errorMessage.includes('already exists')) {
+                    errorMessage = `This email or phone number is already in use. Please try logging in or use different details.`;
+                } else if (errorMessage.includes('Invalid email')) {
+                    errorMessage = `Please enter a valid email address.`;
+                } else if (errorMessage.includes('Password should be')) {
+                    errorMessage = `Password must be at least 6 characters long.`;
+                } else if (errorMessage.includes('signup is disabled')) {
+                    errorMessage = `New registrations are temporarily disabled. Please try again later.`;
+                }
+                
+                showMessage('Registration failed: ' + errorMessage, 'error');
             } finally {
                 setLoading(false);
             }
