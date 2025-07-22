@@ -31,6 +31,20 @@
             background: #1f2937;
             color: white;
         }
+        input[type="file"].input-style {
+            background: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        }
+        input[type="file"].input-style::file-selector-button {
+            background: rgba(124, 58, 237, 0.8);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
         .btn-primary {
             background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
             transition: all 0.3s ease;
@@ -280,6 +294,14 @@
                                 <option value="Uttar Pradesh">Uttar Pradesh</option>
                                 <option value="Uttarakhand">Uttarakhand</option>
                                 <option value="West Bengal">West Bengal</option>
+                                <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                                <option value="Chandigarh">Chandigarh</option>
+                                <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                                <option value="Ladakh">Ladakh</option>
+                                <option value="Lakshadweep">Lakshadweep</option>
+                                <option value="Puducherry">Puducherry</option>
                             </select>
                             <div class="error-message" id="stateError"></div>
                         </div>
@@ -821,16 +843,26 @@
                     const address = document.getElementById('address').value.trim();
                     const language = document.getElementById('language').value;
                     
-                    await supabase.rpc('update_user_profile', {
-                        user_id: user.id,
-                        user_full_name: document.getElementById('fullName').value.trim(),
-                        user_class: userClass,
-                        user_board: board,
-                        user_phone: document.getElementById('phone').value.trim(),
-                        user_city: city,
-                        user_state: state,
-                        user_language: language
-                    });
+                    const { error: profileError } = await supabase
+                        .from('user_profiles')
+                        .upsert({
+                            id: user.id,
+                            full_name: document.getElementById('fullName').value.trim(),
+                            class: userClass,
+                            board: board,
+                            phone: document.getElementById('phone').value.trim(),
+                            city: city,
+                            state: state,
+                            address: address,
+                            language: language,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    
+                    if (profileError) {
+                        console.error('Profile creation error:', profileError);
+                        throw new Error('Failed to create user profile: ' + profileError.message);
+                    }
                 }
                 
                 // Economic status handling
@@ -863,21 +895,23 @@
                         });
 
                     // Update user profile
-                    await supabase.rpc('update_user_profile', {
-                        user_id: user.id,
-                        user_verification_status: 'pending',
-                        user_economic_status: selectedPlan
-                    });
+                    await supabase.from('user_profiles')
+                        .update({
+                            verification_status: 'pending',
+                            economic_status: selectedPlan
+                        })
+                        .eq('id', user.id);
 
                     showMessage('Your verification request has been submitted successfully! Your account will be accessible within 1-3 working days after verification.', 'success');
                     
                 } else if (selectedPlan === 'Premium') {
                     // Premium plan handling
-                    await supabase.rpc('update_user_profile', {
-                        user_id: user.id,
-                        user_economic_status: 'Premium',
-                        user_verification_status: 'approved'
-                    });
+                    await supabase.from('user_profiles')
+                        .update({
+                            economic_status: 'Premium',
+                            verification_status: 'approved'
+                        })
+                        .eq('id', user.id);
                 }
                 
                 // Assign class access
