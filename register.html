@@ -204,7 +204,7 @@
                             <label class="block text-sm font-medium text-gray-200 mb-2">Phone Number</label>
                             <div class="flex">
                                 <span class="px-3 py-3 bg-gray-700 text-white rounded-l-lg border border-gray-600 flex items-center">+91</span>
-                                <input type="tel" id="phone" required class="input-style flex-1 px-4 py-3 rounded-r-lg" placeholder="10-digit mobile number" maxlength="10" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+                                <input type="tel" id="phone" required class="input-style flex-1 px-4 py-3 rounded-r-lg" placeholder="10-digit mobile number" maxlength="10" pattern="[6-9][0-9]{9}" oninput="validatePhoneInput(this)">
                             </div>
                             <div class="error-message" id="phoneError"></div>
                         </div>
@@ -624,8 +624,8 @@
             if (!phone) {
                 showFieldError('phoneError', 'Phone number is required');
                 isValid = false;
-            } else if (!/^\+91[6-9]\d{9}$/.test(phone)) {
-                showFieldError('phoneError', 'Please enter a valid Indian phone number');
+            } else if (!/^[6-9]\d{9}$/.test(phone)) {
+                showFieldError('phoneError', 'Please enter a valid 10-digit mobile number (starting with 6-9)');
                 isValid = false;
             } else {
                 hideFieldError('phoneError');
@@ -949,6 +949,31 @@
                 showMessage('Registration failed: ' + (err.message || err), 'error');
             } finally {
                 setLoading(false);
+            }
+        }
+
+        // Phone validation function
+        function validatePhoneInput(input) {
+            // Remove non-digits
+            let value = input.value.replace(/[^0-9]/g, '');
+            
+            // Limit to 10 digits
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+            
+            // Update input value
+            input.value = value;
+            
+            // Real-time validation feedback
+            if (value.length === 0) {
+                hideFieldError('phoneError');
+            } else if (value.length < 10) {
+                showFieldError('phoneError', `Enter ${10 - value.length} more digits`);
+            } else if (!/^[6-9]/.test(value)) {
+                showFieldError('phoneError', 'Mobile number must start with 6, 7, 8, or 9');
+            } else {
+                hideFieldError('phoneError');
             }
         }
 
