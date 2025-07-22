@@ -4,8 +4,10 @@ class GPTService {
         this.currentSubject = null;
         this.currentTeacher = null;
         this.chatHistory = [];
-        // Use the new domain for the API endpoint
-        this.baseUrl = 'https://tutor-nine-puce.vercel.app/api/chat';
+        // Use current domain for the API endpoint
+        this.baseUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api/chat'
+            : '/api/chat';
     }
     
     setContext(grade, subject) {
