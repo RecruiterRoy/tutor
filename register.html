@@ -137,6 +137,7 @@
                     <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">2</div>
                     <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">3</div>
                     <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">4</div>
+                    <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">5</div>
                 </div>
             </div>
             
@@ -354,6 +355,34 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- OTP Verification Step (for phone registration) -->
+                <div id="otpStep" class="step-content hidden">
+                    <h2 class="text-2xl font-semibold text-white mb-6">Verify Your Phone</h2>
+                    <p class="text-gray-300 mb-6">We've sent a 6-digit verification code to your phone number. Please enter it below:</p>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-200 mb-2">Enter OTP Code</label>
+                        <input type="text" id="otpCode" required class="input-style w-full px-4 py-3 rounded-lg text-center text-2xl tracking-widest" placeholder="000000" maxlength="6" pattern="[0-9]{6}">
+                        <div class="error-message" id="otpError"></div>
+                    </div>
+                    
+                    <div class="text-center mb-6">
+                        <button onclick="resendOTP()" class="text-purple-400 hover:underline text-sm">
+                            Didn't receive the code? Resend OTP
+                        </button>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <button onclick="goBackToConfirmation()" class="btn-secondary px-6 py-3 rounded-lg font-semibold text-white">
+                            ← Back
+                        </button>
+                        <button onclick="verifyOTP()" id="verifyBtn" class="btn-primary px-8 py-3 rounded-lg font-semibold text-white">
+                            <span id="verifyBtnText">Verify & Complete Registration</span>
+                            <div id="verifySpinner" class="spinner mx-auto hidden"></div>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -362,7 +391,7 @@
         // Global variables
         let supabase = null;
         let currentStep = 1;
-        const totalSteps = 4;
+        const totalSteps = 5; // Email: 4 steps, Phone: 5 steps (includes OTP)
         let selectedPlan = null;
         let selectedOAuth = null;
         let googleUser = null;
@@ -499,8 +528,21 @@
         }
 
         function updateStepIndicator() {
+            // Show/hide 5th step indicator based on registration type
+            const fifthIndicator = document.getElementsByClassName('step-indicator')[4];
+            if (selectedOAuth === 'phone') {
+                fifthIndicator.style.display = 'flex';
+            } else {
+                fifthIndicator.style.display = 'none';
+            }
+            
             for (let i = 1; i <= totalSteps; i++) {
                 const indicator = document.getElementsByClassName('step-indicator')[i-1];
+                if (!indicator) continue;
+                
+                // Skip 5th indicator for email registration
+                if (i === 5 && selectedOAuth !== 'phone') continue;
+                
                 if (i < currentStep) {
                     indicator.className = 'step-indicator step-completed w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold';
                 } else if (i === currentStep) {
@@ -735,25 +777,43 @@
                 if (error) throw error;
                     user = data.user;
                 } else if (selectedOAuth === 'phone') {
-                    // Phone registration with email and password (phone as backup)
-                    const email = document.getElementById('email').value.trim();
-                    const password = document.getElementById('password').value;
+                    // Phone registration - send OTP via Twilio
                     const phoneNumber = document.getElementById('phone').value.trim();
                     const full_name = document.getElementById('fullName').value.trim();
                     
-                    const { data, error } = await supabase.auth.signUp({
-                        email,
-                        password,
-                        options: { 
-                            data: { 
-                                full_name, 
-                                phone: phoneNumber 
-                            } 
+                    // Add +91 prefix if not already present
+                    const phoneWithPrefix = phoneNumber.startsWith('+91') ? phoneNumber : `+91${phoneNumber}`;
+                    
+                    const { data, error } = await supabase.auth.signInWithOtp({
+                        phone: phoneWithPrefix,
+                        options: {
+                            data: { full_name }
                         }
                     });
                     
                     if (error) throw error;
-                    user = data.user;
+                    
+                    // Store registration data for OTP verification
+                    window.registrationData = {
+                        phone: phoneWithPrefix,
+                        full_name: full_name,
+                        email: document.getElementById('email').value.trim(),
+                        password: document.getElementById('password').value,
+                        userClass: `Class ${document.getElementById('class').value}`,
+                        board: document.getElementById('board').value,
+                        city: document.getElementById('city').value.trim(),
+                        state: document.getElementById('state').value,
+                        language: document.getElementById('language').value
+                    };
+                    
+                    showMessage('OTP sent to your phone! Please enter the verification code.', 'success');
+                    
+                    // Show OTP verification step
+                    document.getElementById('step4').classList.add('hidden');
+                    document.getElementById('otpStep').classList.remove('hidden');
+                    currentStep = 5; // Move to OTP step
+                    updateStepIndicator();
+                    return; // Don't continue with profile creation yet
                 }
                 
                 // Update user profile
@@ -806,10 +866,8 @@
                     console.error('Class access assignment failed:', accessErr);
                 }
                 
-                // Success message based on OAuth method
-                if (selectedOAuth === 'phone') {
-                    showMessage('Registration initiated! Please complete phone verification with the OTP sent to your phone.', 'success');
-                } else if (selectedOAuth === 'email') {
+                // Success message based on registration method
+                if (selectedOAuth === 'email') {
                     showMessage('Registration successful! Please check your email to verify your account.', 'success');
                 } else {
                     showMessage('Registration successful! Welcome to TUTOR.AI', 'success');
@@ -912,6 +970,121 @@
             } else {
                 passwordField.type = 'password';
                 toggleIcon.textContent = '👁️';
+            }
+        }
+
+        // OTP Verification Functions
+        async function verifyOTP() {
+            try {
+                setVerifyLoading(true);
+                
+                const otpCode = document.getElementById('otpCode').value.trim();
+                
+                if (!otpCode || otpCode.length !== 6) {
+                    showFieldError('otpError', 'Please enter a valid 6-digit OTP code');
+                    setVerifyLoading(false);
+                    return;
+                }
+                
+                // Verify OTP with Supabase
+                const { data, error } = await supabase.auth.verifyOtp({
+                    phone: window.registrationData.phone,
+                    token: otpCode,
+                    type: 'sms'
+                });
+                
+                if (error) {
+                    showFieldError('otpError', 'Invalid OTP code. Please try again.');
+                    setVerifyLoading(false);
+                    return;
+                }
+                
+                // OTP verified successfully - now create user profile
+                const user = data.user;
+                
+                // Create user profile in database
+                const { error: profileError } = await supabase
+                    .from('user_profiles')
+                    .upsert({
+                        id: user.id,
+                        full_name: window.registrationData.full_name,
+                        class: window.registrationData.userClass,
+                        board: window.registrationData.board,
+                        phone: window.registrationData.phone.replace('+91', ''),
+                        city: window.registrationData.city,
+                        state: window.registrationData.state,
+                        preferred_language: window.registrationData.language,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (profileError) {
+                    console.error('Profile creation error:', profileError);
+                    throw new Error('Failed to create user profile: ' + profileError.message);
+                }
+                
+                // Set to Premium plan
+                await supabase.from('user_profiles')
+                    .update({
+                        economic_status: 'Premium',
+                        verification_status: 'approved'
+                    })
+                    .eq('id', user.id);
+                
+                // Show success and redirect
+                showMessage('Phone verification successful! Registration completed.', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 3000);
+                
+            } catch (err) {
+                console.error('OTP verification error:', err);
+                showFieldError('otpError', 'Verification failed: ' + (err.message || err));
+            } finally {
+                setVerifyLoading(false);
+            }
+        }
+        
+        async function resendOTP() {
+            try {
+                const { error } = await supabase.auth.signInWithOtp({
+                    phone: window.registrationData.phone,
+                    options: {
+                        data: { full_name: window.registrationData.full_name }
+                    }
+                });
+                
+                if (error) throw error;
+                
+                showMessage('New OTP sent to your phone!', 'success');
+                
+            } catch (err) {
+                console.error('Resend OTP error:', err);
+                showMessage('Failed to resend OTP: ' + (err.message || err), 'error');
+            }
+        }
+        
+        function goBackToConfirmation() {
+            document.getElementById('otpStep').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+            currentStep = 4;
+            updateStepIndicator();
+        }
+        
+        function setVerifyLoading(isLoading) {
+            const btnText = document.getElementById('verifyBtnText');
+            const spinner = document.getElementById('verifySpinner');
+            const btn = document.getElementById('verifyBtn');
+            
+            if (isLoading) {
+                btnText.style.display = 'none';
+                spinner.classList.remove('hidden');
+                btn.classList.add('loading');
+            } else {
+                btnText.style.display = 'block';
+                spinner.classList.add('hidden');
+                btn.classList.remove('loading');
             }
         }
 
