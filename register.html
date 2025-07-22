@@ -361,7 +361,7 @@
         // Global variables
         let supabase = null;
         let currentStep = 1;
-        const totalSteps = 5;
+        const totalSteps = 4;
         let selectedPlan = null;
         let selectedOAuth = null;
         let googleUser = null;
@@ -620,12 +620,7 @@
                 hideFieldError('cityError');
             }
 
-            if (!address) {
-                showFieldError('addressError', 'Address is required');
-                isValid = false;
-            } else {
-                hideFieldError('addressError');
-            }
+
 
             return isValid;
         }
