@@ -453,8 +453,11 @@
                     document.getElementById('email').value = user.email || '';
                 }
                 
-                // Move to step 2
-                nextStep();
+                // Move to step 2 directly without validation
+                document.getElementById(`step${currentStep}`).classList.add('hidden');
+                currentStep = 2;
+                document.getElementById(`step${currentStep}`).classList.remove('hidden');
+                updateStepIndicator();
                 showMessage('Google sign-in successful! Please complete your profile.', 'success');
                 
             } catch (error) {
@@ -486,7 +489,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://tutor-padho-india.vercel.app/register.html'
+                        redirectTo: 'https://tutor-omega-seven.vercel.app/register.html'
                     }
                 });
                 
@@ -844,7 +847,7 @@
                     password,
                     options: { 
                         data: { full_name, phone, temp_user_id: tempUserId },
-                        emailRedirectTo: 'https://tutor-padho-india.vercel.app/dashboard.html'
+                        emailRedirectTo: 'https://tutor-omega-seven.vercel.app/dashboard.html'
                     }
                 });
                 
