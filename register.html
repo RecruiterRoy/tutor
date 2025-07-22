@@ -762,20 +762,52 @@
                     // Google user is already authenticated
                     user = googleUser;
                 } else if (selectedOAuth === 'email') {
-                    // Email registration
+                    // Email registration - save to registered_profiles first
                 const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value;
                     const full_name = document.getElementById('fullName').value.trim();
                 const phone = document.getElementById('phone').value.trim();
+                    const userClass = `Class ${document.getElementById('class').value}`;
+                    const board = document.getElementById('board').value;
+                    const city = document.getElementById('city').value.trim();
+                    const state = document.getElementById('state').value;
+                    const language = document.getElementById('language').value;
                 
+                // First save registration data to temporary table
+                const tempUserId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                
+                const { error: regError } = await supabase
+                    .from('registered_profiles')
+                    .insert({
+                        temp_user_id: tempUserId,
+                        email: email,
+                        full_name: full_name,
+                        class: userClass,
+                        board: board,
+                        phone: phone,
+                        city: city,
+                        state: state,
+                        preferred_language: language,
+                        registration_method: 'email',
+                        verification_status: 'pending'
+                    });
+                
+                if (regError) {
+                    console.error('Registration data save error:', regError);
+                    throw new Error('Failed to save registration data: ' + regError.message);
+                }
+                
+                // Then create auth user
                 const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
-                    options: { data: { full_name, phone } }
+                    options: { data: { full_name, phone, temp_user_id: tempUserId } }
                 });
                 
                 if (error) throw error;
                     user = data.user;
+                    
+                    // Skip profile creation for email - it will be handled after email verification
                 } else if (selectedOAuth === 'phone') {
                     // Phone registration - send OTP via Twilio
                     const phoneNumber = document.getElementById('phone').value.trim();
@@ -816,8 +848,8 @@
                     return; // Don't continue with profile creation yet
                 }
                 
-                // Update user profile
-                if (user) {
+                // Update user profile (skip for email registration - handled after verification)
+                if (user && selectedOAuth !== 'email') {
                     const userClass = `Class ${document.getElementById('class').value}`;
                 const board = document.getElementById('board').value;
                 const city = document.getElementById('city').value.trim();
@@ -845,25 +877,27 @@
                     }
                 }
                 
-                // Set all users to Premium plan by default
-                await supabase.from('user_profiles')
-                    .update({
-                        economic_status: 'Premium',
-                        verification_status: 'approved'
-                    })
-                    .eq('id', user.id);
+                // Set all users to Premium plan by default (skip for email - handled after verification)
+                if (selectedOAuth !== 'email') {
+                    await supabase.from('user_profiles')
+                        .update({
+                            economic_status: 'Premium',
+                            verification_status: 'approved'
+                        })
+                        .eq('id', user.id);
                 
-                // Assign class access
-                const userClassAccess = `class${document.getElementById('class').value}`;
-                try {
-                    await supabase.rpc('assign_user_class_access', {
-                        p_user_id: user.id,
-                        p_class_name: userClassAccess,
-                        p_subjects: null,
-                        p_languages: ['English']
-                    });
-                } catch (accessErr) {
-                    console.error('Class access assignment failed:', accessErr);
+                    // Assign class access
+                    const userClassAccess = `class${document.getElementById('class').value}`;
+                    try {
+                        await supabase.rpc('assign_user_class_access', {
+                            p_user_id: user.id,
+                            p_class_name: userClassAccess,
+                            p_subjects: null,
+                            p_languages: ['English']
+                        });
+                    } catch (accessErr) {
+                        console.error('Class access assignment failed:', accessErr);
+                    }
                 }
                 
                 // Success message based on registration method
