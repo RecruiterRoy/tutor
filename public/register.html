@@ -486,7 +486,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/register.html'
+                        redirectTo: 'https://tutor-padho-india.vercel.app/register.html'
                     }
                 });
                 
@@ -798,6 +798,10 @@
                 if (selectedOAuth === 'google') {
                     // Google user is already authenticated
                     user = googleUser;
+                    
+                    // For Google OAuth, we need to collect additional details
+                    // The user is already authenticated, so we just need to create profile
+                    console.log('Google OAuth user:', user);
                 } else if (selectedOAuth === 'email') {
                     // Email registration - save to registered_profiles first
                 const email = document.getElementById('email').value.trim();
