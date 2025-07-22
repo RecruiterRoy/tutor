@@ -209,12 +209,13 @@
                         </div>
                         
                         <div id="passwordField" class="relative">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Create Password</label>
                             <input type="password" id="password" required class="input-style w-full px-4 py-3 pr-12 rounded-lg" placeholder="Password (min 6 characters)">
                             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                                 <span id="passwordToggleIcon">👁️</span>
                             </button>
                             <div class="error-message" id="passwordError"></div>
-                    </div>
+                        </div>
                     </div>
                     
                     <div class="flex justify-between mt-6">
@@ -477,11 +478,7 @@
                     document.getElementById(`step${currentStep}`).classList.remove('hidden');
                         updateStepIndicator();
                     
-                    // Handle OAuth-specific logic
-                    if (currentStep === 2 && selectedOAuth === 'phone') {
-                        // Hide password field for phone registration
-                        document.getElementById('passwordField').classList.add('hidden');
-                    }
+                    // Password field is always visible for all registration types
                         
                         if (currentStep === 5) {
                             showConfirmation();
@@ -497,10 +494,7 @@
                 document.getElementById(`step${currentStep}`).classList.remove('hidden');
                 updateStepIndicator();
                 
-                // Show password field if going back from phone flow
-                if (currentStep === 2 && selectedOAuth === 'email') {
-                    document.getElementById('passwordField').classList.remove('hidden');
-                }
+                // Password field is always visible
             }
         }
 
@@ -568,17 +562,15 @@
                 hideFieldError('phoneError');
             }
 
-            // Password validation only for email registration
-            if (selectedOAuth === 'email') {
-                if (!password) {
-                    showFieldError('passwordError', 'Password is required');
-                    isValid = false;
-                } else if (password.length < 6) {
-                    showFieldError('passwordError', 'Password must be at least 6 characters long');
-                    isValid = false;
-                } else {
-                    hideFieldError('passwordError');
-                }
+            // Password validation for all registration types
+            if (!password) {
+                showFieldError('passwordError', 'Password is required');
+                isValid = false;
+            } else if (password.length < 6) {
+                showFieldError('passwordError', 'Password must be at least 6 characters long');
+                isValid = false;
+            } else {
+                hideFieldError('passwordError');
             }
 
             return isValid;
@@ -743,26 +735,25 @@
                 if (error) throw error;
                     user = data.user;
                 } else if (selectedOAuth === 'phone') {
-                    // Phone registration - send OTP
+                    // Phone registration with email and password (phone as backup)
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('password').value;
                     const phoneNumber = document.getElementById('phone').value.trim();
                     const full_name = document.getElementById('fullName').value.trim();
                     
-                    // Add +91 prefix if not already present
-                    const phoneWithPrefix = phoneNumber.startsWith('+91') ? phoneNumber : `+91${phoneNumber}`;
-                    
-                    const { data, error } = await supabase.auth.signInWithOtp({
-                        phone: phoneWithPrefix,
-                        options: {
-                            data: { full_name }
+                    const { data, error } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: { 
+                            data: { 
+                                full_name, 
+                                phone: phoneNumber 
+                            } 
                         }
                     });
                     
                     if (error) throw error;
-                    
-                    showMessage('OTP sent to your phone! Please check your messages and enter the code.', 'success');
-                    // For phone, we'll need to handle OTP verification separately
-                    // For now, we'll create a placeholder user
-                    user = { id: 'temp_' + Date.now() };
+                    user = data.user;
                 }
                 
                 // Update user profile
