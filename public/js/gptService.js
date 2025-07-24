@@ -4,10 +4,17 @@ class GPTService {
         this.currentSubject = null;
         this.currentTeacher = null;
         this.chatHistory = [];
-        // Use current domain for the API endpoint
-        this.baseUrl = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000/api/chat'
-            : '/api/chat';
+        // Dynamic API URL based on current domain
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            this.baseUrl = 'http://localhost:3000/api/chat';
+        } else if (hostname === 'tution.app') {
+            this.baseUrl = 'https://tution.app/api/chat';
+        } else if (hostname === 'tutor-omega-seven.vercel.app') {
+            this.baseUrl = 'https://tutor-omega-seven.vercel.app/api/chat';
+        } else {
+            this.baseUrl = `${window.location.origin}/api/chat`;
+        }
     }
     
     setContext(grade, subject) {

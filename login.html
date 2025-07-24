@@ -609,7 +609,30 @@
 
             } catch (error) {
                 console.error('Login error:', error);
-                showError(error.message || 'Login failed. Please try again.');
+                
+                // Check for email verification errors
+                if (error.message && error.message.includes('Email not confirmed')) {
+                    showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                } else if (error.message && error.message.includes('Invalid login credentials')) {
+                    // Check if user exists but email is not verified
+                    try {
+                        const { data: userData, error: userError } = await window.supabaseClient
+                            .from('registered_profiles')
+                            .select('email, verification_status')
+                            .eq('email', email)
+                            .single();
+                        
+                        if (userData && userData.verification_status === 'pending') {
+                            showError('Your email is not verified. Please check your inbox and click the verification link before logging in.');
+                        } else {
+                            showError('Invalid email or password. Please try again.');
+                        }
+                    } catch (checkError) {
+                        showError('Invalid email or password. Please try again.');
+                    }
+                } else {
+                    showError(error.message || 'Login failed. Please try again.');
+                }
             } finally {
                 hideLoading('loginBtn', 'Sign In');
             }
