@@ -1,7 +1,7 @@
 {
-  "name": "tutor",
+  "name": "tution-app",
   "version": "1.0.0",
-  "description": "AI Tutor with Voice Interaction",
+  "description": "tution.app - AI-powered tutoring for Indian students",
   "main": "server.js",
   "type": "module",
   "scripts": {

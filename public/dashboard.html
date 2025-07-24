@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard - TUTOR.AI</title>
+    <title>Dashboard - tution.app</title>
     
     <!-- Preload essential resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
@@ -389,9 +389,9 @@
         <div class="p-4 border-b border-white/10">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-2">
-                    <img src="/public/images/tutor_logo_transparent.jpg" alt="Tutor.AI Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'"
-                         onerror="this.style.display='none'; this.nextElementSibling.innerHTML='🎓 Tutor.AI';">
-                    <span class="text-white font-bold text-lg cursor-pointer" onclick="window.location.href='index.html'">Tutor.AI</span>
+                    <img src="/public/images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'"
+onerror="this.style.display='none'; this.nextElementSibling.innerHTML='🎓 tution.app';">
+<span class="text-white font-bold text-lg cursor-pointer" onclick="window.location.href='index.html'">tution.app</span>
                 </div>
                 <button class="text-white text-2xl" onclick="closeMobileSidebar()">×</button>
             </div>
@@ -443,10 +443,9 @@
             <!-- Mobile Header -->
             <div class="md:hidden flex items-center justify-between p-3 bg-slate-800/90 border-b border-white/10">
                 <button class="text-white text-2xl" onclick="openMobileSidebar()">☰</button>
-                <div class="flex items-center space-x-2">
-                    <img src="/public/images/tutor_logo_transparent.jpg" alt="Tutor.AI Logo" class="h-6 cursor-pointer" onclick="window.location.href='index.html'">
-                    <h1 class="text-white text-lg font-bold cursor-pointer" onclick="window.location.href='index.html'">TUTOR.AI</h1>
-                        </div>
+                <div class="flex items-center">
+                    <img src="/public/images/tution_emblem.png" alt="tution.app Emblem" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
+                </div>
                 <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                     <span id="mobileInitials" class="text-white font-bold text-xs">L</span>
                     </div>
@@ -455,21 +454,16 @@
             <!-- Desktop Header -->
             <div class="hidden md:block bg-slate-800/90 border-b border-white/10 p-2">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <img src="/public/images/tutor_logo_transparent.jpg" alt="Tutor.AI Logo" class="h-6 cursor-pointer" onclick="window.location.href='index.html'">
-                        <h1 class="text-white text-lg font-bold cursor-pointer" onclick="window.location.href='index.html'">TUTOR.AI</h1>
+                    <div class="flex items-center">
+                        <img src="/public/images/tution_emblem.png" alt="tution.app Emblem" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
                     </div>
                     <div class="flex items-center space-x-2">
-                        <div class="text-right">
-                            <p class="text-white text-xs font-medium" id="topBarUserName">Loading...</p>
-                            <p class="text-gray-400 text-xs" id="topBarUserClass">Loading...</p>
-                            <div class="text-xs">
-                                <span id="subscriptionBadge" class="px-2 py-1 bg-gray-500 text-white rounded-full text-xs">Free</span>
-                                                                <button id="upgradeButton" onclick="window.location.href='public/payment.html'"
-                                        class="ml-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded text-xs hover:from-purple-600 hover:to-pink-600">
-                                    Upgrade
-                                </button>
-                            </div>
+                        <div class="text-xs">
+                            <span id="subscriptionBadge" class="px-2 py-1 bg-gray-500 text-white rounded-full text-xs">Free</span>
+                            <button id="upgradeButton" onclick="window.location.href='public/payment.html'"
+                                    class="ml-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded text-xs hover:from-purple-600 hover:to-pink-600">
+                                Upgrade
+                            </button>
                         </div>
                         <div class="w-7 h-7 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                             <span id="topBarInitials" class="text-white font-bold text-xs">L</span>
@@ -621,7 +615,7 @@
                                         </div>
                                     <div class="avatar-selection-card p-3 rounded-lg" data-teacher="hindi" onclick="handleAvatarSelection('hindi')">
                                         <div class="avatar-container-settings w-12 h-12 mx-auto">
-                                            <img class="avatar-image-settings" src="/public/images/miss_sapna.jpg" alt="Ms. Sapana"
+                                            <img class="avatar-image-settings" src="public/images/miss_sapna.jpg" alt="Ms. Sapana"
                                                  onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNhODU1ZjciLz4KPGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+Cjwvc3ZnPgo='">
                                     </div>
                                         <h3 class="text-white text-center mt-1 text-sm">Ms. Sapana</h3>
@@ -696,7 +690,7 @@
         let recognition = null;
         let currentTeacher = {
                 name: "Roy Sir",
-            image: "/public/images/roy_sir.jpg",
+            image: "public/images/roy_sir.jpg",
             language: "en"
         };
         
@@ -728,6 +722,7 @@
                 const trialActive = await checkTrialStatus();
                 if (!trialActive) {
                     console.log('❌ Trial expired, access blocked');
+                    showTrialExpiredOverlay();
                     return;
                 }
                 
@@ -1058,8 +1053,7 @@
             const initials = name.charAt(0).toUpperCase();
             
             // Update desktop UI
-            document.getElementById('topBarUserName').textContent = name;
-            document.getElementById('topBarUserClass').textContent = className;
+            // User name and class display removed from header
             document.getElementById('topBarInitials').textContent = initials;
             
             // Update mobile UI
@@ -1133,6 +1127,7 @@
             const trialActive = await checkTrialStatus();
             if (!trialActive) {
                 console.log('❌ Trial expired, message blocked');
+                showTrialExpiredOverlay();
                 return;
             }
             
@@ -1445,13 +1440,13 @@
             if (teacher === 'hindi') {
                 currentTeacher = {
                     name: "Ms. Sapana",
-                    image: "/public/images/miss_sapna.jpg",
+                    image: "public/images/miss_sapna.jpg",
                     language: "hi"
                 };
             } else {
                 currentTeacher = {
                     name: "Roy Sir",
-                    image: "/public/images/roy_sir.jpg",
+                    image: "public/images/roy_sir.jpg",
                     language: "en"
                 };
             }
@@ -1827,12 +1822,8 @@
             const teacherName = currentTeacher?.name || 'your teacher';
             const isHindiTeacher = currentTeacher?.language === 'hi';
             
-            const hindiMessage = isHindiTeacher ? 
+            const message = isHindiTeacher ? 
                 `Mujhe aapko padhane mai achha lgta hai, kripya ₹99 ka payment kar ke apni padhai jari rakhein.` :
-                `I enjoyed teaching you, please pay ₹99 to continue studying with me.`;
-            
-            const englishMessage = isHindiTeacher ?
-                `I enjoyed teaching you, please pay ₹99 to continue studying with me.` :
                 `I enjoyed teaching you, please pay ₹99 to continue studying with me.`;
             
             overlay.innerHTML = `
@@ -1848,8 +1839,7 @@
                                  class="w-12 h-12 rounded-full mr-3">
                             <h3 class="font-semibold text-blue-800">${teacherName}</h3>
                         </div>
-                        <p class="text-blue-700 text-lg mb-2 font-medium">${hindiMessage}</p>
-                        <p class="text-gray-600 text-sm">${englishMessage}</p>
+                        <p class="text-blue-700 text-lg mb-2 font-medium">${message}</p>
                     </div>
                     
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">

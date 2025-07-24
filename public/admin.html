@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - TUTOR.AI</title>
+    <title>Admin Dashboard - tution.app</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/public/js/config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -70,8 +70,8 @@
     <nav class="glass-effect p-4 mb-8">
         <div class="container mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <img src="/public/images/tutor_logo_transparent.jpg" alt="Tutor.AI Logo" style="height: 40px; width: auto; cursor-pointer" onclick="window.location.href='index.html'">
-                <h1 class="text-2xl font-bold">TUTOR.AI Admin Dashboard</h1>
+                <img src="/public/images/tution_logo.png" alt="tution.app Logo" style="height: 40px; width: auto; cursor-pointer" onclick="window.location.href='index.html'">
+<h1 class="text-2xl font-bold">tution.app Admin Dashboard</h1>
             </div>
             <div class="flex items-center space-x-4">
                 <span id="adminName" class="text-lg">Admin</span>
@@ -367,7 +367,7 @@
                     // Check if user email contains 'admin' or if user ID matches known admin
                     const isAdminByEmail = user.email && (
                         user.email.toLowerCase().includes('admin') ||
-                        user.email.toLowerCase().includes('tutor.ai')
+                        user.email.toLowerCase().includes('tution.app')
                     );
                     
                     // Check if this user ID matches the admin user we know exists

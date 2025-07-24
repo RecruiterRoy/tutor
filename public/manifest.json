@@ -1,6 +1,6 @@
 {
-  "name": "Tutor.AI - Your Personal AI Teacher",
-  "short_name": "Tutor.AI",
+  "name": "tution.app - Your Personal AI Teacher",
+  "short_name": "tution.app",
   "description": "AI-powered tutoring for Indian students. NCERT books, homework help, career guidance in Hindi, English & regional languages.",
   "start_url": "/",
   "display": "standalone",
