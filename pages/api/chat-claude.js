@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     // Get knowledge bank context
     let knowledgeContext = '';
     try {
-      const knowledgeResponse = await fetch(`${req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000'}/api/knowledge-search`, {
+      const knowledgeResponse = await fetch(`${req.headers.host ? `https://${req.headers.host}` : 'https://tution.app'}/api/knowledge-search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: message, grade: `class${grade}`, subject })
@@ -94,7 +94,7 @@ export async function POST(request) {
     // Get knowledge bank context
     let knowledgeContext = '';
     try {
-      const host = request.headers.get('host') || 'localhost:3000';
+      const host = request.headers.get('host') || 'tution.app';
       const protocol = host.includes('localhost') ? 'http' : 'https';
       
       const knowledgeResponse = await fetch(`${protocol}://${host}/api/knowledge-search`, {

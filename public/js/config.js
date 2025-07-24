@@ -4,8 +4,20 @@ window.TUTOR_CONFIG = {
     SUPABASE_URL: 'https://xhuljxuxnlwtocfmwiid.supabase.co',
     SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4',
   
-  // API Configuration
-  apiBaseUrl: window.location.origin,
+  // API Configuration - Dynamic based on current domain
+  get apiBaseUrl() {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000';
+    } else if (hostname === 'tution.app') {
+      return 'https://tution.app';
+    } else if (hostname === 'tutor-omega-seven.vercel.app') {
+      return 'https://tutor-omega-seven.vercel.app';
+    } else {
+      // Fallback to current origin
+      return window.location.origin;
+    }
+  },
   
   // Mobile Optimization Settings
   mobile: {

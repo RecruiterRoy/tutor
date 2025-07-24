@@ -955,10 +955,17 @@
                 }
                 
                 setTimeout(() => {
-                    if (selectedOAuth === 'google') {
-                        window.location.href = 'dashboard.html';
+                    // Check if user wants to download app after registration
+                    const downloadAfterRegister = localStorage.getItem('downloadAfterRegister');
+                    if (downloadAfterRegister === 'true') {
+                        localStorage.removeItem('downloadAfterRegister');
+                        window.location.href = 'download.html';
                     } else {
-                window.location.href = 'login.html';
+                        if (selectedOAuth === 'google') {
+                            window.location.href = 'dashboard.html';
+                        } else {
+                            window.location.href = 'login.html';
+                        }
                     }
                 }, 3000);
                 
@@ -1224,7 +1231,14 @@
                 showMessage('Phone verification successful! Registration completed.', 'success');
                 
                 setTimeout(() => {
-                    window.location.href = 'dashboard.html';
+                    // Check if user wants to download app after registration
+                    const downloadAfterRegister = localStorage.getItem('downloadAfterRegister');
+                    if (downloadAfterRegister === 'true') {
+                        localStorage.removeItem('downloadAfterRegister');
+                        window.location.href = 'download.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
                 }, 3000);
                 
             } catch (err) {

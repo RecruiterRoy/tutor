@@ -28,6 +28,7 @@ export default async function handler(req, res) {
     // Get knowledge bank context
     let knowledgeContext = '';
     try {
+      // Get the current host for building URLs
       const host = req.headers.host || 'tution.app';
       const protocol = host.includes('localhost') ? 'http' : 'https';
       
@@ -168,6 +169,7 @@ export async function POST(request) {
     // Get knowledge bank context
     let knowledgeContext = '';
     try {
+      // Get the current host for building URLs
       const host = request.headers.get('host') || 'tution.app';
       const protocol = host.includes('localhost') ? 'http' : 'https';
       

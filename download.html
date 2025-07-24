@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download tution.app - Your AI Learning Companion</title>
+    <meta name="description" content="Download tution.app mobile app for Android. Get your personal AI teacher, homework help, and personalized learning experience.">
+    <link rel="icon" href="/public/images/tution_logo.png" type="image/png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        /* Download Section */
+        .download-section {
+            margin-top: 100px;
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .download-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 30px;
+            padding: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .app-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 25px;
+            margin: 0 auto 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 1.2rem 3rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .download-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .info-item {
+            text-align: center;
+            color: white;
+        }
+
+        .info-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #4ecdc4;
+        }
+
+        .info-text {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+        }
+
+        .installation-steps {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .steps-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .step-list {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            color: white;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .step-number {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.8rem 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-top: 2rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .download-container {
+                padding: 2rem;
+                margin: 0 1rem;
+            }
+
+            .download-title {
+                font-size: 2rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .step-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .step-number {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4ecdc4;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="/public/images/tution_logo.png" alt="tution.app Logo" style="height: 40px; width: auto; filter: brightness(0) invert(1);">
+                <span class="logo-text">tution.app</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Download Section -->
+    <section class="download-section">
+        <div class="container">
+            <div class="download-container">
+                <div class="app-icon">📱</div>
+                <h1 class="download-title">Download tution.app</h1>
+                <p class="download-subtitle">
+                    Your personal AI teacher is ready to help you learn! Download the app and start your educational journey today.
+                </p>
+                
+                <button class="download-btn" onclick="startDownload()">
+                    <span id="download-text">📥 Download APK (Free)</span>
+                    <span id="download-loading" class="loading" style="display: none;"></span>
+                </button>
+
+                <div class="progress-container" id="progress-container" style="display: none;">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+
+                <div class="download-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-icon">🎓</div>
+                            <div class="info-title">AI-Powered Learning</div>
+                            <div class="info-text">Personalized study plans and instant homework help</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">📚</div>
+                            <div class="info-title">NCERT Content</div>
+                            <div class="info-text">Complete coverage of CBSE curriculum</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">🗣️</div>
+                            <div class="info-title">Multi-Language</div>
+                            <div class="info-text">Learn in Hindi, English, and regional languages</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">📊</div>
+                            <div class="info-title">Progress Tracking</div>
+                            <div class="info-text">Monitor your learning journey with detailed analytics</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="installation-steps">
+                    <h3 class="steps-title">📋 Installation Instructions</h3>
+                    <ol class="step-list">
+                        <li class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-text">Click the "Download APK" button above</div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-text">Allow installation from unknown sources in your Android settings</div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-text">Open the downloaded APK file and tap "Install"</div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-text">Open tution.app and log in with your registered email</div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-text">Start learning with your personal AI teacher!</div>
+                        </li>
+                    </ol>
+                </div>
+
+                <a href="index.html" class="back-btn">← Back to Home</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function startDownload() {
+            const downloadBtn = document.querySelector('.download-btn');
+            const downloadText = document.getElementById('download-text');
+            const downloadLoading = document.getElementById('download-loading');
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+
+            // Show loading state
+            downloadText.style.display = 'none';
+            downloadLoading.style.display = 'inline-block';
+            downloadBtn.disabled = true;
+            progressContainer.style.display = 'block';
+
+            // Simulate download progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                progressBar.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    // Trigger actual download
+                    setTimeout(() => {
+                        const link = document.createElement('a');
+                        link.href = '/app-release.apk';
+                        link.download = 'tution-app.apk';
+                        link.style.display = 'none';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Reset button state
+                        downloadText.textContent = '✅ Download Complete!';
+                        downloadText.style.display = 'inline-block';
+                        downloadLoading.style.display = 'none';
+                        downloadBtn.disabled = false;
+                        
+                        // Hide progress bar after a delay
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                        }, 2000);
+                    }, 1000);
+                }
+            }, 200);
+        }
+
+        // Check if user came from registration
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadAfterRegister = localStorage.getItem('downloadAfterRegister');
+            if (downloadAfterRegister === 'true') {
+                localStorage.removeItem('downloadAfterRegister');
+                // Auto-start download after a short delay
+                setTimeout(() => {
+                    startDownload();
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html> 
