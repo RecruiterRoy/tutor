@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - TUTOR.AI</title>
+    <title>Admin Dashboard - tution.app</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/public/js/config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -70,8 +70,8 @@
     <nav class="glass-effect p-4 mb-8">
         <div class="container mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <img src="/public/images/tutor_logo_transparent.jpg" alt="Tutor.AI Logo" style="height: 40px; width: auto; cursor-pointer" onclick="window.location.href='index.html'">
-                <h1 class="text-2xl font-bold">TUTOR.AI Admin Dashboard</h1>
+                                <img src="/public/images/tution_logo.png" alt="tution.app Logo" style="height: 40px; width: auto; cursor-pointer" onclick="window.location.href='index.html'">
+                <h1 class="text-2xl font-bold">tution.app Admin Dashboard</h1>
             </div>
             <div class="flex items-center space-x-4">
                 <span id="adminName" class="text-lg">Admin</span>
@@ -193,6 +193,26 @@
                 <div id="users-tab" class="tab-content hidden">
                     <div class="admin-card p-6">
                         <h3 class="text-xl font-semibold mb-4">All Users</h3>
+                        
+                        <!-- Bulk Actions -->
+                        <div class="mb-6 p-4 bg-white/10 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-3">Bulk Actions</h4>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="bulkGiveFreeAccess()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm">
+                                    🎁 Give Free Access to All
+                                </button>
+                                <button onclick="bulkGivePremiumAccess()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm">
+                                    ⭐ Give Premium to All
+                                </button>
+                                <button onclick="bulkResetToTrial()" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg text-sm">
+                                    🔄 Reset All to Trial
+                                </button>
+                                <button onclick="showSubscriptionStats()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm">
+                                    📊 Subscription Stats
+                                </button>
+                            </div>
+                        </div>
+                        
                         <div class="mb-4">
                             <input type="text" id="userSearch" placeholder="Search users..." class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white">
                         </div>
@@ -205,8 +225,9 @@
                                         <th class="p-3 text-left">Class</th>
                                         <th class="p-3 text-left">Board</th>
                                         <th class="p-3 text-left">Location</th>
-                                        <th class="p-3 text-left">Status</th>
+                                        <th class="p-3 text-left">Subscription</th>
                                         <th class="p-3 text-left">Joined</th>
+                                        <th class="p-3 text-left">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="usersTable">
@@ -367,7 +388,7 @@
                     // Check if user email contains 'admin' or if user ID matches known admin
                     const isAdminByEmail = user.email && (
                         user.email.toLowerCase().includes('admin') ||
-                        user.email.toLowerCase().includes('tutor.ai')
+                        user.email.toLowerCase().includes('tution.app')
                     );
                     
                     // Check if this user ID matches the admin user we know exists
@@ -645,6 +666,22 @@
                 users.forEach(user => {
                     const row = document.createElement('tr');
                     row.className = 'border-b border-white/10 hover:bg-white/5';
+                    
+                    // Determine subscription status and color
+                    let subscriptionStatus = 'Trial';
+                    let statusColor = 'bg-yellow-600';
+                    
+                    if (user.subscription_status === 'free') {
+                        subscriptionStatus = 'Free';
+                        statusColor = 'bg-blue-600';
+                    } else if (user.subscription_status === 'active') {
+                        subscriptionStatus = 'Premium';
+                        statusColor = 'bg-green-600';
+                    } else if (user.subscription_status === 'expired') {
+                        subscriptionStatus = 'Expired';
+                        statusColor = 'bg-red-600';
+                    }
+                    
                     row.innerHTML = `
                         <td class="p-3 font-semibold">${user.full_name || 'No name'}</td>
                         <td class="p-3">${user.email || 'N/A'}</td>
@@ -652,11 +689,24 @@
                         <td class="p-3">${user.board || 'Not set'}</td>
                         <td class="p-3">${user.city || 'N/A'}, ${user.state || 'N/A'}</td>
                         <td class="p-3">
-                            <span class="px-2 py-1 rounded text-xs ${user.economic_status === 'Premium' ? 'bg-green-600' : 'bg-blue-600'}">
-                                ${user.economic_status || 'Free'}
+                            <span class="px-2 py-1 rounded text-xs ${statusColor}">
+                                ${subscriptionStatus}
                             </span>
                         </td>
                         <td class="p-3 text-sm">${new Date(user.created_at).toLocaleDateString()}</td>
+                        <td class="p-3">
+                            <div class="flex space-x-2">
+                                <button onclick="giveFreeAccess('${user.email}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs">
+                                    Free
+                                </button>
+                                <button onclick="givePremiumAccess('${user.email}')" class="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs">
+                                    Premium
+                                </button>
+                                <button onclick="resetToTrial('${user.email}')" class="bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded text-xs">
+                                    Trial
+                                </button>
+                            </div>
+                        </td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -733,6 +783,226 @@
             }
         }
 
+        // Subscription Management Functions
+        async function giveFreeAccess(userEmail) {
+            try {
+                if (!userEmail) {
+                    userEmail = prompt('Enter user email to give free access:');
+                    if (!userEmail) return;
+                }
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .update({
+                        subscription_status: 'free',
+                        subscription_plan: 'free_access',
+                        subscription_end: null
+                    })
+                    .eq('email', userEmail);
+                
+                if (error) {
+                    console.error('Error giving free access:', error);
+                    alert('Failed to give free access: ' + error.message);
+                } else {
+                    console.log('✅ Free access granted to:', userEmail);
+                    alert(`Free access granted to ${userEmail}`);
+                    // Reload users table
+                    await loadUsers();
+                }
+            } catch (error) {
+                console.error('Error in giveFreeAccess:', error);
+                alert('Failed to give free access: ' + error.message);
+            }
+        }
+        
+        async function givePremiumAccess(userEmail) {
+            try {
+                if (!userEmail) {
+                    userEmail = prompt('Enter user email to give premium access:');
+                    if (!userEmail) return;
+                }
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .update({
+                        subscription_status: 'active',
+                        subscription_plan: 'premium',
+                        subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year
+                    })
+                    .eq('email', userEmail);
+                
+                if (error) {
+                    console.error('Error giving premium access:', error);
+                    alert('Failed to give premium access: ' + error.message);
+                } else {
+                    console.log('✅ Premium access granted to:', userEmail);
+                    alert(`Premium access granted to ${userEmail}`);
+                    // Reload users table
+                    await loadUsers();
+                }
+            } catch (error) {
+                console.error('Error in givePremiumAccess:', error);
+                alert('Failed to give premium access: ' + error.message);
+            }
+        }
+        
+        async function resetToTrial(userEmail) {
+            try {
+                if (!userEmail) {
+                    userEmail = prompt('Enter user email to reset to trial:');
+                    if (!userEmail) return;
+                }
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .update({
+                        subscription_status: 'trial',
+                        subscription_plan: 'free_trial',
+                        subscription_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+                    })
+                    .eq('email', userEmail);
+                
+                if (error) {
+                    console.error('Error resetting to trial:', error);
+                    alert('Failed to reset to trial: ' + error.message);
+                } else {
+                    console.log('✅ Reset to trial for:', userEmail);
+                    alert(`Reset to trial for ${userEmail}`);
+                    // Reload users table
+                    await loadUsers();
+                }
+            } catch (error) {
+                console.error('Error in resetToTrial:', error);
+                alert('Failed to reset to trial: ' + error.message);
+            }
+        }
+        
+        // Bulk Action Functions
+        async function bulkGiveFreeAccess() {
+            if (!confirm('Are you sure you want to give FREE access to ALL users? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .update({
+                        subscription_status: 'free',
+                        subscription_plan: 'free_access',
+                        subscription_end: null
+                    })
+                    .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all users
+                
+                if (error) {
+                    console.error('Error in bulk free access:', error);
+                    alert('Failed to give free access to all users: ' + error.message);
+                } else {
+                    console.log('✅ Free access granted to all users');
+                    alert('Free access granted to all users!');
+                    await loadUsers();
+                }
+            } catch (error) {
+                console.error('Error in bulkGiveFreeAccess:', error);
+                alert('Failed to give free access to all users: ' + error.message);
+            }
+        }
+        
+        async function bulkGivePremiumAccess() {
+            if (!confirm('Are you sure you want to give PREMIUM access to ALL users? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .update({
+                        subscription_status: 'active',
+                        subscription_plan: 'premium',
+                        subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year
+                    })
+                    .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all users
+                
+                if (error) {
+                    console.error('Error in bulk premium access:', error);
+                    alert('Failed to give premium access to all users: ' + error.message);
+                } else {
+                    console.log('✅ Premium access granted to all users');
+                    alert('Premium access granted to all users!');
+                    await loadUsers();
+                }
+            } catch (error) {
+                console.error('Error in bulkGivePremiumAccess:', error);
+                alert('Failed to give premium access to all users: ' + error.message);
+            }
+        }
+        
+        async function bulkResetToTrial() {
+            if (!confirm('Are you sure you want to reset ALL users to TRIAL? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .update({
+                        subscription_status: 'trial',
+                        subscription_plan: 'free_trial',
+                        subscription_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+                    })
+                    .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all users
+                
+                if (error) {
+                    console.error('Error in bulk reset to trial:', error);
+                    alert('Failed to reset all users to trial: ' + error.message);
+                } else {
+                    console.log('✅ All users reset to trial');
+                    alert('All users reset to trial!');
+                    await loadUsers();
+                }
+            } catch (error) {
+                console.error('Error in bulkResetToTrial:', error);
+                alert('Failed to reset all users to trial: ' + error.message);
+            }
+        }
+        
+        async function showSubscriptionStats() {
+            try {
+                const { data: users, error } = await supabase
+                    .from('user_profiles')
+                    .select('subscription_status');
+                
+                if (error) throw error;
+                
+                const stats = {
+                    trial: 0,
+                    free: 0,
+                    active: 0,
+                    expired: 0
+                };
+                
+                users.forEach(user => {
+                    const status = user.subscription_status || 'trial';
+                    stats[status]++;
+                });
+                
+                const total = users.length;
+                const message = `
+📊 Subscription Statistics:
+
+👥 Total Users: ${total}
+⏰ Trial Users: ${stats.trial} (${((stats.trial/total)*100).toFixed(1)}%)
+🎁 Free Users: ${stats.free} (${((stats.free/total)*100).toFixed(1)}%)
+⭐ Premium Users: ${stats.active} (${((stats.active/total)*100).toFixed(1)}%)
+❌ Expired Users: ${stats.expired} (${((stats.expired/total)*100).toFixed(1)}%)
+                `;
+                
+                alert(message);
+            } catch (error) {
+                console.error('Error getting subscription stats:', error);
+                alert('Failed to get subscription statistics: ' + error.message);
+            }
+        }
+        
         // Load charts
         async function loadCharts() {
             // User Growth Chart

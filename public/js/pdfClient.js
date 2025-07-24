@@ -107,7 +107,10 @@ class PDFClient {
 const pdfClient = new PDFClient();
 
 // Export for use in your app
-export default pdfClient;
+// Export for module usage
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = pdfClient;
+}
 
 // Example usage:
 /*

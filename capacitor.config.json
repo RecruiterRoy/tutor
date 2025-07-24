@@ -1,6 +1,6 @@
 {
-  "appId": "com.tutorai.app",
-  "appName": "TUTOR.AI",
+  "appId": "com.tution.app",
+  "appName": "tution.app",
   "webDir": "public",
   "bundledWebRuntime": false,
   "backgroundColor": "#667eea",

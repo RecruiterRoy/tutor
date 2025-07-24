@@ -1,7 +1,7 @@
 // Use the global Supabase client from CDN
 let supabase = null;
 
-export async function getSupabaseClient() {
+async function getSupabaseClient() {
     if (supabase) return supabase;
     
     try {
