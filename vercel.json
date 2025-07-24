@@ -46,6 +46,10 @@
       "destination": "/download.html"
     },
     {
+      "source": "/tution.app.v1.1.apk",
+      "destination": "/public/tution.app.v1.1.apk"
+    },
+    {
       "source": "/favicon.ico",
       "destination": "/public/favicon.ico"
     },

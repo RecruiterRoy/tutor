@@ -808,7 +808,7 @@
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/dashboard.html'
+                        redirectTo: 'https://tution.app/dashboard.html'
                     }
                 });
 

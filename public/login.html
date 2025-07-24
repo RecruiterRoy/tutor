@@ -377,7 +377,16 @@
                 
                 if (error || !user) {
                     console.error('Session validation failed:', error);
+                    // Clear all auth-related localStorage items
                     localStorage.removeItem('supabase.auth.token');
+                    localStorage.removeItem('supabase.auth.refreshToken');
+                    localStorage.removeItem('supabase.auth.expiresAt');
+                    localStorage.removeItem('supabase.auth.expiresIn');
+                    localStorage.removeItem('supabase.auth.tokenType');
+                    localStorage.removeItem('supabase.auth.accessToken');
+                    // Also clear any other potential auth storage
+                    sessionStorage.removeItem('supabase.auth.token');
+                    sessionStorage.removeItem('supabase.auth.refreshToken');
                     return false;
                 }
                 
@@ -386,6 +395,15 @@
                 
             } catch (error) {
                 console.error('Session check error:', error);
+                // Clear all auth data on any error
+                localStorage.removeItem('supabase.auth.token');
+                localStorage.removeItem('supabase.auth.refreshToken');
+                localStorage.removeItem('supabase.auth.expiresAt');
+                localStorage.removeItem('supabase.auth.expiresIn');
+                localStorage.removeItem('supabase.auth.tokenType');
+                localStorage.removeItem('supabase.auth.accessToken');
+                sessionStorage.removeItem('supabase.auth.token');
+                sessionStorage.removeItem('supabase.auth.refreshToken');
                 return false;
             }
         }
@@ -785,7 +803,7 @@
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/dashboard.html'
+                        redirectTo: 'https://tution.app/dashboard.html'
                     }
                 });
 
