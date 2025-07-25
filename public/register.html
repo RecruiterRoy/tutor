@@ -123,7 +123,7 @@
             <div class="text-center mb-8">
                 <div class="flex justify-center mb-4">
                     <a href="index.html" class="cursor-pointer">
-                        <img src="/public/images/tution_logo.png" alt="tution.app Logo" style="height: 80px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
+                        <img src="public/images/tution_logo.png" alt="tution.app Logo" style="height: 80px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
                     </a>
                 </div>
                 <h1 class="text-4xl font-bold text-white mb-2">tution.app</h1>
@@ -164,16 +164,6 @@
                             <p class="text-gray-300 text-sm">Quick sign up with your Google account</p>
                         </button>
                         
-                        <button onclick="selectOAuth('phone')" class="plan-card p-6 rounded-lg cursor-pointer text-center">
-                            <div class="mb-4">
-                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                            </svg>
-                            </div>
-                            <h3 class="text-white font-semibold mb-2">Phone</h3>
-                            <p class="text-gray-300 text-sm">Sign up with phone number & OTP</p>
-                        </button>
-                        
                         <button onclick="selectOAuth('email')" class="plan-card p-6 rounded-lg cursor-pointer text-center">
                             <div class="mb-4">
                                 <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,6 +173,26 @@
                             <h3 class="text-white font-semibold mb-2">Email</h3>
                             <p class="text-gray-300 text-sm">Traditional email & password sign up</p>
                         </button>
+                        
+                        <!-- <button onclick="selectOAuth('phone')" class="plan-card p-6 rounded-lg cursor-pointer text-center">
+                            <div class="mb-4">
+                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            </div>
+                            <h3 class="text-white font-semibold mb-2">Phone</h3>
+                            <p class="text-gray-300 text-sm">Sign up with phone number & OTP</p>
+                        </button> -->
+                        
+                        <div class="plan-card p-6 rounded-lg text-center opacity-50 cursor-not-allowed">
+                            <div class="mb-4">
+                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            </div>
+                            <h3 class="text-white font-semibold mb-2">Mobile</h3>
+                            <p class="text-gray-300 text-sm">Coming soon</p>
+                        </div>
                             </div>
                         </div>
                         
@@ -420,6 +430,17 @@
                 // Check for Google OAuth callback
                 checkGoogleCallback();
                 
+                // Check for step parameter in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const stepParam = urlParams.get('step');
+                if (stepParam === '2') {
+                    // Start at step 2 (Basic Information)
+                    document.getElementById('step1').classList.add('hidden');
+                    currentStep = 2;
+                    document.getElementById('step2').classList.remove('hidden');
+                    updateStepIndicator();
+                }
+                
             } catch (error) {
                 console.error('❌ Supabase initialization failed:', error);
                 showMessage('Failed to initialize. Please refresh the page.', 'error');
@@ -489,7 +510,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://tution.app/register.html'
+                        redirectTo: 'https://tution.com/register.html?step=2'
                     }
                 });
                 
@@ -817,36 +838,27 @@
                     const state = document.getElementById('state').value;
                     const language = document.getElementById('language').value;
                 
-                // First save registration data to temporary table
-                const tempUserId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                
-                const { error: regError } = await supabase
+                // Upsert initial data (update if exists, insert if not)
+                await supabase
                     .from('registered_profiles')
-                    .insert({
-                        temp_user_id: tempUserId,
-                        email: email,
-                        full_name: full_name,
+                    .upsert({
+                        email,
+                        full_name,
+                        phone,
                         class: userClass,
-                        board: board,
-                        phone: phone,
-                        city: city,
-                        state: state,
+                        board,
+                        city,
+                        state,
                         preferred_language: language,
-                        registration_method: 'email',
-                        verification_status: 'pending'
-                    });
-                
-                if (regError) {
-                    console.error('Registration data save error:', regError);
-                    throw new Error('Failed to save registration data: ' + regError.message);
-                }
-                
-                // Then create auth user
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: ['email'] });
+
+                // Always call signUp (Supabase will resend verification if needed)
                 const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
-                    options: { 
-                        data: { full_name, phone, temp_user_id: tempUserId },
+                    options: {
+                        data: { full_name, phone },
                         emailRedirectTo: 'https://tution.app/dashboard.html'
                     }
                 });
@@ -955,10 +967,17 @@
                 }
                 
                 setTimeout(() => {
-                    if (selectedOAuth === 'google') {
-                        window.location.href = 'dashboard.html';
+                    // Check if user wants to download app after registration
+                    const downloadAfterRegister = localStorage.getItem('downloadAfterRegister');
+                    if (downloadAfterRegister === 'true') {
+                        localStorage.removeItem('downloadAfterRegister');
+                        window.location.href = 'download.html';
                     } else {
-                window.location.href = 'login.html';
+                        if (selectedOAuth === 'google') {
+                            window.location.href = 'dashboard.html';
+                        } else {
+                            window.location.href = 'login.html';
+                        }
                     }
                 }, 3000);
                 
@@ -1224,7 +1243,14 @@
                 showMessage('Phone verification successful! Registration completed.', 'success');
                 
                 setTimeout(() => {
-                    window.location.href = 'dashboard.html';
+                    // Check if user wants to download app after registration
+                    const downloadAfterRegister = localStorage.getItem('downloadAfterRegister');
+                    if (downloadAfterRegister === 'true') {
+                        localStorage.removeItem('downloadAfterRegister');
+                        window.location.href = 'download.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
                 }, 3000);
                 
             } catch (err) {
@@ -1275,6 +1301,29 @@
                 spinner.classList.add('hidden');
                 btn.classList.remove('loading');
             }
+        }
+
+        // After email verification, upsert user_profiles
+        async function createUserProfileAfterVerification(user) {
+            const userClass = `Class ${document.getElementById('class').value}`;
+            const board = document.getElementById('board').value;
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value;
+            const language = document.getElementById('language').value;
+            await supabase
+                .from('user_profiles')
+                .upsert({
+                    id: user.id,
+                    full_name: document.getElementById('fullName').value.trim(),
+                    class: userClass,
+                    board: board,
+                    phone: document.getElementById('phone').value.trim(),
+                    city: city,
+                    state: state,
+                    preferred_language: language,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
         }
 
         // Initialize when page loads

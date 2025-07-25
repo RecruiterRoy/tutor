@@ -523,8 +523,7 @@
             <!-- Sidebar Header -->
             <div class="flex items-center justify-between p-6 border-b border-white/20">
                 <div class="flex items-center space-x-3">
-                    <img src="/public/images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
-                    <span class="text-white font-bold text-lg">tution.app</span>
+                    <img src="public/images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
                 </div>
                 <button class="text-white text-2xl" onclick="closeMobileSidebar()">×</button>
             </div>
@@ -573,8 +572,7 @@
             <!-- Sidebar Header -->
             <div class="flex items-center justify-between p-6 border-b border-white/20">
                 <div class="flex items-center space-x-3">
-                    <img src="/public/images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
-                    <span class="text-white font-bold text-lg">tution.app</span>
+                    <img src="public/images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
                 </div>
             </div>
             
@@ -840,6 +838,14 @@
                                 <div id="voiceWarning" class="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg hidden">
                                     <p class="text-yellow-200 text-sm">⚠️ <strong>Note:</strong> If voice features are disabled, chat will support typing only.</p>
                                 </div>
+                            </div>
+
+                            <!-- Download App Button -->
+                            <div class="card-modern">
+                                <button onclick="downloadApp()" class="btn-modern w-full">
+                                    <span>📱</span>
+                                    <span>Download App</span>
+                                </button>
                             </div>
 
                             <!-- View Profile Button -->
@@ -2135,6 +2141,21 @@
                     }
                 }, 100);
             };
+        }
+
+        // Download App function
+        function downloadApp() {
+            // Create download link for APK
+            const link = document.createElement('a');
+            link.href = 'public/tution.appv1.2.apk';
+            link.download = 'tution.appv1.2.apk';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show success message
+            showSuccess('App download started! Check your downloads folder.');
         }
     </script>
 </body>

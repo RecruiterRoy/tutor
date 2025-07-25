@@ -45,10 +45,10 @@
       "source": "/download.html",
       "destination": "/download.html"
     },
-    {
-      "source": "/tution.app.v1.1.apk",
-      "destination": "/public/tution.app.v1.1.apk"
-    },
+            {
+            "source": "/tution.appv1.2.apk",
+            "destination": "/public/tution.appv1.2.apk"
+        },
     {
       "source": "/favicon.ico",
       "destination": "/public/favicon.ico"

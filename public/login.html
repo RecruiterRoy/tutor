@@ -85,7 +85,7 @@
         <div class="text-center mb-8">
             <div class="flex justify-center mb-4">
                 <a href="index.html" class="cursor-pointer">
-                    <img src="/public/images/tution_logo.png" alt="tution.app Logo" style="height: 60px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
+                                            <img src="public/images/tution_logo.png" alt="tution.app Logo" style="height: 60px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
                 </a>
             </div>
             <h1 class="text-3xl font-bold text-white mb-2">Welcome Back!</h1>
@@ -337,6 +337,22 @@
                 window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 console.log('✅ Supabase initialized');
                 
+                // Set up session listener
+                window.supabaseClient.auth.onAuthStateChange((event, session) => {
+                    console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
+                    
+                    if (event === 'SIGNED_IN' && session) {
+                        console.log('✅ User signed in successfully');
+                    } else if (event === 'SIGNED_OUT') {
+                        console.log('👋 User signed out');
+                        // Clear any stale session data
+                        localStorage.removeItem('supabase.auth.token');
+                        sessionStorage.removeItem('supabase.auth.token');
+                    } else if (event === 'TOKEN_REFRESHED') {
+                        console.log('🔄 Token refreshed');
+                    }
+                });
+                
                 return window.supabaseClient;
                 
             } catch (error) {
@@ -351,42 +367,38 @@
             try {
                 console.log('🔍 Checking if user is already logged in...');
                 
-                const sessionData = localStorage.getItem('supabase.auth.token');
-                if (!sessionData) {
-                    console.log('❌ No session data found');
-                    return false;
-                }
-                
-                // Parse session data safely
-                let session;
-                try {
-                    session = JSON.parse(sessionData);
-                } catch (e) {
-                    console.error('Invalid session data:', e);
-                    localStorage.removeItem('supabase.auth.token');
-                    return false;
-                }
-                
                 // Initialize Supabase if not already done
                 if (!window.supabaseClient) {
                     await initSupabase();
                 }
                 
-                // Verify session with Supabase
-                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                // Get current session from Supabase
+                const { data: { session }, error } = await window.supabaseClient.auth.getSession();
                 
-                if (error || !user) {
-                    console.error('Session validation failed:', error);
-                    // Clear all auth-related localStorage items
+                if (error) {
+                    console.error('Session check error:', error);
+                    // Clear any stale session data
                     localStorage.removeItem('supabase.auth.token');
-                    localStorage.removeItem('supabase.auth.refreshToken');
-                    localStorage.removeItem('supabase.auth.expiresAt');
-                    localStorage.removeItem('supabase.auth.expiresIn');
-                    localStorage.removeItem('supabase.auth.tokenType');
-                    localStorage.removeItem('supabase.auth.accessToken');
-                    // Also clear any other potential auth storage
                     sessionStorage.removeItem('supabase.auth.token');
-                    sessionStorage.removeItem('supabase.auth.refreshToken');
+                    return false;
+                }
+                
+                if (!session) {
+                    console.log('❌ No active session found');
+                    // Clear any stale session data
+                    localStorage.removeItem('supabase.auth.token');
+                    sessionStorage.removeItem('supabase.auth.token');
+                    return false;
+                }
+                
+                // Verify user exists
+                const { data: { user }, error: userError } = await window.supabaseClient.auth.getUser();
+                
+                if (userError || !user) {
+                    console.error('User validation failed:', userError);
+                    // Clear stale session data
+                    localStorage.removeItem('supabase.auth.token');
+                    sessionStorage.removeItem('supabase.auth.token');
                     return false;
                 }
                 
@@ -395,15 +407,9 @@
                 
             } catch (error) {
                 console.error('Session check error:', error);
-                // Clear all auth data on any error
+                // Clear any stale data on error
                 localStorage.removeItem('supabase.auth.token');
-                localStorage.removeItem('supabase.auth.refreshToken');
-                localStorage.removeItem('supabase.auth.expiresAt');
-                localStorage.removeItem('supabase.auth.expiresIn');
-                localStorage.removeItem('supabase.auth.tokenType');
-                localStorage.removeItem('supabase.auth.accessToken');
                 sessionStorage.removeItem('supabase.auth.token');
-                sessionStorage.removeItem('supabase.auth.refreshToken');
                 return false;
             }
         }
@@ -617,17 +623,41 @@
                 }
 
                 if (data.user) {
-                    // Store session data
-                    localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
-                    console.log('✅ Login successful, redirecting to dashboard');
+                    console.log('✅ Login successful');
+                    
+                    // Check if user profile exists, if not create it from registered_profiles
+                    await ensureUserProfile(data.user);
                     
                     // Redirect to dashboard
-                    window.location.href = './dashboard.html';
+                    window.location.href = window.location.origin + '/dashboard.html';
                 }
 
             } catch (error) {
                 console.error('Login error:', error);
-                showError(error.message || 'Login failed. Please try again.');
+                
+                // Check for email verification errors
+                if (error.message && error.message.includes('Email not confirmed')) {
+                    showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                } else if (error.message && error.message.includes('Invalid login credentials')) {
+                    // Check if user exists but email is not verified
+                    try {
+                        const { data: userData, error: userError } = await window.supabaseClient
+                            .from('registered_profiles')
+                            .select('email, verification_status')
+                            .eq('email', email)
+                            .single();
+                        
+                        if (userData && userData.verification_status === 'pending') {
+                            showError('Your email is not verified. Please check your inbox and click the verification link before logging in.');
+                        } else {
+                            showError('Invalid email or password. Please try again.');
+                        }
+                    } catch (checkError) {
+                        showError('Invalid email or password. Please try again.');
+                    }
+                } else {
+                    showError(error.message || 'Login failed. Please try again.');
+                }
             } finally {
                 hideLoading('loginBtn', 'Sign In');
             }
@@ -667,8 +697,6 @@
                 }
 
                 if (data.user) {
-                    // Store session data
-                    localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
                     console.log('✅ Login successful');
                     
                     // Check if user profile exists, if not create it from registered_profiles
@@ -730,8 +758,6 @@
                 }
 
                 if (data.user) {
-                    // Store session data
-                    localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
                     console.log('✅ Registration successful, redirecting to dashboard');
                     
                     // Redirect to dashboard
@@ -780,8 +806,6 @@
                 }
 
                 if (data.user) {
-                    // Store session data
-                    localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
                     console.log('✅ OTP verification successful, redirecting to dashboard');
                     
                     // Redirect to dashboard
