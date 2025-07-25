@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tution.app - Your Personal AI Teacher</title>
+    <title>tution.com - Your Personal AI Teacher</title>
+    
+    <!-- Google Translate -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,hi,gu,ta,te,kn,ml,pa,bn,mr,or,as',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#667eea">
@@ -873,6 +886,40 @@
                 opacity: 0;
             }
         }
+
+        /* Input styling for forms */
+        .input-style {
+            background: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            transition: all 0.3s ease;
+        }
+        .input-style:focus {
+            border-color: rgba(147, 51, 234, 0.8) !important;
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1) !important;
+        }
+        .input-style::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+        select.input-style option {
+            background: #1f2937;
+            color: white;
+        }
+
+        /* About section centering */
+        .about {
+            text-align: center;
+        }
+        .about .container {
+            text-align: center;
+        }
+        .about ul {
+            text-align: center;
+            list-style: none;
+        }
+        .about li {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -880,8 +927,7 @@
     <header>
         <div class="header-content">
             <a href="index.html" class="logo">
-                <img src="/public/images/tution_logo.png" alt="tution.app Logo" class="logo-img cursor-pointer" onclick="window.location.href='index.html'">
-<span class="logo-text">tution.app</span>
+                <img src="public/images/tution_logo.png" alt="tution.app Logo" class="logo-img cursor-pointer" onclick="window.location.href='index.html'">
             </a>
             <nav>
                 <ul class="nav-links">
@@ -891,6 +937,7 @@
                     <li><a href="#contact">Contact</a></li>
                     <li><a href="login.html" class="login-btn">Login</a></li>
                     <li><a href="#" class="download-app-btn" onclick="handleDownloadApp()">Download App</a></li>
+                    <li><div id="google_translate_element" style="margin: 0 10px;"></div></li>
                 </ul>
             </nav>
             <button class="mobile-menu-toggle">☰</button>
@@ -1067,7 +1114,7 @@
                 <p class="text-xl text-gray-300 italic">"सबको शिक्षा, सबको अवसर" - <em>Education for All, Opportunity for Everyone</em></p>
             </div>
             
-            <div class="max-w-4xl mx-auto space-y-8">
+            <div class="max-w-4xl mx-auto space-y-8 text-center">
                 <div class="glass-effect rounded-2xl p-8 text-center">
                     <p class="text-gray-300 text-lg leading-relaxed mb-6">
                         At tution.app, we believe that quality education should never be a privilege reserved for the few. Inspired by the vision of accessible education for all, we've created India's first AI-powered tutoring companion that brings world-class learning support directly to your smartphone—at a price every family can afford.
@@ -1094,19 +1141,19 @@
                 <div class="glass-effect rounded-2xl p-8 text-center">
                     <h3 class="text-2xl font-bold text-white mb-6">What Makes Us Different</h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" style="text-align: center;">
-                        <div class="feature-highlight text-center" style="text-align: center;">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
+                        <div class="feature-highlight text-center">
                             <h4 class="text-xl font-semibold text-purple-300 mb-3">🌟 Affordable Excellence</h4>
-                            <ul class="text-gray-300 space-y-2" style="text-align: center;">
+                            <ul class="text-gray-300 space-y-2 text-center">
                                 <li>• Premium Features at ₹99/month - Less than the cost of a single tuition class</li>
                                 <li>• Premium features at affordable price</li>
                                 <li>• No hidden costs, no compromise on features</li>
                             </ul>
                         </div>
                         
-                        <div class="feature-highlight text-center" style="text-align: center;">
+                        <div class="feature-highlight text-center">
                             <h4 class="text-xl font-semibold text-purple-300 mb-3">🎯 Built for Indian Students</h4>
-                            <ul class="text-gray-300 space-y-2" style="text-align: center;">
+                            <ul class="text-gray-300 space-y-2 text-center">
                                 <li>• Complete CBSE, ICSE & State Board curriculum coverage</li>
                                 <li>• Regional teacher avatars that students can relate to</li>
                                 <li>• Multilingual support - English, Hindi, Hinglish</li>
@@ -1114,9 +1161,9 @@
                             </ul>
                         </div>
                         
-                        <div class="feature-highlight text-center" style="text-align: center;">
+                        <div class="feature-highlight text-center">
                             <h4 class="text-xl font-semibold text-purple-300 mb-3">🚀 Always Available, Always Helping</h4>
-                            <ul class="text-gray-300 space-y-2" style="text-align: center;">
+                            <ul class="text-gray-300 space-y-2 text-center">
                                 <li>• 24/7 doubt clearing - No more waiting for tuition class</li>
                                 <li>• Personalized lesson planning for exam preparation</li>
                                 <li>• Quick topic revisions whenever needed</li>
@@ -1124,9 +1171,9 @@
                             </ul>
                         </div>
                         
-                        <div class="feature-highlight text-center" style="text-align: center;">
+                        <div class="feature-highlight text-center">
                             <h4 class="text-xl font-semibold text-purple-300 mb-3">📱 Mobile-First Design</h4>
-                            <ul class="text-gray-300 space-y-2" style="text-align: center;">
+                            <ul class="text-gray-300 space-y-2 text-center">
                                 <li>• Works on any smartphone - No expensive devices needed</li>
                                 <li>• Offline capability for areas with poor internet</li>
                                 <li>• Progressive Web App technology for smooth performance</li>
@@ -1179,7 +1226,7 @@
     <section class="modi-quote-section" style="background: rgba(255,255,255,0.08); padding: 3rem 0; display: flex; justify-content: center; align-items: center;">
         <div class="container">
             <div style="display: flex; align-items: center; gap: 2rem; max-width: 900px; margin: 0 auto; flex-wrap: wrap;">
-                <img src="/public/images/NarendraModi.jpg" alt="Narendra Modi" style="width: 240px; height: 240px; object-fit: cover; object-position: center 30%; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                <img src="public/images/NarendraModi.jpg" alt="Narendra Modi" style="width: 240px; height: 240px; object-fit: cover; object-position: center 30%; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
                 <div style="flex: 1; min-width: 300px;">
                     <p style="font-size: 1.2rem; color: #fff; font-weight: 500; margin-bottom: 1rem; line-height: 1.5;">"Let us pledge to create an India where no child is left behind in the pursuit of education. An educated youth is the foundation of a developed nation."</p>
                     <p style="font-size: 1.1rem; color: rgba(255,255,255,0.9); font-weight: 400; margin-bottom: 1rem; line-height: 1.5;">"Education is not just about acquiring knowledge; it is about empowering the future. Every child, irrespective of their background, deserves quality education because education is the greatest tool to break the chains of poverty and inequality."</p>
@@ -1206,7 +1253,7 @@
                             <input type="email" id="feedbackEmail" placeholder="Your Email" required>
                         </div>
                         <div class="form-group">
-                            <select id="feedbackCategory" required>
+                            <select id="feedbackCategory" required class="input-style w-full px-4 py-3 rounded-lg">
                                 <option value="">Select Category</option>
                                 <option value="feedback">General Feedback</option>
                                 <option value="books">Books & Content</option>
@@ -1276,7 +1323,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                        <img src="/public/images/tution_logo.png" alt="tution.app Logo" style="height: 30px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
+                        <img src="public/images/tution_logo.png" alt="tution.app Logo" style="height: 30px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
 <h3>tution.app</h3>
                     </div>
                     <p>Making quality education accessible to every Indian student. Learn from AI teachers, get homework help, and build your future.</p>
@@ -1473,8 +1520,8 @@
                     // Trigger actual download after 1 second
                     setTimeout(() => {
                         const link = document.createElement('a');
-                        link.href = '/tution.app.v1.1.apk'; // Updated APK file path
-                        link.download = 'tution.app.v1.1.apk';
+                                        link.href = '/tution.appv1.2.apk'; // Updated APK file path
+                link.download = 'tution.appv1.2.apk';
                         link.style.display = 'none';
                         document.body.appendChild(link);
                         link.click();
