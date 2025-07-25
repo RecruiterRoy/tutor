@@ -921,10 +921,15 @@
                 
                 // Update user profile (skip for email registration - handled after verification)
                 if (user && selectedOAuth !== 'email') {
+                    // Double-check that user has an ID
+                    if (!user.id) {
+                        throw new Error('User ID not found. Please try signing in again.');
+                    }
+                    
                     const userClass = `Class ${document.getElementById('class').value}`;
-                const board = document.getElementById('board').value;
-                const city = document.getElementById('city').value.trim();
-                const state = document.getElementById('state').value;
+                    const board = document.getElementById('board').value;
+                    const city = document.getElementById('city').value.trim();
+                    const state = document.getElementById('state').value;
                     const language = document.getElementById('language').value;
                     
                     const { error: profileError } = await supabase
