@@ -423,13 +423,46 @@
                 // Initialize Supabase first
                 await initSupabase();
                 
+                // Check for email verification redirect
+                const urlParams = new URLSearchParams(window.location.search);
+                const accessToken = urlParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token');
+                
+                if (accessToken && refreshToken) {
+                    console.log('🔐 Email verification detected, setting session...');
+                    try {
+                        // Set the session manually
+                        const { data, error } = await window.supabaseClient.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken
+                        });
+                        
+                        if (error) {
+                            console.error('Session setting error:', error);
+                            throw error;
+                        }
+                        
+                        if (data.user) {
+                            console.log('✅ Email verification successful, user logged in');
+                            // Ensure user profile exists
+                            await ensureUserProfile(data.user);
+                            // Redirect to dashboard
+                            window.location.href = window.location.origin + '/dashboard.html';
+                            return;
+                        }
+                    } catch (sessionError) {
+                        console.error('Failed to set session after email verification:', sessionError);
+                        // Continue with normal login flow
+                    }
+                }
+                
                 // Check if user is already logged in
                 const isLoggedIn = await checkIfLoggedIn();
                 if (isLoggedIn) {
                     console.log('🔄 User already logged in, redirecting to dashboard');
                     window.location.href = window.location.origin + '/dashboard.html';
-                        return;
-                    }
+                    return;
+                }
                     
                 // Proceed with normal login page initialization
                 console.log('✅ Proceeding with login page setup...');
@@ -824,7 +857,7 @@
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://tution.app/dashboard.html'
+                        redirectTo: 'https://tution.app/register.html?step=2'
                     }
                 });
 
