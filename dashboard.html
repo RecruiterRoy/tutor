@@ -20,7 +20,7 @@
     
     <!-- Preload essential resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
-    <link rel="preload" href="/public/images/roy_sir.jpg" as="image">
+    <link rel="preload" href="images/roy_sir.jpg" as="image">
     
     <!-- Load Tailwind CSS production version -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -523,7 +523,7 @@
             <!-- Sidebar Header -->
             <div class="flex items-center justify-between p-6 border-b border-white/20">
                 <div class="flex items-center space-x-3">
-                    <img src="public/images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
+                    <img src="images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
                 </div>
                 <button class="text-white text-2xl" onclick="closeMobileSidebar()">×</button>
             </div>
@@ -572,7 +572,7 @@
             <!-- Sidebar Header -->
             <div class="flex items-center justify-between p-6 border-b border-white/20">
                 <div class="flex items-center space-x-3">
-                    <img src="public/images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
+                    <img src="images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
                 </div>
             </div>
             
@@ -619,7 +619,7 @@
                     
                     <!-- Logo (Mobile) -->
                     <div class="lg:hidden flex items-center">
-                        <img src="/public/images/tution_emblem.png" alt="tution.app Emblem" class="h-8 cursor-pointer hover:opacity-80 transition-opacity" onclick="window.location.href='index.html'">
+                        <img src="images/tution_emblem.png" alt="tution.app Emblem" class="h-8 cursor-pointer hover:opacity-80 transition-opacity" onclick="window.location.href='index.html'">
                     </div>
                     
                     <!-- Desktop Header Content -->
@@ -653,7 +653,7 @@
                     <div class="p-4 border-b border-white/20">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
-                                <img id="teacher-avatar-chat" class="teacher-avatar" src="/public/images/roy_sir.jpg" alt="Teacher Avatar">
+                                <img id="teacher-avatar-chat" class="teacher-avatar" src="images/roy_sir.jpg" alt="Teacher Avatar">
                                 <div>
                                     <h2 class="text-white text-xl font-bold" id="teacherName">Roy Sir</h2>
                                     <p class="text-gray-300 text-sm" id="teacherStatus">Online • Ready to help</p>
@@ -677,7 +677,7 @@
                         <div class="message message-ai">
                             <div class="message-bubble">
                                 <div class="flex items-center space-x-3 mb-3">
-                                    <img src="/public/images/roy_sir.jpg" alt="Roy Sir" class="w-8 h-8 rounded-full">
+                                    <img src="images/roy_sir.jpg" alt="Roy Sir" class="w-8 h-8 rounded-full">
                                     <span class="text-sm font-medium text-blue-200">Roy Sir</span>
                                 </div>
                                 <p>Hello! I'm your AI teacher. How can I help you today? You can ask me anything about your studies, homework, or any subject you're learning.</p>
@@ -810,12 +810,12 @@
                                 <h3 class="text-white text-lg font-semibold mb-4">Teacher Avatar</h3>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="avatar-selection-card p-4 rounded-lg cursor-pointer" onclick="handleAvatarSelection('english')">
-                                        <img class="teacher-avatar mx-auto mb-2" src="/public/images/roy_sir.jpg" alt="Roy Sir" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiM2NjdlZWEiLz4KPGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlI8L3RleHQ+Cjwvc3ZnPgo='">
+                                        <img class="teacher-avatar mx-auto mb-2" src="images/roy_sir.jpg" alt="Roy Sir" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiM2NjdlZWEiLz4KPGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlI8L3RleHQ+Cjwvc3ZnPgo='">
                                         <h4 class="text-white text-center text-sm">Roy Sir</h4>
                                         <p class="text-gray-300 text-center text-xs">Microsoft Ravi (English)</p>
                                     </div>
                                     <div class="avatar-selection-card p-4 rounded-lg cursor-pointer" onclick="handleAvatarSelection('hindi')">
-                                        <img class="teacher-avatar mx-auto mb-2" src="/public/images/miss_sapna.jpg" alt="Ms. Sapana" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNhODU1ZjciLz4KPGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+Cjwvc3ZnPgo='">
+                                        <img class="teacher-avatar mx-auto mb-2" src="images/miss_sapna.jpg" alt="Ms. Sapana" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNhODU1ZjciLz4KPGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+Cjwvc3ZnPgo='">
                                         <h4 class="text-white text-center text-sm">Ms. Sapana</h4>
                                         <p class="text-gray-300 text-center text-xs">Google Hindi</p>
                                     </div>
@@ -993,7 +993,7 @@
         let isRecording = false;
         let currentTeacher = {
             name: "Roy Sir",
-            image: "/public/images/roy_sir.jpg",
+            image: "images/roy_sir.jpg",
             language: "en"
         };
         
@@ -1477,7 +1477,7 @@
             if (teacher === 'hindi') {
                 currentTeacher = {
                     name: "Ms. Sapana",
-                    image: "/public/images/miss_sapna.jpg",
+                    image: "images/miss_sapna.jpg",
                     language: "hi"
                 };
                 // Add selected class to Hindi teacher card
@@ -1485,7 +1485,7 @@
             } else {
                 currentTeacher = {
                     name: "Roy Sir",
-                    image: "/public/images/roy_sir.jpg",
+                    image: "images/roy_sir.jpg",
                     language: "en"
                 };
                 // Add selected class to English teacher card
