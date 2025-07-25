@@ -444,8 +444,8 @@
                         
                         if (data.user) {
                             console.log('✅ Email verification successful, user logged in');
-                            // Ensure user profile exists
-                            await ensureUserProfile(data.user);
+                            // Create user profile immediately upon email verification
+                            await createUserProfileFromRegistration(data.user);
                             // Redirect to dashboard
                             window.location.href = window.location.origin + '/dashboard.html';
                             return;
@@ -475,6 +475,77 @@
         });
 
         // ========== LOGIN PAGE INITIALIZATION ==========
+
+        // Create user profile immediately from registration data (for email verification)
+        async function createUserProfileFromRegistration(user) {
+            try {
+                console.log('Creating user profile immediately from registration data...');
+                
+                // Get registration data
+                const { data: regData, error: regError } = await window.supabaseClient
+                    .from('registered_profiles')
+                    .select('*')
+                    .eq('email', user.email)
+                    .limit(1);
+                
+                if (regError) {
+                    console.error('Could not fetch registration data:', regError);
+                    return;
+                }
+                
+                if (regData && regData.length > 0) {
+                    const registrationData = regData[0];
+                    
+                    // Create user profile from registration data
+                    const { error: createError } = await window.supabaseClient
+                        .from('user_profiles')
+                        .insert({
+                            id: user.id,
+                            full_name: registrationData.full_name,
+                            class: registrationData.class,
+                            board: registrationData.board,
+                            phone: registrationData.phone,
+                            city: registrationData.city,
+                            state: registrationData.state,
+                            preferred_language: registrationData.preferred_language,
+                            economic_status: 'Premium',
+                            verification_status: 'approved',
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    
+                    if (createError) {
+                        console.error('Could not create user profile:', createError);
+                    } else {
+                        console.log('✅ User profile created successfully from registration');
+                        
+                        // Update registration status to verified
+                        await window.supabaseClient
+                            .from('registered_profiles')
+                            .update({ verification_status: 'verified' })
+                            .eq('id', registrationData.id);
+                        
+                        // Assign class access
+                        const userClassAccess = registrationData.class.toLowerCase().replace(' ', '');
+                        try {
+                            await window.supabaseClient.rpc('assign_user_class_access', {
+                                p_user_id: user.id,
+                                p_class_name: userClassAccess,
+                                p_subjects: null,
+                                p_languages: ['English']
+                            });
+                        } catch (accessErr) {
+                            console.error('Class access assignment failed:', accessErr);
+                        }
+                    }
+                } else {
+                    console.warn('No registration data found for user');
+                }
+                
+            } catch (error) {
+                console.error('Error creating user profile from registration:', error);
+            }
+        }
 
         // Ensure user profile exists after login
         async function ensureUserProfile(user) {
