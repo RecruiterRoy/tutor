@@ -670,7 +670,25 @@
                 
                 // Check for email verification errors
                 if (error.message && error.message.includes('Email not confirmed')) {
-                    showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                    // Check if user exists in registered_profiles and is verified
+                    try {
+                        const { data: userData, error: userError } = await window.supabaseClient
+                            .from('registered_profiles')
+                            .select('email, verification_status')
+                            .eq('email', email)
+                            .single();
+                        
+                        if (userData && userData.verification_status === 'verified') {
+                            // User is verified but Supabase session is stale, try to refresh
+                            showError('Your email is verified but session expired. Please try logging in again or use the verification link from your email.');
+                        } else if (userData && userData.verification_status === 'pending') {
+                            showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                        } else {
+                            showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                        }
+                    } catch (checkError) {
+                        showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                    }
                 } else if (error.message && error.message.includes('Invalid login credentials')) {
                     // Check if user exists but email is not verified
                     try {
