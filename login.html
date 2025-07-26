@@ -670,8 +670,11 @@
                     }
                     
                     // Check if user is verified
-                    if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
+                    if (profileData.verification_status === 'pending') {
                         showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                        return;
+                    } else if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
+                        showError('Your account verification is incomplete. Please contact support.');
                         return;
                     }
                     
