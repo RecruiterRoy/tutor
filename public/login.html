@@ -485,7 +485,7 @@
                 const { error: updateError } = await window.supabaseClient
                     .from('user_profiles')
                     .update({ verification_status: 'verified' })
-                    .eq('user_id', user.id);
+                    .eq('id', user.id);
                 
                 if (updateError) {
                     console.error('Could not update verification status:', updateError);
@@ -505,8 +505,8 @@
                 // Check if profile already exists
                 const { data: existingProfile, error: profileError } = await window.supabaseClient
                     .from('user_profiles')
-                    .select('user_id')
-                    .eq('user_id', user.id)
+                    .select('id')
+                    .eq('id', user.id)
                     .limit(1);
                 
                 if (profileError) {
@@ -525,7 +525,7 @@
                 const { error: createError } = await window.supabaseClient
                     .from('user_profiles')
                     .insert({
-                        user_id: user.id,
+                        id: user.id,
                         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
                         email: user.email,
                         phone: user.phone || null,
@@ -660,7 +660,7 @@
                     const { data: profileData, error: profileError } = await window.supabaseClient
                         .from('user_profiles')
                         .select('verification_status, economic_status')
-                        .eq('user_id', data.user.id)
+                        .eq('id', data.user.id)
                         .single();
                     
                     if (profileError) {
@@ -744,7 +744,7 @@
                     const { data: profileData, error: profileError } = await window.supabaseClient
                         .from('user_profiles')
                         .select('verification_status, economic_status')
-                        .eq('user_id', data.user.id)
+                        .eq('id', data.user.id)
                         .single();
                     
                     if (profileError) {

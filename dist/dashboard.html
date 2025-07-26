@@ -1706,7 +1706,7 @@
                 const { data: profileData, error: profileError } = await supabaseClient
                     .from('user_profiles')
                     .select('*')
-                    .eq('user_id', currentUser.id)
+                    .eq('id', currentUser.id)
                     .single();
 
                 if (profileError) {
