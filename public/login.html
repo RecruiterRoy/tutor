@@ -508,20 +508,6 @@
                 console.log('🔄 Updating verification status after email verification for user:', user.email);
                 console.log('User ID:', user.id);
                 
-                // First check if the profile exists
-                const { data: existingProfile, error: checkError } = await window.supabaseClient
-                    .from('user_profiles')
-                    .select('verification_status')
-                    .eq('id', user.id)
-                    .single();
-                
-                if (checkError) {
-                    console.error('Could not check existing profile:', checkError);
-                    return;
-                }
-                
-                console.log('Current verification status:', existingProfile.verification_status);
-                
                 // Update verification status in user_profiles
                 const { data: updateData, error: updateError } = await window.supabaseClient
                     .from('user_profiles')
@@ -533,14 +519,14 @@
                     .select();
                 
                 if (updateError) {
-                    console.error('Could not update verification status:', updateError);
+                    console.error('❌ Could not update verification status:', updateError);
                     return;
                 }
                 
                 console.log('✅ Verification status updated successfully:', updateData);
                 
             } catch (error) {
-                console.error('Error updating verification status:', error);
+                console.error('❌ Error updating verification status:', error);
             }
         }
 
@@ -676,32 +662,34 @@
 
         // ========== FORM HANDLERS ==========
 
-        async function handleLoginWithData(emailOrMobile, password) {
+        // ========== LOGIN FUNCTIONS ==========
+        
+        async function handleLoginWithData() {
             try {
-                showLoading('loginBtn', 'Signing in...');
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
                 
-                // Determine if input is email or mobile
-                const isEmail = emailOrMobile.includes('@');
-                let email = emailOrMobile;
-                
-                // If mobile, add +91 prefix if not present
-                if (!isEmail) {
-                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                if (!email || !password) {
+                    showError('Please fill in all fields');
+                    return;
                 }
-
+                
+                console.log('🔐 Attempting login for:', email);
+                
                 const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
+                    email,
+                    password
                 });
-
+                
                 if (error) {
+                    console.error('❌ Login failed:', error);
                     throw error;
                 }
-
+                
                 if (data.user) {
-                    console.log('✅ Login successful');
+                    console.log('✅ Login successful for:', data.user.email);
                     
-                    // Check verification status before allowing login
+                    // Check user profile
                     const { data: profileData, error: profileError } = await window.supabaseClient
                         .from('user_profiles')
                         .select('verification_status, economic_status')
@@ -709,12 +697,14 @@
                         .single();
                     
                     if (profileError) {
-                        console.error('Could not check user profile:', profileError);
+                        console.error('❌ Profile check failed:', profileError);
                         showError('Login failed. Please try again.');
                         return;
                     }
                     
-                    // Check if user is verified
+                    console.log('📋 Profile status:', profileData);
+                    
+                    // Check verification status
                     if (profileData.verification_status === 'pending') {
                         showError('Please verify your email address before logging in. Check your inbox for the verification link.');
                         return;
@@ -723,72 +713,57 @@
                         return;
                     }
                     
-                    // Check if user has free trial access
+                    // Check economic status
                     if (profileData.economic_status !== 'Premium' && profileData.economic_status !== 'approved') {
                         showError('Your account is not active. Please contact support.');
                         return;
                     }
                     
-                    // Check if user profile exists, if not create it
-                    await ensureUserProfile(data.user);
-                    
-                    // Redirect to dashboard
-                    window.location.href = window.location.origin + '/dashboard.html';
+                    console.log('✅ All checks passed, redirecting to dashboard');
+                    window.location.href = 'https://tution.app/dashboard.html';
                 }
-
-            } catch (error) {
-                console.error('Login error:', error);
                 
-                // Check for email verification errors
-                if (error.message && error.message.includes('Email not confirmed')) {
-                    showError('Please verify your email address before logging in. Check your inbox for the verification link.');
-                } else if (error.message && error.message.includes('Invalid login credentials')) {
-                    showError('Invalid email or password. Please try again. If you registered with Google OAuth, please use the "Continue with Google" button to log in.');
-                } else {
-                    showError(error.message || 'Login failed. Please try again.');
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                
+                let errorMessage = 'Login failed. Please try again.';
+                
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Invalid email or password. Please try again. If you registered with Google OAuth, please use the "Continue with Google" button to log in.';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
                 }
-            } finally {
-                hideLoading('loginBtn', 'Sign In');
+                
+                showError(errorMessage);
             }
         }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            
-            // Get values from Alpine.js data instead of DOM elements
-            const emailOrMobile = window.authAppData?.email || '';
-            const password = window.authAppData?.password || '';
-            
-            if (!emailOrMobile || !password) {
-                showError('Please fill in all fields');
-                return;
-            }
-                    
+        
+        async function handleLogin() {
             try {
-                showLoading('loginBtn', 'Signing in...');
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
                 
-                // Determine if input is email or mobile
-                const isEmail = emailOrMobile.includes('@');
-                let email = emailOrMobile;
-                
-                // If mobile, add +91 prefix if not present
-                if (!isEmail) {
-                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                if (!email || !password) {
+                    showError('Please fill in all fields');
+                    return;
                 }
-
+                
+                console.log('🔐 Attempting login for:', email);
+                
                 const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
+                    email,
+                    password
                 });
-
+                
                 if (error) {
+                    console.error('❌ Login failed:', error);
                     throw error;
                 }
-
+                
                 if (data.user) {
-                    console.log('✅ Login successful');
+                    console.log('✅ Login successful for:', data.user.email);
                     
-                    // Check verification status before allowing login
+                    // Check user profile
                     const { data: profileData, error: profileError } = await window.supabaseClient
                         .from('user_profiles')
                         .select('verification_status, economic_status')
@@ -796,12 +771,14 @@
                         .single();
                     
                     if (profileError) {
-                        console.error('Could not check user profile:', profileError);
+                        console.error('❌ Profile check failed:', profileError);
                         showError('Login failed. Please try again.');
                         return;
                     }
                     
-                    // Check if user is verified
+                    console.log('📋 Profile status:', profileData);
+                    
+                    // Check verification status
                     if (profileData.verification_status === 'pending') {
                         showError('Please verify your email address before logging in. Check your inbox for the verification link.');
                         return;
@@ -810,24 +787,28 @@
                         return;
                     }
                     
-                    // Check if user has free trial access
+                    // Check economic status
                     if (profileData.economic_status !== 'Premium' && profileData.economic_status !== 'approved') {
                         showError('Your account is not active. Please contact support.');
                         return;
                     }
                     
-                    // Check if user profile exists, if not create it
-                    await ensureUserProfile(data.user);
-                    
-                    // Redirect to dashboard
-                    window.location.href = window.location.origin + '/dashboard.html';
+                    console.log('✅ All checks passed, redirecting to dashboard');
+                    window.location.href = 'https://tution.app/dashboard.html';
                 }
-
-                    } catch (error) {
-                console.error('Login error:', error);
-                showError(error.message || 'Login failed. Please try again.');
-                    } finally {
-                hideLoading('loginBtn', 'Sign In');
+                
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                
+                let errorMessage = 'Login failed. Please try again.';
+                
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Invalid email or password. Please try again. If you registered with Google OAuth, please use the "Continue with Google" button to log in.';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
+                }
+                
+                showError(errorMessage);
             }
         }
 
