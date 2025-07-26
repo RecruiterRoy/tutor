@@ -476,74 +476,26 @@
 
         // ========== LOGIN PAGE INITIALIZATION ==========
 
-        // Create user profile immediately from registration data (for email verification)
+        // Update verification status after email verification
         async function createUserProfileFromRegistration(user) {
             try {
-                console.log('Creating user profile immediately from registration data...');
+                console.log('Updating verification status after email verification...');
                 
-                // Get registration data
-                const { data: regData, error: regError } = await window.supabaseClient
-                    .from('registered_profiles')
-                    .select('*')
-                    .eq('email', user.email)
-                    .limit(1);
+                // Update verification status in user_profiles
+                const { error: updateError } = await window.supabaseClient
+                    .from('user_profiles')
+                    .update({ verification_status: 'verified' })
+                    .eq('user_id', user.id);
                 
-                if (regError) {
-                    console.error('Could not fetch registration data:', regError);
+                if (updateError) {
+                    console.error('Could not update verification status:', updateError);
                     return;
                 }
                 
-                if (regData && regData.length > 0) {
-                    const registrationData = regData[0];
-                    
-                    // Create user profile from registration data
-                    const { error: createError } = await window.supabaseClient
-                        .from('user_profiles')
-                        .insert({
-                            id: user.id,
-                            full_name: registrationData.full_name,
-                            class: registrationData.class,
-                            board: registrationData.board,
-                            phone: registrationData.phone,
-                            city: registrationData.city,
-                            state: registrationData.state,
-                            preferred_language: registrationData.preferred_language,
-                            economic_status: 'Premium',
-                            verification_status: 'approved',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        });
-                    
-                    if (createError) {
-                        console.error('Could not create user profile:', createError);
-                    } else {
-                        console.log('✅ User profile created successfully from registration');
-                        
-                        // Update registration status to verified
-                        await window.supabaseClient
-                            .from('registered_profiles')
-                            .update({ verification_status: 'verified' })
-                            .eq('id', registrationData.id);
-                        
-                        // Assign class access
-                        const userClassAccess = registrationData.class.toLowerCase().replace(' ', '');
-                        try {
-                            await window.supabaseClient.rpc('assign_user_class_access', {
-                                p_user_id: user.id,
-                                p_class_name: userClassAccess,
-                                p_subjects: null,
-                                p_languages: ['English']
-                            });
-                        } catch (accessErr) {
-                            console.error('Class access assignment failed:', accessErr);
-                        }
-                    }
-                } else {
-                    console.warn('No registration data found for user');
-                }
+                console.log('✅ Verification status updated successfully');
                 
             } catch (error) {
-                console.error('Error creating user profile from registration:', error);
+                console.error('Error updating verification status:', error);
             }
         }
 
@@ -553,8 +505,8 @@
                 // Check if profile already exists
                 const { data: existingProfile, error: profileError } = await window.supabaseClient
                     .from('user_profiles')
-                    .select('id')
-                    .eq('id', user.id)
+                    .select('user_id')
+                    .eq('user_id', user.id)
                     .limit(1);
                 
                 if (profileError) {
@@ -567,52 +519,27 @@
                     return;
                 }
                 
-                // Profile doesn't exist, try to create from registered_profiles
-                console.log('Creating user profile from registration data...');
+                // Profile doesn't exist, create a basic profile
+                console.log('Creating basic user profile...');
                 
-                const { data: regData, error: regError } = await window.supabaseClient
-                    .from('registered_profiles')
-                    .select('*')
-                    .eq('email', user.email)
-                    .limit(1);
+                const { error: createError } = await window.supabaseClient
+                    .from('user_profiles')
+                    .insert({
+                        user_id: user.id,
+                        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+                        email: user.email,
+                        phone: user.phone || null,
+                        avatar: 'teacher-avatar1.png',
+                        economic_status: 'Premium',
+                        verification_status: 'verified',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
                 
-                if (regError) {
-                    console.warn('Could not fetch registration data:', regError);
-                    return;
-                }
-                
-                if (regData && regData.length > 0) {
-                    const registrationData = regData[0];
-                    
-                    // Create user profile from registration data
-                    const { error: createError } = await window.supabaseClient
-                        .from('user_profiles')
-                        .insert({
-                            id: user.id,
-                            full_name: registrationData.full_name,
-                            class: registrationData.class,
-                            board: registrationData.board,
-                            phone: registrationData.phone,
-                            city: registrationData.city,
-                            state: registrationData.state,
-                            preferred_language: registrationData.preferred_language,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        });
-                    
-                    if (createError) {
-                        console.error('Could not create user profile:', createError);
-                    } else {
-                        console.log('✅ User profile created successfully');
-                        
-                        // Mark registration as moved
-                        await window.supabaseClient
-                            .from('registered_profiles')
-                            .update({ verification_status: 'moved' })
-                            .eq('id', registrationData.id);
-                    }
+                                if (createError) {
+                    console.error('Could not create user profile:', createError);
                 } else {
-                    console.warn('No registration data found for user');
+                    console.log('✅ User profile created successfully');
                 }
                 
             } catch (error) {
@@ -729,7 +656,32 @@
                 if (data.user) {
                     console.log('✅ Login successful');
                     
-                    // Check if user profile exists, if not create it from registered_profiles
+                    // Check verification status before allowing login
+                    const { data: profileData, error: profileError } = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('verification_status, economic_status')
+                        .eq('user_id', data.user.id)
+                        .single();
+                    
+                    if (profileError) {
+                        console.error('Could not check user profile:', profileError);
+                        showError('Login failed. Please try again.');
+                        return;
+                    }
+                    
+                    // Check if user is verified
+                    if (profileData.verification_status !== 'verified') {
+                        showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                        return;
+                    }
+                    
+                    // Check if user has free trial access
+                    if (profileData.economic_status !== 'Premium' && profileData.economic_status !== 'approved') {
+                        showError('Your account is not active. Please contact support.');
+                        return;
+                    }
+                    
+                    // Check if user profile exists, if not create it
                     await ensureUserProfile(data.user);
                     
                     // Redirect to dashboard
@@ -741,42 +693,9 @@
                 
                 // Check for email verification errors
                 if (error.message && error.message.includes('Email not confirmed')) {
-                    // Check if user exists in registered_profiles and is verified
-                    try {
-                        const { data: userData, error: userError } = await window.supabaseClient
-                            .from('registered_profiles')
-                            .select('email, verification_status')
-                            .eq('email', email)
-                            .single();
-                        
-                        if (userData && userData.verification_status === 'verified') {
-                            // User is verified but Supabase session is stale, try to refresh
-                            showError('Your email is verified but session expired. Please try logging in again or use the verification link from your email.');
-                        } else if (userData && userData.verification_status === 'pending') {
-                            showError('Please verify your email address before logging in. Check your inbox for the verification link.');
-                        } else {
-                            showError('Please verify your email address before logging in. Check your inbox for the verification link.');
-                        }
-                    } catch (checkError) {
-                        showError('Please verify your email address before logging in. Check your inbox for the verification link.');
-                    }
+                    showError('Please verify your email address before logging in. Check your inbox for the verification link.');
                 } else if (error.message && error.message.includes('Invalid login credentials')) {
-                    // Check if user exists but email is not verified
-                    try {
-                        const { data: userData, error: userError } = await window.supabaseClient
-                            .from('registered_profiles')
-                            .select('email, verification_status')
-                            .eq('email', email)
-                            .single();
-                        
-                        if (userData && userData.verification_status === 'pending') {
-                            showError('Your email is not verified. Please check your inbox and click the verification link before logging in.');
-                        } else {
-                            showError('Invalid email or password. Please try again.');
-                        }
-                    } catch (checkError) {
-                        showError('Invalid email or password. Please try again.');
-                    }
+                    showError('Invalid email or password. Please try again.');
                 } else {
                     showError(error.message || 'Login failed. Please try again.');
                 }
@@ -821,7 +740,32 @@
                 if (data.user) {
                     console.log('✅ Login successful');
                     
-                    // Check if user profile exists, if not create it from registered_profiles
+                    // Check verification status before allowing login
+                    const { data: profileData, error: profileError } = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('verification_status, economic_status')
+                        .eq('user_id', data.user.id)
+                        .single();
+                    
+                    if (profileError) {
+                        console.error('Could not check user profile:', profileError);
+                        showError('Login failed. Please try again.');
+                        return;
+                    }
+                    
+                    // Check if user is verified
+                    if (profileData.verification_status !== 'verified') {
+                        showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                        return;
+                    }
+                    
+                    // Check if user has free trial access
+                    if (profileData.economic_status !== 'Premium' && profileData.economic_status !== 'approved') {
+                        showError('Your account is not active. Please contact support.');
+                        return;
+                    }
+                    
+                    // Check if user profile exists, if not create it
                     await ensureUserProfile(data.user);
                     
                     // Redirect to dashboard
