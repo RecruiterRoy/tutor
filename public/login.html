@@ -427,6 +427,9 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const accessToken = urlParams.get('access_token');
                 const refreshToken = urlParams.get('refresh_token');
+                const type = urlParams.get('type');
+                
+                console.log('🔍 Checking URL params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
                 
                 if (accessToken && refreshToken) {
                     console.log('🔐 Email verification detected, setting session...');
@@ -443,7 +446,7 @@
                         }
                         
                         if (data.user) {
-                            console.log('✅ Email verification successful, user logged in');
+                            console.log('✅ Email verification successful, user logged in:', data.user.email);
                             // Create user profile immediately upon email verification
                             await createUserProfileFromRegistration(data.user);
                             // Redirect to dashboard
@@ -452,6 +455,29 @@
                         }
                     } catch (sessionError) {
                         console.error('Failed to set session after email verification:', sessionError);
+                        // Continue with normal login flow
+                    }
+                }
+                
+                // Also check for email verification via type parameter
+                if (type === 'signup' || type === 'recovery') {
+                    console.log('🔐 Email verification detected via type parameter');
+                    try {
+                        // Get current user
+                        const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                        
+                        if (error) {
+                            console.error('Could not get user after email verification:', error);
+                        } else if (user) {
+                            console.log('✅ Email verification successful, user logged in:', user.email);
+                            // Create user profile immediately upon email verification
+                            await createUserProfileFromRegistration(user);
+                            // Redirect to dashboard
+                            window.location.href = window.location.origin + '/dashboard.html';
+                            return;
+                        }
+                    } catch (verificationError) {
+                        console.error('Failed to handle email verification:', verificationError);
                         // Continue with normal login flow
                     }
                 }
@@ -479,20 +505,39 @@
         // Update verification status after email verification
         async function createUserProfileFromRegistration(user) {
             try {
-                console.log('Updating verification status after email verification...');
+                console.log('🔄 Updating verification status after email verification for user:', user.email);
+                console.log('User ID:', user.id);
+                
+                // First check if the profile exists
+                const { data: existingProfile, error: checkError } = await window.supabaseClient
+                    .from('user_profiles')
+                    .select('verification_status')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (checkError) {
+                    console.error('Could not check existing profile:', checkError);
+                    return;
+                }
+                
+                console.log('Current verification status:', existingProfile.verification_status);
                 
                 // Update verification status in user_profiles
-                const { error: updateError } = await window.supabaseClient
+                const { data: updateData, error: updateError } = await window.supabaseClient
                     .from('user_profiles')
-                    .update({ verification_status: 'verified' })
-                    .eq('id', user.id);
+                    .update({ 
+                        verification_status: 'verified',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', user.id)
+                    .select();
                 
                 if (updateError) {
                     console.error('Could not update verification status:', updateError);
                     return;
                 }
                 
-                console.log('✅ Verification status updated successfully');
+                console.log('✅ Verification status updated successfully:', updateData);
                 
             } catch (error) {
                 console.error('Error updating verification status:', error);
