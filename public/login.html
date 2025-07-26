@@ -670,7 +670,7 @@
                     }
                     
                     // Check if user is verified
-                    if (profileData.verification_status !== 'verified') {
+                    if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
                         showError('Please verify your email address before logging in. Check your inbox for the verification link.');
                         return;
                     }
@@ -754,7 +754,7 @@
                     }
                     
                     // Check if user is verified
-                    if (profileData.verification_status !== 'verified') {
+                    if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
                         showError('Please verify your email address before logging in. Check your inbox for the verification link.');
                         return;
                     }
