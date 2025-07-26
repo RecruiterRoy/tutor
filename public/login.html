@@ -695,7 +695,7 @@
                 if (error.message && error.message.includes('Email not confirmed')) {
                     showError('Please verify your email address before logging in. Check your inbox for the verification link.');
                 } else if (error.message && error.message.includes('Invalid login credentials')) {
-                    showError('Invalid email or password. Please try again.');
+                    showError('Invalid email or password. Please try again. If you registered with Google OAuth, please use the "Continue with Google" button to log in.');
                 } else {
                     showError(error.message || 'Login failed. Please try again.');
                 }
