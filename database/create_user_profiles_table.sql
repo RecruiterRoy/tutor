@@ -5,13 +5,17 @@
 CREATE TABLE IF NOT EXISTS public.user_profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     full_name VARCHAR(255),
+    email VARCHAR(255),
     class VARCHAR(20),
     board VARCHAR(100),
     board_abbr VARCHAR(10),
     phone VARCHAR(20),
     city VARCHAR(100),
     state VARCHAR(100),
-    preferred_language VARCHAR(10) DEFAULT 'en',
+    preferred_language VARCHAR(10) DEFAULT 'English',
+    avatar VARCHAR(255) DEFAULT 'teacher-avatar1.png',
+    economic_status VARCHAR(50) DEFAULT 'Premium',
+    verification_status VARCHAR(50) DEFAULT 'pending',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -98,19 +102,26 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Create function to sync user profile on signup
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+    user_email VARCHAR;
 BEGIN
+    -- Only take email from OAuth, don't extract name
+    user_email := NEW.email;
+    
+    -- Create minimal profile with only email
+    -- All other details will be filled from registration form
     INSERT INTO public.user_profiles (
         id, 
-        full_name,
-        class,
-        board,
-        board_abbr
+        email,
+        verification_status,
+        created_at,
+        updated_at
     ) VALUES (
         NEW.id,
-        NEW.raw_user_meta_data->>'full_name',
-        'Class 1', -- Default class
-        NULL, -- No default board - user must select
-        NULL -- No default board abbreviation - user must select
+        user_email,
+        'pending', -- Start as pending until registration form is completed
+        NOW(),
+        NOW()
     );
     RETURN NEW;
 END;
