@@ -881,10 +881,11 @@
                         throw new Error('Google authentication failed. Please try again.');
                     }
                     
-                    console.log('✅ Google user found:', user.id);
+                    console.log('✅ Google user found:', user.id, user.email);
                     
                     // Set password for Google user
                     try {
+                        console.log('🔐 Setting password for Google user...');
                         const { error: passwordError } = await supabase.auth.updateUser({
                             password: password
                         });
@@ -899,31 +900,37 @@
                     }
                     
                     // Create profile for Google user
-                    const { error: profileError } = await supabase
+                    console.log('📝 Creating profile for Google user...');
+                    const profileData = {
+                        id: user.id,
+                        full_name: fullName,
+                        email: user.email,
+                        phone: phone,
+                        class: userClass,
+                        board: board,
+                        city: city,
+                        state: state,
+                        preferred_language: language,
+                        avatar: selectedAvatar || 'teacher-avatar1.png',
+                        economic_status: 'Premium',
+                        verification_status: 'approved',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+                    
+                    console.log('📋 Profile data to insert:', profileData);
+                    
+                    const { data: insertedProfile, error: profileError } = await supabase
                         .from('user_profiles')
-                        .insert({
-                            id: user.id,
-                            full_name: fullName,
-                            email: user.email,
-                            phone: phone,
-                            class: userClass,
-                            board: board,
-                            city: city,
-                            state: state,
-                            preferred_language: language,
-                            avatar: selectedAvatar || 'teacher-avatar1.png',
-                            economic_status: 'Premium',
-                            verification_status: 'approved',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        });
+                        .insert(profileData)
+                        .select();
                     
                     if (profileError) {
                         console.error('❌ Google profile creation failed:', profileError);
                         throw new Error('Failed to create Google user profile: ' + profileError.message);
                     }
                     
-                    console.log('✅ Google profile created successfully');
+                    console.log('✅ Google profile created successfully:', insertedProfile);
                     showMessage('Registration successful! Redirecting to dashboard...', 'success');
                     
                     // Redirect to dashboard after short delay
