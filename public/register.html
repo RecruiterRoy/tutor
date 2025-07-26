@@ -325,7 +325,7 @@
 
                         
                         <div>
-                            <select id="language" class="input-style w-full px-4 py-3 rounded-lg">
+                            <select id="language" class="input-style w-full px-4 py-3 rounded-lg" onchange="updateAvatarBasedOnLanguage()">
                                 <option value="English">English</option>
                                 <option value="Hindi">Hindi</option>
                                 <option value="Hinglish">Hinglish (Hindi + English)</option>
@@ -405,6 +405,7 @@
         let selectedPlan = null;
         let selectedOAuth = null;
         let googleUser = null;
+        let selectedAvatar = 'teacher-avatar1.png'; // Default avatar
 
         // Supabase configuration
         const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
@@ -755,14 +756,12 @@
                     <p class="text-gray-300">Board: ${document.getElementById('board').value}</p>
                     <p class="text-gray-300">State: ${document.getElementById('state').value}</p>
                     <p class="text-gray-300">City: ${document.getElementById('city').value}</p>
-                    <p class="text-gray-300">Address: ${document.getElementById('address').value}</p>
+                    <p class="text-gray-300">Language: ${document.getElementById('language').value}</p>
                 </div>
                 <div class="bg-white/10 p-4 rounded-lg">
                     <h3 class="text-white font-semibold mb-2">Plan Information</h3>
-                    <p class="text-gray-300">Selected Plan: ${selectedPlan}</p>
-                    ${selectedPlan === 'Premium' ? 
-                        `<p class="text-yellow-400">Monthly Fee: ₹99</p>` : 
-                        `<p class="text-green-400">Monthly Fee: Free</p>`}
+                    <p class="text-green-400">Premium Plan - Free Trial</p>
+                    <p class="text-gray-300">All users get Premium access during trial period</p>
                 </div>
             `;
             
@@ -1007,6 +1006,7 @@
                     city: city,
                     state: state,
                     preferred_language: language,
+                    avatar: selectedAvatar,
                     economic_status: 'Premium',
                     verification_status: 'approved',
                     created_at: new Date().toISOString(),
@@ -1323,6 +1323,17 @@
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 });
+        }
+
+        // Avatar selection based on language
+        function updateAvatarBasedOnLanguage() {
+            const language = document.getElementById('language').value;
+            if (language === 'Hindi' || language === 'Hinglish') {
+                selectedAvatar = 'miss_sapna.jpg'; // Miss Sapna for Hindi/Hinglish
+            } else {
+                selectedAvatar = 'roy_sir.jpg'; // Roy Sir for English
+            }
+            console.log('Avatar updated to:', selectedAvatar);
         }
 
         // Initialize when page loads
