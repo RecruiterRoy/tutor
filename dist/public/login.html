@@ -423,70 +423,86 @@
                 // Initialize Supabase first
                 await initSupabase();
                 
-                // Check for email verification redirect
+                // Check for email verification redirect - handle all possible Supabase scenarios
                 const urlParams = new URLSearchParams(window.location.search);
                 const accessToken = urlParams.get('access_token');
                 const refreshToken = urlParams.get('refresh_token');
                 const type = urlParams.get('type');
+                const error = urlParams.get('error');
+                const errorDescription = urlParams.get('error_description');
                 
-                console.log('🔍 Checking URL params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
+                console.log('🔍 Checking URL params:', { 
+                    accessToken: !!accessToken, 
+                    refreshToken: !!refreshToken, 
+                    type, 
+                    error, 
+                    errorDescription,
+                    fullUrl: window.location.href
+                });
                 
+                // Handle email verification success
                 if (accessToken && refreshToken) {
-                    console.log('🔐 Email verification detected, setting session...');
+                    console.log('🔐 Email verification detected with tokens, setting session...');
                     try {
                         // Set the session manually
-                        const { data, error } = await window.supabaseClient.auth.setSession({
+                        const { data, error: sessionError } = await window.supabaseClient.auth.setSession({
                             access_token: accessToken,
                             refresh_token: refreshToken
                         });
                         
-                        if (error) {
-                            console.error('Session setting error:', error);
-                            throw error;
+                        if (sessionError) {
+                            console.error('❌ Session setting error:', sessionError);
+                            throw sessionError;
                         }
                         
                         if (data.user) {
                             console.log('✅ Email verification successful, user logged in:', data.user.email);
-                            // Create user profile immediately upon email verification
-                            await createUserProfileFromRegistration(data.user);
+                            // Update verification status immediately
+                            await updateVerificationStatus(data.user);
                             // Redirect to dashboard
-                            window.location.href = window.location.origin + '/dashboard.html';
+                            window.location.href = 'https://tution.app/dashboard.html';
                             return;
                         }
                     } catch (sessionError) {
-                        console.error('Failed to set session after email verification:', sessionError);
+                        console.error('❌ Failed to set session after email verification:', sessionError);
                         // Continue with normal login flow
                     }
                 }
                 
-                // Also check for email verification via type parameter
+                // Handle email verification via type parameter (alternative Supabase flow)
                 if (type === 'signup' || type === 'recovery') {
                     console.log('🔐 Email verification detected via type parameter');
                     try {
                         // Get current user
-                        const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                        const { data: { user }, error: userError } = await window.supabaseClient.auth.getUser();
                         
-                        if (error) {
-                            console.error('Could not get user after email verification:', error);
+                        if (userError) {
+                            console.error('❌ Could not get user after email verification:', userError);
                         } else if (user) {
                             console.log('✅ Email verification successful, user logged in:', user.email);
-                            // Create user profile immediately upon email verification
-                            await createUserProfileFromRegistration(user);
+                            // Update verification status immediately
+                            await updateVerificationStatus(user);
                             // Redirect to dashboard
-                            window.location.href = window.location.origin + '/dashboard.html';
+                            window.location.href = 'https://tution.app/dashboard.html';
                             return;
                         }
                     } catch (verificationError) {
-                        console.error('Failed to handle email verification:', verificationError);
+                        console.error('❌ Failed to handle email verification:', verificationError);
                         // Continue with normal login flow
                     }
+                }
+                
+                // Handle any verification errors
+                if (error) {
+                    console.error('❌ Email verification error:', error, errorDescription);
+                    showError(`Email verification failed: ${errorDescription || error}`);
                 }
                 
                 // Check if user is already logged in
                 const isLoggedIn = await checkIfLoggedIn();
                 if (isLoggedIn) {
                     console.log('🔄 User already logged in, redirecting to dashboard');
-                    window.location.href = window.location.origin + '/dashboard.html';
+                    window.location.href = 'https://tution.app/dashboard.html';
                     return;
                 }
                     
@@ -500,13 +516,27 @@
             }
         });
 
-        // ========== LOGIN PAGE INITIALIZATION ==========
-
+        // ========== EMAIL VERIFICATION FUNCTIONS ==========
+        
         // Update verification status after email verification
-        async function createUserProfileFromRegistration(user) {
+        async function updateVerificationStatus(user) {
             try {
-                console.log('🔄 Updating verification status after email verification for user:', user.email);
+                console.log('🔄 Updating verification status for user:', user.email);
                 console.log('User ID:', user.id);
+                
+                // First check if profile exists
+                const { data: existingProfile, error: checkError } = await window.supabaseClient
+                    .from('user_profiles')
+                    .select('verification_status')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (checkError) {
+                    console.error('❌ Could not check existing profile:', checkError);
+                    return;
+                }
+                
+                console.log('📋 Current verification status:', existingProfile.verification_status);
                 
                 // Update verification status in user_profiles
                 const { data: updateData, error: updateError } = await window.supabaseClient
@@ -528,6 +558,11 @@
             } catch (error) {
                 console.error('❌ Error updating verification status:', error);
             }
+        }
+        
+        // Legacy function for backward compatibility
+        async function createUserProfileFromRegistration(user) {
+            return await updateVerificationStatus(user);
         }
 
         // Ensure user profile exists after login
