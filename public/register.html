@@ -475,10 +475,12 @@
                 
                 console.log('Google OAuth user data:', user);
                 
-                // Auto-fill form with Google data
+                // Only auto-fill email from Google, don't auto-fill name
+                // Name should come from registration form (parent filling for child)
                 if (user.user_metadata) {
-                    document.getElementById('fullName').value = user.user_metadata.full_name || '';
                     document.getElementById('email').value = user.email || '';
+                    // Clear name field - parent should fill child's name
+                    document.getElementById('fullName').value = '';
                 }
                 
                 // Move to step 2 directly without validation
@@ -899,21 +901,22 @@
                         console.warn('⚠️ Password setting failed:', error);
                     }
                     
-                    // Create profile for Google user
-                    console.log('📝 Creating profile for Google user...');
+                    // Create profile for Google user with registration form data
+                    console.log('📝 Creating profile for Google user with registration data...');
                     const profileData = {
                         id: user.id,
-                        full_name: fullName,
-                        email: user.email,
-                        phone: phone,
-                        class: userClass,
-                        board: board,
-                        city: city,
-                        state: state,
-                        preferred_language: language,
+                        full_name: fullName, // From registration form (child's name)
+                        email: user.email, // From Google OAuth
+                        phone: phone, // From registration form
+                        class: userClass, // From registration form
+                        board: board, // From registration form
+                        board_abbr: board, // From registration form
+                        city: city, // From registration form
+                        state: state, // From registration form
+                        preferred_language: language, // From registration form
                         avatar: selectedAvatar || 'teacher-avatar1.png',
                         economic_status: 'Premium',
-                        verification_status: 'approved',
+                        verification_status: 'approved', // Auto-approved for OAuth users
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     };
@@ -922,7 +925,9 @@
                     
                     const { data: insertedProfile, error: profileError } = await supabase
                         .from('user_profiles')
-                        .insert(profileData)
+                        .upsert(profileData, {
+                            onConflict: 'id'
+                        })
                         .select();
                     
                     if (profileError) {
@@ -931,7 +936,7 @@
                     }
                     
                     console.log('✅ Google profile created successfully:', insertedProfile);
-                    showMessage('Registration successful! Redirecting to dashboard...', 'success');
+                    showMessage('Registration successful! Your profile has been created with email and mobile as user ID. Redirecting to dashboard...', 'success');
                     
                     // Redirect to dashboard after short delay
                     setTimeout(() => {

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Test - tution.app</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-2xl w-full">
+        <h1 class="text-2xl font-bold mb-6 text-center">Google OAuth Test</h1>
+        
+        <div id="status" class="mb-4 p-4 rounded-lg"></div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <button id="checkUser" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+                Check Current User
+            </button>
+            
+            <button id="checkProfile" class="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">
+                Check User Profile
+            </button>
+            
+            <button id="createProfile" class="w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600">
+                Create Profile
+            </button>
+            
+            <button id="testGoogleLogin" class="w-full bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600">
+                Test Google Login
+            </button>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">User Information</h3>
+            <div id="userInfo" class="bg-gray-50 p-4 rounded text-sm"></div>
+        </div>
+        
+        <div>
+            <h3 class="text-lg font-semibold mb-2">Debug Log</h3>
+            <div id="output" class="bg-gray-100 p-4 rounded text-sm font-mono max-h-96 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        function log(message) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.innerHTML += `<div class="mb-1"><span class="text-gray-500">[${timestamp}]</span> ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+        
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            const colors = {
+                info: 'bg-blue-100 text-blue-800',
+                success: 'bg-green-100 text-green-800',
+                error: 'bg-red-100 text-red-800',
+                warning: 'bg-yellow-100 text-yellow-800'
+            };
+            status.className = `mb-4 p-4 rounded-lg ${colors[type]}`;
+            status.textContent = message;
+        }
+        
+        function updateUserInfo(user) {
+            const userInfo = document.getElementById('userInfo');
+            userInfo.innerHTML = `
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div><strong>ID:</strong> ${user.id}</div>
+                    <div><strong>Email:</strong> ${user.email}</div>
+                    <div><strong>Provider:</strong> ${user.app_metadata?.provider || 'Unknown'}</div>
+                    <div><strong>Email Confirmed:</strong> ${user.email_confirmed_at ? 'Yes' : 'No'}</div>
+                    <div><strong>Phone:</strong> ${user.phone || 'Not set'}</div>
+                    <div><strong>Created:</strong> ${new Date(user.created_at).toLocaleString()}</div>
+                </div>
+                <div class="mt-2">
+                    <strong>User Metadata:</strong>
+                    <pre class="text-xs bg-white p-2 rounded mt-1">${JSON.stringify(user.user_metadata, null, 2)}</pre>
+                </div>
+                <div class="mt-2">
+                    <strong>App Metadata:</strong>
+                    <pre class="text-xs bg-white p-2 rounded mt-1">${JSON.stringify(user.app_metadata, null, 2)}</pre>
+                </div>
+            `;
+        }
+        
+        // Check current user
+        document.getElementById('checkUser').addEventListener('click', async () => {
+            try {
+                log('🔍 Checking current user...');
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) {
+                    log('❌ Error getting user: ' + error.message);
+                    showStatus('No user logged in', 'error');
+                    return;
+                }
+                
+                if (user) {
+                    log('✅ User found: ' + user.email);
+                    log('User ID: ' + user.id);
+                    log('Provider: ' + (user.app_metadata?.provider || 'Unknown'));
+                    log('Email confirmed: ' + user.email_confirmed_at);
+                    updateUserInfo(user);
+                    showStatus('User logged in: ' + user.email, 'success');
+                } else {
+                    log('❌ No user found');
+                    showStatus('No user logged in', 'warning');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                showStatus('Error checking user', 'error');
+            }
+        });
+        
+        // Check user profile
+        document.getElementById('checkProfile').addEventListener('click', async () => {
+            try {
+                log('🔍 Checking user profile...');
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError || !user) {
+                    log('❌ No user logged in');
+                    showStatus('Please log in first', 'error');
+                    return;
+                }
+                
+                const { data: profile, error: profileError } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (profileError) {
+                    log('❌ Profile error: ' + profileError.message);
+                    showStatus('Profile not found', 'error');
+                    return;
+                }
+                
+                log('✅ Profile found:');
+                log('Full Name: ' + profile.full_name);
+                log('Email: ' + profile.email);
+                log('Verification Status: ' + profile.verification_status);
+                log('Economic Status: ' + profile.economic_status);
+                log('Created: ' + profile.created_at);
+                log('Updated: ' + profile.updated_at);
+                
+                showStatus('Profile loaded successfully', 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                showStatus('Error checking profile', 'error');
+            }
+        });
+        
+        // Create profile
+        document.getElementById('createProfile').addEventListener('click', async () => {
+            try {
+                log('🔄 Creating user profile...');
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError || !user) {
+                    log('❌ No user logged in');
+                    showStatus('Please log in first', 'error');
+                    return;
+                }
+                
+                // Extract Google OAuth data if available
+                const fullName = user.user_metadata?.full_name || 
+                               user.user_metadata?.name ||
+                               user.email?.split('@')[0] || 
+                               'User';
+                
+                const profileData = {
+                    id: user.id,
+                    full_name: fullName,
+                    email: user.email,
+                    class: 'Class 1',
+                    board: 'CBSE',
+                    board_abbr: 'CBSE',
+                    phone: user.phone || '',
+                    city: '',
+                    state: '',
+                    preferred_language: 'English',
+                    avatar: 'teacher-avatar1.png',
+                    economic_status: 'Premium',
+                    verification_status: 'approved',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                
+                log('📋 Profile data to insert:');
+                log(JSON.stringify(profileData, null, 2));
+                
+                const { data: insertData, error: insertError } = await supabase
+                    .from('user_profiles')
+                    .upsert(profileData, {
+                        onConflict: 'id'
+                    })
+                    .select();
+                
+                if (insertError) {
+                    log('❌ Insert error: ' + insertError.message);
+                    showStatus('Failed to create profile', 'error');
+                    return;
+                }
+                
+                log('✅ Profile created/updated successfully:');
+                log(JSON.stringify(insertData, null, 2));
+                
+                showStatus('Profile created successfully', 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                showStatus('Error creating profile', 'error');
+            }
+        });
+        
+        // Test Google login
+        document.getElementById('testGoogleLogin').addEventListener('click', async () => {
+            try {
+                log('🔐 Testing Google login...');
+                
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href
+                    }
+                });
+                
+                if (error) {
+                    log('❌ Google login error: ' + error.message);
+                    showStatus('Google login failed', 'error');
+                    return;
+                }
+                
+                log('✅ Google OAuth initiated');
+                showStatus('Google OAuth initiated', 'info');
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                showStatus('Error testing Google login', 'error');
+            }
+        });
+        
+        // Auto-check on page load
+        window.addEventListener('load', async () => {
+            log('🚀 Google OAuth test page loaded');
+            log('Current URL: ' + window.location.href);
+            
+            // Check URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const accessToken = urlParams.get('access_token');
+            const refreshToken = urlParams.get('refresh_token');
+            const type = urlParams.get('type');
+            
+            log('URL Parameters:');
+            log('Access Token: ' + (accessToken ? 'Present' : 'Not present'));
+            log('Refresh Token: ' + (refreshToken ? 'Present' : 'Not present'));
+            log('Type: ' + (type || 'Not present'));
+            
+            if (accessToken && refreshToken) {
+                log('🔐 OAuth callback detected!');
+                showStatus('OAuth callback detected', 'info');
+                
+                // Auto-check user after OAuth
+                setTimeout(async () => {
+                    try {
+                        const { data: { user }, error } = await supabase.auth.getUser();
+                        if (user && !error) {
+                            log('✅ OAuth user authenticated: ' + user.email);
+                            updateUserInfo(user);
+                            showStatus('OAuth user authenticated: ' + user.email, 'success');
+                        }
+                    } catch (error) {
+                        log('❌ Error getting OAuth user: ' + error.message);
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html> 

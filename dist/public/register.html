@@ -475,10 +475,12 @@
                 
                 console.log('Google OAuth user data:', user);
                 
-                // Auto-fill form with Google data
+                // Only auto-fill email from Google, don't auto-fill name
+                // Name should come from registration form (parent filling for child)
                 if (user.user_metadata) {
-                    document.getElementById('fullName').value = user.user_metadata.full_name || '';
                     document.getElementById('email').value = user.email || '';
+                    // Clear name field - parent should fill child's name
+                    document.getElementById('fullName').value = '';
                 }
                 
                 // Move to step 2 directly without validation

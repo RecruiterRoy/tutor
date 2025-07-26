@@ -565,13 +565,16 @@
             return await updateVerificationStatus(user);
         }
 
-        // Ensure user profile exists after login
+                // Ensure user profile exists after login
         async function ensureUserProfile(user) {
             try {
+                console.log('🔍 Ensuring user profile exists for:', user.email);
+                console.log('🔍 User provider:', user.app_metadata?.provider);
+                
                 // Check if profile already exists
                 const { data: existingProfile, error: profileError } = await window.supabaseClient
                     .from('user_profiles')
-                    .select('id')
+                    .select('*')
                     .eq('id', user.id)
                     .limit(1);
                 
@@ -581,35 +584,90 @@
                 }
                 
                 if (existingProfile && existingProfile.length > 0) {
-                    console.log('User profile already exists');
+                    console.log('✅ User profile already exists');
+                    
+                    // For Google OAuth users, ensure profile is complete
+                    if (user.app_metadata?.provider === 'google') {
+                        await ensureGoogleOAuthProfileComplete(user, existingProfile[0]);
+                    }
                     return;
                 }
                 
                 // Profile doesn't exist, create a basic profile
-                console.log('Creating basic user profile...');
+                console.log('📝 Creating new user profile...');
                 
-                const { error: createError } = await window.supabaseClient
+                const profileData = {
+                    id: user.id,
+                    email: user.email,
+                    verification_status: user.app_metadata?.provider === 'google' ? 'approved' : 'pending',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                
+                console.log('📋 Profile data to insert:', profileData);
+                
+                const { data: createdProfile, error: createError } = await window.supabaseClient
                     .from('user_profiles')
-                    .insert({
-                        id: user.id,
-                        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-                        email: user.email,
-                        phone: user.phone || null,
-                        avatar: 'teacher-avatar1.png',
-                        economic_status: 'Premium',
-                        verification_status: 'verified',
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
+                    .insert(profileData)
+                    .select()
+                    .single();
                 
-                                if (createError) {
-                    console.error('Could not create user profile:', createError);
+                if (createError) {
+                    console.error('❌ Could not create user profile:', createError);
                 } else {
-                    console.log('✅ User profile created successfully');
+                    console.log('✅ User profile created successfully:', createdProfile);
                 }
                 
             } catch (error) {
-                console.error('Error ensuring user profile:', error);
+                console.error('❌ Error ensuring user profile:', error);
+            }
+        }
+        
+        // Ensure Google OAuth profile is complete
+        async function ensureGoogleOAuthProfileComplete(user, existingProfile) {
+            try {
+                console.log('🔍 Checking Google OAuth profile completeness...');
+                
+                // Check if profile is complete with registration data
+                const isComplete = existingProfile.full_name && 
+                                 existingProfile.email && 
+                                 existingProfile.phone &&
+                                 existingProfile.class && 
+                                 existingProfile.board &&
+                                 existingProfile.verification_status === 'approved';
+                
+                if (!isComplete) {
+                    console.log('⚠️ Google OAuth profile incomplete, user needs to complete registration...');
+                    
+                    // Show message to user about completing registration
+                    showMessage('Please complete your profile registration to access all features.', 'warning');
+                    
+                    // Update basic info from OAuth only
+                    const updateData = {
+                        email: user.email,
+                        verification_status: 'approved',
+                        economic_status: 'Premium',
+                        updated_at: new Date().toISOString()
+                    };
+                    
+                    const { data: updatedProfile, error: updateError } = await window.supabaseClient
+                        .from('user_profiles')
+                        .update(updateData)
+                        .eq('id', user.id)
+                        .select()
+                        .single();
+                    
+                    if (updateError) {
+                        console.error('❌ Failed to update Google OAuth profile:', updateError);
+                    } else {
+                        console.log('✅ Google OAuth profile updated:', updatedProfile);
+                    }
+                } else {
+                    console.log('✅ Google OAuth profile is complete');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error ensuring Google OAuth profile:', error);
             }
         }
 
@@ -624,11 +682,48 @@
                 // Initialize password toggles
                 initializePasswordToggles();
                 
+                // Check for OAuth callback
+                await checkOAuthCallback();
+                
                 console.log('✅ Login page initialized');
                 
             } catch (error) {
                 console.error('❌ Login page initialization error:', error);
                 showError('Failed to initialize login page. Please refresh.');
+            }
+        }
+        
+        // Check for OAuth callback and handle user profile creation
+        async function checkOAuthCallback() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const accessToken = urlParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token');
+                
+                if (accessToken && refreshToken) {
+                    console.log('🔐 OAuth callback detected');
+                    
+                    // Get the authenticated user
+                    const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                    
+                    if (error || !user) {
+                        console.error('❌ Could not get OAuth user:', error);
+                        return;
+                    }
+                    
+                    console.log('✅ OAuth user authenticated:', user.email);
+                    console.log('🔍 User provider:', user.app_metadata?.provider);
+                    
+                    // Ensure user profile exists
+                    await ensureUserProfile(user);
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = 'https://tution.app/dashboard.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('❌ Error handling OAuth callback:', error);
             }
         }
 
