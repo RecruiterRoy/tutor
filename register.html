@@ -835,61 +835,63 @@
                     
                     user = currentUser;
                     
-                    // For Google OAuth, we need to collect additional details
-                    // The user is already authenticated, so we just need to create profile
-                    console.log('Google OAuth user:', user);
+                    // Save user profile directly for Google OAuth
+                    await saveGoogleUserProfile(user);
                 } else if (selectedOAuth === 'email') {
-                    // Email registration - save to registered_profiles first
-                const email = document.getElementById('email').value.trim();
-                const password = document.getElementById('password').value;
+                    // Email registration - save directly to user_profiles
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('password').value;
                     const full_name = document.getElementById('fullName').value.trim();
-                const phone = document.getElementById('phone').value.trim();
+                    const phone = document.getElementById('phone').value.trim();
                     const userClass = `Class ${document.getElementById('class').value}`;
                     const board = document.getElementById('board').value;
                     const city = document.getElementById('city').value.trim();
                     const state = document.getElementById('state').value;
                     const language = document.getElementById('language').value;
-                
-                // First save registration data to temporary table
-                const tempUserId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                
-                const { error: regError } = await supabase
-                    .from('registered_profiles')
-                    .insert({
-                        temp_user_id: tempUserId,
-                        email: email,
-                        full_name: full_name,
-                        class: userClass,
-                        board: board,
-                        phone: phone,
-                        city: city,
-                        state: state,
-                        preferred_language: language,
-                        registration_method: 'email',
-                        verification_status: 'pending'
+
+                    // Create auth user
+                    const { data, error } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: { 
+                            data: { full_name, phone },
+                            emailRedirectTo: 'https://tution.app/login.html'
+                        }
                     });
-                
-                if (regError) {
-                    console.error('Registration data save error:', regError);
-                    throw new Error('Failed to save registration data: ' + regError.message);
-                }
-                
-                // Then create auth user
-                const { data, error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: { 
-                        data: { full_name, phone, temp_user_id: tempUserId },
-                        emailRedirectTo: 'https://tution.app/dashboard.html'
-                    }
-                });
-                
-                if (error) throw error;
+                    
+                    if (error) throw error;
                     user = data.user;
                     
-                    // Skip profile creation for email - it will be handled after email verification
+                    // Save user profile immediately for email registration
+                    if (user && user.id) {
+                        const { error: profileError } = await supabase
+                            .from('user_profiles')
+                            .upsert({
+                                user_id: user.id,
+                                full_name: full_name,
+                                email: email,
+                                phone: phone,
+                                class: userClass,
+                                board: board,
+                                city: city,
+                                state: state,
+                                preferred_language: language,
+                                avatar: selectedAvatar || 'teacher-avatar1.png',
+                                economic_status: 'Premium',
+                                verification_status: 'pending',
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            }, {
+                                onConflict: 'user_id'
+                            });
+                        
+                        if (profileError) {
+                            console.error('Profile creation error:', profileError);
+                            throw new Error('Failed to create user profile: ' + profileError.message);
+                        }
+                    }
                 } else if (selectedOAuth === 'phone') {
-                    // Phone registration - send OTP via Twilio
+                    // Phone registration - send OTP via custom API
                     const phoneNumber = document.getElementById('phone').value.trim();
                     const full_name = document.getElementById('fullName').value.trim();
                     
@@ -964,28 +966,7 @@
                     }
                 }
                 
-                // Set all users to Premium plan by default (skip for email - handled after verification)
-                if (selectedOAuth !== 'email') {
-                    await supabase.from('user_profiles')
-                        .update({
-                            economic_status: 'Premium',
-                            verification_status: 'approved'
-                        })
-                        .eq('id', user.id);
-                
-                    // Assign class access
-                    const userClassAccess = `class${document.getElementById('class').value}`;
-                    try {
-                        await supabase.rpc('assign_user_class_access', {
-                            p_user_id: user.id,
-                            p_class_name: userClassAccess,
-                            p_subjects: null,
-                            p_languages: ['English']
-                        });
-                    } catch (accessErr) {
-                        console.error('Class access assignment failed:', accessErr);
-                    }
-                }
+
                 
                 // Success message based on registration method
                 if (selectedOAuth === 'email') {
@@ -1050,6 +1031,38 @@
             }
         }
 
+        // Save user profile for Google OAuth
+        async function saveGoogleUserProfile(user) {
+            if (!user || !user.id) {
+                throw new Error('Google user not found. Please try signing in again.');
+            }
+            const userClass = `Class ${document.getElementById('class').value}`;
+            const board = document.getElementById('board').value;
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value;
+            const language = document.getElementById('language').value;
+            const { error: profileError } = await supabase
+                .from('user_profiles')
+                .upsert({
+                    user_id: user.id,
+                    full_name: document.getElementById('fullName').value.trim(),
+                    email: user.email,
+                    phone: document.getElementById('phone').value.trim(),
+                    class: userClass,
+                    board: board,
+                    city: city,
+                    state: state,
+                    preferred_language: language,
+                    economic_status: 'Premium',
+                    verification_status: 'approved',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+            if (profileError) {
+                throw new Error('Failed to create Google user profile: ' + profileError.message);
+            }
+        }
+
         // Real-time validation functions
         async function validateEmailOnBlur(input) {
             const email = input.value.trim();
@@ -1067,9 +1080,9 @@
                     return; // Skip check if table doesn't exist
                 }
                 
-                // Check if email exists in registered_profiles
+                // Check if email exists in user_profiles
                 const { data: registeredUsers, error: regError } = await supabase
-                    .from('registered_profiles')
+                    .from('user_profiles')
                     .select('id, verification_status')
                     .eq('email', email)
                     .limit(1);
@@ -1242,14 +1255,18 @@
                 const { error: profileError } = await supabase
                     .from('user_profiles')
                     .upsert({
-                        id: user.id,
+                        user_id: user.id,
                         full_name: window.registrationData.full_name,
+                        email: window.registrationData.email,
                         class: window.registrationData.userClass,
                         board: window.registrationData.board,
                         phone: window.registrationData.phone.replace('+91', ''),
                         city: window.registrationData.city,
                         state: window.registrationData.state,
                         preferred_language: window.registrationData.language,
+                        avatar: selectedAvatar || 'teacher-avatar1.png',
+                        economic_status: 'Premium',
+                        verification_status: 'approved',
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     });
@@ -1265,7 +1282,7 @@
                         economic_status: 'Premium',
                         verification_status: 'approved'
                     })
-                    .eq('id', user.id);
+                    .eq('user_id', user.id);
                 
                 // Show success and redirect
                 showMessage('Phone verification successful! Registration completed.', 'success');
