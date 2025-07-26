@@ -812,28 +812,18 @@
             }
 
             setLoading(true);
-            
             try {
                 // Check for duplicate email/phone before registration
                 const email = document.getElementById('email').value.trim();
                 const phone = document.getElementById('phone').value.trim();
-                
-                // Temporarily disabled duplicate check for faster deployment
-                // await checkDuplicateUser(email, phone);
-                
                 let user = null;
-                
-                // Handle different OAuth methods
                 if (selectedOAuth === 'google') {
                     // Google user is already authenticated - get current user from Supabase
                     const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-                    
                     if (userError || !currentUser) {
                         throw new Error('Failed to get authenticated user. Please try signing in with Google again.');
                     }
-                    
                     user = currentUser;
-                    
                     // Save user profile directly for Google OAuth
                     await saveGoogleUserProfile(user);
                 } else if (selectedOAuth === 'email') {
@@ -848,11 +838,11 @@
                     const state = document.getElementById('state').value;
                     const language = document.getElementById('language').value;
 
-                    // Create auth user
+                    // Always call signUp (Supabase will resend verification if needed)
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password,
-                        options: { 
+                        options: {
                             data: { full_name, phone },
                             emailRedirectTo: 'https://tution.app/login.html'
                         }
@@ -877,7 +867,7 @@
                        preferred_language: language,
                        avatar: selectedAvatar || 'teacher-avatar1.png',
                        economic_status: 'Premium',
-                       verification_status: 'verified',
+                       verification_status: 'pending',
                        created_at: new Date().toISOString(),
                        updated_at: new Date().toISOString()
                    }, {
@@ -929,9 +919,7 @@
                     return; // Don't continue with profile creation yet
                 }
                 
-
-                
-
+                // Profile creation is now handled within each OAuth method above
                 
                 // Success message based on registration method
                 if (selectedOAuth === 'email') {
@@ -1348,6 +1336,29 @@
                 spinner.classList.add('hidden');
                 btn.classList.remove('loading');
             }
+        }
+
+        // After email verification, upsert user_profiles
+        async function createUserProfileAfterVerification(user) {
+            const userClass = `Class ${document.getElementById('class').value}`;
+            const board = document.getElementById('board').value;
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value;
+            const language = document.getElementById('language').value;
+            await supabase
+                .from('user_profiles')
+                .upsert({
+                    id: user.id,
+                    full_name: document.getElementById('fullName').value.trim(),
+                    class: userClass,
+                    board: board,
+                    phone: document.getElementById('phone').value.trim(),
+                    city: city,
+                    state: state,
+                    preferred_language: language,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
         }
 
         // Avatar selection based on language

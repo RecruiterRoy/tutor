@@ -536,7 +536,7 @@
                         updated_at: new Date().toISOString()
                     });
                 
-                if (createError) {
+                                if (createError) {
                     console.error('Could not create user profile:', createError);
                 } else {
                     console.log('✅ User profile created successfully');
@@ -670,8 +670,11 @@
                     }
                     
                     // Check if user is verified
-                    if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
+                    if (profileData.verification_status === 'pending') {
                         showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                        return;
+                    } else if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
+                        showError('Your account verification is incomplete. Please contact support.');
                         return;
                     }
                     
@@ -739,6 +742,34 @@
 
                 if (data.user) {
                     console.log('✅ Login successful');
+                    
+                    // Check verification status before allowing login
+                    const { data: profileData, error: profileError } = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('verification_status, economic_status')
+                        .eq('id', data.user.id)
+                        .single();
+                    
+                    if (profileError) {
+                        console.error('Could not check user profile:', profileError);
+                        showError('Login failed. Please try again.');
+                        return;
+                    }
+                    
+                    // Check if user is verified
+                    if (profileData.verification_status === 'pending') {
+                        showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                        return;
+                    } else if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
+                        showError('Your account verification is incomplete. Please contact support.');
+                        return;
+                    }
+                    
+                    // Check if user has free trial access
+                    if (profileData.economic_status !== 'Premium' && profileData.economic_status !== 'approved') {
+                        showError('Your account is not active. Please contact support.');
+                        return;
+                    }
                     
                     // Check if user profile exists, if not create it
                     await ensureUserProfile(data.user);
