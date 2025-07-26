@@ -929,42 +929,7 @@
                     return; // Don't continue with profile creation yet
                 }
                 
-                // Update user profile (skip for email registration - handled after verification)
-                if (user && selectedOAuth !== 'email') {
-                    // Double-check that user has an ID
-                    if (!user.id) {
-                        throw new Error('User ID not found. Please try signing in again.');
-                    }
-                    
-                    const userClass = `Class ${document.getElementById('class').value}`;
-                    const board = document.getElementById('board').value;
-                    const city = document.getElementById('city').value.trim();
-                    const state = document.getElementById('state').value;
-                    const language = document.getElementById('language').value;
-                    
-                    const { error: profileError } = await supabase
-                        .from('user_profiles')
-                        .upsert({
-                            user_id: user.id,
-                            full_name: document.getElementById('fullName').value.trim(),
-                            class: userClass,
-                            board: board,
-                            phone: document.getElementById('phone').value.trim(),
-                            city: city,
-                            state: state,
-                            preferred_language: language,
-                            avatar: selectedAvatar,
-                            economic_status: 'Premium',
-                            verification_status: 'approved',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        });
-                    
-                    if (profileError) {
-                        console.error('Profile creation error:', profileError);
-                        throw new Error('Failed to create user profile: ' + profileError.message);
-                    }
-                }
+
                 
 
                 
