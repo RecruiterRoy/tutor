@@ -798,187 +798,143 @@
             }
         }
 
-        // Registration
+        // ========== REGISTRATION LOGIC ==========
+        
         async function registerUser() {
-            if (!supabase) {
-                showMessage('Please wait for the app to load completely', 'error');
-                return;
-            }
-            
-            const termsAgree = document.getElementById('termsAgree').checked;
-            if (!termsAgree) {
-                showMessage('Please agree to the Terms of Service and Privacy Policy', 'error');
-                return;
-            }
-
-            setLoading(true);
             try {
-                // Check for duplicate email/phone before registration
+                setLoading(true);
+                clearMessages();
+                
+                console.log('🚀 Starting registration process...');
+                
+                // Get form data
+                const fullName = document.getElementById('fullName').value.trim();
                 const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
                 const phone = document.getElementById('phone').value.trim();
-                let user = null;
-                if (selectedOAuth === 'google') {
-                    // Google user is already authenticated - get current user from Supabase
-                    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-                    if (userError || !currentUser) {
-                        throw new Error('Failed to get authenticated user. Please try signing in with Google again.');
-                    }
-                    user = currentUser;
-                    // Save user profile directly for Google OAuth
-                    await saveGoogleUserProfile(user);
-                } else if (selectedOAuth === 'email') {
-                    // Email registration - save directly to user_profiles
-                    const email = document.getElementById('email').value.trim();
-                    const password = document.getElementById('password').value;
-                    const full_name = document.getElementById('fullName').value.trim();
-                    const phone = document.getElementById('phone').value.trim();
-                    const userClass = `Class ${document.getElementById('class').value}`;
-                    const board = document.getElementById('board').value;
-                    const city = document.getElementById('city').value.trim();
-                    const state = document.getElementById('state').value;
-                    const language = document.getElementById('language').value;
-
-                    // Always call signUp (Supabase will resend verification if needed)
+                const userClass = `Class ${document.getElementById('class').value}`;
+                const board = document.getElementById('board').value;
+                const city = document.getElementById('city').value.trim();
+                const state = document.getElementById('state').value;
+                const language = document.getElementById('language').value;
+                
+                console.log('📝 Form data collected:', { fullName, email, phone, userClass, board, city, state, language });
+                
+                if (selectedOAuth === 'email') {
+                    console.log('📧 Processing email registration...');
+                    
+                    // Email registration
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password,
                         options: {
-                            data: { full_name, phone },
+                            data: { full_name: fullName, phone },
                             emailRedirectTo: 'https://tution.app/login.html'
                         }
                     });
                     
-                    if (error) throw error;
-                    user = data.user;
+                    if (error) {
+                        console.error('❌ Email registration failed:', error);
+                        throw new Error(error.message);
+                    }
                     
-                    // Save user profile immediately for email registration
-                    if (user && user.id) {
+                    if (data.user) {
+                        console.log('✅ Email user created:', data.user.id);
+                        
+                        // Create profile immediately with pending status
                         const { error: profileError } = await supabase
                             .from('user_profiles')
-                                               .upsert({
-                       id: user.id,
-                       full_name: full_name,
-                       email: email,
-                       phone: phone,
-                       class: userClass,
-                       board: board,
-                       city: city,
-                       state: state,
-                       preferred_language: language,
-                       avatar: selectedAvatar || 'teacher-avatar1.png',
-                       economic_status: 'Premium',
-                       verification_status: 'pending',
-                       created_at: new Date().toISOString(),
-                       updated_at: new Date().toISOString()
-                   }, {
-                       onConflict: 'id'
-                   });
+                            .insert({
+                                id: data.user.id,
+                                full_name: fullName,
+                                email: email,
+                                phone: phone,
+                                class: userClass,
+                                board: board,
+                                city: city,
+                                state: state,
+                                preferred_language: language,
+                                avatar: selectedAvatar || 'teacher-avatar1.png',
+                                economic_status: 'Premium',
+                                verification_status: 'pending',
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            });
                         
                         if (profileError) {
-                            console.error('Profile creation error:', profileError);
+                            console.error('❌ Profile creation failed:', profileError);
                             throw new Error('Failed to create user profile: ' + profileError.message);
                         }
+                        
+                        console.log('✅ Profile created with pending status');
+                        showMessage('Registration successful! Please check your email to verify your account.', 'success');
                     }
-                } else if (selectedOAuth === 'phone') {
-                    // Phone registration - send OTP via custom API
-                    const phoneNumber = document.getElementById('phone').value.trim();
-                    const full_name = document.getElementById('fullName').value.trim();
                     
-                    // Add +91 prefix if not already present
-                    const phoneWithPrefix = phoneNumber.startsWith('+91') ? phoneNumber : `+91${phoneNumber}`;
+                } else if (selectedOAuth === 'google') {
+                    console.log('🔍 Processing Google OAuth registration...');
                     
-                    const { data, error } = await supabase.auth.signInWithOtp({
-                        phone: phoneWithPrefix,
-                        options: {
-                            data: { full_name }
-                        }
-                    });
+                    // Get current user from Google OAuth
+                    const { data: { user }, error: userError } = await supabase.auth.getUser();
                     
-                    if (error) throw error;
+                    if (userError || !user) {
+                        console.error('❌ No Google user found:', userError);
+                        throw new Error('Google authentication failed. Please try again.');
+                    }
                     
-                    // Store registration data for OTP verification
-                    window.registrationData = {
-                        phone: phoneWithPrefix,
-                        full_name: full_name,
-                        email: document.getElementById('email').value.trim(),
-                        password: document.getElementById('password').value,
-                        userClass: `Class ${document.getElementById('class').value}`,
-                        board: document.getElementById('board').value,
-                        city: document.getElementById('city').value.trim(),
-                        state: document.getElementById('state').value,
-                        language: document.getElementById('language').value
-                    };
+                    console.log('✅ Google user found:', user.id);
                     
-                    showMessage('OTP sent to your phone! Please enter the verification code.', 'success');
-                    
-                    // Show OTP verification step
-                    document.getElementById('step4').classList.add('hidden');
-                    document.getElementById('otpStep').classList.remove('hidden');
-                    currentStep = 5; // Move to OTP step
-                    updateStepIndicator();
-                    return; // Don't continue with profile creation yet
-                }
-                
-                // Profile creation is now handled within each OAuth method above
-                
-                // Success message based on registration method
-                if (selectedOAuth === 'email') {
-                    showMessage('Registration successful! Please check your email to verify your account.', 'success');
-                } else {
-                    showMessage('Registration successful! Welcome to tution.app', 'success');
-                }
-                
-                setTimeout(() => {
-                    // Check if user wants to download app after registration
-                    const downloadAfterRegister = localStorage.getItem('downloadAfterRegister');
-                    if (downloadAfterRegister === 'true') {
-                        localStorage.removeItem('downloadAfterRegister');
-                        window.location.href = 'download.html';
-                    } else {
-                        if (selectedOAuth === 'google') {
-                            window.location.href = 'dashboard.html';
+                    // Set password for Google user
+                    try {
+                        const { error: passwordError } = await supabase.auth.updateUser({
+                            password: password
+                        });
+                        
+                        if (passwordError) {
+                            console.warn('⚠️ Password update failed:', passwordError);
                         } else {
-                            window.location.href = 'login.html';
+                            console.log('✅ Password set for Google user');
                         }
+                    } catch (error) {
+                        console.warn('⚠️ Password setting failed:', error);
                     }
-                }, 3000);
-                
-            } catch (err) {
-                console.error('Registration error:', err);
-                
-                let errorMessage = err.message || err;
-                
-                // Handle specific Supabase auth errors
-                if (errorMessage.includes('User already registered') || errorMessage.includes('already registered')) {
-                    errorMessage = `Email is already registered. Please try logging in instead or use a different email address.`;
                     
-                    // Add login link to the error message
+                    // Create profile for Google user
+                    const { error: profileError } = await supabase
+                        .from('user_profiles')
+                        .insert({
+                            id: user.id,
+                            full_name: fullName,
+                            email: user.email,
+                            phone: phone,
+                            class: userClass,
+                            board: board,
+                            city: city,
+                            state: state,
+                            preferred_language: language,
+                            avatar: selectedAvatar || 'teacher-avatar1.png',
+                            economic_status: 'Premium',
+                            verification_status: 'approved',
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    
+                    if (profileError) {
+                        console.error('❌ Google profile creation failed:', profileError);
+                        throw new Error('Failed to create Google user profile: ' + profileError.message);
+                    }
+                    
+                    console.log('✅ Google profile created successfully');
+                    showMessage('Registration successful! Redirecting to dashboard...', 'success');
+                    
+                    // Redirect to dashboard after short delay
                     setTimeout(() => {
-                        const errorDiv = document.getElementById('globalMessage');
-                        if (errorDiv) {
-                            errorDiv.innerHTML = `
-                                <div class="bg-red-500/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg">
-                                    ${errorMessage}
-                                    <div class="mt-3">
-                                        <a href="login.html" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors inline-block">
-                                            Go to Login
-                                        </a>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    }, 100);
-                } else if (errorMessage.includes('already taken') || errorMessage.includes('already exists')) {
-                    errorMessage = `This email or phone number is already in use. Please try logging in or use different details.`;
-                } else if (errorMessage.includes('Invalid email')) {
-                    errorMessage = `Please enter a valid email address.`;
-                } else if (errorMessage.includes('Password should be')) {
-                    errorMessage = `Password must be at least 6 characters long.`;
-                } else if (errorMessage.includes('signup is disabled')) {
-                    errorMessage = `New registrations are temporarily disabled. Please try again later.`;
+                        window.location.href = 'https://tution.app/dashboard.html';
+                    }, 2000);
                 }
                 
-                showMessage('Registration failed: ' + errorMessage, 'error');
+            } catch (error) {
+                console.error('❌ Registration failed:', error);
+                showMessage('Registration failed: ' + error.message, 'error');
             } finally {
                 setLoading(false);
             }
