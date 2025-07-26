@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - TUTOR.AI</title>
+    <title>Login - tution.app</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     
     <!-- Load Supabase CDN first -->
@@ -83,6 +83,11 @@
     <div class="glass-effect rounded-2xl p-8 w-full max-w-md shadow-2xl" x-data="authApp()">
         <!-- Header -->
         <div class="text-center mb-8">
+            <div class="flex justify-center mb-4">
+                <a href="index.html" class="cursor-pointer">
+                                            <img src="images/tution_logo.png" alt="tution.app Logo" style="height: 60px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
+                </a>
+            </div>
             <h1 class="text-3xl font-bold text-white mb-2">Welcome Back!</h1>
             <p class="text-gray-200">Sign in to continue your learning journey</p>
         </div>
@@ -104,19 +109,27 @@
         <!-- Email/Password Login -->
         <div x-show="currentTab === 'email'" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-200 mb-2">Email</label>
+                <label class="block text-sm font-medium text-gray-200 mb-2">Email or Mobile Number</label>
                 <input x-model="email" 
-                       type="email" 
-                       placeholder="Enter your email"
+                       type="text" 
+                       placeholder="Enter your email or mobile number"
                        class="w-full px-4 py-3 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
             </div>
             
             <div x-show="!isMagicLink">
                 <label class="block text-sm font-medium text-gray-200 mb-2">Password</label>
+                <div class="relative">
                 <input x-model="password" 
+                           x-ref="passwordField"
                        type="password" 
                        placeholder="Enter your password"
-                       class="w-full px-4 py-3 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+                           class="w-full px-4 py-3 pr-12 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
+                    <button type="button" 
+                            @click="togglePassword()"
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                        <span x-text="showPassword ? '🙈' : '👁️'"></span>
+                    </button>
+                </div>
             </div>
 
             <div class="flex items-center justify-between">
@@ -214,278 +227,752 @@
              x-text="message"></div>
     </div>
 
-    <!-- Load config and auth in order -->
-    <script src="/public/js/config.js"></script>
-    <script src="/public/js/auth.js"></script>
-
     <script>
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, scripts should be available');
-            console.log('window.supabaseConfig:', typeof window.supabaseConfig);
-            console.log('window.TutorAuth:', typeof window.TutorAuth);
-            console.log('window.supabase:', typeof window.supabase);
-        });
-
-        // Alpine.js app - must be globally available
+        // ========== ALPINE.JS APP INITIALIZATION ==========
+        
         function authApp() {
             return {
-                currentTab: 'email',
+                // Form data
                 email: '',
                 password: '',
                 phone: '',
-                countryCode: '+91',
                 otp: '',
+                fullName: '',
+                countryCode: '+91',
+                
+                // UI state
+                currentTab: 'email',
                 isMagicLink: false,
                 otpSent: false,
+                showPassword: false,
                 loading: false,
+                
+                // Messages
                 message: '',
                 messageType: 'error',
-                supabaseReady: false,
-
-                init() {
-                    console.log('Alpine app initializing...');
-                    // Wait for Supabase to be ready
-                    this.waitForSupabase();
-                },
-
-                async waitForSupabase() {
-                    console.log('Waiting for Supabase to be ready...');
-                    let attempts = 0;
-                    const maxAttempts = 50; // 5 seconds max
-                    
-                    // Check all dependencies
-                    while (attempts < maxAttempts) {
-                        if (window.supabase && window.supabaseConfig && window.TutorAuth) {
-                            console.log('All dependencies loaded, initializing TutorAuth...');
-                            break;
-                        }
-                        
-                        console.log(`Attempt ${attempts + 1}: Supabase=${!!window.supabase}, Config=${!!window.supabaseConfig}, TutorAuth=${!!window.TutorAuth}`);
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        attempts++;
-                    }
-                    
-                    if (window.TutorAuth && window.supabase && window.supabaseConfig) {
-                        try {
-                            await window.TutorAuth.init();
-                            this.supabaseReady = true;
-                            console.log('Supabase ready in Alpine app');
-                            
-                            // Check if user is already logged in
-                            this.checkAuthState();
-                        } catch (error) {
-                            console.error('Failed to initialize TutorAuth:', error);
-                            this.showMessage(`Database connection failed: ${error.message}`, 'error');
-                        }
-                    } else {
-                        const missing = [];
-                        if (!window.supabase) missing.push('Supabase library');
-                        if (!window.supabaseConfig) missing.push('Config');
-                        if (!window.TutorAuth) missing.push('TutorAuth');
-                        
-                        console.error('Missing dependencies:', missing.join(', '));
-                        this.showMessage(`Failed to load: ${missing.join(', ')}. Please refresh the page.`, 'error');
-                    }
-                },
-
-                async checkAuthState() {
-                    try {
-                        // Only check auth state if TutorAuth is properly initialized
-                        if (window.TutorAuth && window.TutorAuth.isInitialized) {
-                            const user = window.TutorAuth.getCurrentUser();
-                            if (user) {
-                                console.log('User already authenticated, redirecting to dashboard');
-                                // Add a small delay to prevent immediate redirect loops
-                                setTimeout(() => {
-                                    window.location.href = '/dashboard.html';
-                                }, 100);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Auth state check error:', error);
-                    }
-                },
-
-                async signInWithEmail() {
-                    if (!this.supabaseReady) {
-                        this.showMessage('Database not initialized. Please wait...', 'error');
+                
+                // Methods
+                signInWithEmail() {
+                    if (!this.email || !this.password) {
+                        this.showMessage('Please fill in all fields', 'error');
                         return;
                     }
                     
-                    this.loading = true
-                    this.message = ''
+                    this.loading = true;
+                    this.message = '';
                     
-                    try {
-                        let result
-                        if (this.isMagicLink) {
-                            result = await window.TutorAuth.supabase.auth.signInWithOtp({
-                                email: this.email,
-                                options: {
-                                    shouldCreateUser: false
-                                }
-                            })
-                            this.showMessage('Magic link sent to your email!', 'success')
-                        } else {
-                            result = await window.TutorAuth.signInWithEmail(this.email, this.password)
-                            
-                            if (result.success) {
-                                console.log('Login successful, redirecting to dashboard');
-                                window.location.href = '/dashboard.html'
-                            } else {
-                                this.showMessage(result.error, 'error')
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Login error:', error);
-                        this.showMessage('An error occurred. Please try again.', 'error')
-                    } finally {
-                        this.loading = false
-                    }
+                    // Call handleLogin directly with the data
+                    handleLoginWithData(this.email, this.password).then(() => {
+                        this.loading = false;
+                    }).catch((error) => {
+                        this.loading = false;
+                        this.showMessage(error.message || 'Login failed', 'error');
+                    });
                 },
-
-                async sendOTP() {
-                    if (!this.supabaseReady) {
-                        this.showMessage('Database not initialized. Please wait...', 'error');
+                
+                sendOTP() {
+                    if (!this.phone) {
+                        this.showMessage('Please enter phone number', 'error');
                         return;
                     }
                     
-                    this.loading = true
-                    this.message = ''
-                    
-                    try {
-                        // Clean phone number and add country code
-                        const cleanPhone = this.phone.replace(/\D/g, '');
-                        if (cleanPhone.length !== 10) {
-                            this.showMessage('Please enter a valid 10-digit phone number', 'error');
-                            return;
-                        }
-                        
-                        const fullPhoneNumber = this.countryCode + cleanPhone;
-                        
-                        const result = await window.TutorAuth.supabase.auth.signInWithOtp({
-                            phone: fullPhoneNumber,
-                            options: {
-                                shouldCreateUser: true
-                            }
-                        })
-                        
-                        if (result.error) {
-                            this.showMessage(result.error.message, 'error')
-                        } else {
-                            this.otpSent = true
-                            this.showMessage('OTP sent successfully!', 'success')
-                        }
-                    } catch (error) {
-                        console.error('OTP error:', error);
-                        this.showMessage('Failed to send OTP. Please try again.', 'error')
-                    } finally {
-                        this.loading = false
-                    }
+                    this.loading = true;
+                    this.message = '';
+                    // TODO: Implement OTP sending
+                    this.showMessage('OTP feature coming soon', 'error');
+                    this.loading = false;
                 },
-
-                async verifyOTP() {
-                    if (!this.supabaseReady) {
-                        this.showMessage('Database not initialized. Please wait...', 'error');
+                
+                verifyOTP() {
+                    if (!this.otp) {
+                        this.showMessage('Please enter OTP', 'error');
                         return;
                     }
                     
-                    this.loading = true
-                    this.message = ''
-                    
-                    try {
-                        const cleanPhone = this.phone.replace(/\D/g, '');
-                        const fullPhoneNumber = this.countryCode + cleanPhone;
-                        
-                        const result = await window.TutorAuth.supabase.auth.verifyOtp({
-                            phone: fullPhoneNumber,
-                            token: this.otp,
-                            type: 'sms'
-                        })
-                        
-                        if (result.error) {
-                            this.showMessage(result.error.message, 'error')
-                        } else {
-                            console.log('OTP verification successful, redirecting to dashboard');
-                            window.location.href = '/dashboard.html'
-                        }
-                    } catch (error) {
-                        console.error('OTP verification error:', error);
-                        this.showMessage('Invalid OTP. Please try again.', 'error')
-                    } finally {
-                        this.loading = false
-                    }
+                    this.loading = true;
+                    this.message = '';
+                    // TODO: Implement OTP verification
+                    this.showMessage('OTP feature coming soon', 'error');
+                    this.loading = false;
                 },
-
-                async resendOTP() {
-                    this.otpSent = false
-                    await this.sendOTP()
+                
+                signInWithGoogle() {
+                    this.loading = true;
+                    handleGoogleLogin().then(() => {
+                        this.loading = false;
+                    }).catch((error) => {
+                        this.loading = false;
+                        this.showMessage(error.message || 'Google login failed', 'error');
+                    });
                 },
-
-                async signInWithGoogle() {
-                    if (!this.supabaseReady) {
-                        this.showMessage('Database not initialized. Please wait...', 'error');
-                        return;
-                    }
-                    
-                    this.loading = true
-                    this.message = ''
-                    
-                    try {
-                        const result = await window.TutorAuth.supabase.auth.signInWithOAuth({
-                            provider: 'google',
-                            options: {
-                                redirectTo: window.location.origin + '/dashboard'
-                            }
-                        })
-                        
-                        if (result.error) {
-                            this.showMessage(result.error.message, 'error')
-                        }
-                    } catch (error) {
-                        console.error('Google OAuth error:', error);
-                        this.showMessage('Google sign-in failed. Please try again.', 'error')
-                    } finally {
-                        this.loading = false
-                    }
+                
+                showMessage(message, type = 'error') {
+                    this.message = message;
+                    this.messageType = type;
+                    this.loading = false;
                 },
-
-                async resetPassword() {
-                    if (!this.supabaseReady) {
-                        this.showMessage('Database not initialized. Please wait...', 'error');
-                        return;
-                    }
-                    
-                    if (!this.email) {
-                        this.showMessage('Please enter your email first', 'error')
-                        return
-                    }
-                    
-                    this.loading = true
-                    try {
-                        const result = await window.TutorAuth.supabase.auth.resetPasswordForEmail(this.email)
-                        if (result.error) {
-                            this.showMessage(result.error.message, 'error')
-                        } else {
-                            this.showMessage('Password reset email sent!', 'success')
-                        }
-                    } catch (error) {
-                        console.error('Password reset error:', error);
-                        this.showMessage('Failed to send reset email', 'error')
-                    } finally {
-                        this.loading = false
-                    }
-                },
-
-                showMessage(text, type) {
-                    this.message = text
-                    this.messageType = type
-                    setTimeout(() => {
-                        this.message = ''
-                    }, 5000)
+                
+                togglePassword() {
+                    this.showPassword = !this.showPassword;
+                    const passwordField = this.$refs.passwordField;
+                    passwordField.type = this.showPassword ? 'text' : 'password';
                 }
+            };
+        }
+
+        // ========== SUPABASE INITIALIZATION ==========
+
+        async function initSupabase() {
+            try {
+                // Check if already initialized
+                if (window.supabaseClient) {
+                    return window.supabaseClient;
+                }
+                
+                // Configuration
+                const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4';
+                
+                // Initialize
+                window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('✅ Supabase initialized');
+                
+                // Set up session listener
+                window.supabaseClient.auth.onAuthStateChange((event, session) => {
+                    console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
+                    
+                    if (event === 'SIGNED_IN' && session) {
+                        console.log('✅ User signed in successfully');
+                    } else if (event === 'SIGNED_OUT') {
+                        console.log('👋 User signed out');
+                        // Clear any stale session data
+                        localStorage.removeItem('supabase.auth.token');
+                        sessionStorage.removeItem('supabase.auth.token');
+                    } else if (event === 'TOKEN_REFRESHED') {
+                        console.log('🔄 Token refreshed');
+                    }
+                });
+                
+                return window.supabaseClient;
+                
+            } catch (error) {
+                console.error('❌ Supabase initialization failed:', error);
+                throw error;
             }
         }
+
+        // ========== SESSION CHECKING ==========
+
+        async function checkIfLoggedIn() {
+            try {
+                console.log('🔍 Checking if user is already logged in...');
+                
+                // Initialize Supabase if not already done
+                if (!window.supabaseClient) {
+                    await initSupabase();
+                }
+                
+                // Get current session from Supabase
+                const { data: { session }, error } = await window.supabaseClient.auth.getSession();
+                
+                if (error) {
+                    console.error('Session check error:', error);
+                    // Clear any stale session data
+                    localStorage.removeItem('supabase.auth.token');
+                    sessionStorage.removeItem('supabase.auth.token');
+                    return false;
+                }
+                
+                if (!session) {
+                    console.log('❌ No active session found');
+                    // Clear any stale session data
+                    localStorage.removeItem('supabase.auth.token');
+                    sessionStorage.removeItem('supabase.auth.token');
+                    return false;
+                }
+                
+                // Verify user exists
+                const { data: { user }, error: userError } = await window.supabaseClient.auth.getUser();
+                
+                if (userError || !user) {
+                    console.error('User validation failed:', userError);
+                    // Clear stale session data
+                    localStorage.removeItem('supabase.auth.token');
+                    sessionStorage.removeItem('supabase.auth.token');
+                    return false;
+                }
+                
+                console.log('✅ Valid session found for user:', user.email);
+                return true;
+                
+            } catch (error) {
+                console.error('Session check error:', error);
+                // Clear any stale data on error
+                localStorage.removeItem('supabase.auth.token');
+                sessionStorage.removeItem('supabase.auth.token');
+                return false;
+            }
+        }
+
+        // ========== MAIN INITIALIZATION ==========
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('🚀 Login page initializing...');
+                
+                // Initialize Supabase first
+                await initSupabase();
+                
+                // Check for email verification redirect
+                const urlParams = new URLSearchParams(window.location.search);
+                const accessToken = urlParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token');
+                
+                if (accessToken && refreshToken) {
+                    console.log('🔐 Email verification detected, setting session...');
+                    try {
+                        // Set the session manually
+                        const { data, error } = await window.supabaseClient.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken
+                        });
+                        
+                        if (error) {
+                            console.error('Session setting error:', error);
+                            throw error;
+                        }
+                        
+                        if (data.user) {
+                            console.log('✅ Email verification successful, user logged in');
+                            // Create user profile immediately upon email verification
+                            await createUserProfileFromRegistration(data.user);
+                            // Redirect to dashboard
+                            window.location.href = window.location.origin + '/dashboard.html';
+                            return;
+                        }
+                    } catch (sessionError) {
+                        console.error('Failed to set session after email verification:', sessionError);
+                        // Continue with normal login flow
+                    }
+                }
+                
+                // Check if user is already logged in
+                const isLoggedIn = await checkIfLoggedIn();
+                if (isLoggedIn) {
+                    console.log('🔄 User already logged in, redirecting to dashboard');
+                    window.location.href = window.location.origin + '/dashboard.html';
+                    return;
+                }
+                    
+                // Proceed with normal login page initialization
+                console.log('✅ Proceeding with login page setup...');
+                initializeLoginPage();
+                
+            } catch (error) {
+                console.error('❌ Login page initialization error:', error);
+                showError('Failed to initialize. Please refresh the page.');
+            }
+        });
+
+        // ========== LOGIN PAGE INITIALIZATION ==========
+
+        // Update verification status after email verification
+        async function createUserProfileFromRegistration(user) {
+            try {
+                console.log('Updating verification status after email verification...');
+                
+                // Update verification status in user_profiles
+                const { error: updateError } = await window.supabaseClient
+                    .from('user_profiles')
+                    .update({ verification_status: 'verified' })
+                    .eq('id', user.id);
+                
+                if (updateError) {
+                    console.error('Could not update verification status:', updateError);
+                    return;
+                }
+                
+                console.log('✅ Verification status updated successfully');
+                
+            } catch (error) {
+                console.error('Error updating verification status:', error);
+            }
+        }
+
+        // Ensure user profile exists after login
+        async function ensureUserProfile(user) {
+            try {
+                // Check if profile already exists
+                const { data: existingProfile, error: profileError } = await window.supabaseClient
+                    .from('user_profiles')
+                    .select('id')
+                    .eq('id', user.id)
+                    .limit(1);
+                
+                if (profileError) {
+                    console.warn('Could not check user profile:', profileError);
+                    return;
+                }
+                
+                if (existingProfile && existingProfile.length > 0) {
+                    console.log('User profile already exists');
+                    return;
+                }
+                
+                // Profile doesn't exist, create a basic profile
+                console.log('Creating basic user profile...');
+                
+                const { error: createError } = await window.supabaseClient
+                    .from('user_profiles')
+                    .insert({
+                        id: user.id,
+                        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+                        email: user.email,
+                        phone: user.phone || null,
+                        avatar: 'teacher-avatar1.png',
+                        economic_status: 'Premium',
+                        verification_status: 'verified',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (createError) {
+                    console.error('Could not create user profile:', createError);
+                } else {
+                    console.log('✅ User profile created successfully');
+                }
+                
+            } catch (error) {
+                console.error('Error ensuring user profile:', error);
+            }
+        }
+
+        async function initializeLoginPage() {
+            try {
+                // Initialize form elements
+                initializeForms();
+                
+                // Initialize OAuth
+                initializeOAuth();
+                
+                // Initialize password toggles
+                initializePasswordToggles();
+                
+                console.log('✅ Login page initialized');
+                
+            } catch (error) {
+                console.error('❌ Login page initialization error:', error);
+                showError('Failed to initialize login page. Please refresh.');
+            }
+        }
+
+        // ========== FORM INITIALIZATION ==========
+
+        function initializeForms() {
+            // Login form
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+
+            // Register form
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', handleRegistration);
+            }
+
+            // OTP form
+            const otpForm = document.getElementById('otpForm');
+            if (otpForm) {
+                otpForm.addEventListener('submit', handleOTPVerification);
+            }
+        }
+
+        function initializePasswordToggles() {
+            // Login password toggle
+            const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+            const loginPasswordInput = document.getElementById('loginPassword');
+
+            if (loginPasswordToggle && loginPasswordInput) {
+                loginPasswordToggle.addEventListener('click', () => {
+                    togglePasswordVisibility(loginPasswordInput, loginPasswordToggle);
+                });
+            }
+
+            // Register password toggle
+            const registerPasswordToggle = document.getElementById('registerPasswordToggle');
+            const registerPasswordInput = document.getElementById('registerPassword');
+
+            if (registerPasswordToggle && registerPasswordInput) {
+                registerPasswordToggle.addEventListener('click', () => {
+                    togglePasswordVisibility(registerPasswordInput, registerPasswordToggle);
+                });
+            }
+        }
+
+        function togglePasswordVisibility(input, toggle) {
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                        } else {
+                input.type = 'password';
+                toggle.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+
+        // ========== OAuth INITIALIZATION ==========
+
+        function initializeOAuth() {
+            const googleLoginBtn = document.getElementById('googleLogin');
+            if (googleLoginBtn) {
+                googleLoginBtn.addEventListener('click', handleGoogleLogin);
+            }
+        }
+
+        // ========== FORM HANDLERS ==========
+
+        async function handleLoginWithData(emailOrMobile, password) {
+            try {
+                showLoading('loginBtn', 'Signing in...');
+                
+                // Determine if input is email or mobile
+                const isEmail = emailOrMobile.includes('@');
+                let email = emailOrMobile;
+                
+                // If mobile, add +91 prefix if not present
+                if (!isEmail) {
+                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                }
+
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    console.log('✅ Login successful');
+                    
+                    // Check verification status before allowing login
+                    const { data: profileData, error: profileError } = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('verification_status, economic_status')
+                        .eq('id', data.user.id)
+                        .single();
+                    
+                    if (profileError) {
+                        console.error('Could not check user profile:', profileError);
+                        showError('Login failed. Please try again.');
+                        return;
+                    }
+                    
+                    // Check if user is verified
+                    if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
+                        showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                        return;
+                    }
+                    
+                    // Check if user has free trial access
+                    if (profileData.economic_status !== 'Premium' && profileData.economic_status !== 'approved') {
+                        showError('Your account is not active. Please contact support.');
+                        return;
+                    }
+                    
+                    // Check if user profile exists, if not create it
+                    await ensureUserProfile(data.user);
+                    
+                    // Redirect to dashboard
+                    window.location.href = window.location.origin + '/dashboard.html';
+                }
+
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // Check for email verification errors
+                if (error.message && error.message.includes('Email not confirmed')) {
+                    showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                } else if (error.message && error.message.includes('Invalid login credentials')) {
+                    showError('Invalid email or password. Please try again. If you registered with Google OAuth, please use the "Continue with Google" button to log in.');
+                } else {
+                    showError(error.message || 'Login failed. Please try again.');
+                }
+            } finally {
+                hideLoading('loginBtn', 'Sign In');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            // Get values from Alpine.js data instead of DOM elements
+            const emailOrMobile = window.authAppData?.email || '';
+            const password = window.authAppData?.password || '';
+            
+            if (!emailOrMobile || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+                    
+            try {
+                showLoading('loginBtn', 'Signing in...');
+                
+                // Determine if input is email or mobile
+                const isEmail = emailOrMobile.includes('@');
+                let email = emailOrMobile;
+                
+                // If mobile, add +91 prefix if not present
+                if (!isEmail) {
+                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                }
+
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    console.log('✅ Login successful');
+                    
+                    // Check if user profile exists, if not create it
+                    await ensureUserProfile(data.user);
+                    
+                    // Redirect to dashboard
+                    window.location.href = window.location.origin + '/dashboard.html';
+                }
+
+                    } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Login failed. Please try again.');
+                    } finally {
+                hideLoading('loginBtn', 'Sign In');
+            }
+        }
+
+        async function handleRegistration(e) {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('registerName').value.trim();
+            const emailOrMobile = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            
+            if (!fullName || !emailOrMobile || !password) {
+                showError('Please fill in all fields');
+                        return;
+                    }
+                    
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+
+            try {
+                showLoading('registerBtn', 'Creating account...');
+                
+                // Determine if input is email or mobile
+                const isEmail = emailOrMobile.includes('@');
+                let email = emailOrMobile;
+                
+                // If mobile, add +91 prefix if not present
+                if (!isEmail) {
+                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                }
+
+                const { data, error } = await window.supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName
+                        }
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    console.log('✅ Registration successful, redirecting to dashboard');
+                    
+                    // Redirect to dashboard
+                    window.location.href = window.location.origin + '/dashboard.html';
+                }
+
+                    } catch (error) {
+                console.error('Registration error:', error);
+                showError(error.message || 'Registration failed. Please try again.');
+                    } finally {
+                hideLoading('registerBtn', 'Create Account');
+            }
+        }
+
+        async function handleOTPVerification(e) {
+            e.preventDefault();
+            
+            const emailOrMobile = document.getElementById('otpEmail').value.trim();
+            const otp = document.getElementById('otpCode').value.trim();
+            
+            if (!emailOrMobile || !otp) {
+                showError('Please fill in all fields');
+                        return;
+                    }
+                    
+            try {
+                showLoading('otpBtn', 'Verifying...');
+                
+                // Determine if input is email or mobile
+                const isEmail = emailOrMobile.includes('@');
+                let email = emailOrMobile;
+                
+                // If mobile, add +91 prefix if not present
+                if (!isEmail) {
+                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                }
+
+                const { data, error } = await window.supabaseClient.auth.verifyOtp({
+                    email: email,
+                    token: otp,
+                    type: 'email'
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.user) {
+                    console.log('✅ OTP verification successful, redirecting to dashboard');
+                    
+                    // Redirect to dashboard
+                    window.location.href = window.location.origin + '/dashboard.html';
+                }
+
+                    } catch (error) {
+                console.error('OTP verification error:', error);
+                showError(error.message || 'OTP verification failed. Please try again.');
+                    } finally {
+                hideLoading('otpBtn', 'Verify OTP');
+            }
+        }
+
+        async function handleGoogleLogin() {
+            try {
+                showLoading('googleLogin', 'Connecting...');
+                
+                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: 'https://tution.app/dashboard.html'
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                // OAuth redirect will handle the rest
+                console.log('✅ Google OAuth initiated');
+
+            } catch (error) {
+                console.error('Google login error:', error);
+                showError(error.message || 'Google login failed. Please try again.');
+            } finally {
+                hideLoading('googleLogin', '<i class="fab fa-google"></i> Continue with Google');
+            }
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+
+        function showForm(formType) {
+            // Hide all forms
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('otpForm').style.display = 'none';
+
+            // Show selected form
+            document.getElementById(formType + 'Form').style.display = 'block';
+
+            // Update active tab
+            document.querySelectorAll('.form-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-form="${formType}"]`).classList.add('active');
+        }
+
+        function showLoading(buttonId, text) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + text;
+            }
+        }
+
+        function hideLoading(buttonId, text) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = text;
+            }
+        }
+
+        function showError(message) {
+            console.error(message);
+            // Try to show error in Alpine.js if available
+            if (window.Alpine && window.Alpine.store) {
+                // If Alpine.js is available, show error there
+                const app = document.querySelector('[x-data]').__x.$data;
+                if (app && app.showMessage) {
+                    app.showMessage(message, 'error');
+                } else {
+                    // Fallback to a simple notification
+                    showNotification(message, 'error');
+                }
+            } else {
+                // Fallback to simple notification
+                showNotification(message, 'error');
+            }
+        }
+
+        function showNotification(message, type = 'error') {
+            // Create a simple notification instead of alert
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
+                type === 'error' ? 'bg-red-600' : 'bg-green-600'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // ========== ERROR HANDLING ==========
+
+        // Global error handler - only catch actual errors, not Alpine.js warnings
+        window.addEventListener('error', (event) => {
+            // Ignore Alpine.js expression errors and null errors
+            if (event.error === null || event.message.includes('Alpine Expression Error')) {
+                return;
+            }
+            console.error('Global error:', event.error);
+            event.preventDefault();
+            showError('An unexpected error occurred. Please refresh the page.');
+        });
+
+        // Unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled rejection:', event.reason);
+            event.preventDefault();
+            showError('A system error occurred. Please try again.');
+        });
     </script>
 
 </body>

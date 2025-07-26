@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - TUTOR.AI</title>
+    <title>Register - tution.app</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Inter', sans-serif; }
@@ -30,6 +30,20 @@
         select.input-style option {
             background: #1f2937;
             color: white;
+        }
+        input[type="file"].input-style {
+            background: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        }
+        input[type="file"].input-style::file-selector-button {
+            background: rgba(124, 58, 237, 0.8);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-right: 10px;
+            cursor: pointer;
         }
         .btn-primary {
             background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
@@ -107,10 +121,15 @@
         <div class="max-w-4xl mx-auto">
             <!-- Header -->
             <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-white mb-2">TUTOR.AI</h1>
+                <div class="flex justify-center mb-4">
+                    <a href="index.html" class="cursor-pointer">
+                        <img src="images/tution_logo.png" alt="tution.app Logo" style="height: 80px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
+                    </a>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-2">tution.app</h1>
                 <p class="text-gray-300">Create your account</p>
             </div>
-
+    
             <!-- Step Indicator -->
             <div class="flex justify-center mb-8">
                 <div class="flex space-x-4">
@@ -121,7 +140,7 @@
                     <div class="step-indicator bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white">5</div>
                 </div>
             </div>
-
+            
             <div class="glass-effect rounded-3xl p-8 shadow-2xl">
                 <!-- Error/Success Messages -->
                 <div id="globalMessage" class="mb-4 p-3 rounded-lg hidden"></div>
@@ -135,38 +154,48 @@
                         <button onclick="selectOAuth('google')" class="plan-card p-6 rounded-lg cursor-pointer text-center">
                             <div class="mb-4">
                                 <svg class="w-12 h-12 mx-auto" viewBox="0 0 24 24">
-                                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                                </svg>
+                                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
                             </div>
                             <h3 class="text-white font-semibold mb-2">Google</h3>
                             <p class="text-gray-300 text-sm">Quick sign up with your Google account</p>
                         </button>
                         
-                        <button onclick="selectOAuth('phone')" class="plan-card p-6 rounded-lg cursor-pointer text-center">
-                            <div class="mb-4">
-                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                </svg>
-                            </div>
-                            <h3 class="text-white font-semibold mb-2">Phone</h3>
-                            <p class="text-gray-300 text-sm">Sign up with phone number & OTP</p>
-                        </button>
-                        
                         <button onclick="selectOAuth('email')" class="plan-card p-6 rounded-lg cursor-pointer text-center">
                             <div class="mb-4">
                                 <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                </svg>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
                             </div>
                             <h3 class="text-white font-semibold mb-2">Email</h3>
                             <p class="text-gray-300 text-sm">Traditional email & password sign up</p>
                         </button>
-                    </div>
-                </div>
-
+                        
+                        <!-- <button onclick="selectOAuth('phone')" class="plan-card p-6 rounded-lg cursor-pointer text-center">
+                            <div class="mb-4">
+                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            </div>
+                            <h3 class="text-white font-semibold mb-2">Phone</h3>
+                            <p class="text-gray-300 text-sm">Sign up with phone number & OTP</p>
+                        </button> -->
+                        
+                        <div class="plan-card p-6 rounded-lg text-center opacity-50 cursor-not-allowed">
+                            <div class="mb-4">
+                                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            </div>
+                            <h3 class="text-white font-semibold mb-2">Mobile</h3>
+                            <p class="text-gray-300 text-sm">Coming soon</p>
+                        </div>
+                            </div>
+                        </div>
+                        
                 <!-- Step 2: Basic Information -->
                 <div id="step2" class="step-content hidden">
                     <h2 class="text-2xl font-semibold text-white mb-6">Basic Information</h2>
@@ -177,17 +206,25 @@
                         </div>
                         
                         <div>
-                            <input type="email" id="email" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Email Address">
+                            <input type="email" id="email" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Email Address" onblur="validateEmailOnBlur(this)">
                             <div class="error-message" id="emailError"></div>
-                        </div>
+                                </div>
                         
                         <div>
-                            <input type="tel" id="phone" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Phone Number (+91XXXXXXXXXX)">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Phone Number</label>
+                            <div class="flex">
+                                <span class="px-3 py-3 bg-gray-700 text-white rounded-l-lg border border-gray-600 flex items-center">+91</span>
+                                <input type="tel" id="phone" required class="input-style flex-1 px-4 py-3 rounded-r-lg" placeholder="10-digit mobile number" maxlength="10" pattern="[6-9][0-9]{9}" oninput="validatePhoneInput(this)" onblur="validatePhoneOnBlur(this)">
+                            </div>
                             <div class="error-message" id="phoneError"></div>
                         </div>
                         
-                        <div id="passwordField">
-                            <input type="password" id="password" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Password (min 6 characters)">
+                        <div id="passwordField" class="relative">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">Create Password</label>
+                            <input type="password" id="password" required class="input-style w-full px-4 py-3 pr-12 rounded-lg" placeholder="Password (min 6 characters)">
+                            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                                <span id="passwordToggleIcon">👁️</span>
+                            </button>
                             <div class="error-message" id="passwordError"></div>
                         </div>
                     </div>
@@ -201,7 +238,7 @@
                         </button>
                     </div>
                 </div>
-
+                
                 <!-- Step 3: Academic Information -->
                 <div id="step3" class="step-content hidden">
                     <h2 class="text-2xl font-semibold text-white mb-6">Academic Information</h2>
@@ -268,6 +305,14 @@
                                 <option value="Uttar Pradesh">Uttar Pradesh</option>
                                 <option value="Uttarakhand">Uttarakhand</option>
                                 <option value="West Bengal">West Bengal</option>
+                                <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                                <option value="Chandigarh">Chandigarh</option>
+                                <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                                <option value="Ladakh">Ladakh</option>
+                                <option value="Lakshadweep">Lakshadweep</option>
+                                <option value="Puducherry">Puducherry</option>
                             </select>
                             <div class="error-message" id="stateError"></div>
                         </div>
@@ -277,13 +322,10 @@
                             <div class="error-message" id="cityError"></div>
                         </div>
                         
-                        <div class="md:col-span-2">
-                            <input type="text" id="address" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Full Address (Village/Town/Area)">
-                            <div class="error-message" id="addressError"></div>
-                        </div>
+
                         
                         <div>
-                            <select id="language" class="input-style w-full px-4 py-3 rounded-lg">
+                            <select id="language" class="input-style w-full px-4 py-3 rounded-lg" onchange="updateAvatarBasedOnLanguage()">
                                 <option value="English">English</option>
                                 <option value="Hindi">Hindi</option>
                                 <option value="Hinglish">Hinglish (Hindi + English)</option>
@@ -300,68 +342,9 @@
                         </button>
                     </div>
                 </div>
-
-                <!-- Step 4: Economic Status -->
+                
+                <!-- Step 4: Confirmation -->
                 <div id="step4" class="step-content hidden">
-                    <h2 class="text-2xl font-semibold text-white mb-6">Economic Status Verification</h2>
-                    <p class="text-gray-300 mb-6">To provide free access to eligible students, please select your economic status:</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div class="plan-card p-4 rounded-lg cursor-pointer" onclick="selectPlan('BPL')">
-                            <div class="text-center">
-                                <h3 class="text-white font-semibold mb-2">Below Poverty Line (BPL)</h3>
-                                <p class="text-green-400 text-sm mb-2">Free Access</p>
-                                <p class="text-gray-300 text-xs">Requires ration card verification</p>
-                            </div>
-                        </div>
-                        
-                        <div class="plan-card p-4 rounded-lg cursor-pointer" onclick="selectPlan('APL')">
-                            <div class="text-center">
-                                <h3 class="text-white font-semibold mb-2">Above Poverty Line (APL)</h3>
-                                <p class="text-green-400 text-sm mb-2">Free Access</p>
-                                <p class="text-gray-300 text-xs">Requires ration card verification</p>
-                            </div>
-                        </div>
-                        
-                        <div class="plan-card p-4 rounded-lg cursor-pointer" onclick="selectPlan('Premium')">
-                            <div class="text-center">
-                                <h3 class="text-white font-semibold mb-2">Premium Plan</h3>
-                                <p class="text-yellow-400 text-sm mb-2">₹99/month</p>
-                                <p class="text-gray-300 text-xs">Full access, no verification needed</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- BPL/APL Card Details -->
-                    <div id="cardDetails" class="hidden">
-                        <div class="bg-blue-900/30 p-4 rounded-lg mb-4">
-                            <h3 class="text-white font-semibold mb-2">Ration Card Verification</h3>
-                            <p class="text-gray-300 text-sm">Please provide your ration card details for verification</p>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <input type="text" id="cardNumber" maxlength="10" class="input-style w-full px-4 py-3 rounded-lg" placeholder="Ration Card Number (10 characters)">
-                                <div class="error-message" id="cardNumberError"></div>
-                            </div>
-                            <div>
-                                <input type="file" id="cardPic" accept="image/*" class="input-style w-full px-4 py-3 rounded-lg">
-                                <div class="error-message" id="cardPicError"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-between mt-6">
-                        <button onclick="prevStep()" class="btn-secondary px-6 py-3 rounded-lg font-semibold text-white">
-                            ← Previous
-                        </button>
-                        <button onclick="nextStep()" class="btn-primary px-6 py-3 rounded-lg font-semibold text-white">
-                            Next Step →
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 5: Confirmation -->
-                <div id="step5" class="step-content hidden">
                     <h2 class="text-2xl font-semibold text-white mb-6">Confirm Your Details</h2>
                     <div id="confirmationDetails" class="space-y-4 mb-6">
                         <!-- Details will be populated by JavaScript -->
@@ -382,22 +365,51 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- OTP Verification Step (for phone registration) -->
+                <div id="otpStep" class="step-content hidden">
+                    <h2 class="text-2xl font-semibold text-white mb-6">Verify Your Phone</h2>
+                    <p class="text-gray-300 mb-6">We've sent a 6-digit verification code to your phone number. Please enter it below:</p>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-200 mb-2">Enter OTP Code</label>
+                        <input type="text" id="otpCode" required class="input-style w-full px-4 py-3 rounded-lg text-center text-2xl tracking-widest" placeholder="000000" maxlength="6" pattern="[0-9]{6}">
+                        <div class="error-message" id="otpError"></div>
+                    </div>
+                    
+                    <div class="text-center mb-6">
+                        <button onclick="resendOTP()" class="text-purple-400 hover:underline text-sm">
+                            Didn't receive the code? Resend OTP
+                        </button>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <button onclick="goBackToConfirmation()" class="btn-secondary px-6 py-3 rounded-lg font-semibold text-white">
+                            ← Back
+                        </button>
+                        <button onclick="verifyOTP()" id="verifyBtn" class="btn-primary px-8 py-3 rounded-lg font-semibold text-white">
+                            <span id="verifyBtnText">Verify & Complete Registration</span>
+                            <div id="verifySpinner" class="spinner mx-auto hidden"></div>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
+    
     <script>
         // Global variables
         let supabase = null;
         let currentStep = 1;
-        const totalSteps = 5;
+        const totalSteps = 5; // Email: 4 steps, Phone: 5 steps (includes OTP)
         let selectedPlan = null;
         let selectedOAuth = null;
         let googleUser = null;
+        let selectedAvatar = 'teacher-avatar1.png'; // Default avatar
 
         // Supabase configuration
         const SUPABASE_URL = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzQ4MTYsImV4cCI6MjA2NzMxMDgxNn0.udHlokpxgR45eS6Pl0OWj7YT1RwW6FUAvGFTed03EIU';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODYwOTMsImV4cCI6MjA2Nzk2MjA5M30.mTsc-UknUlrhTqfUCzALyRhmqC26XvwMVNHgD5Ttkw4';
 
         // Initialize Supabase
         async function initSupabase() {
@@ -418,6 +430,17 @@
                 
                 // Check for Google OAuth callback
                 checkGoogleCallback();
+                
+                // Check for step parameter in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const stepParam = urlParams.get('step');
+                if (stepParam === '2') {
+                    // Start at step 2 (Basic Information)
+                    document.getElementById('step1').classList.add('hidden');
+                    currentStep = 2;
+                    document.getElementById('step2').classList.remove('hidden');
+                    updateStepIndicator();
+                }
                 
             } catch (error) {
                 console.error('❌ Supabase initialization failed:', error);
@@ -443,8 +466,14 @@
                 const { data: { user }, error } = await supabase.auth.getUser();
                 if (error) throw error;
                 
+                if (!user) {
+                    throw new Error('No user data received from Google OAuth');
+                }
+                
                 googleUser = user;
                 selectedOAuth = 'google';
+                
+                console.log('Google OAuth user data:', user);
                 
                 // Auto-fill form with Google data
                 if (user.user_metadata) {
@@ -452,13 +481,16 @@
                     document.getElementById('email').value = user.email || '';
                 }
                 
-                // Move to step 2
-                nextStep();
+                // Move to step 2 directly without validation
+                document.getElementById(`step${currentStep}`).classList.add('hidden');
+                currentStep = 2;
+                document.getElementById(`step${currentStep}`).classList.remove('hidden');
+                updateStepIndicator();
                 showMessage('Google sign-in successful! Please complete your profile.', 'success');
                 
             } catch (error) {
                 console.error('Google success handling error:', error);
-                showMessage('Failed to get user data from Google.', 'error');
+                showMessage('Failed to get user data from Google. Please try again.', 'error');
             }
         }
 
@@ -478,14 +510,14 @@
         async function handleGoogleSignIn() {
             if (!supabase) {
                 showMessage('Please wait for the app to load completely', 'error');
-                return;
-            }
-            
+                    return;
+                }
+                
             try {
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/register.html'
+                        redirectTo: 'https://tution.app/register.html?step=2'
                     }
                 });
                 
@@ -502,20 +534,16 @@
             if (validateCurrentStep()) {
                 if (currentStep < totalSteps) {
                     document.getElementById(`step${currentStep}`).classList.add('hidden');
-                    currentStep++;
+                        currentStep++;
                     document.getElementById(`step${currentStep}`).classList.remove('hidden');
-                    updateStepIndicator();
+                        updateStepIndicator();
                     
-                    // Handle OAuth-specific logic
-                    if (currentStep === 2 && selectedOAuth === 'phone') {
-                        // Hide password field for phone registration
-                        document.getElementById('passwordField').classList.add('hidden');
+                    // Password field is always visible for all registration types
+                        
+                        if (currentStep === 5) {
+                            showConfirmation();
+                        }
                     }
-                    
-                    if (currentStep === 5) {
-                        showConfirmation();
-                    }
-                }
             }
         }
 
@@ -526,16 +554,26 @@
                 document.getElementById(`step${currentStep}`).classList.remove('hidden');
                 updateStepIndicator();
                 
-                // Show password field if going back from phone flow
-                if (currentStep === 2 && selectedOAuth === 'email') {
-                    document.getElementById('passwordField').classList.remove('hidden');
-                }
+                // Password field is always visible
             }
         }
 
         function updateStepIndicator() {
+            // Show/hide 5th step indicator based on registration type
+            const fifthIndicator = document.getElementsByClassName('step-indicator')[4];
+            if (selectedOAuth === 'phone') {
+                fifthIndicator.style.display = 'flex';
+            } else {
+                fifthIndicator.style.display = 'none';
+            }
+            
             for (let i = 1; i <= totalSteps; i++) {
                 const indicator = document.getElementsByClassName('step-indicator')[i-1];
+                if (!indicator) continue;
+                
+                // Skip 5th indicator for email registration
+                if (i === 5 && selectedOAuth !== 'phone') continue;
+                
                 if (i < currentStep) {
                     indicator.className = 'step-indicator step-completed w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold';
                 } else if (i === currentStep) {
@@ -556,12 +594,12 @@
                 case 3:
                     return validateStep3();
                 case 4:
-                    return validateStep4();
+                    return true; // Skip step 4 validation since we removed BPL/APL
                 default:
                     return true;
             }
         }
-
+        
         function validateStep2() {
             let isValid = true;
             
@@ -590,24 +628,22 @@
             if (!phone) {
                 showFieldError('phoneError', 'Phone number is required');
                 isValid = false;
-            } else if (!/^\+91[6-9]\d{9}$/.test(phone)) {
-                showFieldError('phoneError', 'Please enter a valid Indian phone number');
+            } else if (!/^[6-9]\d{9}$/.test(phone)) {
+                showFieldError('phoneError', 'Please enter a valid 10-digit mobile number (starting with 6-9)');
                 isValid = false;
             } else {
                 hideFieldError('phoneError');
             }
 
-            // Password validation only for email registration
-            if (selectedOAuth === 'email') {
-                if (!password) {
-                    showFieldError('passwordError', 'Password is required');
-                    isValid = false;
-                } else if (password.length < 6) {
-                    showFieldError('passwordError', 'Password must be at least 6 characters long');
-                    isValid = false;
-                } else {
-                    hideFieldError('passwordError');
-                }
+            // Password validation for all registration types
+            if (!password) {
+                showFieldError('passwordError', 'Password is required');
+                isValid = false;
+            } else if (password.length < 6) {
+                showFieldError('passwordError', 'Password must be at least 6 characters long');
+                isValid = false;
+            } else {
+                hideFieldError('passwordError');
             }
 
             return isValid;
@@ -620,7 +656,6 @@
             const board = document.getElementById('board').value;
             const state = document.getElementById('state').value;
             const city = document.getElementById('city').value.trim();
-            const address = document.getElementById('address').value.trim();
 
             if (!classValue) {
                 showFieldError('classError', 'Please select your class');
@@ -650,12 +685,7 @@
                 hideFieldError('cityError');
             }
 
-            if (!address) {
-                showFieldError('addressError', 'Address is required');
-                isValid = false;
-            } else {
-                hideFieldError('addressError');
-            }
+
 
             return isValid;
         }
@@ -726,18 +756,46 @@
                     <p class="text-gray-300">Board: ${document.getElementById('board').value}</p>
                     <p class="text-gray-300">State: ${document.getElementById('state').value}</p>
                     <p class="text-gray-300">City: ${document.getElementById('city').value}</p>
-                    <p class="text-gray-300">Address: ${document.getElementById('address').value}</p>
+                    <p class="text-gray-300">Language: ${document.getElementById('language').value}</p>
                 </div>
                 <div class="bg-white/10 p-4 rounded-lg">
                     <h3 class="text-white font-semibold mb-2">Plan Information</h3>
-                    <p class="text-gray-300">Selected Plan: ${selectedPlan}</p>
-                    ${selectedPlan === 'Premium' ? 
-                        `<p class="text-yellow-400">Monthly Fee: ₹99</p>` : 
-                        `<p class="text-green-400">Monthly Fee: Free</p>`}
+                    <p class="text-green-400">Premium Plan - Free Trial</p>
+                    <p class="text-gray-300">All users get Premium access during trial period</p>
                 </div>
             `;
             
             confirmationDiv.innerHTML = details;
+        }
+
+        // Check for duplicate email/phone (simplified - only check actual data)
+        async function checkDuplicateUser(email, phone) {
+            try {
+                // Only check if tables exist, if not, skip validation
+                const { data: phoneUsers, error: phoneError } = await supabase
+                    .from('user_profiles')
+                    .select('id, phone')
+                    .eq('phone', phone)
+                    .limit(1);
+                
+                // If table doesn't exist, skip check
+                if (phoneError && phoneError.code === 'PGRST116') {
+                    console.log('user_profiles table not found, skipping phone check');
+                    return;
+                }
+                
+                if (phoneUsers && phoneUsers.length > 0) {
+                    throw new Error(`Phone number +91${phone} is already registered. Please use a different phone number or try logging in.`);
+                }
+                
+            } catch (error) {
+                // Only throw if it's a validation error (not technical error)
+                if (error.message.includes('already registered')) {
+                    throw error;
+                }
+                console.warn('Duplicate check skipped due to technical issue:', error.message);
+                // Allow registration to continue
+            }
         }
 
         // Registration
@@ -746,7 +804,7 @@
                 showMessage('Please wait for the app to load completely', 'error');
                 return;
             }
-
+            
             const termsAgree = document.getElementById('termsAgree').checked;
             if (!termsAgree) {
                 showMessage('Please agree to the Terms of Service and Privacy Policy', 'error');
@@ -756,34 +814,91 @@
             setLoading(true);
             
             try {
+                // Check for duplicate email/phone before registration
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                
+                // Temporarily disabled duplicate check for faster deployment
+                // await checkDuplicateUser(email, phone);
+                
                 let user = null;
                 
                 // Handle different OAuth methods
                 if (selectedOAuth === 'google') {
-                    // Google user is already authenticated
-                    user = googleUser;
+                    // Google user is already authenticated - get current user from Supabase
+                    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+                    
+                    if (userError || !currentUser) {
+                        throw new Error('Failed to get authenticated user. Please try signing in with Google again.');
+                    }
+                    
+                    user = currentUser;
+                    
+                    // Save user profile directly for Google OAuth
+                    await saveGoogleUserProfile(user);
                 } else if (selectedOAuth === 'email') {
-                    // Email registration
+                    // Email registration - save directly to user_profiles
                     const email = document.getElementById('email').value.trim();
                     const password = document.getElementById('password').value;
                     const full_name = document.getElementById('fullName').value.trim();
                     const phone = document.getElementById('phone').value.trim();
-                    
+                    const userClass = `Class ${document.getElementById('class').value}`;
+                    const board = document.getElementById('board').value;
+                    const city = document.getElementById('city').value.trim();
+                    const state = document.getElementById('state').value;
+                    const language = document.getElementById('language').value;
+
+                    // Create auth user
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password,
-                        options: { data: { full_name, phone } }
+                        options: { 
+                            data: { full_name, phone },
+                            emailRedirectTo: 'https://tution.app/login.html'
+                        }
                     });
                     
                     if (error) throw error;
                     user = data.user;
+                    
+                    // Save user profile immediately for email registration
+                    if (user && user.id) {
+                        const { error: profileError } = await supabase
+                            .from('user_profiles')
+                                               .upsert({
+                       id: user.id,
+                       full_name: full_name,
+                       email: email,
+                       phone: phone,
+                       class: userClass,
+                       board: board,
+                       city: city,
+                       state: state,
+                       preferred_language: language,
+                       avatar: selectedAvatar || 'teacher-avatar1.png',
+                       economic_status: 'Premium',
+                       verification_status: 'verified',
+                       created_at: new Date().toISOString(),
+                       updated_at: new Date().toISOString()
+                   }, {
+                       onConflict: 'id'
+                   });
+                        
+                        if (profileError) {
+                            console.error('Profile creation error:', profileError);
+                            throw new Error('Failed to create user profile: ' + profileError.message);
+                        }
+                    }
                 } else if (selectedOAuth === 'phone') {
-                    // Phone registration - send OTP
-                    const phone = document.getElementById('phone').value.trim();
+                    // Phone registration - send OTP via custom API
+                    const phoneNumber = document.getElementById('phone').value.trim();
                     const full_name = document.getElementById('fullName').value.trim();
                     
+                    // Add +91 prefix if not already present
+                    const phoneWithPrefix = phoneNumber.startsWith('+91') ? phoneNumber : `+91${phoneNumber}`;
+                    
                     const { data, error } = await supabase.auth.signInWithOtp({
-                        phone,
+                        phone: phoneWithPrefix,
                         options: {
                             data: { full_name }
                         }
@@ -791,115 +906,262 @@
                     
                     if (error) throw error;
                     
-                    showMessage('OTP sent to your phone! Please check your messages and enter the code.', 'success');
-                    // For phone, we'll need to handle OTP verification separately
-                    // For now, we'll create a placeholder user
-                    user = { id: 'temp_' + Date.now() };
+                    // Store registration data for OTP verification
+                    window.registrationData = {
+                        phone: phoneWithPrefix,
+                        full_name: full_name,
+                        email: document.getElementById('email').value.trim(),
+                        password: document.getElementById('password').value,
+                        userClass: `Class ${document.getElementById('class').value}`,
+                        board: document.getElementById('board').value,
+                        city: document.getElementById('city').value.trim(),
+                        state: document.getElementById('state').value,
+                        language: document.getElementById('language').value
+                    };
+                    
+                    showMessage('OTP sent to your phone! Please enter the verification code.', 'success');
+                    
+                    // Show OTP verification step
+                    document.getElementById('step4').classList.add('hidden');
+                    document.getElementById('otpStep').classList.remove('hidden');
+                    currentStep = 5; // Move to OTP step
+                    updateStepIndicator();
+                    return; // Don't continue with profile creation yet
                 }
                 
-                // Update user profile
-                if (user) {
-                    const userClass = `Class ${document.getElementById('class').value}`;
-                    const board = document.getElementById('board').value;
-                    const city = document.getElementById('city').value.trim();
-                    const state = document.getElementById('state').value;
-                    const address = document.getElementById('address').value.trim();
-                    const language = document.getElementById('language').value;
-                    
-                    await supabase.rpc('update_user_profile', {
-                        user_id: user.id,
-                        user_full_name: document.getElementById('fullName').value.trim(),
-                        user_class: userClass,
-                        user_board: board,
-                        user_phone: document.getElementById('phone').value.trim(),
-                        user_city: city,
-                        user_state: state,
-                        user_language: language
-                    });
-                }
-                
-                // Economic status handling
-                if (selectedPlan === 'BPL' || selectedPlan === 'APL') {
-                    const document_type = selectedPlan === 'BPL' ? 'bpl_card' : 'apl_card';
-                    const cardNumber = document.getElementById('cardNumber').value.trim();
-                    
-                    // Upload card image
-                    let document_url = '';
-                    const cardPic = document.getElementById('cardPic').files[0];
-                    if (cardPic) {
-                        const { data: uploadData, error: uploadError } = await supabase.storage
-                            .from('verification-docs')
-                            .upload(`${user.id}/card_${Date.now()}`, cardPic);
-                        if (uploadError) throw uploadError;
-                        document_url = supabase.storage
-                            .from('verification-docs')
-                            .getPublicUrl(uploadData.path).data.publicUrl;
-                    }
-                    
-                    // Insert verification request
-                    await supabase.from('bpl_apl_verifications').insert({
-                        user_id: user.id,
-                        document_type,
-                        document_url,
-                        verification_status: 'pending',
-                        admin_notes: '',
-                        verified_by: null,
-                        card_number: cardNumber
-                    });
 
-                    // Update user profile
-                    await supabase.rpc('update_user_profile', {
-                        user_id: user.id,
-                        user_verification_status: 'pending',
-                        user_economic_status: selectedPlan
-                    });
+                
 
-                    showMessage('Your verification request has been submitted successfully! Your account will be accessible within 1-3 working days after verification.', 'success');
-                    
-                } else if (selectedPlan === 'Premium') {
-                    // Premium plan handling
-                    await supabase.rpc('update_user_profile', {
-                        user_id: user.id,
-                        user_economic_status: 'Premium',
-                        user_verification_status: 'approved'
-                    });
-                }
                 
-                // Assign class access
-                const userClassAccess = `class${document.getElementById('class').value}`;
-                try {
-                    await supabase.rpc('assign_user_class_access', {
-                        p_user_id: user.id,
-                        p_class_name: userClassAccess,
-                        p_subjects: null,
-                        p_languages: ['English']
-                    });
-                } catch (accessErr) {
-                    console.error('Class access assignment failed:', accessErr);
-                }
-                
-                // Success message based on OAuth method
-                if (selectedOAuth === 'phone') {
-                    showMessage('Registration initiated! Please complete phone verification with the OTP sent to your phone.', 'success');
-                } else if (selectedOAuth === 'email') {
+                // Success message based on registration method
+                if (selectedOAuth === 'email') {
                     showMessage('Registration successful! Please check your email to verify your account.', 'success');
                 } else {
-                    showMessage('Registration successful! Welcome to TUTOR.AI', 'success');
+                    showMessage('Registration successful! Welcome to tution.app', 'success');
                 }
                 
                 setTimeout(() => {
-                    if (selectedOAuth === 'google') {
-                        window.location.href = 'dashboard.html';
+                    // Check if user wants to download app after registration
+                    const downloadAfterRegister = localStorage.getItem('downloadAfterRegister');
+                    if (downloadAfterRegister === 'true') {
+                        localStorage.removeItem('downloadAfterRegister');
+                        window.location.href = 'download.html';
                     } else {
-                        window.location.href = 'login.html';
+                        if (selectedOAuth === 'google') {
+                            window.location.href = 'dashboard.html';
+                        } else {
+                            window.location.href = 'login.html';
+                        }
                     }
                 }, 3000);
                 
             } catch (err) {
                 console.error('Registration error:', err);
-                showMessage('Registration failed: ' + (err.message || err), 'error');
+                
+                let errorMessage = err.message || err;
+                
+                // Handle specific Supabase auth errors
+                if (errorMessage.includes('User already registered') || errorMessage.includes('already registered')) {
+                    errorMessage = `Email is already registered. Please try logging in instead or use a different email address.`;
+                    
+                    // Add login link to the error message
+                    setTimeout(() => {
+                        const errorDiv = document.getElementById('globalMessage');
+                        if (errorDiv) {
+                            errorDiv.innerHTML = `
+                                <div class="bg-red-500/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg">
+                                    ${errorMessage}
+                                    <div class="mt-3">
+                                        <a href="login.html" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors inline-block">
+                                            Go to Login
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }, 100);
+                } else if (errorMessage.includes('already taken') || errorMessage.includes('already exists')) {
+                    errorMessage = `This email or phone number is already in use. Please try logging in or use different details.`;
+                } else if (errorMessage.includes('Invalid email')) {
+                    errorMessage = `Please enter a valid email address.`;
+                } else if (errorMessage.includes('Password should be')) {
+                    errorMessage = `Password must be at least 6 characters long.`;
+                } else if (errorMessage.includes('signup is disabled')) {
+                    errorMessage = `New registrations are temporarily disabled. Please try again later.`;
+                }
+                
+                showMessage('Registration failed: ' + errorMessage, 'error');
             } finally {
                 setLoading(false);
+            }
+        }
+
+        // Save user profile for Google OAuth
+        async function saveGoogleUserProfile(user) {
+            if (!user || !user.id) {
+                throw new Error('Google user not found. Please try signing in again.');
+            }
+            
+            // Get the password from the form
+            const password = document.getElementById('password').value;
+            
+            // Update the user's password so they can log in with email/password later
+            // This is crucial for Google OAuth users to be able to log in with email/password
+            try {
+                const { error: passwordError } = await supabase.auth.updateUser({
+                    password: password
+                });
+                
+                if (passwordError) {
+                    console.error('Password update failed:', passwordError);
+                    // Try alternative approach - sign out and sign in with password
+                    console.log('Trying alternative password setting approach...');
+                    await supabase.auth.signOut();
+                    
+                    // Sign in with the new password to verify it works
+                    const { error: signInError } = await supabase.auth.signInWithPassword({
+                        email: user.email,
+                        password: password
+                    });
+                    
+                    if (signInError) {
+                        console.error('Password verification failed:', signInError);
+                    } else {
+                        console.log('✅ Password set and verified successfully');
+                    }
+                } else {
+                    console.log('✅ Password updated successfully for Google OAuth user');
+                }
+            } catch (error) {
+                console.error('Password update error:', error);
+                // Continue with profile creation even if password update fails
+            }
+            
+            const userClass = `Class ${document.getElementById('class').value}`;
+            const board = document.getElementById('board').value;
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value;
+            const language = document.getElementById('language').value;
+                       const { error: profileError } = await supabase
+               .from('user_profiles')
+               .upsert({
+                   id: user.id,
+                   full_name: document.getElementById('fullName').value.trim(),
+                   email: user.email,
+                   phone: document.getElementById('phone').value.trim(),
+                   class: userClass,
+                   board: board,
+                   city: city,
+                   state: state,
+                   preferred_language: language,
+                   avatar: selectedAvatar,
+                   economic_status: 'Premium',
+                   verification_status: 'approved',
+                   created_at: new Date().toISOString(),
+                   updated_at: new Date().toISOString()
+               });
+            if (profileError) {
+                throw new Error('Failed to create Google user profile: ' + profileError.message);
+            }
+        }
+
+        // Real-time validation functions
+        async function validateEmailOnBlur(input) {
+            const email = input.value.trim();
+            if (!email) return;
+            
+            try {
+                // Check if email exists in user_profiles (verified users)
+                const { data: existingUsers, error } = await supabase
+                    .from('user_profiles')
+                    .select('id')
+                    .limit(1);
+                
+                if (error && error.code !== 'PGRST116') {
+                    console.warn('Could not check email:', error);
+                    return; // Skip check if table doesn't exist
+                }
+                
+                // Check if email exists in user_profiles
+                const { data: registeredUsers, error: regError } = await supabase
+                    .from('user_profiles')
+                    .select('id, verification_status')
+                    .eq('email', email)
+                    .limit(1);
+                
+                if (regError && regError.code !== 'PGRST116') {
+                    console.warn('Could not check registered emails:', regError);
+                    return;
+                }
+                
+                if (registeredUsers && registeredUsers.length > 0) {
+                    const user = registeredUsers[0];
+                    if (user.verification_status === 'pending') {
+                        showFieldError('emailError', 'Email already registered but not verified. Check your email for verification link.');
+                    } else {
+                        showFieldError('emailError', 'Email already registered. Try logging in instead.');
+                    }
+                    input.style.borderColor = '#ef4444';
+                } else {
+                    hideFieldError('emailError');
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }
+            } catch (error) {
+                console.warn('Email validation error:', error);
+            }
+        }
+        
+        async function validatePhoneOnBlur(input) {
+            const phone = input.value.trim();
+            if (!phone || phone.length !== 10) return;
+            
+            try {
+                // Check if phone exists in user_profiles
+                const { data: existingUsers, error } = await supabase
+                    .from('user_profiles')
+                    .select('id')
+                    .eq('phone', phone)
+                    .limit(1);
+                
+                if (error && error.code !== 'PGRST116') {
+                    console.warn('Could not check phone:', error);
+                    return;
+                }
+                
+                if (existingUsers && existingUsers.length > 0) {
+                    showFieldError('phoneError', 'Phone number already registered. Try logging in instead.');
+                    input.style.borderColor = '#ef4444';
+                } else {
+                    hideFieldError('phoneError');
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }
+            } catch (error) {
+                console.warn('Phone validation error:', error);
+            }
+        }
+
+        // Phone validation function
+        function validatePhoneInput(input) {
+            // Remove non-digits
+            let value = input.value.replace(/[^0-9]/g, '');
+            
+            // Limit to 10 digits
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+            
+            // Update input value
+            input.value = value;
+            
+            // Real-time validation feedback
+            if (value.length === 0) {
+                hideFieldError('phoneError');
+            } else if (value.length < 10) {
+                showFieldError('phoneError', `Enter ${10 - value.length} more digits`);
+            } else if (!/^[6-9]/.test(value)) {
+                showFieldError('phoneError', 'Mobile number must start with 6, 7, 8, or 9');
+            } else {
+                hideFieldError('phoneError');
             }
         }
 
@@ -948,8 +1210,159 @@
             }
         }
 
+        // Password visibility toggle
+        function togglePasswordVisibility() {
+            const passwordField = document.getElementById('password');
+            const toggleIcon = document.getElementById('passwordToggleIcon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.textContent = '🙈';
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.textContent = '👁️';
+            }
+        }
+
+        // OTP Verification Functions
+        async function verifyOTP() {
+            try {
+                setVerifyLoading(true);
+                
+                const otpCode = document.getElementById('otpCode').value.trim();
+                
+                if (!otpCode || otpCode.length !== 6) {
+                    showFieldError('otpError', 'Please enter a valid 6-digit OTP code');
+                    setVerifyLoading(false);
+                    return;
+                }
+                
+                // Verify OTP with Supabase
+                const { data, error } = await supabase.auth.verifyOtp({
+                    phone: window.registrationData.phone,
+                    token: otpCode,
+                    type: 'sms'
+                });
+                
+                if (error) {
+                    showFieldError('otpError', 'Invalid OTP code. Please try again.');
+                    setVerifyLoading(false);
+                    return;
+                }
+                
+                // OTP verified successfully - now create user profile
+                const user = data.user;
+                
+                       // Create user profile in database
+       const { error: profileError } = await supabase
+           .from('user_profiles')
+           .upsert({
+               id: user.id,
+               full_name: window.registrationData.full_name,
+               email: window.registrationData.email,
+               class: window.registrationData.userClass,
+               board: window.registrationData.board,
+               phone: window.registrationData.phone.replace('+91', ''),
+               city: window.registrationData.city,
+               state: window.registrationData.state,
+               preferred_language: window.registrationData.language,
+               avatar: selectedAvatar || 'teacher-avatar1.png',
+               economic_status: 'Premium',
+               verification_status: 'approved',
+               created_at: new Date().toISOString(),
+               updated_at: new Date().toISOString()
+           });
+                
+                if (profileError) {
+                    console.error('Profile creation error:', profileError);
+                    throw new Error('Failed to create user profile: ' + profileError.message);
+                }
+                
+                // Set to Premium plan
+                await supabase.from('user_profiles')
+                    .update({
+                        economic_status: 'Premium',
+                        verification_status: 'approved'
+                    })
+                    .eq('id', user.id);
+                
+                // Show success and redirect
+                showMessage('Phone verification successful! Registration completed.', 'success');
+                
+                setTimeout(() => {
+                    // Check if user wants to download app after registration
+                    const downloadAfterRegister = localStorage.getItem('downloadAfterRegister');
+                    if (downloadAfterRegister === 'true') {
+                        localStorage.removeItem('downloadAfterRegister');
+                        window.location.href = 'download.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
+                }, 3000);
+                
+            } catch (err) {
+                console.error('OTP verification error:', err);
+                showFieldError('otpError', 'Verification failed: ' + (err.message || err));
+            } finally {
+                setVerifyLoading(false);
+            }
+        }
+        
+        async function resendOTP() {
+            try {
+                const { error } = await supabase.auth.signInWithOtp({
+                    phone: window.registrationData.phone,
+                    options: {
+                        data: { full_name: window.registrationData.full_name }
+                    }
+                });
+                
+                if (error) throw error;
+                
+                showMessage('New OTP sent to your phone!', 'success');
+                
+            } catch (err) {
+                console.error('Resend OTP error:', err);
+                showMessage('Failed to resend OTP: ' + (err.message || err), 'error');
+            }
+        }
+        
+        function goBackToConfirmation() {
+            document.getElementById('otpStep').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+            currentStep = 4;
+            updateStepIndicator();
+        }
+        
+        function setVerifyLoading(isLoading) {
+            const btnText = document.getElementById('verifyBtnText');
+            const spinner = document.getElementById('verifySpinner');
+            const btn = document.getElementById('verifyBtn');
+            
+            if (isLoading) {
+                btnText.style.display = 'none';
+                spinner.classList.remove('hidden');
+                btn.classList.add('loading');
+            } else {
+                btnText.style.display = 'block';
+                spinner.classList.add('hidden');
+                btn.classList.remove('loading');
+            }
+        }
+
+        // Avatar selection based on language
+        function updateAvatarBasedOnLanguage() {
+            const language = document.getElementById('language').value;
+            if (language === 'Hindi' || language === 'Hinglish') {
+                selectedAvatar = 'miss_sapna.jpg'; // Miss Sapna for Hindi/Hinglish
+            } else {
+                selectedAvatar = 'roy_sir.jpg'; // Roy Sir for English
+            }
+            console.log('Avatar updated to:', selectedAvatar);
+        }
+
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', initSupabase);
     </script>
 </body>
-</html> 
+</html>
