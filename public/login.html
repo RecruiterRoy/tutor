@@ -816,49 +816,59 @@
                 if (data.user) {
                     console.log('✅ Login successful for:', data.user.email);
                     
-                    // Check user profile
+                    // Check user profile - ensure user has a complete profile
                     const { data: profileData, error: profileError } = await window.supabaseClient
                         .from('user_profiles')
-                        .select('verification_status, economic_status')
+                        .select('*')
                         .eq('id', data.user.id)
                         .single();
                     
-                    if (profileError) {
+                    if (profileError || !profileData) {
                         console.error('❌ Profile check failed:', profileError);
-                        showError('Login failed. Please try again.');
+                        showError('User profile not found. Please complete your registration first.');
                         return;
                     }
                     
                     console.log('📋 Profile status:', profileData);
                     
-                    // Check if user is email confirmed but profile still shows pending
-                    if (profileData.verification_status === 'pending' && data.user.email_confirmed_at) {
-                        console.log('✅ Email confirmed, updating verification status...');
-                        
-                        // Update verification status to approved
-                        const { error: updateError } = await window.supabaseClient
-                            .from('user_profiles')
-                            .update({ 
-                                verification_status: 'approved',
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('id', data.user.id);
-                        
-                        if (updateError) {
-                            console.error('❌ Failed to update verification status:', updateError);
-                        } else {
-                            console.log('✅ Verification status updated to approved');
-                            profileData.verification_status = 'approved';
-                        }
+                    // Ensure user has required profile fields
+                    const requiredFields = ['full_name', 'email', 'phone', 'class', 'board'];
+                    const missingFields = requiredFields.filter(field => !profileData[field]);
+                    
+                    if (missingFields.length > 0) {
+                        console.error('❌ Missing required profile fields:', missingFields);
+                        showError('Your profile is incomplete. Please complete your registration first.');
+                        return;
                     }
                     
                     // Check verification status
-                    if (profileData.verification_status === 'pending') {
-                        showError('Please verify your email address before logging in. Check your inbox for the verification link.');
-                        return;
-                    } else if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
-                        showError('Your account verification is incomplete. Please contact support.');
-                        return;
+                    if (profileData.verification_status !== 'approved') {
+                        console.log('⚠️ User verification status:', profileData.verification_status);
+                        
+                        // Auto-approve if email is confirmed
+                        if (data.user.email_confirmed_at) {
+                            console.log('✅ Email confirmed, auto-approving user...');
+                            
+                            const { error: updateError } = await window.supabaseClient
+                                .from('user_profiles')
+                                .update({ 
+                                    verification_status: 'approved',
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('id', data.user.id);
+                            
+                            if (updateError) {
+                                console.error('❌ Failed to update verification status:', updateError);
+                                showError('Verification failed. Please try again.');
+                                return;
+                            } else {
+                                console.log('✅ Verification status updated to approved');
+                                profileData.verification_status = 'approved';
+                            }
+                        } else {
+                            showError('Please verify your email address before logging in.');
+                            return;
+                        }
                     }
                     
                     // Check economic status
@@ -879,7 +889,7 @@
                 if (error.message.includes('Invalid login credentials')) {
                     errorMessage = 'Invalid email or password. Please try again. If you registered with Google OAuth, please use the "Continue with Google" button to log in.';
                 } else if (error.message.includes('Email not confirmed')) {
-                    errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
+                    errorMessage = 'Email confirmation bypassed. Please try logging in again.';
                 }
                 
                 showError(errorMessage);

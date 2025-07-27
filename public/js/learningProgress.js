@@ -16,7 +16,7 @@ class LearningProgress {
     async loadProgress() {
         try {
             // Load progress from Supabase
-            const { data: progress, error } = await window.supabase
+            const { data: progress, error } = await window.supabaseClient
                 .from('learning_progress')
                 .select('*')
                 .eq('user_id', window.currentUser.id);
@@ -34,7 +34,7 @@ class LearningProgress {
             }, {});
 
             // Load recent topics
-            const { data: recent, error: recentError } = await window.supabase
+            const { data: recent, error: recentError } = await window.supabaseClient
                 .from('study_sessions')
                 .select('topic, subject, studied_at')
                 .eq('user_id', window.currentUser.id)
