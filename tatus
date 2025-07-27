@@ -1,0 +1,5 @@
+[33m253bf8f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix all Supabase URLs to use correct xhuljxuxnlwtocfmwiid.supabase.co domain
+[33macdd73e[m Add email verification test page to diagnose and fix verification issues
+[33m1a73fee[m Add database trigger to automatically update verification status when email is confirmed
+[33mefe0287[m Fix email verification status update in dist/login.html
+[33mb8459de[m Fix login issues: handleLoginWithData function parameters and email verification status update

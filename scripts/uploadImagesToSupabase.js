@@ -3,7 +3,7 @@ import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
-const supabaseUrl = 'https://qwxkqwxkqwxkqwxkqwxk.supabase.co';
+const supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
 const supabaseKey = 'process.env.SUPABASE_ANON_KEY';
 const supabase = createClient(supabaseUrl, supabaseKey);
 

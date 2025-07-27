@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const supabase = createClient(
-  'https://xhuljxuxnlwtocfmwiid.supabase.co',
+  'https://vfqdjpiyaabufpaofysz.supabase.co',
   'process.env.SUPABASE_SERVICE_KEY'
 );
 

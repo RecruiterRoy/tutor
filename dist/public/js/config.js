@@ -34,8 +34,8 @@
         console.log('✅ Using injected environment variables');
       } else {
         // Fallback to hardcoded values
-        supabaseUrl = 'https://xhuljxuxnlwtocfmwiid.supabase.co';
-        supabaseAnonKey = 'process.env.SUPABASE_ANON_KEY';
+        supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
+        supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
         // Use the same domain as the deployed app to avoid CORS issues
         apiBaseUrl = 'https://tutor-tq4v.vercel.app';
         console.log('⚠️ Using hardcoded fallback values');

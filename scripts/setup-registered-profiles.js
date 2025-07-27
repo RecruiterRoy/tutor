@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load Supabase configuration from environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xhuljxuxnlwtocfmwiid.supabase.co';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vfqdjpiyaabufpaofysz.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
 if (!supabaseServiceKey) {
