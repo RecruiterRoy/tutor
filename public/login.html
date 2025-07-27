@@ -794,11 +794,8 @@
 
         // ========== LOGIN FUNCTIONS ==========
         
-        async function handleLoginWithData() {
+        async function handleLoginWithData(email, password) {
             try {
-                const email = document.getElementById('loginEmail').value.trim();
-                const password = document.getElementById('loginPassword').value;
-                
                 if (!email || !password) {
                     showError('Please fill in all fields');
                     return;
@@ -833,6 +830,27 @@
                     }
                     
                     console.log('📋 Profile status:', profileData);
+                    
+                    // Check if user is email confirmed but profile still shows pending
+                    if (profileData.verification_status === 'pending' && data.user.email_confirmed_at) {
+                        console.log('✅ Email confirmed, updating verification status...');
+                        
+                        // Update verification status to approved
+                        const { error: updateError } = await window.supabaseClient
+                            .from('user_profiles')
+                            .update({ 
+                                verification_status: 'approved',
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', data.user.id);
+                        
+                        if (updateError) {
+                            console.error('❌ Failed to update verification status:', updateError);
+                        } else {
+                            console.log('✅ Verification status updated to approved');
+                            profileData.verification_status = 'approved';
+                        }
+                    }
                     
                     // Check verification status
                     if (profileData.verification_status === 'pending') {
@@ -907,6 +925,27 @@
                     }
                     
                     console.log('📋 Profile status:', profileData);
+                    
+                    // Check if user is email confirmed but profile still shows pending
+                    if (profileData.verification_status === 'pending' && data.user.email_confirmed_at) {
+                        console.log('✅ Email confirmed, updating verification status...');
+                        
+                        // Update verification status to approved
+                        const { error: updateError } = await window.supabaseClient
+                            .from('user_profiles')
+                            .update({ 
+                                verification_status: 'approved',
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', data.user.id);
+                        
+                        if (updateError) {
+                            console.error('❌ Failed to update verification status:', updateError);
+                        } else {
+                            console.log('✅ Verification status updated to approved');
+                            profileData.verification_status = 'approved';
+                        }
+                    }
                     
                     // Check verification status
                     if (profileData.verification_status === 'pending') {
