@@ -13,8 +13,8 @@
 In your Railway project dashboard, go to Variables tab and add:
 ```
 OPENAI_API_KEY=your_openai_api_key_here
-SUPABASE_URL=https://xhuljxuxnlwtocfmwiid.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2NjU5NTYsImV4cCI6MjA1MTI0MTk1Nn0.xzUEGlhqaAjLhc3WFnXfDLPqtPHvZb0zGZKjmKqUZJA
+SUPABASE_URL=https://vfqdjpiyaabufpaofysz.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo
 PORT=3000
 ```
 
@@ -43,44 +43,6 @@ git push origin main
 In your Vercel project dashboard, go to Settings → Environment Variables:
 ```
 OPENAI_API_KEY=your_openai_api_key_here
-SUPABASE_URL=https://xhuljxuxnlwtocfmwiid.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhodWxqeHV4bmx3dG9jZm13aWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2NjU5NTYsImV4cCI6MjA1MTI0MTk1Nn0.xzUEGlhqaAjLhc3WFnXfDLPqtPHvZb0zGZKjmKqUZJA
+SUPABASE_URL=https://vfqdjpiyaabufpaofysz.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo
 ```
-
-## Get OpenAI API Key
-
-1. Go to [OpenAI Platform](https://platform.openai.com)
-2. Sign up/Login
-3. Go to API Keys section
-4. Create a new secret key
-5. Copy the key and use it in your environment variables
-
-## Testing
-
-1. **Local Testing:**
-   ```bash
-   npm install
-   npm start
-   ```
-   Visit `http://localhost:3000`
-
-2. **Production Testing:**
-   - Frontend: Your Netlify URL
-   - Backend: Your Railway/Vercel URL
-   - API: `https://your-backend-url/api/chat`
-
-## Current Status
-
-✅ **Complete Backend** - server.js with OpenAI integration  
-✅ **Deployment Config** - Railway and Vercel ready  
-✅ **Frontend Integration** - Dashboard configured for API  
-🔄 **Next Step** - Deploy backend and update config  
-
-## Architecture
-
-```
-Frontend (Netlify) → Backend (Railway/Vercel) → OpenAI API
-     ↓                      ↓
-   Static Files        Node.js + Express
-   dashboard.html      /api/chat endpoint
-``` 
