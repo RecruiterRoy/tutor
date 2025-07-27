@@ -9,7 +9,7 @@ class GroupLearning {
     async initializeRealtime() {
         try {
             // Subscribe to presence changes
-            const presenceChannel = window.supabase.channel('online-users');
+            const presenceChannel = window.supabaseClient.channel('online-users');
             
             presenceChannel
                 .on('presence', { event: 'join' }, ({ newPresences }) => {
@@ -35,7 +35,7 @@ class GroupLearning {
                 });
 
             // Subscribe to shared notes changes
-            const notesChannel = window.supabase.channel('shared-notes');
+            const notesChannel = window.supabaseClient.channel('shared-notes');
             
             notesChannel
                 .on('INSERT', { event: '*', schema: 'public', table: 'shared_notes' }, 
