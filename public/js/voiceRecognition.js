@@ -394,7 +394,11 @@ class VoiceRecognition {
 
 // Initialize voice recognition
 const voiceRecognition = new VoiceRecognition();
+window.voiceRecognition = voiceRecognition;
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = voiceRecognition;
-} 
+}
+
+console.log('✅ Voice Recognition initialized successfully'); 

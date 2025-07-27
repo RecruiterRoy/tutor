@@ -7,7 +7,7 @@ const anthropic = new Anthropic({
 
 const supabase = createClient(
   'https://vfqdjpiyaabufpaofysz.supabase.co',
-  'process.env.SUPABASE_SERVICE_KEY'
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 // Usage tracking for cost monitoring

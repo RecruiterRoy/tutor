@@ -1291,7 +1291,11 @@
                 const studentInitialsElement = document.getElementById('studentInitials');
                 
                 if (studentNameElement) studentNameElement.textContent = name;
-                if (studentClassElement) studentClassElement.textContent = className;
+                if (studentClassElement) {
+                    // Remove "Class" prefix if it already exists to avoid duplication
+                    const classValue = className.replace(/^Class\s+/i, '');
+                    studentClassElement.textContent = `Class ${classValue}`;
+                }
                 if (studentInitialsElement) studentInitialsElement.textContent = initials;
                 
                 // Update teacher avatar
@@ -1515,11 +1519,25 @@
         
         function initVoiceFeatures() {
             // Initialize voice recognition and TTS
-            if (window.initVoiceRecognition) {
-                window.initVoiceRecognition();
+            console.log('🔊 Initializing voice features...');
+            
+            // Check if services are available
+            if (window.voiceRecognition) {
+                console.log('✅ Voice Recognition service available');
+            } else {
+                console.warn('⚠️ Voice Recognition service not available');
             }
-            if (window.initTextToSpeech) {
-                window.initTextToSpeech();
+            
+            if (window.textToSpeech) {
+                console.log('✅ Text-to-Speech service available');
+            } else {
+                console.warn('⚠️ Text-to-Speech service not available');
+            }
+            
+            if (window.gptService) {
+                console.log('✅ GPT Service available');
+            } else {
+                console.warn('⚠️ GPT Service not available');
             }
         }
         
@@ -1532,24 +1550,30 @@
         }
         
         function startVoiceInput() {
-            if (window.startVoiceRecognition) {
-                window.startVoiceRecognition();
+            if (window.voiceRecognition) {
+                window.voiceRecognition.startListening();
                 isRecording = true;
                 document.getElementById('voiceIcon').textContent = '⏹️';
+                showSuccess('Voice input started! Speak now...');
+            } else {
+                showError('Voice recognition not available');
             }
         }
         
         function stopVoiceInput() {
-            if (window.stopVoiceRecognition) {
-                window.stopVoiceRecognition();
+            if (window.voiceRecognition) {
+                window.voiceRecognition.stop();
                 isRecording = false;
                 document.getElementById('voiceIcon').textContent = '🎤';
+                showSuccess('Voice input stopped');
             }
         }
         
         function playTTS(text) {
-            if (window.speakText) {
-                window.speakText(text);
+            if (window.textToSpeech) {
+                window.textToSpeech.speak(text);
+            } else {
+                showError('Text-to-speech not available');
             }
         }
         
@@ -1650,7 +1674,9 @@
                 }
                 
                 if (studentClassElement && profile.class) {
-                    studentClassElement.textContent = `Class ${profile.class}`;
+                    // Remove "Class" prefix if it already exists to avoid duplication
+                    const classValue = profile.class.replace(/^Class\s+/i, '');
+                    studentClassElement.textContent = `Class ${classValue}`;
                 }
                 
                 if (studentInitialsElement && profile.full_name) {
