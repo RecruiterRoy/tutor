@@ -825,13 +825,13 @@
                 if (selectedOAuth === 'email') {
                     console.log('📧 Processing email registration...');
                     
-                    // Email registration
+                    // Email registration - Bypass email verification
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password,
                         options: {
                             data: { full_name: fullName, phone },
-                            emailRedirectTo: 'https://tution.app/login.html'
+                            emailConfirm: false // Skip email confirmation
                         }
                     });
                     
@@ -843,7 +843,16 @@
                     if (data.user) {
                         console.log('✅ Email user created:', data.user.id);
                         
-                        // Create profile immediately with pending status
+                        // Manually confirm email in database
+                        const { error: confirmError } = await supabase.rpc('manual_confirm_email', {
+                            user_email: email
+                        });
+                        
+                        if (confirmError) {
+                            console.warn('⚠️ Manual email confirmation failed:', confirmError);
+                        }
+                        
+                        // Create profile immediately with approved status
                         const { error: profileError } = await supabase
                             .from('user_profiles')
                             .upsert({
@@ -858,7 +867,7 @@
                                 preferred_language: language,
                                 avatar: selectedAvatar || 'teacher-avatar1.png',
                                 economic_status: 'Premium',
-                                verification_status: 'pending',
+                                verification_status: 'approved',
                                 created_at: new Date().toISOString(),
                                 updated_at: new Date().toISOString()
                             }, {
@@ -870,8 +879,13 @@
                             throw new Error('Failed to create user profile: ' + profileError.message);
                         }
                         
-                        console.log('✅ Profile created with pending status');
-                        showMessage('Registration successful! Please check your email to verify your account.', 'success');
+                        console.log('✅ Profile created with approved status');
+                        showMessage('Registration successful! You can now login.', 'success');
+                        
+                        // Redirect to login page
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 2000);
                     }
                     
                 } else if (selectedOAuth === 'google') {
