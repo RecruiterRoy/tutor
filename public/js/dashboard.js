@@ -23,8 +23,7 @@ async function initializeSupabase() {
 // PDF Processor will be initialized separately if needed
 let pdfProcessor = null;
 
-// Global state
-let currentUser = null;
+// Global state - currentUser is managed by dashboard.html
 let recognition;
 let isRecording = false;
 let recognitionTimeout;
