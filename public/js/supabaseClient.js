@@ -27,7 +27,27 @@ async function getSupabaseClient() {
     }
 }
 
+// Initialize immediately and expose to window
+async function initializeSupabaseClient() {
+    try {
+        const client = await getSupabaseClient();
+        window.supabaseClient = client;
+        console.log('✅ Supabase client exposed to window.supabaseClient');
+        return client;
+    } catch (error) {
+        console.error('Failed to initialize Supabase client:', error);
+        throw error;
+    }
+}
+
 // Initialize immediately if possible
 if (typeof window !== 'undefined' && typeof window.supabase !== 'undefined' && window.TUTOR_CONFIG) {
-    getSupabaseClient();
-} 
+    initializeSupabaseClient();
+}
+
+// Also initialize when DOM is loaded (fallback)
+window.addEventListener('DOMContentLoaded', function() {
+    if (!window.supabaseClient && typeof window.supabase !== 'undefined' && window.TUTOR_CONFIG) {
+        initializeSupabaseClient();
+    }
+}); 

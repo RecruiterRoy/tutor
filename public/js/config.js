@@ -69,11 +69,15 @@ window.TUTOR_CONFIG = {
 // Initialize Supabase client when config is loaded
 window.addEventListener('DOMContentLoaded', function() {
   if (typeof window.supabase !== 'undefined') {
-    window.supabaseClient = window.supabase.createClient(
-      window.TUTOR_CONFIG.SUPABASE_URL,
-      window.TUTOR_CONFIG.SUPABASE_ANON_KEY
-    );
-    console.log('Supabase client initialized from config');
+    try {
+      window.supabaseClient = window.supabase.createClient(
+        window.TUTOR_CONFIG.SUPABASE_URL,
+        window.TUTOR_CONFIG.SUPABASE_ANON_KEY
+      );
+      console.log('✅ Supabase client initialized from config');
+    } catch (error) {
+      console.error('❌ Failed to initialize Supabase client from config:', error);
+    }
   }
 });
 
