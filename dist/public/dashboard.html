@@ -1024,7 +1024,7 @@
     
     <script>
         // Global variables
-        let currentUser = null;
+        // currentUser will be set by the authentication flow
         let userData = {
             full_name: 'User',
             class: 'Class 1',
@@ -1062,6 +1062,7 @@
                 }
                 
                 currentUser = user;
+                window.currentUser = user; // Ensure global access
                 
                 // Check if user has a complete profile
                 const { data: profile, error: profileError } = await supabaseClient
@@ -1192,7 +1193,7 @@
                 console.log('🔍 User metadata:', currentUser.user_metadata);
                 console.log('🔍 User email:', currentUser.email);
                 
-                const { data, error } = await supabaseClient
+                const { data, error } = await window.supabaseClient
                     .from('user_profiles')
                     .select('*')
                     .eq('id', currentUser.id)
@@ -1253,7 +1254,7 @@
                 
                 console.log('📋 Profile data to insert:', profileData);
                 
-                const { data, error } = await supabaseClient
+                const { data, error } = await window.supabaseClient
                     .from('user_profiles')
                     .insert(profileData)
                     .select()
@@ -2075,7 +2076,7 @@
             document.getElementById('popupProfileName').value = userData.full_name || '';
             document.getElementById('popupProfileClass').value = userData.class || '';
             document.getElementById('popupProfileBoard').value = userData.board || '';
-            document.getElementById('popupProfileEmail').value = currentUser.email || '';
+                            document.getElementById('popupProfileEmail').value = (currentUser && currentUser.email) || '';
             document.getElementById('popupProfileMobile').value = userData.mobile || 'Not set';
             
             // Show popup
@@ -2145,8 +2146,8 @@
         // Show contact us popup
         function showContactUs() {
             // Populate contact form with user data
-            document.getElementById('contactUsName').value = userData.full_name || currentUser.email || '';
-            document.getElementById('contactUsEmail').value = currentUser.email || '';
+            document.getElementById('contactUsName').value = userData.full_name || (currentUser && currentUser.email) || '';
+            document.getElementById('contactUsEmail').value = (currentUser && currentUser.email) || '';
             document.getElementById('contactUsMobile').value = userData.mobile || 'Not set';
             
             // Show popup
