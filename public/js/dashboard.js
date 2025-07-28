@@ -1,15 +1,14 @@
 // Dashboard.js - Main dashboard functionality
 // Note: Supabase client is initialized via config.js and supabaseClient.js
 
-// Initialize Supabase - will be set by server
-let supabase = null;
+// Use the global supabaseClient that's initialized in config.js
+// No need to declare supabase here as it's already available via window.supabaseClient
 
 // Initialize Supabase when page loads
 async function initializeSupabase() {
     try {
         // Use the global supabaseClient that's initialized in config.js
         if (window.supabaseClient) {
-            supabase = window.supabaseClient;
             console.log('Supabase initialized successfully');
         } else {
             throw new Error('Supabase client not available');
@@ -91,6 +90,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await initializeSupabase();
         
+        // Initialize dashboard
+        await initializeDashboard();
+        
         // Initialize Mermaid
         mermaid.initialize({
             startOnLoad: false,
@@ -116,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // --- Keep existing initialization logic ---
-        const { data: { user }, error } = await supabase.auth.getUser();
+        const { data: { user }, error } = await window.supabaseClient.auth.getUser();
     
         if (error || !user) {
             console.log('No authenticated user, redirecting to login');
@@ -149,18 +151,100 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function initializeDashboard() {
-    if (!supabase) {
-        console.error('Supabase not initialized');
-        return;
-    }
-    
-    // Check authentication
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error || !user) {
-        console.log('No authenticated user, redirecting to login');
-        window.location.href = '/login';
-        return;
+    try {
+        console.log('🚀 Initializing dashboard...');
+        
+        // Get current user from Supabase auth
+        const { data: { user }, error: authError } = await window.supabaseClient.auth.getUser();
+        
+        if (authError || !user) {
+            console.error('❌ No authenticated user found:', authError);
+            window.location.href = '/login.html';
+            return;
+        }
+        
+        // Set current user globally
+        window.currentUser = user;
+        console.log('✅ User authenticated:', user.id);
+        
+        // Check user verification status
+        const { data: profile, error } = await window.supabaseClient
+            .from('user_profiles')
+            .select('verification_status, full_name, email, class, board')
+            .eq('id', user.id)
+            .single();
+        
+        if (error) {
+            console.error('❌ Error fetching user profile:', error);
+            // Don't redirect immediately, try to create profile
+            console.log('🔄 Attempting to create user profile...');
+            // Continue with basic functionality
+            console.log('⚠️ Profile error, continuing with basic features...');
+        } else {
+            // Ensure user is verified
+            if (!profile || (profile.verification_status !== 'approved' && profile.verification_status !== 'verified')) {
+                console.error('❌ User not verified. Status:', profile?.verification_status);
+                // Auto-approve if email is confirmed
+                if (user.email_confirmed_at) {
+                    console.log('✅ Email confirmed, auto-approving user...');
+                    await window.supabaseClient.rpc('manual_confirm_email', { user_email: user.email });
+                    // Refresh profile
+                    const { data: updatedProfile } = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('verification_status, full_name, email, class, board')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    if (updatedProfile && updatedProfile.verification_status === 'approved') {
+                        console.log('✅ User auto-approved successfully');
+                    } else {
+                        console.error('❌ Auto-approval failed');
+                        window.location.href = '/login.html';
+                        return;
+                    }
+                } else {
+                    console.error('❌ User not verified and email not confirmed');
+                    window.location.href = '/login.html';
+                    return;
+                }
+            }
+            
+            // Ensure all required profile fields are present
+            if (!profile.full_name || !profile.email || (!profile.class && !profile.class_level) || !profile.board) {
+                console.error('❌ Incomplete user profile');
+                // Don't redirect to profile page, just continue with basic functionality
+                console.log('⚠️ Profile incomplete, continuing with basic features...');
+            }
+        }
+        
+        console.log('✅ User verified and ready for dashboard');
+        
+        // Continue with dashboard initialization
+        await loadUserData();
+        await loadBooks();
+        setupEventListeners();
+        populateAvatarGrid();
+        initializeVoiceFeatures();
+        populateVoices();
+        loadVoiceSettings();
+        setupVoiceSettingsListeners();
+        initSpeechRecognition();
+        showWelcomeMessage();
+        
+        // Initialize additional features
+        if (window.learningProgress) {
+            window.learningProgress.loadProgress();
+        }
+        
+        if (window.groupLearning) {
+            window.groupLearning.initializeRealtime();
+        }
+        
+        console.log('✅ Dashboard initialized successfully');
+        
+    } catch (error) {
+        console.error('❌ Dashboard initialization failed:', error);
+        showError('Failed to initialize dashboard. Please refresh the page.');
     }
     
     currentUser = user;
@@ -178,7 +262,7 @@ async function loadUserData() {
     try {
         clearDashboardError();
         // Get user profile from profiles table
-        const { data: profile, error } = await supabase
+        const { data: profile, error } = await window.supabaseClient
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
@@ -203,7 +287,9 @@ async function loadUserData() {
             }
             
             if (userInfo) {
-                userInfo.textContent = `Class ${profile.class_level || 'N/A'} • ${profile.board || 'N/A'}`;
+                const classLevel = profile.class_level || profile.class || 'N/A';
+                const cleanClassLevel = classLevel.replace(/^Class\s*/i, '');
+                userInfo.textContent = `Class ${cleanClassLevel} • ${profile.board || 'N/A'}`;
             }
             
             if (userAvatar) {
@@ -220,7 +306,9 @@ async function loadUserData() {
             }
             
             if (userClass) {
-                userClass.textContent = `Class ${profile.class_level || 'N/A'}`;
+                const classLevel = profile.class_level || profile.class || 'N/A';
+                const cleanClassLevel = classLevel.replace(/^Class\s*/i, '');
+                userClass.textContent = `Class ${cleanClassLevel}`;
             }
             
             // Populate profile modal fields
@@ -234,7 +322,11 @@ async function loadUserData() {
             if (profileName) profileName.value = profile.full_name || '';
             if (profileEmail) profileEmail.value = currentUser.email || '';
             if (profilePhone) profilePhone.value = profile.phone || '';
-            if (profileClass) profileClass.value = `Class ${profile.class_level || 'N/A'}`;
+            if (profileClass) {
+                const classLevel = profile.class_level || profile.class || 'N/A';
+                const cleanClassLevel = classLevel.replace(/^Class\s*/i, '');
+                profileClass.value = `Class ${cleanClassLevel}`;
+            }
             if (learningStyle) learningStyle.value = profile.learning_style || 'visual';
             if (preferredLanguage) preferredLanguage.value = profile.preferred_language || 'en';
             
@@ -431,13 +523,13 @@ async function updateContext() {
     
     // Update user preferences
     if (currentUser) {
-        await supabase.from('user_preferences').upsert({
+        await window.supabaseClient.from('user_preferences').upsert({
             user_id: currentUser.id,
             preference_key: 'current_grade',
             preference_value: currentGrade
         });
         
-        await supabase.from('user_preferences').upsert({
+        await window.supabaseClient.from('user_preferences').upsert({
             user_id: currentUser.id,
             preference_key: 'current_subject',
             preference_value: currentSubject
@@ -487,11 +579,13 @@ async function addMessage(role, content) {
     messageDiv.className = `message-${role} p-4 rounded-2xl mb-4`;
     
     // Process Mermaid diagrams
-    let processedContent = content;
-    const hasMermaid = content.includes('```mermaid');
+    // Ensure content is a string before processing
+    const contentString = typeof content === 'string' ? content : JSON.stringify(content);
+    let processedContent = contentString;
+    const hasMermaid = contentString.includes('```mermaid');
     
     if (hasMermaid) {
-        processedContent = content.replace(/```mermaid([\s\S]*?)```/g, 
+        processedContent = contentString.replace(/```mermaid([\s\S]*?)```/g, 
             '<div class="mermaid bg-gray-800 p-4 rounded-lg my-4">$1</div>');
     }
     
@@ -896,7 +990,7 @@ function hideOAuthModal() {
 
 async function signInWithGoogle() {
     try {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error } = await window.supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 redirectTo: 'https://tution.app/dashboard'
@@ -912,7 +1006,7 @@ async function signInWithGoogle() {
 
 async function signInWithGitHub() {
     try {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error } = await window.supabaseClient.auth.signInWithOAuth({
             provider: 'github',
             options: {
                 redirectTo: 'https://tution.app/dashboard'
@@ -927,10 +1021,10 @@ async function signInWithGitHub() {
 }
 
 async function logout() {
-    if (!supabase) return;
+    if (!window.supabaseClient) return;
     
     try {
-        const { error } = await supabase.auth.signOut();
+        const { error } = await window.supabaseClient.auth.signOut();
         if (error) throw error;
         
         window.location.href = '/';
@@ -999,7 +1093,10 @@ function updateUserDisplay(profile) {
     }
     
     if (userClassElement) {
-        userClassElement.textContent = `Class ${profile.grade || '10'}`;
+        const grade = profile.grade || profile.class_level || '10';
+        // Remove "Class" prefix if it already exists
+        const cleanGrade = grade.replace(/^Class\s*/i, '');
+        userClassElement.textContent = `Class ${cleanGrade}`;
     }
     
     if (userAvatarElement && profile.avatar_id) {
@@ -1028,7 +1125,7 @@ async function savePreferences() {
             }
         };
         
-        await supabase.from('user_preferences').upsert({
+        await window.supabaseClient.from('user_preferences').upsert({
             user_id: currentUser.id,
             preference_key: 'user_preferences',
             preference_value: preferences
@@ -1080,7 +1177,7 @@ async function saveProfileChanges() {
         const learningStyle = document.getElementById('learningStyle');
         const preferredLanguage = document.getElementById('preferredLanguage');
         
-        const { error } = await supabase
+        const { error } = await window.supabaseClient
             .from('profiles')
             .upsert({
                 id: currentUser.id,
@@ -1161,7 +1258,7 @@ function setupAvatarSelection() {
 
 async function saveAvatarPreference() {
     try {
-        await supabase.from('profiles').upsert({ id: currentUser.id, ai_avatar: selectedAvatar });
+        await window.supabaseClient.from('profiles').upsert({ id: currentUser.id, ai_avatar: selectedAvatar });
     } catch (error) {
         console.error('Error saving avatar preference:', error);
     }
