@@ -1171,13 +1171,12 @@
                 
                 // Create Supabase client
                 if (typeof window.supabase !== 'undefined') {
-                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                    window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                 } else {
                     // Fallback to CDN
                     const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-                    supabaseClient = createClient(supabaseUrl, supabaseKey);
+                    window.supabaseClient = createClient(supabaseUrl, supabaseKey);
                 }
-                window.supabaseClient = supabaseClient;
                 
                 console.log('✅ Supabase client initialized successfully');
             } catch (error) {
