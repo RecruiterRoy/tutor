@@ -8,6 +8,11 @@ class GroupLearning {
 
     async initializeRealtime() {
         try {
+            if (!window.currentUser || !window.currentUser.id) {
+                console.warn('User not available, skipping realtime initialization');
+                return;
+            }
+            
             // Subscribe to presence changes
             const presenceChannel = window.supabaseClient.channel('online-users');
             
@@ -51,7 +56,11 @@ class GroupLearning {
 
     async createGroup(name, description) {
         try {
-            const { data, error } = await window.supabase
+            if (!window.currentUser || !window.currentUser.id) {
+                throw new Error('User not available');
+            }
+            
+            const { data, error } = await window.supabaseClient
                 .from('study_groups')
                 .insert({
                     name,
@@ -74,7 +83,11 @@ class GroupLearning {
 
     async joinGroup(groupId) {
         try {
-            const { data, error } = await window.supabase
+            if (!window.currentUser || !window.currentUser.id) {
+                throw new Error('User not authenticated');
+            }
+            
+            const { data, error } = await window.supabaseClient
                 .from('group_members')
                 .insert({
                     group_id: groupId,
@@ -96,9 +109,9 @@ class GroupLearning {
 
     async loadGroupData(groupId) {
         try {
-            // Load group details
-            const { data: group, error: groupError } = await window.supabase
-                .from('study_groups')
+                         // Load group details
+             const { data: group, error: groupError } = await window.supabaseClient
+                 .from('study_groups')
                 .select(`
                     *,
                     group_members (
@@ -126,9 +139,9 @@ class GroupLearning {
     }
 
     async shareNote(content, topic) {
-        try {
-            const { data, error } = await window.supabase
-                .from('shared_notes')
+                 try {
+             const { data, error } = await window.supabaseClient
+                 .from('shared_notes')
                 .insert({
                     group_id: this.currentGroup.id,
                     user_id: window.currentUser.id,

@@ -1870,27 +1870,36 @@
         
         // ========== EVENT LISTENERS ==========
         
-        document.addEventListener('DOMContentLoaded', function() {
-            // Request microphone permission for mobile
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(function(stream) {
-                        console.log('✅ Microphone permission granted');
-                        // Stop the stream to release the microphone
-                        stream.getTracks().forEach(track => track.stop());
-                    })
-                    .catch(function(err) {
-                        console.log('❌ Microphone permission denied:', err);
-                        // Show a helpful message for mobile users
-                        if (err.name === 'NotAllowedError') {
-                            setTimeout(() => {
-                                showError('Microphone access denied. Please enable it in your browser settings for voice features.');
-                            }, 2000);
-                        }
-                    });
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Request microphone permission for mobile
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(function(stream) {
+                            console.log('✅ Microphone permission granted');
+                            // Stop the stream to release the microphone
+                            stream.getTracks().forEach(track => track.stop());
+                        })
+                        .catch(function(err) {
+                            console.log('❌ Microphone permission denied:', err);
+                            // Show a helpful message for mobile users
+                            if (err.name === 'NotAllowedError') {
+                                setTimeout(() => {
+                                    showError('Microphone access denied. Please enable it in your browser settings for voice features.');
+                                }, 2000);
+                            }
+                        });
+                }
+                
+                await initSupabase();
+                await initializeDashboard();
+                
+                console.log('✅ App initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ App initialization failed:', error);
+                showError('Failed to initialize app. Please refresh the page.');
             }
-            
-            initApp();
         });
         
         // Handle Enter key in chat input
@@ -2279,6 +2288,79 @@
             
             // Show success message
             showSuccess('App download started! Check your downloads folder.');
+        }
+
+        // ========== DASHBOARD INITIALIZATION ==========
+        
+        async function initializeDashboard() {
+            try {
+                console.log('🚀 Initializing dashboard...');
+                
+                // Check if user is authenticated and verified
+                if (!window.currentUser || !window.currentUser.id) {
+                    console.error('❌ No authenticated user found');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                // Check user verification status
+                const { data: profile, error } = await supabaseClient
+                    .from('user_profiles')
+                    .select('verification_status, full_name, email, class, board')
+                    .eq('id', window.currentUser.id)
+                    .single();
+                
+                if (error) {
+                    console.error('❌ Error fetching user profile:', error);
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                // Ensure user is verified
+                if (!profile || profile.verification_status !== 'approved') {
+                    console.error('❌ User not verified. Status:', profile?.verification_status);
+                    alert('Your account is not yet verified. Please contact support.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                // Ensure all required profile fields are present
+                if (!profile.full_name || !profile.email || !profile.class || !profile.board) {
+                    console.error('❌ Incomplete user profile');
+                    alert('Please complete your profile information before accessing the dashboard.');
+                    window.location.href = '/profile.html';
+                    return;
+                }
+                
+                console.log('✅ User verified and profile complete');
+                
+                // Continue with dashboard initialization
+                await loadUserData();
+                await loadBooks();
+                setupEventListeners();
+                populateAvatarGrid();
+                initializeVoiceFeatures();
+                populateVoices();
+                loadVoiceSettings();
+                setupVoiceSettingsListeners();
+                initSpeechRecognition();
+                showWelcomeMessage();
+                
+                // Initialize additional features
+                if (window.learningProgress) {
+                    window.learningProgress.loadProgress();
+                }
+                
+                if (window.groupLearning) {
+                    window.groupLearning.initializeRealtime();
+                }
+                
+                console.log('✅ Dashboard initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Dashboard initialization failed:', error);
+                showError('Failed to initialize dashboard. Please refresh the page.');
+            }
         }
     </script>
 </body>

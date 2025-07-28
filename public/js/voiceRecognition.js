@@ -70,13 +70,18 @@ class VoiceRecognition {
                 await this.initializeGroupMode();
             }
             
-            // Set language based on user preference
-            const { data: prefs } = await window.supabase
-                .from('user_preferences')
-                .select('preference_value')
-                .eq('user_id', window.currentUser.id)
-                .eq('preference_key', 'preferred_language')
-                .single();
+                         // Set language based on user preference
+             if (!window.currentUser || !window.currentUser.id) {
+                 console.warn('User not available, using default language');
+                 return;
+             }
+             
+             const { data: prefs } = await window.supabaseClient
+                 .from('user_preferences')
+                 .select('preference_value')
+                 .eq('user_id', window.currentUser.id)
+                 .eq('preference_key', 'preferred_language')
+                 .single();
 
             if (prefs?.preference_value) {
                 this.recognition.lang = prefs.preference_value;
@@ -93,10 +98,15 @@ class VoiceRecognition {
     async initializeGroupMode() {
         try {
             // Load speaker profiles
-            const { data: profiles, error } = await window.supabaseClient
-                .from('speaker_profiles')
-                .select('*')
-                .eq('group_id', window.groupLearning.currentGroup.id);
+                    if (!window.groupLearning || !window.groupLearning.currentGroup || !window.groupLearning.currentGroup.id) {
+            console.warn('Group not available, skipping speaker profiles load');
+            return [];
+        }
+        
+        const { data: profiles, error } = await window.supabaseClient
+            .from('speaker_profiles')
+            .select('*')
+            .eq('group_id', window.groupLearning.currentGroup.id);
 
             if (error) throw error;
 
@@ -228,11 +238,15 @@ class VoiceRecognition {
 
     async createNewSpeakerProfile(features) {
         try {
-            const { data, error } = await window.supabaseClient
-                .from('speaker_profiles')
-                .insert({
-                    group_id: window.groupLearning.currentGroup.id,
-                    user_id: window.currentUser.id,
+                    if (!window.currentUser || !window.currentUser.id || !window.groupLearning || !window.groupLearning.currentGroup || !window.groupLearning.currentGroup.id) {
+            throw new Error('User or group not available');
+        }
+        
+        const { data, error } = await window.supabaseClient
+            .from('speaker_profiles')
+            .insert({
+                group_id: window.groupLearning.currentGroup.id,
+                user_id: window.currentUser.id,
                     features: features
                 })
                 .select()
