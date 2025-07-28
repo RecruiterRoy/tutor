@@ -1101,7 +1101,7 @@
             // Create a simple notification instead of alert
             const notification = document.createElement('div');
             notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
-                type === 'error' ? 'bg-red-600' : 'bg-green-600'
+                type === 'error' ? 'bg-red-600' : type === 'info' ? 'bg-blue-600' : 'bg-green-600'
             }`;
             notification.textContent = message;
             document.body.appendChild(notification);
