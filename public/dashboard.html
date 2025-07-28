@@ -1036,7 +1036,7 @@
             image: "images/roy_sir.jpg",
             language: "en"
         };
-        let supabaseClient = null;
+        // supabaseClient is initialized globally via supabaseClient.js
         
         // TTS Variables
         let currentSpeech = null;
@@ -1053,7 +1053,7 @@
                 await initSupabase();
                 
                 // Check authentication
-                const { data: { user }, error } = await supabaseClient.auth.getUser();
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
                 if (error || !user) {
                     console.log('❌ No authenticated user, redirecting to login');
                     window.location.href = 'login.html';
@@ -1192,7 +1192,7 @@
                 console.log('🔍 User metadata:', currentUser.user_metadata);
                 console.log('🔍 User email:', currentUser.email);
                 
-                const { data, error } = await supabaseClient
+                const { data, error } = await window.supabaseClient
                     .from('user_profiles')
                     .select('*')
                     .eq('id', currentUser.id)
@@ -1253,7 +1253,7 @@
                 
                 console.log('📋 Profile data to insert:', profileData);
                 
-                const { data, error } = await supabaseClient
+                const { data, error } = await window.supabaseClient
                     .from('user_profiles')
                     .insert(profileData)
                     .select()
@@ -1691,7 +1691,7 @@
         
         async function checkTrialStatus() {
             try {
-                const { data: { user } } = await supabaseClient.auth.getUser();
+                const { data: { user } } = await window.supabaseClient.auth.getUser();
                 if (!user) {
                     console.log('No user found, skipping trial check');
                     return true; // Allow access even without user
@@ -1824,8 +1824,8 @@
         // Logout function
         async function logout() {
             try {
-                if (supabaseClient) {
-                    await supabaseClient.auth.signOut();
+                if (window.supabaseClient) {
+                    await window.supabaseClient.auth.signOut();
                 }
                 window.location.href = 'login.html';
             } catch (error) {
