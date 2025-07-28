@@ -993,15 +993,33 @@
             try {
                 showLoading('googleLogin', 'Connecting...');
                 
+                // Check if Google OAuth is properly configured
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client not initialized');
+                }
+
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://tution.app/dashboard.html'
+                        redirectTo: 'https://tution.app/dashboard.html',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        }
                     }
                 });
 
                 if (error) {
-                    throw error;
+                    console.error('Google OAuth error:', error);
+                    
+                    // Handle specific error types
+                    if (error.message.includes('provider is not enabled')) {
+                        throw new Error('Google OAuth is not enabled in Supabase. Please contact support.');
+                    } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+                        throw new Error('Google OAuth configuration error. Please try email login instead.');
+                    } else {
+                        throw error;
+                    }
                 }
 
                 // OAuth redirect will handle the rest
@@ -1009,7 +1027,19 @@
 
             } catch (error) {
                 console.error('Google login error:', error);
-                showError(error.message || 'Google login failed. Please try again.');
+                
+                // Show user-friendly error message
+                let errorMessage = 'Google login failed. Please try again.';
+                
+                if (error.message.includes('provider is not enabled')) {
+                    errorMessage = 'Google login is not available right now. Please use email login.';
+                } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+                    errorMessage = 'Google login is temporarily unavailable. Please use email login instead.';
+                } else if (error.message.includes('popup')) {
+                    errorMessage = 'Please allow popups for Google login to work.';
+                }
+                
+                showError(errorMessage);
             } finally {
                 hideLoading('googleLogin', '<i class="fab fa-google"></i> Continue with Google');
             }
