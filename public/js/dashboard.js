@@ -25,7 +25,7 @@ let pdfProcessor = null;
 
 // Global state - currentUser is managed by dashboard.html
 let recognition;
-let isRecording = false;
+// isRecording is managed by dashboard.html
 let recognitionTimeout;
 let isAmbientListening = false;
 let currentGrade = null;

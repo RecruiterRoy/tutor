@@ -35,7 +35,7 @@
         window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
         window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
         
-        // Anthropic API Key from environment variables
+                // Anthropic API Key from environment variables
         window.anthropicApiKey = null;
         
         // Try to load environment variables first (for Next.js)
@@ -46,10 +46,10 @@
             if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
                 window.supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
             }
-                    if (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
-                window.anthropicApiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
-            }
         }
+        
+        // For Vercel deployment, environment variables are available at build time
+        // The actual API key will be injected by Vercel during deployment
         
         console.log('🔧 Supabase URL:', window.supabaseUrl);
         console.log('🔧 Supabase Key:', window.supabaseKey ? 'Available' : 'Not found');
@@ -1062,6 +1062,7 @@
                 }
                 
                 currentUser = user;
+                window.currentUser = user; // Ensure global access
                 
                 // Check if user has a complete profile
                 const { data: profile, error: profileError } = await supabaseClient
