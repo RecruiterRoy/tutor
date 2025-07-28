@@ -93,7 +93,7 @@ class VoiceRecognition {
     async initializeGroupMode() {
         try {
             // Load speaker profiles
-            const { data: profiles, error } = await window.supabase
+            const { data: profiles, error } = await window.supabaseClient
                 .from('speaker_profiles')
                 .select('*')
                 .eq('group_id', window.groupLearning.currentGroup.id);
@@ -228,7 +228,7 @@ class VoiceRecognition {
 
     async createNewSpeakerProfile(features) {
         try {
-            const { data, error } = await window.supabase
+            const { data, error } = await window.supabaseClient
                 .from('speaker_profiles')
                 .insert({
                     group_id: window.groupLearning.currentGroup.id,

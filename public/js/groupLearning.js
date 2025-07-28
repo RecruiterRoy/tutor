@@ -151,7 +151,7 @@ class GroupLearning {
 
     async shareAIResponse(response, topic) {
         try {
-            const { data, error } = await window.supabase
+            const { data, error } = await window.supabaseClient
                 .from('shared_ai_responses')
                 .insert({
                     group_id: this.currentGroup.id,

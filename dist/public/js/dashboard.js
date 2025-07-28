@@ -1,6 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-import { PDFProcessor } from '../utils/pdfExtractor.js';
-import { getSupabaseClient } from './supabaseClient.js';
+// Dashboard.js - Main dashboard functionality
+// Note: Supabase client is initialized via config.js and supabaseClient.js
 
 // Initialize Supabase - will be set by server
 let supabase = null;
@@ -8,8 +7,13 @@ let supabase = null;
 // Initialize Supabase when page loads
 async function initializeSupabase() {
     try {
-        supabase = await getSupabaseClient();
-        console.log('Supabase initialized successfully');
+        // Use the global supabaseClient that's initialized in config.js
+        if (window.supabaseClient) {
+            supabase = window.supabaseClient;
+            console.log('Supabase initialized successfully');
+        } else {
+            throw new Error('Supabase client not available');
+        }
     } catch (error) {
         console.error('Failed to initialize Supabase:', error);
         alert('Failed to initialize database connection. Please try again.');
@@ -17,8 +21,8 @@ async function initializeSupabase() {
     }
 }
 
-// Initialize PDF Processor for local books
-const pdfProcessor = new PDFProcessor();
+// PDF Processor will be initialized separately if needed
+let pdfProcessor = null;
 
 // Global state
 let currentUser = null;
