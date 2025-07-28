@@ -49,6 +49,7 @@
         console.log('🔧 Supabase Key:', window.supabaseKey ? 'Available' : 'Not found');
     </script>
     <script src="js/supabaseClient.js" defer></script>
+    <script src="js/aiHealthCheck.js" defer></script>
     <script src="js/gptService.js" defer></script>
     <script src="js/voiceRecognition.js" defer></script>
     <script src="js/textToSpeech.js" defer></script>
@@ -1015,6 +1016,33 @@
                 const { data: { user }, error } = await supabaseClient.auth.getUser();
                 if (error || !user) {
                     console.log('❌ No authenticated user, redirecting to login');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Check if user has a complete profile
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('user_profiles')
+                    .select('verification_status, full_name, email, class, board')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (profileError || !profile) {
+                    console.log('❌ No user profile found, redirecting to login');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Check verification status
+                if (profile.verification_status !== 'approved' && profile.verification_status !== 'verified') {
+                    console.log('❌ User not verified, redirecting to login');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Check if profile is complete
+                if (!profile.full_name || !profile.email || !profile.class || !profile.board) {
+                    console.log('❌ Profile incomplete, redirecting to login');
                     window.location.href = 'login.html';
                     return;
                 }

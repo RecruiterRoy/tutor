@@ -529,12 +529,41 @@
                     showError(`Email verification failed: ${errorDescription || error}`);
                 }
                 
-                // Check if user is already logged in
+                // Check if user is already logged in and verified
                 const isLoggedIn = await checkIfLoggedIn();
                 if (isLoggedIn) {
-                    console.log('🔄 User already logged in, redirecting to dashboard');
-                    window.location.href = 'https://tution.app/dashboard.html';
-                    return;
+                    console.log('🔄 User already logged in, checking verification status...');
+                    
+                    // Get user profile to check verification status
+                    const { data: { user } } = await window.supabaseClient.auth.getUser();
+                    if (user) {
+                        const { data: profile, error: profileError } = await window.supabaseClient
+                            .from('user_profiles')
+                            .select('verification_status, full_name, email, class, board')
+                            .eq('id', user.id)
+                            .single();
+                        
+                        if (profileError) {
+                            console.error('❌ Error fetching profile:', profileError);
+                            // Clear session and stay on login page
+                            await window.supabaseClient.auth.signOut();
+                            return;
+                        }
+                        
+                        // Only redirect if user is verified and has complete profile
+                        if (profile && profile.verification_status === 'approved' && 
+                            profile.full_name && profile.email && profile.class && profile.board) {
+                            console.log('✅ User verified and profile complete, redirecting to dashboard');
+                            window.location.href = 'https://tution.app/dashboard.html';
+                            return;
+                        } else {
+                            console.log('❌ User not verified or profile incomplete, staying on login page');
+                            // Clear session to force re-authentication
+                            await window.supabaseClient.auth.signOut();
+                            showError('Please complete your profile verification before accessing the dashboard.');
+                            return;
+                        }
+                    }
                 }
                     
                 // Proceed with normal login page initialization
@@ -689,6 +718,11 @@
                     // Check verification status
                     if (profile.verification_status !== 'approved' && profile.verification_status !== 'verified') {
                         throw new Error('Your account is not verified. Please check your email for verification link.');
+                    }
+                    
+                    // Check if profile is complete (has all required fields)
+                    if (!profile.full_name || !profile.email || !profile.class || !profile.board) {
+                        throw new Error('Please complete your profile information (name, class, board) before accessing the dashboard.');
                     }
                     
                     console.log('✅ All checks passed, redirecting to dashboard');
