@@ -825,13 +825,13 @@
                 if (selectedOAuth === 'email') {
                     console.log('📧 Processing email registration...');
                     
-                    // Email registration
+                    // Email registration - Bypass email verification
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password,
                         options: {
                             data: { full_name: fullName, phone },
-                            emailRedirectTo: 'https://tution.app/login.html'
+                            emailConfirm: false // Skip email confirmation
                         }
                     });
                     
@@ -843,35 +843,86 @@
                     if (data.user) {
                         console.log('✅ Email user created:', data.user.id);
                         
-                        // Create profile immediately with pending status
-                        const { error: profileError } = await supabase
-                            .from('user_profiles')
-                            .upsert({
-                                id: data.user.id,
-                                full_name: fullName,
-                                email: email,
-                                phone: phone,
-                                class: userClass,
-                                board: board,
-                                city: city,
-                                state: state,
-                                preferred_language: language,
-                                avatar: selectedAvatar || 'teacher-avatar1.png',
-                                economic_status: 'Premium',
-                                verification_status: 'pending',
-                                created_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString()
-                            }, {
-                                onConflict: 'id'
-                            });
+                        // Wait a moment for the trigger to complete (if it exists)
+                        await new Promise(resolve => setTimeout(resolve, 1000));
                         
-                        if (profileError) {
-                            console.error('❌ Profile creation failed:', profileError);
-                            throw new Error('Failed to create user profile: ' + profileError.message);
+                        // Check if profile was created by trigger
+                        const { data: existingProfile, error: profileCheckError } = await supabase
+                            .from('user_profiles')
+                            .select('*')
+                            .eq('id', data.user.id)
+                            .single();
+                        
+                        if (existingProfile) {
+                            console.log('✅ Profile exists, updating with complete data...');
+                            
+                            // Update existing profile with complete data
+                            const { error: updateError } = await supabase
+                                .from('user_profiles')
+                                .update({
+                                    full_name: fullName,
+                                    phone: phone,
+                                    class: userClass,
+                                    board: board,
+                                    city: city,
+                                    state: state,
+                                    preferred_language: language,
+                                    avatar: selectedAvatar || 'teacher-avatar1.png',
+                                    economic_status: 'Premium',
+                                    verification_status: 'approved',
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('id', data.user.id);
+                            
+                            if (updateError) {
+                                console.error('❌ Profile update failed:', updateError);
+                                throw new Error('Failed to update user profile: ' + updateError.message);
+                            }
+                        } else {
+                            console.log('📝 Creating new profile...');
+                            
+                            // Create profile manually
+                            const { error: profileError } = await supabase
+                                .from('user_profiles')
+                                .insert({
+                                    id: data.user.id,
+                                    full_name: fullName,
+                                    email: email,
+                                    phone: phone,
+                                    class: userClass,
+                                    board: board,
+                                    city: city,
+                                    state: state,
+                                    preferred_language: language,
+                                    avatar: selectedAvatar || 'teacher-avatar1.png',
+                                    economic_status: 'Premium',
+                                    verification_status: 'approved',
+                                    created_at: new Date().toISOString(),
+                                    updated_at: new Date().toISOString()
+                                });
+                            
+                            if (profileError) {
+                                console.error('❌ Profile creation failed:', profileError);
+                                throw new Error('Failed to create user profile: ' + profileError.message);
+                            }
                         }
                         
-                        console.log('✅ Profile created with pending status');
-                        showMessage('Registration successful! Please check your email to verify your account.', 'success');
+                        // Manually confirm email in database
+                        const { error: confirmError } = await supabase.rpc('manual_confirm_email', {
+                            user_email: email
+                        });
+                        
+                        if (confirmError) {
+                            console.warn('⚠️ Manual email confirmation failed:', confirmError);
+                        }
+                        
+                        console.log('✅ Profile created/updated with approved status');
+                        showMessage('Registration successful! You can now login.', 'success');
+                        
+                        // Redirect to login page
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 2000);
                     }
                     
                 } else if (selectedOAuth === 'google') {
