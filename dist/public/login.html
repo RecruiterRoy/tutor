@@ -721,10 +721,13 @@
                 if (data.user) {
                     console.log('✅ Login successful for:', data.user.email);
                     
+                    // Set current user globally
+                    window.currentUser = data.user;
+                    
                     // Check user profile
                     const { data: profileData, error: profileError } = await window.supabaseClient
                         .from('user_profiles')
-                        .select('verification_status, economic_status')
+                        .select('verification_status, economic_status, full_name, email, class, board')
                         .eq('id', data.user.id)
                         .single();
                     
@@ -770,6 +773,11 @@
                     if (profileData.economic_status !== 'Premium' && profileData.economic_status !== 'approved') {
                         showError('Your account is not active. Please contact support.');
                         return;
+                    }
+                    
+                    // Check if profile is complete (has all required fields)
+                    if (!profileData.full_name || !profileData.email || !profileData.class || !profileData.board) {
+                        console.warn('⚠️ Profile incomplete, but allowing access to dashboard');
                     }
                     
                     console.log('✅ All checks passed, redirecting to dashboard');

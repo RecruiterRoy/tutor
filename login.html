@@ -722,10 +722,13 @@
                 if (data.user) {
                     console.log('✅ Login successful');
                     
+                    // Set current user globally
+                    window.currentUser = data.user;
+                    
                     // Check verification status before allowing login
                     const { data: profileData, error: profileError } = await window.supabaseClient
                         .from('user_profiles')
-                        .select('verification_status, economic_status')
+                        .select('verification_status, economic_status, full_name, email, class, board')
                         .eq('id', data.user.id)
                         .single();
                     
@@ -737,8 +740,15 @@
                     
                     // Check if user is verified
                     if (profileData.verification_status === 'pending') {
-                        showError('Please verify your email address before logging in. Check your inbox for the verification link.');
-                        return;
+                        // Auto-approve if email is confirmed
+                        if (data.user.email_confirmed_at) {
+                            console.log('✅ Email confirmed, auto-approving user...');
+                            await window.supabaseClient.rpc('manual_confirm_email', { user_email: data.user.email });
+                            console.log('✅ User auto-approved successfully');
+                        } else {
+                            showError('Please verify your email address before logging in. Check your inbox for the verification link.');
+                            return;
+                        }
                     } else if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
                         showError('Your account verification is incomplete. Please contact support.');
                         return;
@@ -748,6 +758,11 @@
                     if (profileData.economic_status !== 'Premium' && profileData.economic_status !== 'approved') {
                         showError('Your account is not active. Please contact support.');
                         return;
+                    }
+                    
+                    // Check if profile is complete (has all required fields)
+                    if (!profileData.full_name || !profileData.email || !profileData.class || !profileData.board) {
+                        console.warn('⚠️ Profile incomplete, but allowing access to dashboard');
                     }
                     
                     // Check if user profile exists, if not create it

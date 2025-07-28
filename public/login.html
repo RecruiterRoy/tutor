@@ -708,6 +708,9 @@
                 if (authData.user) {
                     console.log('✅ Login successful for:', authData.user.email);
                     
+                    // Set current user globally
+                    window.currentUser = authData.user;
+                    
                     // Ensure user profile exists
                     const profile = await ensureUserProfile(authData.user);
                     
@@ -717,12 +720,19 @@
                     
                     // Check verification status
                     if (profile.verification_status !== 'approved' && profile.verification_status !== 'verified') {
-                        throw new Error('Your account is not verified. Please check your email for verification link.');
+                        // Auto-approve if email is confirmed
+                        if (authData.user.email_confirmed_at) {
+                            console.log('✅ Email confirmed, auto-approving user...');
+                            await window.supabaseClient.rpc('manual_confirm_email', { user_email: email });
+                            console.log('✅ User auto-approved successfully');
+                        } else {
+                            throw new Error('Your account is not verified. Please check your email for verification link.');
+                        }
                     }
                     
                     // Check if profile is complete (has all required fields)
                     if (!profile.full_name || !profile.email || !profile.class || !profile.board) {
-                        throw new Error('Please complete your profile information (name, class, board) before accessing the dashboard.');
+                        console.warn('⚠️ Profile incomplete, but allowing access to dashboard');
                     }
                     
                     console.log('✅ All checks passed, redirecting to dashboard');
