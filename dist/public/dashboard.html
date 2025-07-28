@@ -1020,26 +1020,11 @@
                 }
                 
                 currentUser = user;
+                window.currentUser = user; // Set global currentUser
                 console.log('✅ User authenticated:', user.email);
                 
-                // Load user profile
-                await loadUserProfile();
-                
-                // Check trial status
-                const trialActive = await checkTrialStatus();
-                if (!trialActive) {
-                    console.log('❌ Trial expired, access blocked');
-                    return;
-                }
-                
-                // Initialize voice features
-                initVoiceFeatures();
-                
-                // Connect teacher avatar to AI
-                connectTeacherAvatar();
-                
-                // Set default selected avatar
-                document.querySelector('[onclick="handleAvatarSelection(\'english\')"]').classList.add('selected');
+                // Initialize dashboard with user verification
+                await initializeDashboard();
                 
                 console.log('✅ App initialized successfully');
                 
@@ -2188,6 +2173,79 @@
             
             // Show success message
             showSuccess('App download started! Check your downloads folder.');
+        }
+
+        // ========== DASHBOARD INITIALIZATION ==========
+        
+        async function initializeDashboard() {
+            try {
+                console.log('🚀 Initializing dashboard...');
+                
+                // Check if user is authenticated and verified
+                if (!window.currentUser || !window.currentUser.id) {
+                    console.error('❌ No authenticated user found');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                // Check user verification status
+                const { data: profile, error } = await supabaseClient
+                    .from('user_profiles')
+                    .select('verification_status, full_name, email, class, board')
+                    .eq('id', window.currentUser.id)
+                    .single();
+                
+                if (error) {
+                    console.error('❌ Error fetching user profile:', error);
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                // Ensure user is verified
+                if (!profile || profile.verification_status !== 'approved') {
+                    console.error('❌ User not verified. Status:', profile?.verification_status);
+                    alert('Your account is not yet verified. Please contact support.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                // Ensure all required profile fields are present
+                if (!profile.full_name || !profile.email || !profile.class || !profile.board) {
+                    console.error('❌ Incomplete user profile');
+                    alert('Please complete your profile information before accessing the dashboard.');
+                    window.location.href = '/profile.html';
+                    return;
+                }
+                
+                console.log('✅ User verified and profile complete');
+                
+                // Continue with dashboard initialization
+                await loadUserData();
+                await loadBooks();
+                setupEventListeners();
+                populateAvatarGrid();
+                initializeVoiceFeatures();
+                populateVoices();
+                loadVoiceSettings();
+                setupVoiceSettingsListeners();
+                initSpeechRecognition();
+                showWelcomeMessage();
+                
+                // Initialize additional features
+                if (window.learningProgress) {
+                    window.learningProgress.loadProgress();
+                }
+                
+                if (window.groupLearning) {
+                    window.groupLearning.initializeRealtime();
+                }
+                
+                console.log('✅ Dashboard initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Dashboard initialization failed:', error);
+                showError('Failed to initialize dashboard. Please refresh the page.');
+            }
         }
     </script>
 </body>

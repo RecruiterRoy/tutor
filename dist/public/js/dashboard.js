@@ -1,15 +1,11 @@
 // Dashboard.js - Main dashboard functionality
 // Note: Supabase client is initialized via config.js and supabaseClient.js
 
-// Initialize Supabase - will be set by server
-let supabase = null;
-
 // Initialize Supabase when page loads
 async function initializeSupabase() {
     try {
         // Use the global supabaseClient that's initialized in config.js
         if (window.supabaseClient) {
-            supabase = window.supabaseClient;
             console.log('Supabase initialized successfully');
         } else {
             throw new Error('Supabase client not available');
@@ -116,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // --- Keep existing initialization logic ---
-        const { data: { user }, error } = await supabase.auth.getUser();
+        const { data: { user }, error } = await window.supabaseClient.auth.getUser();
     
         if (error || !user) {
             console.log('No authenticated user, redirecting to login');
@@ -149,13 +145,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function initializeDashboard() {
-    if (!supabase) {
+    if (!window.supabaseClient) {
         console.error('Supabase not initialized');
         return;
     }
     
     // Check authentication
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const { data: { user }, error } = await window.supabaseClient.auth.getUser();
     
     if (error || !user) {
         console.log('No authenticated user, redirecting to login');
@@ -178,7 +174,7 @@ async function loadUserData() {
     try {
         clearDashboardError();
         // Get user profile from profiles table
-        const { data: profile, error } = await supabase
+        const { data: profile, error } = await window.supabaseClient
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
@@ -431,13 +427,13 @@ async function updateContext() {
     
     // Update user preferences
     if (currentUser) {
-        await supabase.from('user_preferences').upsert({
+        await window.supabaseClient.from('user_preferences').upsert({
             user_id: currentUser.id,
             preference_key: 'current_grade',
             preference_value: currentGrade
         });
         
-        await supabase.from('user_preferences').upsert({
+        await window.supabaseClient.from('user_preferences').upsert({
             user_id: currentUser.id,
             preference_key: 'current_subject',
             preference_value: currentSubject
@@ -896,7 +892,7 @@ function hideOAuthModal() {
 
 async function signInWithGoogle() {
     try {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error } = await window.supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 redirectTo: window.location.origin + '/dashboard'
@@ -912,7 +908,7 @@ async function signInWithGoogle() {
 
 async function signInWithGitHub() {
     try {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error } = await window.supabaseClient.auth.signInWithOAuth({
             provider: 'github',
             options: {
                 redirectTo: window.location.origin + '/dashboard'
@@ -927,10 +923,10 @@ async function signInWithGitHub() {
 }
 
 async function logout() {
-    if (!supabase) return;
+    if (!window.supabaseClient) return;
     
     try {
-        const { error } = await supabase.auth.signOut();
+        const { error } = await window.supabaseClient.auth.signOut();
         if (error) throw error;
         
         window.location.href = '/';
@@ -1028,7 +1024,7 @@ async function savePreferences() {
             }
         };
         
-        await supabase.from('user_preferences').upsert({
+        await window.supabaseClient.from('user_preferences').upsert({
             user_id: currentUser.id,
             preference_key: 'user_preferences',
             preference_value: preferences
@@ -1080,7 +1076,7 @@ async function saveProfileChanges() {
         const learningStyle = document.getElementById('learningStyle');
         const preferredLanguage = document.getElementById('preferredLanguage');
         
-        const { error } = await supabase
+        const { error } = await window.supabaseClient
             .from('profiles')
             .upsert({
                 id: currentUser.id,
@@ -1161,7 +1157,7 @@ function setupAvatarSelection() {
 
 async function saveAvatarPreference() {
     try {
-        await supabase.from('profiles').upsert({ id: currentUser.id, ai_avatar: selectedAvatar });
+        await window.supabaseClient.from('profiles').upsert({ id: currentUser.id, ai_avatar: selectedAvatar });
     } catch (error) {
         console.error('Error saving avatar preference:', error);
     }

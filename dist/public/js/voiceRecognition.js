@@ -71,7 +71,11 @@ class VoiceRecognition {
             }
             
             // Set language based on user preference
-            const { data: prefs } = await window.supabase
+            if (!window.currentUser || !window.currentUser.id) {
+                console.warn('User not available, using default language');
+                return;
+            }
+            const { data: prefs } = await window.supabaseClient
                 .from('user_preferences')
                 .select('preference_value')
                 .eq('user_id', window.currentUser.id)
@@ -228,6 +232,10 @@ class VoiceRecognition {
 
     async createNewSpeakerProfile(features) {
         try {
+            if (!window.currentUser || !window.currentUser.id || !window.groupLearning || !window.groupLearning.currentGroup || !window.groupLearning.currentGroup.id) {
+                console.warn('Required data not available for speaker profile creation');
+                return null;
+            }
             const { data, error } = await window.supabaseClient
                 .from('speaker_profiles')
                 .insert({

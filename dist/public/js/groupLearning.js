@@ -8,6 +8,11 @@ class GroupLearning {
 
     async initializeRealtime() {
         try {
+            if (!window.currentUser || !window.currentUser.id) {
+                console.warn('User not available, skipping realtime initialization');
+                return;
+            }
+            
             // Subscribe to presence changes
             const presenceChannel = window.supabaseClient.channel('online-users');
             
@@ -25,7 +30,7 @@ class GroupLearning {
                     this.updateActiveUsers();
                 })
                 .subscribe(async (status) => {
-                    if (status === 'SUBSCRIBED') {
+                    if (status === 'SUBSCRIBED' && window.currentUser && window.currentUser.id) {
                         await presenceChannel.track({ 
                             user_id: window.currentUser.id,
                             username: window.currentUser.username,

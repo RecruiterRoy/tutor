@@ -15,6 +15,11 @@ class LearningProgress {
 
     async loadProgress() {
         try {
+            if (!window.currentUser || !window.currentUser.id) {
+                console.warn('User not available, skipping progress load');
+                return;
+            }
+            
             // Load progress from Supabase
             const { data: progress, error } = await window.supabaseClient
                 .from('learning_progress')
