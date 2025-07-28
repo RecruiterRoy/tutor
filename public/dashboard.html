@@ -32,7 +32,7 @@
     <!-- Environment Variables Loader -->
     <script>
         // Direct Supabase credentials (fallback if .env doesn't work)
-                    window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
+        window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
         window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
         
         // Try to load environment variables first (for Next.js)
@@ -43,13 +43,16 @@
             if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
                 window.supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
             }
+            if (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
+                window.anthropicApiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
+            }
         }
         
         console.log('🔧 Supabase URL:', window.supabaseUrl);
         console.log('🔧 Supabase Key:', window.supabaseKey ? 'Available' : 'Not found');
+        console.log('🔧 Anthropic API Key:', window.anthropicApiKey ? 'Available' : 'Not found');
     </script>
     <script src="js/supabaseClient.js" defer></script>
-    <script src="js/aiHealthCheck.js" defer></script>
     <script src="js/gptService.js" defer></script>
     <script src="js/voiceRecognition.js" defer></script>
     <script src="js/textToSpeech.js" defer></script>
@@ -59,6 +62,7 @@
     <script src="js/imageSearch.js" defer></script>
     <script src="js/enhancedAIService.js" defer></script>
     <script src="js/claudeChat.js" defer></script>
+    <script src="js/aiHealthCheck.js" defer></script>
     <script src="js/dashboard.js" defer></script>
     
     <!-- Load Razorpay for payments -->
@@ -421,6 +425,43 @@
             .quick-action-btn {
                 padding: 10px 6px;
             }
+            
+            /* Mobile header adjustments */
+            header.nav-modern {
+                padding: 12px;
+            }
+            
+            /* Mobile sidebar adjustments */
+            #mobileSidebar {
+                width: 280px;
+            }
+            
+            /* Input area adjustments */
+            .input-area .flex {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .input-area button {
+                width: 100%;
+            }
+            
+            /* Chat header adjustments */
+            .chat-header .flex {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            /* Settings content adjustments */
+            .settings-content {
+                padding: 15px;
+            }
+            
+            /* Avatar selection grid */
+            .avatar-selection-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         /* Teacher Avatar */
@@ -641,8 +682,6 @@
                     <div class="hidden lg:block">
                         <div id="google_translate_element"></div>
                     </div>
-                    
-
                 </div>
             </header>
             
@@ -688,8 +727,6 @@
                             </div>
                         </div>
                     </div>
-                    
-
                     
                     <!-- Input Area -->
                     <div class="input-area">
@@ -997,6 +1034,7 @@
             image: "images/roy_sir.jpg",
             language: "en"
         };
+        let supabaseClient = null;
         
         // TTS Variables
         let currentSpeech = null;
@@ -1019,6 +1057,8 @@
                     window.location.href = 'login.html';
                     return;
                 }
+                
+                currentUser = user;
                 
                 // Check if user has a complete profile
                 const { data: profile, error: profileError } = await supabaseClient
@@ -1047,7 +1087,6 @@
                     return;
                 }
                 
-                currentUser = user;
                 console.log('✅ User authenticated:', user.email);
                 console.log('🔍 User provider:', user.app_metadata?.provider);
                 console.log('🔍 User metadata:', user.user_metadata);
@@ -1118,7 +1157,7 @@
                 // Final fallback to hardcoded values (for development)
                 if (!supabaseUrl || !supabaseKey) {
                     supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
-                                          supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
+                    supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
                 }
                 
                 console.log('🔧 Supabase URL:', supabaseUrl ? 'Found' : 'Not found');
@@ -1415,8 +1454,22 @@
                 // Show loading
                 showLoading(true);
                 
-                // Get AI response
-                const response = await getAIResponse(message);
+                // Get AI response - try Claude first, then fallback to GPT
+                let response;
+                try {
+                    if (window.claudeChat) {
+                        response = await window.claudeChat.sendMessage(message, userData);
+                    } else {
+                        throw new Error('Claude service not available');
+                    }
+                } catch (claudeError) {
+                    console.log('⚠️ Claude error, falling back to GPT:', claudeError);
+                    if (window.gptService) {
+                        response = await window.gptService.sendMessage(message, userData);
+                    } else {
+                        throw new Error('No AI service available');
+                    }
+                }
                 
                 // Add AI response
                 addMessage('ai', response);
@@ -1434,21 +1487,6 @@
                 addMessage('ai', 'Sorry, I encountered an error. Please try again.');
             } finally {
                 showLoading(false);
-            }
-        }
-        
-        // Get AI response using gptService
-        async function getAIResponse(message) {
-            if (!window.gptService) {
-                throw new Error('GPT Service not available');
-            }
-            
-            try {
-                const response = await window.gptService.sendMessage(message, userData);
-                return response;
-            } catch (error) {
-                console.error('Error getting AI response:', error);
-                throw error;
             }
         }
         
@@ -2154,10 +2192,6 @@
             }
         }
 
-
-
-
-
         // Contact admin function
         async function contactAdmin() {
             try {
@@ -2393,4 +2427,3 @@
     </script>
 </body>
 </html>
-
