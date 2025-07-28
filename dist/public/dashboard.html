@@ -2063,6 +2063,13 @@
             console.log('User data:', userData);
             console.log('Current user:', currentUser);
             
+            // Check if currentUser is available
+            if (!currentUser) {
+                console.error('Current user not available');
+                alert('Please log in again to access your profile.');
+                return;
+            }
+            
             // Populate popup fields with current user data
             document.getElementById('popupProfileName').value = userData.full_name || '';
             document.getElementById('popupProfileClass').value = userData.class || '';

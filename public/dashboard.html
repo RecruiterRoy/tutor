@@ -1023,7 +1023,7 @@
     
     <script>
         // Global variables
-        let currentUser = null;
+        // currentUser will be set by the authentication flow
         let userData = {
             full_name: 'User',
             class: 'Class 1',
@@ -2063,11 +2063,18 @@
             console.log('User data:', userData);
             console.log('Current user:', currentUser);
             
+            // Check if currentUser is available
+            if (!currentUser) {
+                console.error('Current user not available');
+                alert('Please log in again to access your profile.');
+                return;
+            }
+            
             // Populate popup fields with current user data
             document.getElementById('popupProfileName').value = userData.full_name || '';
             document.getElementById('popupProfileClass').value = userData.class || '';
             document.getElementById('popupProfileBoard').value = userData.board || '';
-            document.getElementById('popupProfileEmail').value = currentUser.email || '';
+                            document.getElementById('popupProfileEmail').value = (currentUser && currentUser.email) || '';
             document.getElementById('popupProfileMobile').value = userData.mobile || 'Not set';
             
             // Show popup
@@ -2137,8 +2144,8 @@
         // Show contact us popup
         function showContactUs() {
             // Populate contact form with user data
-            document.getElementById('contactUsName').value = userData.full_name || currentUser.email || '';
-            document.getElementById('contactUsEmail').value = currentUser.email || '';
+            document.getElementById('contactUsName').value = userData.full_name || (currentUser && currentUser.email) || '';
+            document.getElementById('contactUsEmail').value = (currentUser && currentUser.email) || '';
             document.getElementById('contactUsMobile').value = userData.mobile || 'Not set';
             
             // Show popup
