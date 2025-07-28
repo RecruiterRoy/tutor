@@ -35,6 +35,9 @@
         window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
         window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
         
+        // Direct Anthropic API Key (fallback if .env doesn't work)
+        window.anthropicApiKey = 'sk-ant-api03-Your-Anthropic-API-Key-Here';
+        
         // Try to load environment variables first (for Next.js)
         if (typeof process !== 'undefined' && process.env) {
             if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -43,9 +46,8 @@
             if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
                 window.supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
             }
-            if (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
-                window.anthropicApiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
-            }
+                    // For production, set your actual Anthropic API key here
+        // window.anthropicApiKey = 'your-actual-api-key-here';
         }
         
         console.log('🔧 Supabase URL:', window.supabaseUrl);
@@ -1569,7 +1571,9 @@
             
             // Convert markdown to HTML if it's an AI message
             if (role === 'ai') {
-                bubbleDiv.innerHTML = DOMPurify.sanitize(marked.parse(content));
+                // Ensure content is a string before passing to marked
+                const contentString = typeof content === 'string' ? content : JSON.stringify(content);
+                bubbleDiv.innerHTML = DOMPurify.sanitize(marked.parse(contentString));
             } else {
                 bubbleDiv.textContent = content;
             }
@@ -1958,7 +1962,6 @@
                 }
                 
                 await initSupabase();
-                await initializeDashboard();
                 
                 console.log('✅ App initialized successfully');
                 
@@ -2354,103 +2357,7 @@
 
         // ========== DASHBOARD INITIALIZATION ==========
         
-        async function initializeDashboard() {
-            try {
-                console.log('🚀 Initializing dashboard...');
-                
-                // Get current user from Supabase auth
-                const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-                
-                if (authError || !user) {
-                    console.error('❌ No authenticated user found:', authError);
-                    window.location.href = '/login.html';
-                    return;
-                }
-                
-                // Set current user globally
-                window.currentUser = user;
-                console.log('✅ User authenticated:', user.id);
-                
-                // Check user verification status
-                const { data: profile, error } = await supabaseClient
-                    .from('user_profiles')
-                    .select('verification_status, full_name, email, class, board')
-                    .eq('id', user.id)
-                    .single();
-                
-                if (error) {
-                    console.error('❌ Error fetching user profile:', error);
-                    // Don't redirect immediately, try to create profile
-                    console.log('🔄 Attempting to create user profile...');
-                    await createUserProfile();
-                    return;
-                }
-                
-                // Ensure user is verified
-                if (!profile || (profile.verification_status !== 'approved' && profile.verification_status !== 'verified')) {
-                    console.error('❌ User not verified. Status:', profile?.verification_status);
-                    // Auto-approve if email is confirmed
-                    if (user.email_confirmed_at) {
-                        console.log('✅ Email confirmed, auto-approving user...');
-                        await supabaseClient.rpc('manual_confirm_email', { user_email: user.email });
-                        // Refresh profile
-                        const { data: updatedProfile } = await supabaseClient
-                            .from('user_profiles')
-                            .select('verification_status, full_name, email, class, board')
-                            .eq('id', user.id)
-                            .single();
-                        
-                        if (updatedProfile && updatedProfile.verification_status === 'approved') {
-                            console.log('✅ User auto-approved successfully');
-                        } else {
-                            console.error('❌ Auto-approval failed');
-                            window.location.href = '/login.html';
-                            return;
-                        }
-                    } else {
-                        console.error('❌ User not verified and email not confirmed');
-                        window.location.href = '/login.html';
-                        return;
-                    }
-                }
-                
-                // Ensure all required profile fields are present
-                if (!profile.full_name || !profile.email || !profile.class || !profile.board) {
-                    console.error('❌ Incomplete user profile');
-                    // Don't redirect to profile page, just continue with basic functionality
-                    console.log('⚠️ Profile incomplete, continuing with basic features...');
-                }
-                
-                console.log('✅ User verified and ready for dashboard');
-                
-                // Continue with dashboard initialization
-                await loadUserData();
-                await loadBooks();
-                setupEventListeners();
-                populateAvatarGrid();
-                initializeVoiceFeatures();
-                populateVoices();
-                loadVoiceSettings();
-                setupVoiceSettingsListeners();
-                initSpeechRecognition();
-                showWelcomeMessage();
-                
-                // Initialize additional features
-                if (window.learningProgress) {
-                    window.learningProgress.loadProgress();
-                }
-                
-                if (window.groupLearning) {
-                    window.groupLearning.initializeRealtime();
-                }
-                
-                console.log('✅ Dashboard initialized successfully');
-                
-            } catch (error) {
-                console.error('❌ Dashboard initialization failed:', error);
-                showError('Failed to initialize dashboard. Please refresh the page.');
-            }
-        }
+
     </script>
 </body>
 </html>

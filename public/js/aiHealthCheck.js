@@ -3,7 +3,8 @@
 
 class AIHealthCheck {
     constructor() {
-        this.apiBaseUrl = 'https://tution.app/api';
+        // Use relative URL to avoid CORS issues
+        this.apiBaseUrl = '/api';
         this.healthStatus = {
             anthropic: false,
             chat: false,
