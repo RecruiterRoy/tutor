@@ -747,39 +747,7 @@
                     throw new Error('Supabase client not initialized');
                 }
 
-                // TEMPORARY: Show helpful message and redirect to email registration
-                showNotification('Google OAuth is being configured. Please use email registration for now.', 'info');
-                
-                // Switch to registration form
-                setTimeout(() => {
-                    showForm('register');
-                    // Show helpful message in the form
-                    const formContainer = document.querySelector('.form-container');
-                    if (formContainer) {
-                        const message = `
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                                <div class="flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="fas fa-info-circle text-blue-400"></i>
-                                    </div>
-                                    <div class="ml-3">
-                                        <h3 class="text-sm font-medium text-blue-800">
-                                            Google OAuth Setup in Progress
-                                        </h3>
-                                        <div class="mt-2 text-sm text-blue-700">
-                                            <p>Google OAuth is being configured. Please use email registration for now.</p>
-                                            <p class="mt-2"><strong>Need help?</strong> Visit: <a href="https://tution.app/test-oauth-config.html" target="_blank" class="underline">OAuth Setup Guide</a></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        formContainer.insertAdjacentHTML('afterbegin', message);
-                    }
-                }, 1000);
-
-                // Comment out the actual OAuth call for now
-                /*
+                // Attempt Google OAuth login
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
@@ -806,7 +774,6 @@
 
                 // OAuth redirect will handle the rest
                 console.log('✅ Google OAuth initiated');
-                */
 
             } catch (error) {
                 console.error('Google login error:', error);
