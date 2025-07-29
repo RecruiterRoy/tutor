@@ -752,11 +752,19 @@ function populateVoices() {
 }
 
 function loadVoiceSettings() {
+    const voiceSelect = document.getElementById('voiceSelect');
     const voiceRate = document.getElementById('voiceRate');
     const voicePitch = document.getElementById('voicePitch');
     
-    voiceRate.value = localStorage.getItem('voiceRate') || 1;
-    voicePitch.value = localStorage.getItem('voicePitch') || 1;
+    if (voiceSelect) {
+        voiceSelect.value = localStorage.getItem('selectedVoice') || '';
+    }
+    if (voiceRate) {
+        voiceRate.value = localStorage.getItem('voiceRate') || '1.0';
+    }
+    if (voicePitch) {
+        voicePitch.value = localStorage.getItem('voicePitch') || '1.0';
+    }
 }
 
 function setupVoiceSettingsListeners() {
@@ -784,10 +792,23 @@ function setupVoiceSettingsListeners() {
 
 function initSpeechRecognition() {
     try {
+        const voiceButton = document.getElementById('voiceButton');
+        const voiceStatus = document.getElementById('voiceStatus');
+        
+        if (!voiceButton) {
+            console.warn('Voice button not found');
+            return;
+        }
+        
+        if (!voiceStatus) {
+            console.warn('Voice status element not found');
+            return;
+        }
+        
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
             console.warn('Speech recognition not supported');
-            document.getElementById('voiceButton').style.display = 'none';
+            voiceButton.style.display = 'none';
             return;
         }
 
@@ -800,8 +821,8 @@ function initSpeechRecognition() {
         recognition.onstart = () => {
             console.log('Speech recognition started');
             isRecording = true;
-            document.getElementById('voiceIcon').textContent = '🔴';
-            document.getElementById('voiceButton').classList.add('voice-recording');
+            voiceButton.textContent = '🔴'; // Changed from voiceIcon to voiceButton
+            voiceButton.classList.add('voice-recording');
             
             // Set timeout (15 seconds)
             recognitionTimeout = setTimeout(() => {
@@ -900,12 +921,15 @@ async function speakText(text) {
         console.log(`[TTS] ${voices.length} voices loaded.`);
         
         const voiceSelect = document.getElementById('voiceSelect');
-        const selectedVoiceName = voiceSelect.value;
+        const voiceRate = document.getElementById('voiceRate');
+        const voicePitch = document.getElementById('voicePitch');
+        
+        const selectedVoiceName = voiceSelect ? voiceSelect.value : '';
         console.log(`[TTS] Selected voice from dropdown: ${selectedVoiceName}`);
         
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = parseFloat(document.getElementById('voiceRate').value) || 1;
-        utterance.pitch = parseFloat(document.getElementById('voicePitch').value) || 1;
+        utterance.rate = voiceRate ? parseFloat(voiceRate.value) || 1 : 1;
+        utterance.pitch = voicePitch ? parseFloat(voicePitch.value) || 1 : 1;
 
         // Select voice if available
         if (selectedVoiceName && voices.length > 0) {
