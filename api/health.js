@@ -1,86 +1,47 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
 export default async function handler(req, res) {
-  // Add CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
   if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // Check if required environment variables are set
-    const hasAnthropicKey = !!process.env.ANTHROPIC_API_KEY;
-    const hasSupabaseUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const hasSupabaseKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Test Supabase connection
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('count')
+      .limit(1);
 
-    const healthStatus = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      services: {
-        anthropic: hasAnthropicKey ? 'configured' : 'missing_key',
-        supabase: (hasSupabaseUrl && hasSupabaseKey) ? 'configured' : 'missing_config'
-      }
-    };
-
-    const isHealthy = hasAnthropicKey && hasSupabaseUrl && hasSupabaseKey;
-    
-    if (isHealthy) {
-      res.status(200).json(healthStatus);
-    } else {
-      healthStatus.status = 'degraded';
-      res.status(200).json(healthStatus);
+    if (error) {
+      return res.status(500).json({ 
+        status: 'error',
+        message: 'Database connection failed',
+        error: error.message 
+      });
     }
 
+    // Test Anthropic API key availability
+    const anthropicApiKey = process.env.ANTHROPIC_API_KEY || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
+    
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      services: {
+        database: 'connected',
+        anthropic: anthropicApiKey ? 'available' : 'not_configured'
+      }
+    });
   } catch (error) {
     console.error('Health check error:', error);
     res.status(500).json({ 
-      status: 'unhealthy',
-      error: error.message,
-      timestamp: new Date().toISOString()
+      status: 'error',
+      message: 'Health check failed',
+      error: error.message 
     });
-  }
-}
-
-// For App Router (Next.js 13+)
-export async function GET() {
-  try {
-    // Check if required environment variables are set
-    const hasAnthropicKey = !!process.env.ANTHROPIC_API_KEY;
-    const hasSupabaseUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const hasSupabaseKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    const healthStatus = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      services: {
-        anthropic: hasAnthropicKey ? 'configured' : 'missing_key',
-        supabase: (hasSupabaseUrl && hasSupabaseKey) ? 'configured' : 'missing_config'
-      }
-    };
-
-    const isHealthy = hasAnthropicKey && hasSupabaseUrl && hasSupabaseKey;
-    
-    if (isHealthy) {
-      return Response.json(healthStatus);
-    } else {
-      healthStatus.status = 'degraded';
-      return Response.json(healthStatus);
-    }
-
-  } catch (error) {
-    console.error('Health check error:', error);
-    return Response.json({ 
-      status: 'unhealthy',
-      error: error.message,
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
   }
 } 

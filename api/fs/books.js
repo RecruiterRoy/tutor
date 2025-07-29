@@ -27,7 +27,8 @@ export default async function handler(req, res) {
     
     if (error) {
       console.error('Database error:', error);
-      return res.status(500).json({ error: 'Failed to fetch books from database' });
+      // Return empty array instead of error for now
+      return res.status(200).json([]);
     }
     
     // If no books found in database, return empty array
@@ -38,6 +39,7 @@ export default async function handler(req, res) {
     res.status(200).json(books);
   } catch (error) {
     console.error('Error fetching books:', error);
-    res.status(500).json({ error: 'Failed to fetch books' });
+    // Return empty array instead of error
+    res.status(200).json([]);
   }
 }

@@ -127,6 +127,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
     
+        // Set current user globally
+        window.currentUser = user;
+        currentUser = user; // Set local variable too
+        console.log('✅ User authenticated:', user.id);
+    
         // currentUser is already set from authentication
         await loadUserData();
         setupEventListeners();
@@ -168,6 +173,7 @@ async function initializeDashboard() {
         
         // Set current user globally
         window.currentUser = user;
+        currentUser = user; // Set local variable too
         console.log('✅ User authenticated:', user.id);
         
         // Check user verification status
@@ -257,6 +263,13 @@ async function initializeDashboard() {
 async function loadUserData() {
     try {
         clearDashboardError();
+        
+        // Check if currentUser exists
+        if (!currentUser || !currentUser.id) {
+            console.error('❌ No current user available');
+            return;
+        }
+        
         // Get user profile from user_profiles table
         const { data: profile, error } = await window.supabaseClient
             .from('user_profiles')
@@ -506,6 +519,11 @@ function setupEventListeners() {
 
 function populateAvatarGrid() {
     const avatarGrid = document.getElementById('avatarGrid');
+    if (!avatarGrid) {
+        console.warn('Avatar grid element not found');
+        return;
+    }
+    
     avatarGrid.innerHTML = '';
     
     regionalAvatars.forEach(avatar => {

@@ -35,7 +35,7 @@
         window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
         window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
         
-                // Anthropic API Key from environment variables
+        // Anthropic API Key - will be set by Vercel environment variables
         window.anthropicApiKey = null;
         
         // Try to load environment variables first (for Next.js)
@@ -45,6 +45,9 @@
             }
             if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
                 window.supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            }
+            if (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
+                window.anthropicApiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
             }
         }
         
@@ -77,6 +80,7 @@
     <!-- Load non-critical scripts after page load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.3/dist/purify.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js" defer></script>
     
     <!-- Load fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
