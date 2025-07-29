@@ -1,90 +1,29 @@
 {
   "version": 2,
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "public/**/*",
+      "use": "@vercel/static"
     },
     {
-      "source": "/register",
-      "destination": "/register.html"
-    },
-    {
-      "source": "/register.html",
-      "destination": "/register.html"
-    },
-    {
-      "source": "/login",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/login.html",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/dashboard.html"
-    },
-    {
-      "source": "/dashboard.html",
-      "destination": "/dashboard.html"
-    },
-    {
-      "source": "/admin",
-      "destination": "/admin.html"
-    },
-    {
-      "source": "/admin.html",
-      "destination": "/admin.html"
-    },
-    {
-      "source": "/download",
-      "destination": "/download.html"
-    },
-    {
-      "source": "/download.html",
-      "destination": "/download.html"
-    },
-            {
-            "source": "/tution.appv1.2.apk",
-            "destination": "/public/tution.appv1.2.apk"
-        },
-    {
-      "source": "/favicon.ico",
-      "destination": "/public/favicon.ico"
-    },
-    {
-      "source": "/manifest.json",
-      "destination": "/public/manifest.json"
-    },
-    {
-      "source": "/public/(.*)",
-      "destination": "/public/$1"
-    },
-    {
-      "source": "/",
-      "destination": "/index.html"
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     }
   ],
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "headers": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        }
-      ]
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
-  ]
+  ],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "SUPABASE_SERVICE_KEY": "@supabase_service_key",
+    "NEXT_PUBLIC_ANTHROPIC_API_KEY": "@anthropic_api_key"
+  }
 }
