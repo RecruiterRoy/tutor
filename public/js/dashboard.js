@@ -28,6 +28,8 @@ let recognition;
 // isRecording is managed by dashboard.html
 let recognitionTimeout;
 let isAmbientListening = false;
+// Global variables
+let currentUser = null;
 let currentGrade = null;
 let currentSubject = null;
 let selectedAvatar = 'professor';
@@ -125,12 +127,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
     
-        currentUser = user;
+        // currentUser is already set from authentication
         await loadUserData();
         setupEventListeners();
         populateAvatarGrid();
         loadUserPreferences();
         await loadBooks();
+        
+        // Show welcome message
         showWelcomeMessage();
         // --- End of existing logic ---
 
@@ -246,23 +250,16 @@ async function initializeDashboard() {
         showError('Failed to initialize dashboard. Please refresh the page.');
     }
     
-    currentUser = user;
+    // currentUser is already set from authentication
     await loadUserData();
-    setupEventListeners();
-    populateAvatarGrid();
-    loadUserPreferences();
-    await loadBooks();
-    
-    // Show welcome message
-    showWelcomeMessage();
 }
 
 async function loadUserData() {
     try {
         clearDashboardError();
-        // Get user profile from profiles table
+        // Get user profile from user_profiles table
         const { data: profile, error } = await window.supabaseClient
-            .from('profiles')
+            .from('user_profiles')
             .select('*')
             .eq('id', currentUser.id)
             .single();
@@ -444,21 +441,45 @@ function openBook(bookId, bookName) {
 
 function setupEventListeners() {
     // Grade and subject selectors
-    document.getElementById('gradeSelect').addEventListener('change', updateContext);
-    document.getElementById('subjectSelect').addEventListener('change', updateContext);
+    const gradeSelect = document.getElementById('gradeSelect');
+    if (gradeSelect) {
+        gradeSelect.addEventListener('change', updateContext);
+    }
+    
+    const subjectSelect = document.getElementById('subjectSelect');
+    if (subjectSelect) {
+        subjectSelect.addEventListener('change', updateContext);
+    }
     
     // Message input
-    document.getElementById('messageInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) {
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    }
     
     // Voice button
-    document.getElementById('voiceButton').addEventListener('click', toggleVoiceRecording);
+    const voiceButton = document.getElementById('voiceButton');
+    if (voiceButton) {
+        voiceButton.addEventListener('click', toggleVoiceRecording);
+    }
     
     // Accessibility options
-    document.getElementById('dyslexicFont').addEventListener('change', updateAccessibility);
-    document.getElementById('highContrast').addEventListener('change', updateAccessibility);
-    document.getElementById('screenReader').addEventListener('change', updateAccessibility);
+    const dyslexicFont = document.getElementById('dyslexicFont');
+    if (dyslexicFont) {
+        dyslexicFont.addEventListener('change', updateAccessibility);
+    }
+    
+    const highContrast = document.getElementById('highContrast');
+    if (highContrast) {
+        highContrast.addEventListener('change', updateAccessibility);
+    }
+    
+    const screenReader = document.getElementById('screenReader');
+    if (screenReader) {
+        screenReader.addEventListener('change', updateAccessibility);
+    }
 
     // Profile modal
     const profileBtn = document.getElementById('profileBtn');
@@ -466,13 +487,13 @@ function setupEventListeners() {
     const closeProfile = document.getElementById('closeProfile');
     const saveProfile = document.getElementById('saveProfile');
     
-    if (profileBtn) {
+    if (profileBtn && profileModal) {
         profileBtn.addEventListener('click', () => {
             profileModal.classList.remove('hidden');
         });
     }
     
-    if (closeProfile) {
+    if (closeProfile && profileModal) {
         closeProfile.addEventListener('click', () => {
             profileModal.classList.add('hidden');
         });
@@ -494,12 +515,12 @@ function populateAvatarGrid() {
             <div class="text-3xl mb-2">${avatar.image}</div>
             <div class="text-xs text-white">${avatar.name}</div>
         `;
-        avatarElement.onclick = () => selectAvatar(avatar.id);
+        avatarElement.onclick = (event) => selectAvatar(avatar.id, event);
         avatarGrid.appendChild(avatarElement);
     });
 }
 
-function selectAvatar(avatarId) {
+function selectAvatar(avatarId, event) {
     selectedAvatar = avatarId;
     
     // Update visual selection
@@ -507,12 +528,17 @@ function selectAvatar(avatarId) {
         option.classList.remove('selected');
     });
     
-    event.target.closest('.avatar-option').classList.add('selected');
+    if (event && event.target) {
+        event.target.closest('.avatar-option').classList.add('selected');
+    }
     
     // Update user display
     const avatar = regionalAvatars.find(a => a.id === avatarId);
     if (avatar) {
-        document.getElementById('userAvatar').innerHTML = avatar.image;
+        const userAvatar = document.getElementById('userAvatar');
+        if (userAvatar) {
+            userAvatar.innerHTML = avatar.image;
+        }
     }
 }
 
@@ -852,7 +878,7 @@ async function speakText(text) {
 
         // Wait for voices to load
         console.log('[TTS] Loading voices...');
-        const voices = await loadVoices();
+        const voices = await populateVoices();
         console.log(`[TTS] ${voices.length} voices loaded.`);
         
         const voiceSelect = document.getElementById('voiceSelect');
@@ -903,7 +929,7 @@ async function initVoiceSelection() {
     voiceSelect.innerHTML = '<option value="">Loading voices...</option>';
 
     try {
-        const voices = await loadVoices();
+        const voices = await populateVoices();
         voiceSelect.innerHTML = ''; // Clear loading message
 
         const indianLangCodes = ['en-IN', 'hi-IN', 'bn-IN', 'gu-IN', 'kn-IN', 'ml-IN', 'mr-IN', 'ta-IN', 'te-IN'];
@@ -1161,7 +1187,6 @@ window.showSection = showSection;
 window.toggleSidebar = toggleSidebar;
 window.sendMessage = sendMessage;
 window.startVoiceInput = toggleVoiceRecording;
-window.toggleAmbient = toggleAmbient;
 window.selectAvatar = selectAvatar;
 window.savePreferences = savePreferences;
 window.signInWithGoogle = signInWithGoogle;
@@ -1177,7 +1202,7 @@ async function saveProfileChanges() {
         const preferredLanguage = document.getElementById('preferredLanguage');
         
         const { error } = await window.supabaseClient
-            .from('profiles')
+            .from('user_profiles')
             .upsert({
                 id: currentUser.id,
                 full_name: profileName.value,
@@ -1257,7 +1282,7 @@ function setupAvatarSelection() {
 
 async function saveAvatarPreference() {
     try {
-        await window.supabaseClient.from('profiles').upsert({ id: currentUser.id, ai_avatar: selectedAvatar });
+        await window.supabaseClient.from('user_profiles').upsert({ id: currentUser.id, ai_avatar: selectedAvatar });
     } catch (error) {
         console.error('Error saving avatar preference:', error);
     }
@@ -1412,5 +1437,13 @@ if (window.mermaid) {
         },
         securityLevel: 'loose'
     });
+} 
+
+// Show profile popup
+function showProfilePopup() {
+    const profileModal = document.getElementById('profileModal');
+    if (profileModal) {
+        profileModal.classList.remove('hidden');
+    }
 } 
 
