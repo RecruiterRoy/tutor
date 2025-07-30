@@ -19,7 +19,7 @@ class LearningProgress {
                 console.warn('User not available, skipping progress load');
                 return;
             }
-            
+
             // Load progress from Supabase
             const { data: progress, error } = await window.supabaseClient
                 .from('learning_progress')
@@ -39,12 +39,20 @@ class LearningProgress {
             }, {});
 
             // Load recent topics
-            const { data: recent, error: recentError } = await window.supabaseClient
-                .from('study_sessions')
-                .select('topic, subject, studied_at')
-                .eq('user_id', window.currentUser.id)
-                .order('studied_at', { ascending: false })
-                .limit(5);
+            if (!window.currentUser || !window.currentUser.id) {
+                console.warn('User not available, skipping recent sessions load');
+                this.recentTopics = [];
+            } else {
+                const { data: recent, error: recentError } = await window.supabaseClient
+                    .from('study_sessions')
+                    .select('topic, subject, studied_at')
+                    .eq('user_id', window.currentUser.id)
+                    .order('studied_at', { ascending: false })
+                    .limit(5);
+
+                if (recentError) throw recentError;
+                this.recentTopics = recent;
+            }
 
             if (recentError) throw recentError;
             this.recentTopics = recent;
@@ -225,7 +233,7 @@ class LearningProgress {
 
     async updatePreferences(input) {
         try {
-            const { data, error } = await window.supabaseClient
+            const { data, error } = await window.supabase
                 .from('user_preferences')
                 .upsert({
                     user_id: window.currentUser.id,

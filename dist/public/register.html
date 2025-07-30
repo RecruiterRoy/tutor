@@ -843,16 +843,9 @@
                     if (data.user) {
                         console.log('✅ Email user created:', data.user.id);
                         
-                        // Manually confirm email in database
-                        const { error: confirmError } = await supabase.rpc('manual_confirm_email', {
-                            user_email: email
-                        });
+                        // Create profile directly without checking for trigger
+                        console.log('📝 Creating user profile...');
                         
-                        if (confirmError) {
-                            console.warn('⚠️ Manual email confirmation failed:', confirmError);
-                        }
-                        
-                        // Create profile immediately with approved status
                         const { error: profileError } = await supabase
                             .from('user_profiles')
                             .upsert({
@@ -871,12 +864,22 @@
                                 created_at: new Date().toISOString(),
                                 updated_at: new Date().toISOString()
                             }, {
-                                onConflict: 'id'
+                                onConflict: 'id',
+                                ignoreDuplicates: false
                             });
                         
                         if (profileError) {
                             console.error('❌ Profile creation failed:', profileError);
                             throw new Error('Failed to create user profile: ' + profileError.message);
+                        }
+                        
+                        // Manually confirm email in database
+                        const { error: confirmError } = await supabase.rpc('manual_confirm_email', {
+                            user_email: email
+                        });
+                        
+                        if (confirmError) {
+                            console.warn('⚠️ Manual email confirmation failed:', confirmError);
                         }
                         
                         console.log('✅ Profile created with approved status');
@@ -899,10 +902,11 @@
                         throw new Error('Google authentication failed. Please try again.');
                     }
                     
-                    console.log('✅ Google user found:', user.id);
+                    console.log('✅ Google user found:', user.id, user.email);
                     
                     // Set password for Google user
                     try {
+                        console.log('🔐 Setting password for Google user...');
                         const { error: passwordError } = await supabase.auth.updateUser({
                             password: password
                         });
@@ -916,33 +920,42 @@
                         console.warn('⚠️ Password setting failed:', error);
                     }
                     
-                    // Create profile for Google user
-                    const { error: profileError } = await supabase
+                    // Create profile for Google user with registration form data
+                    console.log('📝 Creating profile for Google user with registration data...');
+                    const profileData = {
+                        id: user.id,
+                        full_name: fullName, // From registration form (child's name)
+                        email: user.email, // From Google OAuth
+                        phone: phone, // From registration form
+                        class: userClass, // From registration form
+                        board: board, // From registration form
+                        board_abbr: board, // From registration form
+                        city: city, // From registration form
+                        state: state, // From registration form
+                        preferred_language: language, // From registration form
+                        avatar: selectedAvatar || 'teacher-avatar1.png',
+                        economic_status: 'Premium',
+                        verification_status: 'approved', // Auto-approved for OAuth users
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+                    
+                    console.log('📋 Profile data to insert:', profileData);
+                    
+                    const { data: insertedProfile, error: profileError } = await supabase
                         .from('user_profiles')
-                        .insert({
-                            id: user.id,
-                            full_name: fullName,
-                            email: user.email,
-                            phone: phone,
-                            class: userClass,
-                            board: board,
-                            city: city,
-                            state: state,
-                            preferred_language: language,
-                            avatar: selectedAvatar || 'teacher-avatar1.png',
-                            economic_status: 'Premium',
-                            verification_status: 'approved',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        });
+                        .upsert(profileData, {
+                            onConflict: 'id'
+                        })
+                        .select();
                     
                     if (profileError) {
                         console.error('❌ Google profile creation failed:', profileError);
                         throw new Error('Failed to create Google user profile: ' + profileError.message);
                     }
                     
-                    console.log('✅ Google profile created successfully');
-                    showMessage('Registration successful! Redirecting to dashboard...', 'success');
+                    console.log('✅ Google profile created successfully:', insertedProfile);
+                    showMessage('Registration successful! Your profile has been created with email and mobile as user ID. Redirecting to dashboard...', 'success');
                     
                     // Redirect to dashboard after short delay
                     setTimeout(() => {

@@ -854,7 +854,7 @@ function initSpeechRecognition() {
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
-        recognition.lang = document.getElementById('preferredLanguage').value || 'en-US';
+        recognition.lang = 'en-US'; // Default to English, can be enhanced later
 
         recognition.onstart = () => {
             console.log('Speech recognition started');

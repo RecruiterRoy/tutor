@@ -30,7 +30,7 @@ class GroupLearning {
                     this.updateActiveUsers();
                 })
                 .subscribe(async (status) => {
-                    if (status === 'SUBSCRIBED' && window.currentUser && window.currentUser.id) {
+                    if (status === 'SUBSCRIBED') {
                         await presenceChannel.track({ 
                             user_id: window.currentUser.id,
                             username: window.currentUser.username,
@@ -56,6 +56,10 @@ class GroupLearning {
 
     async createGroup(name, description) {
         try {
+            if (!window.currentUser || !window.currentUser.id) {
+                throw new Error('User not available');
+            }
+            
             const { data, error } = await window.supabaseClient
                 .from('study_groups')
                 .insert({
@@ -79,6 +83,10 @@ class GroupLearning {
 
     async joinGroup(groupId) {
         try {
+            if (!window.currentUser || !window.currentUser.id) {
+                throw new Error('User not authenticated');
+            }
+            
             const { data, error } = await window.supabaseClient
                 .from('group_members')
                 .insert({
@@ -101,9 +109,9 @@ class GroupLearning {
 
     async loadGroupData(groupId) {
         try {
-            // Load group details
-            const { data: group, error: groupError } = await window.supabaseClient
-                .from('study_groups')
+                         // Load group details
+             const { data: group, error: groupError } = await window.supabaseClient
+                 .from('study_groups')
                 .select(`
                     *,
                     group_members (
@@ -131,9 +139,9 @@ class GroupLearning {
     }
 
     async shareNote(content, topic) {
-        try {
-            const { data, error } = await window.supabaseClient
-                .from('shared_notes')
+                 try {
+             const { data, error } = await window.supabaseClient
+                 .from('shared_notes')
                 .insert({
                     group_id: this.currentGroup.id,
                     user_id: window.currentUser.id,

@@ -2,8 +2,19 @@ class GPTService {
     constructor() {
         this.currentGrade = null;
         this.currentSubject = null;
+        this.currentTeacher = null;
         this.chatHistory = [];
-        this.baseUrl = '/api/enhanced-chat'; // Use enhanced chat API
+        // Dynamic API URL based on current domain
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            this.baseUrl = 'http://localhost:3000/api/chat';
+        } else if (hostname === 'tution.app') {
+            this.baseUrl = 'https://tution.app/api/chat';
+        } else if (hostname === 'tutor-omega-seven.vercel.app') {
+            this.baseUrl = 'https://tutor-omega-seven.vercel.app/api/chat';
+        } else {
+            this.baseUrl = `${window.location.origin}/api/chat`;
+        }
     }
     
     setContext(grade, subject) {
@@ -12,19 +23,27 @@ class GPTService {
         console.log(`GPT Service Context Updated: Grade=${grade}, Subject=${subject}`);
     }
     
+    setTeacher(teacherName) {
+        this.currentTeacher = teacherName;
+        console.log(`GPT Service Teacher Updated: ${teacherName}`);
+        // Clear chat history when switching teachers for fresh context
+        this.chatHistory = [];
+    }
+    
     async sendMessage(userMessage, userProfile = null) {
         try {
             this.chatHistory.push({ role: 'user', content: userMessage });
             
+            // Format request for the simple chat API
             const requestBody = {
-                message: userMessage,
+                messages: this.chatHistory, // Send full chat history
                 grade: this.currentGrade || '6',
                 subject: this.currentSubject || 'General',
-                userProfile: userProfile, // Send user profile to API
-                action: 'chat'
+                language: this.currentTeacher === 'Ms. Sapana' ? 'hi' : 'en',
+                user_profile: userProfile // Send user profile to API
             };
 
-            console.log('Sending request to enhanced chat:', JSON.stringify(requestBody, null, 2));
+            console.log('Sending request to chat API:', JSON.stringify(requestBody, null, 2));
 
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
@@ -104,37 +123,4 @@ class GPTService {
 const gptService = new GPTService();
 window.gptService = gptService;
 
-// Export utility functions
-export const updateContext = () => {
-    const grade = document.getElementById('grade-select').value;
-    const subject = document.getElementById('subject-select').value;
-    gptService.setContext(grade, subject);
-};
-
-export const handleChat = async () => {
-    const messageInput = document.getElementById('message-input');
-    const userMessage = messageInput.value;
-    if (!userMessage.trim()) return;
-    addMessage('user', userMessage);
-    messageInput.value = '';
-    const response = await gptService.sendMessage(userMessage);
-    addMessage('ai', response);
-};
-
-// Initialize event listeners
-if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', () => {
-        const sendButton = document.getElementById('send-button');
-        const messageInput = document.getElementById('message-input');
-
-        if (sendButton) {
-            sendButton.addEventListener('click', handleChat);
-        }
-
-        if (messageInput) {
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') handleChat();
-            });
-        }
-    });
-} 
+console.log('✅ GPT Service initialized successfully'); 

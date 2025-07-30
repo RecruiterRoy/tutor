@@ -35,7 +35,7 @@
         window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
         window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
         
-                // Anthropic API Key from environment variables
+        // Anthropic API Key - will be set by Vercel environment variables
         window.anthropicApiKey = null;
         
         // Try to load environment variables first (for Next.js)
@@ -45,6 +45,9 @@
             }
             if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
                 window.supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            }
+            if (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
+                window.anthropicApiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
             }
         }
         
@@ -67,6 +70,7 @@
     <script src="js/claudeChat.js" defer></script>
     <script src="js/aiHealthCheck.js" defer></script>
     <script src="js/dashboard.js" defer></script>
+    <script src="scripts/integrateEnhancedAI.js" defer></script>
     
     <!-- Load Razorpay for payments -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -77,6 +81,7 @@
     <!-- Load non-critical scripts after page load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.3/dist/purify.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js" defer></script>
     
     <!-- Load fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -875,6 +880,29 @@
                                         <input type="checkbox" id="voiceInputEnabled" checked class="rounded" onchange="handleVoiceInputToggle()">
                                         <span class="text-white">Enable Voice Input</span>
                                     </label>
+                                    
+                                    <!-- Voice Selection -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Voice:</label>
+                                        <select id="voiceSelect" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400">
+                                            <option value="">Loading voices...</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Voice Rate -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Speed: <span id="voiceRateValue">1.0</span>x</label>
+                                        <input type="range" id="voiceRate" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full">
+                                    </div>
+                                    
+                                    <!-- Voice Pitch -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Pitch: <span id="voicePitchValue">1.0</span></label>
+                                        <input type="range" id="voicePitch" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full">
+                                    </div>
+                                    
+                                    <!-- Voice Status -->
+                                    <div id="voiceStatus" class="text-green-400 text-sm">Voice ready</div>
                                 </div>
                                 <div id="voiceWarning" class="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg hidden">
                                     <p class="text-yellow-200 text-sm">⚠️ <strong>Note:</strong> If voice features are disabled, chat will support typing only.</p>
