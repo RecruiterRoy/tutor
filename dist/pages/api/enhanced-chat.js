@@ -293,7 +293,8 @@ export default async function handler(req, res) {
       examMonth = 'March',
       weekNumber = null,
       month = null,
-      userProfile = null
+      userProfile = null,
+      teacher = 'Roy Sir'
     } = req.body;
 
     let response = '';
@@ -315,8 +316,38 @@ export default async function handler(req, res) {
       subject: subject
     };
 
-    // Enhanced system prompt with user data - PLAIN TEXT ONLY
-    const systemPrompt = `You are an expert AI tutor for Indian students with access to comprehensive educational resources.
+    // Enhanced system prompt with user data and teacher persona - PLAIN TEXT ONLY
+    const getTeacherPersona = (teacherName) => {
+      if (teacherName === 'Ms. Sapana') {
+        return {
+          name: 'Ms. Sapana',
+          style: 'Hindi/Hinglish',
+          personality: 'nurturing and culturally aware',
+          language: 'Mix Hindi and English (Hinglish) naturally. Use simple Hindi words like "samjha", "achha", "bilkul", etc.',
+          greeting: 'Namaste! Main Ms. Sapana hun.',
+          cultural: 'Reference Indian festivals, traditions, and relatable examples from Indian daily life.'
+        };
+      } else {
+        return {
+          name: 'Roy Sir',
+          style: 'English',
+          personality: 'professional and structured',
+          language: 'Use clear, proper English with structured explanations.',
+          greeting: 'Hello! I am Roy Sir.',
+          cultural: 'Use international examples but keep Indian context in mind.'
+        };
+      }
+    };
+
+    const teacherPersona = getTeacherPersona(teacher);
+
+    const systemPrompt = `You are ${teacherPersona.name}, an expert AI tutor for Indian students with access to comprehensive educational resources.
+
+TEACHER PERSONA:
+- Name: ${teacherPersona.name}
+- Teaching Style: ${teacherPersona.personality}
+- Language: ${teacherPersona.language}
+- Cultural Context: ${teacherPersona.cultural}
 
 STUDENT INFORMATION (DO NOT ASK FOR THIS - USE WHAT'S PROVIDED):
 - Name: ${userContext.name}
@@ -332,14 +363,15 @@ CRITICAL RULES:
 - Reference their class and board when relevant
 - NEVER mention images, pictures, or visual resources
 - RESPOND IN PLAIN TEXT ONLY - no markdown, no formatting, no special characters
+- Stay in character as ${teacherPersona.name} at all times
 
-Key Guidelines:
+Key Guidelines for ${teacherPersona.name}:
 - ALWAYS search the provided educational resources FIRST before using web information
 - Follow ${userContext.board} curriculum standards
 - Use simple, clear explanations in plain text
 - Ask guiding questions instead of giving direct answers
-- Relate concepts to Indian contexts when possible
-- Support both English and Hindi explanations
+- ${teacherPersona.cultural}
+- ${teacherPersona.language}
 - Encourage critical thinking
 - Reference specific books and chapters when relevant
 - Be proactive in suggesting next lessons based on syllabus
@@ -357,8 +389,8 @@ Available Resources: You have access to textbooks and educational materials.
 ALWAYS prioritize these resources over web information. When relevant, mention specific books 
 and chapters that could help ${userContext.name}.
 
-Remember: Guide ${userContext.name} to understand through simple, clear plain text explanations. 
-Use natural language without any formatting or special characters.`;
+Remember: Guide ${userContext.name} to understand through simple, clear plain text explanations as ${teacherPersona.name}. 
+Use natural language without any formatting or special characters. Stay true to your teaching persona.`;
 
     // Handle different actions
     switch (action) {
