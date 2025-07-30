@@ -127,6 +127,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
     
+        // Set current user globally
+        window.currentUser = user;
+        currentUser = user; // Set local variable too
+        console.log('✅ User authenticated:', user.id);
+    
         // currentUser is already set from authentication
         await loadUserData();
         setupEventListeners();
@@ -168,11 +173,12 @@ async function initializeDashboard() {
         
         // Set current user globally
         window.currentUser = user;
+        currentUser = user; // Set local variable too
         console.log('✅ User authenticated:', user.id);
         
         // Check user verification status
         const { data: profile, error } = await window.supabaseClient
-            .from('user_user_profiles')
+            .from('user_profiles')
             .select('verification_status, full_name, email, class, board')
             .eq('id', user.id)
             .single();
@@ -193,7 +199,7 @@ async function initializeDashboard() {
                     await window.supabaseClient.rpc('manual_confirm_email', { user_email: user.email });
                     // Refresh profile
                     const { data: updatedProfile } = await window.supabaseClient
-                        .from('user_user_profiles')
+                        .from('user_profiles')
                         .select('verification_status, full_name, email, class, board')
                         .eq('id', user.id)
                         .single();
@@ -257,6 +263,13 @@ async function initializeDashboard() {
 async function loadUserData() {
     try {
         clearDashboardError();
+        
+        // Check if currentUser exists
+        if (!currentUser || !currentUser.id) {
+            console.error('❌ No current user available');
+            return;
+        }
+        
         // Get user profile from user_profiles table
         const { data: profile, error } = await window.supabaseClient
             .from('user_profiles')
@@ -506,6 +519,11 @@ function setupEventListeners() {
 
 function populateAvatarGrid() {
     const avatarGrid = document.getElementById('avatarGrid');
+    if (!avatarGrid) {
+        console.warn('Avatar grid element not found');
+        return;
+    }
+    
     avatarGrid.innerHTML = '';
     
     regionalAvatars.forEach(avatar => {
@@ -566,33 +584,63 @@ async function sendMessage() {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
     if (!text) return;
+    
     // Add user message to chat
     await addMessage('user', text);
     input.value = '';
     showTypingIndicator();
+    
     try {
+        // Get user profile data from Supabase
+        let userProfile = null;
+        if (currentUser && currentUser.id) {
+            const { data: profile, error } = await window.supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (!error && profile) {
+                userProfile = profile;
+            }
+        }
+        
         // Get user class/subject from profile or UI
-        const userClass = currentUser?.user_metadata?.class || document.getElementById('userClass')?.textContent || '';
+        const userClass = userProfile?.class || userProfile?.class_level || currentUser?.user_metadata?.class || document.getElementById('userClass')?.textContent || '';
         const userSubject = window.currentSubject || '';
-        // Send to GPT backend
+        const userBoard = userProfile?.board || 'CBSE';
+        
+        console.log('Sending message with user data:', {
+            name: userProfile?.full_name,
+            class: userClass,
+            board: userBoard,
+            subject: userSubject
+        });
+        
+        // Send to AI backend with complete user profile
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: text,
-                class: userClass,
+                grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                 subject: userSubject,
-                userId: currentUser?.id
+                userProfile: userProfile,
+                teacher: window.selectedTeacher || 'Roy Sir'
             })
         });
+        
         const data = await response.json();
         removeTypingIndicator();
-        if (data.response) {
+        
+        if (data.success && data.response) {
             await addMessage('ai', data.response);
         } else {
+            console.error('AI response error:', data);
             await addMessage('ai', 'Sorry, I could not get a response from the AI.');
         }
     } catch (err) {
+        console.error('Send message error:', err);
         removeTypingIndicator();
         await addMessage('ai', 'Error connecting to AI server.');
     }
@@ -734,11 +782,19 @@ function populateVoices() {
 }
 
 function loadVoiceSettings() {
+    const voiceSelect = document.getElementById('voiceSelect');
     const voiceRate = document.getElementById('voiceRate');
     const voicePitch = document.getElementById('voicePitch');
     
-    voiceRate.value = localStorage.getItem('voiceRate') || 1;
-    voicePitch.value = localStorage.getItem('voicePitch') || 1;
+    if (voiceSelect) {
+        voiceSelect.value = localStorage.getItem('selectedVoice') || '';
+    }
+    if (voiceRate) {
+        voiceRate.value = localStorage.getItem('voiceRate') || '1.0';
+    }
+    if (voicePitch) {
+        voicePitch.value = localStorage.getItem('voicePitch') || '1.0';
+    }
 }
 
 function setupVoiceSettingsListeners() {
@@ -747,29 +803,50 @@ function setupVoiceSettingsListeners() {
     const voicePitch = document.getElementById('voicePitch');
     const voiceButton = document.getElementById('voiceButton');
 
-    voiceSelect.addEventListener('change', () => {
-        const voices = window.speechSynthesis.getVoices();
-        selectedVoice = voices.find(v => v.name === voiceSelect.value);
-        localStorage.setItem('selectedVoice', voiceSelect.value);
-    });
+    if (voiceSelect) {
+        voiceSelect.addEventListener('change', () => {
+            const voices = window.speechSynthesis.getVoices();
+            selectedVoice = voices.find(v => v.name === voiceSelect.value);
+            localStorage.setItem('selectedVoice', voiceSelect.value);
+        });
+    }
 
-    voiceRate.addEventListener('change', () => {
-        localStorage.setItem('voiceRate', voiceRate.value);
-    });
+    if (voiceRate) {
+        voiceRate.addEventListener('change', () => {
+            localStorage.setItem('voiceRate', voiceRate.value);
+        });
+    }
 
-    voicePitch.addEventListener('change', () => {
-        localStorage.setItem('voicePitch', voicePitch.value);
-    });
+    if (voicePitch) {
+        voicePitch.addEventListener('change', () => {
+            localStorage.setItem('voicePitch', voicePitch.value);
+        });
+    }
 
-    voiceButton.addEventListener('click', toggleVoiceRecording);
+    if (voiceButton) {
+        voiceButton.addEventListener('click', toggleVoiceRecording);
+    }
 }
 
 function initSpeechRecognition() {
     try {
+        const voiceButton = document.getElementById('voiceButton');
+        const voiceStatus = document.getElementById('voiceStatus');
+        
+        if (!voiceButton) {
+            console.warn('Voice button not found');
+            return;
+        }
+        
+        if (!voiceStatus) {
+            console.warn('Voice status element not found');
+            return;
+        }
+        
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
             console.warn('Speech recognition not supported');
-            document.getElementById('voiceButton').style.display = 'none';
+            voiceButton.style.display = 'none';
             return;
         }
 
@@ -782,8 +859,8 @@ function initSpeechRecognition() {
         recognition.onstart = () => {
             console.log('Speech recognition started');
             isRecording = true;
-            document.getElementById('voiceIcon').textContent = '🔴';
-            document.getElementById('voiceButton').classList.add('voice-recording');
+            voiceButton.textContent = '🔴'; // Changed from voiceIcon to voiceButton
+            voiceButton.classList.add('voice-recording');
             
             // Set timeout (15 seconds)
             recognitionTimeout = setTimeout(() => {
@@ -882,12 +959,15 @@ async function speakText(text) {
         console.log(`[TTS] ${voices.length} voices loaded.`);
         
         const voiceSelect = document.getElementById('voiceSelect');
-        const selectedVoiceName = voiceSelect.value;
+        const voiceRate = document.getElementById('voiceRate');
+        const voicePitch = document.getElementById('voicePitch');
+        
+        const selectedVoiceName = voiceSelect ? voiceSelect.value : '';
         console.log(`[TTS] Selected voice from dropdown: ${selectedVoiceName}`);
         
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = parseFloat(document.getElementById('voiceRate').value) || 1;
-        utterance.pitch = parseFloat(document.getElementById('voicePitch').value) || 1;
+        utterance.rate = voiceRate ? parseFloat(voiceRate.value) || 1 : 1;
+        utterance.pitch = voicePitch ? parseFloat(voicePitch.value) || 1 : 1;
 
         // Select voice if available
         if (selectedVoiceName && voices.length > 0) {
