@@ -17,7 +17,7 @@ class AIHealthCheck {
         
         try {
             // Check basic health endpoint
-            const healthResponse = await fetch(`${this.apiBaseUrl}/health`);
+            const healthResponse = await fetch(`${window.TUTOR_CONFIG?.apiBaseUrl || ''}/api/health`);
             if (healthResponse.ok) {
                 const healthData = await healthResponse.json();
                 console.log('✅ Health check response:', healthData);
@@ -59,7 +59,7 @@ class AIHealthCheck {
         try {
             console.log('🧪 Testing chat connection...');
             
-            const response = await fetch(`${this.apiBaseUrl}/chat`, {
+            const response = await fetch(`${window.TUTOR_CONFIG?.apiBaseUrl || ''}/api/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

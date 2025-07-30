@@ -401,7 +401,7 @@ async function loadBooks() {
         const classNumber = userClass.toString().replace(/[^\d]/g, '');
         
         // Use the filtered endpoint with class parameter
-        const response = await fetch(`/api/fs/books?grade=${classNumber}`);
+        const response = await fetch(`${window.TUTOR_CONFIG?.apiBaseUrl || ''}/api/fs/books?grade=${classNumber}`);
         if (!response.ok) throw new Error('Failed to load books');
         
         const books = await response.json();
@@ -709,7 +709,7 @@ async function saveStudySession(question, answer) {
     if (!currentUser) return;
     
     try {
-        await fetch('/api/study-session', {
+        await fetch(`${window.TUTOR_CONFIG?.apiBaseUrl || ''}/api/study-session`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1385,7 +1385,7 @@ async function sendChatMessage() {
     if (isDiagramRequest) {
         // Try to find a relevant book image first
         try {
-            const imgRes = await fetch(`/api/book-images?keyword=${encodeURIComponent(message)}`);
+            const imgRes = await fetch(`${window.TUTOR_CONFIG?.apiBaseUrl || ''}/api/book-images?keyword=${encodeURIComponent(message)}`);
             const imgData = await imgRes.json();
             if (imgData.images && imgData.images.length > 0) {
                 removeTypingIndicator();
