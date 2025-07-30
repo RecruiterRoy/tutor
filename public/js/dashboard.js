@@ -584,33 +584,63 @@ async function sendMessage() {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
     if (!text) return;
+    
     // Add user message to chat
     await addMessage('user', text);
     input.value = '';
     showTypingIndicator();
+    
     try {
+        // Get user profile data from Supabase
+        let userProfile = null;
+        if (currentUser && currentUser.id) {
+            const { data: profile, error } = await window.supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (!error && profile) {
+                userProfile = profile;
+            }
+        }
+        
         // Get user class/subject from profile or UI
-        const userClass = currentUser?.user_metadata?.class || document.getElementById('userClass')?.textContent || '';
+        const userClass = userProfile?.class || userProfile?.class_level || currentUser?.user_metadata?.class || document.getElementById('userClass')?.textContent || '';
         const userSubject = window.currentSubject || '';
-        // Send to GPT backend
+        const userBoard = userProfile?.board || 'CBSE';
+        
+        console.log('Sending message with user data:', {
+            name: userProfile?.full_name,
+            class: userClass,
+            board: userBoard,
+            subject: userSubject
+        });
+        
+        // Send to AI backend with complete user profile
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: text,
-                class: userClass,
+                grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                 subject: userSubject,
-                userId: currentUser?.id
+                userProfile: userProfile,
+                teacher: window.selectedTeacher || 'Roy Sir'
             })
         });
+        
         const data = await response.json();
         removeTypingIndicator();
-        if (data.response) {
+        
+        if (data.success && data.response) {
             await addMessage('ai', data.response);
         } else {
+            console.error('AI response error:', data);
             await addMessage('ai', 'Sorry, I could not get a response from the AI.');
         }
     } catch (err) {
+        console.error('Send message error:', err);
         removeTypingIndicator();
         await addMessage('ai', 'Error connecting to AI server.');
     }
@@ -773,21 +803,29 @@ function setupVoiceSettingsListeners() {
     const voicePitch = document.getElementById('voicePitch');
     const voiceButton = document.getElementById('voiceButton');
 
-    voiceSelect.addEventListener('change', () => {
-        const voices = window.speechSynthesis.getVoices();
-        selectedVoice = voices.find(v => v.name === voiceSelect.value);
-        localStorage.setItem('selectedVoice', voiceSelect.value);
-    });
+    if (voiceSelect) {
+        voiceSelect.addEventListener('change', () => {
+            const voices = window.speechSynthesis.getVoices();
+            selectedVoice = voices.find(v => v.name === voiceSelect.value);
+            localStorage.setItem('selectedVoice', voiceSelect.value);
+        });
+    }
 
-    voiceRate.addEventListener('change', () => {
-        localStorage.setItem('voiceRate', voiceRate.value);
-    });
+    if (voiceRate) {
+        voiceRate.addEventListener('change', () => {
+            localStorage.setItem('voiceRate', voiceRate.value);
+        });
+    }
 
-    voicePitch.addEventListener('change', () => {
-        localStorage.setItem('voicePitch', voicePitch.value);
-    });
+    if (voicePitch) {
+        voicePitch.addEventListener('change', () => {
+            localStorage.setItem('voicePitch', voicePitch.value);
+        });
+    }
 
-    voiceButton.addEventListener('click', toggleVoiceRecording);
+    if (voiceButton) {
+        voiceButton.addEventListener('click', toggleVoiceRecording);
+    }
 }
 
 function initSpeechRecognition() {
