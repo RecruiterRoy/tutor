@@ -85,7 +85,7 @@
         <div class="text-center mb-8">
             <div class="flex justify-center mb-4">
                 <a href="index.html" class="cursor-pointer">
-                                            <img src="images/tution_logo.png" alt="tution.app Logo" style="height: 60px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
+                    <img src="images/tution_logo.png" alt="tution.app Logo" style="height: 60px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
                 </a>
             </div>
             <h1 class="text-3xl font-bold text-white mb-2">Welcome Back!</h1>
@@ -119,10 +119,10 @@
             <div x-show="!isMagicLink">
                 <label class="block text-sm font-medium text-gray-200 mb-2">Password</label>
                 <div class="relative">
-                <input x-model="password" 
+                    <input x-model="password" 
                            x-ref="passwordField"
-                       type="password" 
-                       placeholder="Enter your password"
+                           type="password" 
+                           placeholder="Enter your password"
                            class="w-full px-4 py-3 pr-12 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
                     <button type="button" 
                             @click="togglePassword()"
@@ -252,22 +252,31 @@
                 messageType: 'error',
                 
                 // Methods
-                signInWithEmail() {
-                    if (!this.email || !this.password) {
-                        this.showMessage('Please fill in all fields', 'error');
+                async signInWithEmail() {
+                    if (!this.email) {
+                        this.showMessage('Please enter your email', 'error');
+                        return;
+                    }
+                    
+                    if (!this.isMagicLink && !this.password) {
+                        this.showMessage('Please enter your password', 'error');
                         return;
                     }
                     
                     this.loading = true;
                     this.message = '';
                     
-                    // Call handleLogin directly with the data
-                    handleLoginWithData(this.email, this.password).then(() => {
-                        this.loading = false;
-                    }).catch((error) => {
-                        this.loading = false;
+                    try {
+                        if (this.isMagicLink) {
+                            await handleMagicLinkLogin(this.email);
+                        } else {
+                            await handleLoginWithData(this.email, this.password);
+                        }
+                    } catch (error) {
                         this.showMessage(error.message || 'Login failed', 'error');
-                    });
+                    } finally {
+                        this.loading = false;
+                    }
                 },
                 
                 sendOTP() {
@@ -296,26 +305,48 @@
                     this.loading = false;
                 },
                 
-                signInWithGoogle() {
+                async signInWithGoogle() {
                     this.loading = true;
-                    handleGoogleLogin().then(() => {
-                        this.loading = false;
-                    }).catch((error) => {
-                        this.loading = false;
+                    try {
+                        await handleGoogleLogin();
+                    } catch (error) {
                         this.showMessage(error.message || 'Google login failed', 'error');
-                    });
+                    } finally {
+                        this.loading = false;
+                    }
                 },
                 
                 showMessage(message, type = 'error') {
                     this.message = message;
                     this.messageType = type;
-                    this.loading = false;
                 },
                 
                 togglePassword() {
                     this.showPassword = !this.showPassword;
                     const passwordField = this.$refs.passwordField;
                     passwordField.type = this.showPassword ? 'text' : 'password';
+                },
+                
+                async resetPassword() {
+                    if (!this.email) {
+                        this.showMessage('Please enter your email first', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    try {
+                        const { error } = await window.supabaseClient.auth.resetPasswordForEmail(this.email);
+                        if (error) throw error;
+                        this.showMessage('Password reset link sent to your email', 'success');
+                    } catch (error) {
+                        this.showMessage(error.message || 'Failed to send reset link', 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                resendOTP() {
+                    this.sendOTP();
                 }
             };
         }
@@ -457,8 +488,8 @@
                         
                         if (data.user) {
                             console.log('✅ Email verification successful, user logged in:', data.user.email);
-                            // Update verification status immediately
-                            await updateVerificationStatus(data.user);
+                            // Ensure user profile exists
+                            await ensureUserProfile(data.user);
                             // Redirect to dashboard
                             window.location.href = 'https://tution.app/dashboard.html';
                             return;
@@ -480,8 +511,8 @@
                             console.error('❌ Could not get user after email verification:', userError);
                         } else if (user) {
                             console.log('✅ Email verification successful, user logged in:', user.email);
-                            // Update verification status immediately
-                            await updateVerificationStatus(user);
+                            // Ensure user profile exists
+                            await ensureUserProfile(user);
                             // Redirect to dashboard
                             window.location.href = 'https://tution.app/dashboard.html';
                             return;
@@ -498,17 +529,45 @@
                     showError(`Email verification failed: ${errorDescription || error}`);
                 }
                 
-                // Check if user is already logged in
+                // Check if user is already logged in and verified
                 const isLoggedIn = await checkIfLoggedIn();
                 if (isLoggedIn) {
-                    console.log('🔄 User already logged in, redirecting to dashboard');
-                    window.location.href = 'https://tution.app/dashboard.html';
-                    return;
+                    console.log('🔄 User already logged in, checking verification status...');
+                    
+                    // Get user profile to check verification status
+                    const { data: { user } } = await window.supabaseClient.auth.getUser();
+                    if (user) {
+                        const { data: profile, error: profileError } = await window.supabaseClient
+                            .from('user_profiles')
+                            .select('verification_status, full_name, email, class, board')
+                            .eq('id', user.id)
+                            .single();
+                        
+                        if (profileError) {
+                            console.error('❌ Error fetching profile:', profileError);
+                            // Clear session and stay on login page
+                            await window.supabaseClient.auth.signOut();
+                            return;
+                        }
+                        
+                        // Only redirect if user is verified and has complete profile
+                        if (profile && profile.verification_status === 'approved' && 
+                            profile.full_name && profile.email && profile.class && profile.board) {
+                            console.log('✅ User verified and profile complete, redirecting to dashboard');
+                            window.location.href = 'https://tution.app/dashboard.html';
+                            return;
+                        } else {
+                            console.log('❌ User not verified or profile incomplete, staying on login page');
+                            // Clear session to force re-authentication
+                            await window.supabaseClient.auth.signOut();
+                            showError('Please complete your profile verification before accessing the dashboard.');
+                            return;
+                        }
+                    }
                 }
                     
                 // Proceed with normal login page initialization
                 console.log('✅ Proceeding with login page setup...');
-                initializeLoginPage();
                 
             } catch (error) {
                 console.error('❌ Login page initialization error:', error);
@@ -516,432 +575,210 @@
             }
         });
 
-        // ========== EMAIL VERIFICATION FUNCTIONS ==========
+        // ========== USER PROFILE FUNCTIONS ==========
         
-        // Update verification status after email verification
-        async function updateVerificationStatus(user) {
-            try {
-                console.log('🔄 Updating verification status for user:', user.email);
-                console.log('User ID:', user.id);
-                
-                // First check if profile exists
-                const { data: existingProfile, error: checkError } = await window.supabaseClient
-                    .from('user_profiles')
-                    .select('verification_status')
-                    .eq('id', user.id)
-                    .single();
-                
-                if (checkError) {
-                    console.error('❌ Could not check existing profile:', checkError);
-                    return;
-                }
-                
-                console.log('📋 Current verification status:', existingProfile.verification_status);
-                
-                // Update verification status in user_profiles
-                const { data: updateData, error: updateError } = await window.supabaseClient
-                    .from('user_profiles')
-                    .update({ 
-                        verification_status: 'verified',
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', user.id)
-                    .select();
-                
-                if (updateError) {
-                    console.error('❌ Could not update verification status:', updateError);
-                    return;
-                }
-                
-                console.log('✅ Verification status updated successfully:', updateData);
-                
-            } catch (error) {
-                console.error('❌ Error updating verification status:', error);
-            }
-        }
-        
-        // Legacy function for backward compatibility
-        async function createUserProfileFromRegistration(user) {
-            return await updateVerificationStatus(user);
-        }
-
         // Ensure user profile exists after login
         async function ensureUserProfile(user) {
             try {
+                console.log('🔍 Ensuring user profile exists for:', user.email);
+                console.log('🔍 User provider:', user.app_metadata?.provider);
+                
                 // Check if profile already exists
                 const { data: existingProfile, error: profileError } = await window.supabaseClient
                     .from('user_profiles')
-                    .select('id')
+                    .select('*')
                     .eq('id', user.id)
-                    .limit(1);
+                    .single();
                 
-                if (profileError) {
-                    console.warn('Could not check user profile:', profileError);
-                    return;
+                if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = no rows found
+                    console.error('❌ Could not check user profile:', profileError);
+                    throw new Error('Failed to verify user profile');
                 }
                 
-                if (existingProfile && existingProfile.length > 0) {
-                    console.log('User profile already exists');
-                    return;
+                if (existingProfile) {
+                    console.log('✅ User profile already exists');
+                    
+                    // For Google OAuth users, ensure profile is complete
+                    if (user.app_metadata?.provider === 'google') {
+                        await ensureGoogleOAuthProfileComplete(user, existingProfile);
+                    }
+                    return existingProfile;
                 }
                 
                 // Profile doesn't exist, create a basic profile
-                console.log('Creating basic user profile...');
+                console.log('📝 Creating new user profile...');
                 
-                const { error: createError } = await window.supabaseClient
+                const profileData = {
+                    id: user.id,
+                    email: user.email,
+                    full_name: user.user_metadata?.full_name || '',
+                    verification_status: user.app_metadata?.provider === 'google' ? 'approved' : 'pending',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                
+                console.log('📋 Profile data to insert:', profileData);
+                
+                const { data: createdProfile, error: createError } = await window.supabaseClient
                     .from('user_profiles')
-                    .insert({
-                        id: user.id,
-                        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-                        email: user.email,
-                        phone: user.phone || null,
-                        avatar: 'teacher-avatar1.png',
-                        economic_status: 'Premium',
-                        verification_status: 'verified',
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
+                    .insert(profileData)
+                    .select()
+                    .single();
                 
                 if (createError) {
-                    console.error('Could not create user profile:', createError);
-                } else {
-                    console.log('✅ User profile created successfully');
+                    console.error('❌ Could not create user profile:', createError);
+                    throw new Error('Failed to create user profile');
                 }
+                
+                console.log('✅ User profile created successfully:', createdProfile);
+                return createdProfile;
                 
             } catch (error) {
-                console.error('Error ensuring user profile:', error);
+                console.error('❌ Error ensuring user profile:', error);
+                throw error;
             }
         }
-
-        async function initializeLoginPage() {
+        
+        // Ensure Google OAuth profile is complete
+        async function ensureGoogleOAuthProfileComplete(user, existingProfile) {
             try {
-                // Initialize form elements
-                initializeForms();
+                console.log('🔍 Checking Google OAuth profile completeness...');
                 
-                // Initialize OAuth
-                initializeOAuth();
+                // Check if profile is complete with registration data
+                const isComplete = existingProfile.full_name && 
+                                 existingProfile.email && 
+                                 existingProfile.phone &&
+                                 existingProfile.class && 
+                                 existingProfile.board &&
+                                 existingProfile.verification_status === 'approved';
                 
-                // Initialize password toggles
-                initializePasswordToggles();
-                
-                console.log('✅ Login page initialized');
-                
-            } catch (error) {
-                console.error('❌ Login page initialization error:', error);
-                showError('Failed to initialize login page. Please refresh.');
-            }
-        }
-
-        // ========== FORM INITIALIZATION ==========
-
-        function initializeForms() {
-            // Login form
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                loginForm.addEventListener('submit', handleLogin);
-            }
-
-            // Register form
-            const registerForm = document.getElementById('registerForm');
-            if (registerForm) {
-                registerForm.addEventListener('submit', handleRegistration);
-            }
-
-            // OTP form
-            const otpForm = document.getElementById('otpForm');
-            if (otpForm) {
-                otpForm.addEventListener('submit', handleOTPVerification);
-            }
-        }
-
-        function initializePasswordToggles() {
-            // Login password toggle
-            const loginPasswordToggle = document.getElementById('loginPasswordToggle');
-            const loginPasswordInput = document.getElementById('loginPassword');
-
-            if (loginPasswordToggle && loginPasswordInput) {
-                loginPasswordToggle.addEventListener('click', () => {
-                    togglePasswordVisibility(loginPasswordInput, loginPasswordToggle);
-                });
-            }
-
-            // Register password toggle
-            const registerPasswordToggle = document.getElementById('registerPasswordToggle');
-            const registerPasswordInput = document.getElementById('registerPassword');
-
-            if (registerPasswordToggle && registerPasswordInput) {
-                registerPasswordToggle.addEventListener('click', () => {
-                    togglePasswordVisibility(registerPasswordInput, registerPasswordToggle);
-                });
-            }
-        }
-
-        function togglePasswordVisibility(input, toggle) {
-            if (input.type === 'password') {
-                input.type = 'text';
-                toggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
-                        } else {
-                input.type = 'password';
-                toggle.innerHTML = '<i class="fas fa-eye"></i>';
-            }
-        }
-
-        // ========== OAuth INITIALIZATION ==========
-
-        function initializeOAuth() {
-            const googleLoginBtn = document.getElementById('googleLogin');
-            if (googleLoginBtn) {
-                googleLoginBtn.addEventListener('click', handleGoogleLogin);
-            }
-        }
-
-        // ========== FORM HANDLERS ==========
-
-        async function handleLoginWithData(emailOrMobile, password) {
-            try {
-                showLoading('loginBtn', 'Signing in...');
-                
-                // Determine if input is email or mobile
-                const isEmail = emailOrMobile.includes('@');
-                let email = emailOrMobile;
-                
-                // If mobile, add +91 prefix if not present
-                if (!isEmail) {
-                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
-                }
-
-                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
-                if (error) {
-                    throw error;
-                }
-
-                if (data.user) {
-                    console.log('✅ Login successful');
+                if (!isComplete) {
+                    console.log('⚠️ Google OAuth profile incomplete, updating basic info...');
                     
-                    // Set current user globally
-                    window.currentUser = data.user;
+                    // Update basic info from OAuth
+                    const updateData = {
+                        email: user.email,
+                        full_name: user.user_metadata?.full_name || existingProfile.full_name,
+                        verification_status: 'approved',
+                        updated_at: new Date().toISOString()
+                    };
                     
-                    // Check verification status before allowing login
-                    const { data: profileData, error: profileError } = await window.supabaseClient
+                    const { data: updatedProfile, error: updateError } = await window.supabaseClient
                         .from('user_profiles')
-                        .select('verification_status, economic_status, full_name, email, class, board')
-                        .eq('id', data.user.id)
+                        .update(updateData)
+                        .eq('id', user.id)
+                        .select()
                         .single();
                     
-                    if (profileError) {
-                        console.error('Could not check user profile:', profileError);
-                        showError('Login failed. Please try again.');
-                        return;
+                    if (updateError) {
+                        console.error('❌ Failed to update Google OAuth profile:', updateError);
+                    } else {
+                        console.log('✅ Google OAuth profile updated:', updatedProfile);
+                    }
+                } else {
+                    console.log('✅ Google OAuth profile is complete');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error ensuring Google OAuth profile:', error);
+            }
+        }
+
+        // ========== AUTHENTICATION FUNCTIONS ==========
+
+        async function handleLoginWithData(email, password) {
+            try {
+                if (!email || !password) {
+                    throw new Error('Please fill in all fields');
+                }
+                
+                console.log('🔐 Attempting login for:', email);
+                
+                // Sign in with email and password
+                const { data: authData, error: authError } = await window.supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (authError) {
+                    console.error('❌ Login failed:', authError);
+                    throw authError;
+                }
+                
+                if (authData.user) {
+                    console.log('✅ Login successful for:', authData.user.email);
+                    
+                    // Set current user globally
+                    window.currentUser = authData.user;
+                    
+                    // Ensure user profile exists
+                    const profile = await ensureUserProfile(authData.user);
+                    
+                    if (!profile) {
+                        throw new Error('User profile not found. Please complete your registration first.');
                     }
                     
-                    // Check if user is verified
-                    if (profileData.verification_status === 'pending') {
+                    // Check verification status
+                    if (profile.verification_status !== 'approved' && profile.verification_status !== 'verified') {
                         // Auto-approve if email is confirmed
-                        if (data.user.email_confirmed_at) {
+                        if (authData.user.email_confirmed_at) {
                             console.log('✅ Email confirmed, auto-approving user...');
-                            await window.supabaseClient.rpc('manual_confirm_email', { user_email: data.user.email });
+                            await window.supabaseClient.rpc('manual_confirm_email', { user_email: email });
                             console.log('✅ User auto-approved successfully');
                         } else {
-                            showError('Please verify your email address before logging in. Check your inbox for the verification link.');
-                            return;
+                            throw new Error('Your account is not verified. Please check your email for verification link.');
                         }
-                    } else if (profileData.verification_status !== 'verified' && profileData.verification_status !== 'approved') {
-                        showError('Your account verification is incomplete. Please contact support.');
-                        return;
-                    }
-                    
-                    // Check if user has free trial access
-                    if (profileData.economic_status !== 'Premium' && profileData.economic_status !== 'approved') {
-                        showError('Your account is not active. Please contact support.');
-                        return;
                     }
                     
                     // Check if profile is complete (has all required fields)
-                    if (!profileData.full_name || !profileData.email || !profileData.class || !profileData.board) {
+                    if (!profile.full_name || !profile.email || !profile.class || !profile.board) {
                         console.warn('⚠️ Profile incomplete, but allowing access to dashboard');
                     }
                     
-                    // Check if user profile exists, if not create it
-                    await ensureUserProfile(data.user);
-                    
-                    // Redirect to dashboard
-                    window.location.href = window.location.origin + '/dashboard.html';
+                    console.log('✅ All checks passed, redirecting to dashboard');
+                    window.location.href = 'https://tution.app/dashboard.html';
                 }
-
+                
             } catch (error) {
-                console.error('Login error:', error);
+                console.error('❌ Login error:', error);
                 
-                // Check for email verification errors
-                if (error.message && error.message.includes('Email not confirmed')) {
-                    showError('Please verify your email address before logging in. Check your inbox for the verification link.');
-                } else if (error.message && error.message.includes('Invalid login credentials')) {
-                    showError('Invalid email or password. Please try again. If you registered with Google OAuth, please use the "Continue with Google" button to log in.');
-                } else {
-                    showError(error.message || 'Login failed. Please try again.');
+                let errorMessage = 'Login failed. Please try again.';
+                
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Invalid email or password. Please try again.';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
                 }
-            } finally {
-                hideLoading('loginBtn', 'Sign In');
+                
+                throw new Error(errorMessage);
             }
         }
 
-        async function handleLogin(e) {
-            e.preventDefault();
-            
-            // Get values from Alpine.js data instead of DOM elements
-            const emailOrMobile = window.authAppData?.email || '';
-            const password = window.authAppData?.password || '';
-            
-            if (!emailOrMobile || !password) {
-                showError('Please fill in all fields');
-                return;
-            }
-                    
+        async function handleMagicLinkLogin(email) {
             try {
-                showLoading('loginBtn', 'Signing in...');
-                
-                // Determine if input is email or mobile
-                const isEmail = emailOrMobile.includes('@');
-                let email = emailOrMobile;
-                
-                // If mobile, add +91 prefix if not present
-                if (!isEmail) {
-                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
+                if (!email) {
+                    throw new Error('Please enter your email');
                 }
-
-                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
-                if (error) {
-                    throw error;
-                }
-
-                if (data.user) {
-                    console.log('✅ Login successful');
-                    
-                    // Check if user profile exists, if not create it
-                    await ensureUserProfile(data.user);
-                    
-                    // Redirect to dashboard
-                    window.location.href = window.location.origin + '/dashboard.html';
-                }
-
-                    } catch (error) {
-                console.error('Login error:', error);
-                showError(error.message || 'Login failed. Please try again.');
-                    } finally {
-                hideLoading('loginBtn', 'Sign In');
-            }
-        }
-
-        async function handleRegistration(e) {
-            e.preventDefault();
-            
-            const fullName = document.getElementById('registerName').value.trim();
-            const emailOrMobile = document.getElementById('registerEmail').value.trim();
-            const password = document.getElementById('registerPassword').value;
-            
-            if (!fullName || !emailOrMobile || !password) {
-                showError('Please fill in all fields');
-                        return;
-                    }
-                    
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters long');
-                return;
-            }
-
-            try {
-                showLoading('registerBtn', 'Creating account...');
                 
-                // Determine if input is email or mobile
-                const isEmail = emailOrMobile.includes('@');
-                let email = emailOrMobile;
+                console.log('🔐 Sending magic link to:', email);
                 
-                // If mobile, add +91 prefix if not present
-                if (!isEmail) {
-                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
-                }
-
-                const { data, error } = await window.supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
+                const { error } = await window.supabaseClient.auth.signInWithOtp({
+                    email,
                     options: {
-                        data: {
-                            full_name: fullName
-                        }
+                        emailRedirectTo: 'https://tution.app/dashboard.html'
                     }
                 });
-
+                
                 if (error) {
+                    console.error('❌ Magic link failed:', error);
                     throw error;
                 }
-
-                if (data.user) {
-                    console.log('✅ Registration successful, redirecting to dashboard');
-                    
-                    // Redirect to dashboard
-                    window.location.href = window.location.origin + '/dashboard.html';
-                }
-
-                    } catch (error) {
-                console.error('Registration error:', error);
-                showError(error.message || 'Registration failed. Please try again.');
-                    } finally {
-                hideLoading('registerBtn', 'Create Account');
-            }
-        }
-
-        async function handleOTPVerification(e) {
-            e.preventDefault();
-            
-            const emailOrMobile = document.getElementById('otpEmail').value.trim();
-            const otp = document.getElementById('otpCode').value.trim();
-            
-            if (!emailOrMobile || !otp) {
-                showError('Please fill in all fields');
-                        return;
-                    }
-                    
-            try {
-                showLoading('otpBtn', 'Verifying...');
                 
-                // Determine if input is email or mobile
-                const isEmail = emailOrMobile.includes('@');
-                let email = emailOrMobile;
+                throw new Error('Magic link sent to your email. Please check your inbox.');
                 
-                // If mobile, add +91 prefix if not present
-                if (!isEmail) {
-                    email = emailOrMobile.startsWith('+91') ? emailOrMobile : `+91${emailOrMobile}`;
-                }
-
-                const { data, error } = await window.supabaseClient.auth.verifyOtp({
-                    email: email,
-                    token: otp,
-                    type: 'email'
-                });
-
-                if (error) {
-                    throw error;
-                }
-
-                if (data.user) {
-                    console.log('✅ OTP verification successful, redirecting to dashboard');
-                    
-                    // Redirect to dashboard
-                    window.location.href = window.location.origin + '/dashboard.html';
-                }
-
-                    } catch (error) {
-                console.error('OTP verification error:', error);
-                showError(error.message || 'OTP verification failed. Please try again.');
-                    } finally {
-                hideLoading('otpBtn', 'Verify OTP');
+            } catch (error) {
+                console.error('❌ Magic link error:', error);
+                throw error;
             }
         }
 
@@ -949,15 +786,34 @@
             try {
                 showLoading('googleLogin', 'Connecting...');
                 
+                // Check if Google OAuth is properly configured
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client not initialized');
+                }
+
+                // Attempt Google OAuth login
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://tution.app/dashboard.html'
+                        redirectTo: 'https://tution.app/dashboard.html',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        }
                     }
                 });
 
                 if (error) {
-                    throw error;
+                    console.error('Google OAuth error:', error);
+                    
+                    // Handle specific error types
+                    if (error.message.includes('provider is not enabled')) {
+                        throw new Error('Google OAuth is not enabled in Supabase. Please contact support.');
+                    } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+                        throw new Error('Google OAuth configuration error. Please try email login instead.');
+                    } else {
+                        throw error;
+                    }
                 }
 
                 // OAuth redirect will handle the rest
@@ -965,45 +821,25 @@
 
             } catch (error) {
                 console.error('Google login error:', error);
-                showError(error.message || 'Google login failed. Please try again.');
+                
+                // Show user-friendly error message
+                let errorMessage = 'Google login failed. Please try again.';
+                
+                if (error.message.includes('provider is not enabled')) {
+                    errorMessage = 'Google login is not available right now. Please use email login.';
+                } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+                    errorMessage = 'Google login is temporarily unavailable. Please use email login instead.';
+                } else if (error.message.includes('popup')) {
+                    errorMessage = 'Please allow popups for Google login to work.';
+                }
+                
+                showError(errorMessage);
             } finally {
                 hideLoading('googleLogin', '<i class="fab fa-google"></i> Continue with Google');
             }
         }
 
         // ========== UTILITY FUNCTIONS ==========
-
-        function showForm(formType) {
-            // Hide all forms
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('otpForm').style.display = 'none';
-
-            // Show selected form
-            document.getElementById(formType + 'Form').style.display = 'block';
-
-            // Update active tab
-            document.querySelectorAll('.form-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelector(`[data-form="${formType}"]`).classList.add('active');
-        }
-
-        function showLoading(buttonId, text) {
-            const button = document.getElementById(buttonId);
-            if (button) {
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + text;
-            }
-        }
-
-        function hideLoading(buttonId, text) {
-            const button = document.getElementById(buttonId);
-            if (button) {
-                button.disabled = false;
-                button.innerHTML = text;
-            }
-        }
 
         function showError(message) {
             console.error(message);
@@ -1058,6 +894,5 @@
             showError('A system error occurred. Please try again.');
         });
     </script>
-
 </body>
 </html>
