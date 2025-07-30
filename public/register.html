@@ -902,10 +902,11 @@
                         throw new Error('Google authentication failed. Please try again.');
                     }
                     
-                    console.log('✅ Google user found:', user.id);
+                    console.log('✅ Google user found:', user.id, user.email);
                     
                     // Set password for Google user
                     try {
+                        console.log('🔐 Setting password for Google user...');
                         const { error: passwordError } = await supabase.auth.updateUser({
                             password: password
                         });
@@ -1343,6 +1344,29 @@
                 spinner.classList.add('hidden');
                 btn.classList.remove('loading');
             }
+        }
+
+        // After email verification, upsert user_profiles
+        async function createUserProfileAfterVerification(user) {
+            const userClass = `Class ${document.getElementById('class').value}`;
+            const board = document.getElementById('board').value;
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value;
+            const language = document.getElementById('language').value;
+            await supabase
+                .from('user_profiles')
+                .upsert({
+                    id: user.id,
+                    full_name: document.getElementById('fullName').value.trim(),
+                    class: userClass,
+                    board: board,
+                    phone: document.getElementById('phone').value.trim(),
+                    city: city,
+                    state: state,
+                    preferred_language: language,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
         }
 
         // Avatar selection based on language
