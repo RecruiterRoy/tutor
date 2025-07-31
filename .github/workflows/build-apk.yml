@@ -37,6 +37,7 @@ jobs:
         cp server.js dist/
         cp package.json dist/
         cp vercel.json dist/
+        cp capacitor.config.json dist/
         echo "Web assets copied successfully"
         
     - name: Build APK
