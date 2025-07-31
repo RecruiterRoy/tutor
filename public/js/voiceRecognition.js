@@ -136,10 +136,8 @@ class VoiceRecognition {
             this.isListening = false;
             this.updateUI('error');
             
-            // Show user-friendly error message
-            if (window.showError) {
-                window.showError('Could not start voice recognition: ' + error.message);
-            }
+            // Don't show error message to user - just log it
+            console.log('Voice recognition error:', error.message);
         }
     }
 
