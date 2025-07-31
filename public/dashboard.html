@@ -632,10 +632,48 @@
                 width: 100%;
             }
             
+            /* Fix mic button positioning on mobile */
+            .chat-input {
+                padding-right: 50px !important;
+            }
+            
+            #voiceButton {
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 10;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 8px;
+                border: none;
+            }
+            
+            /* Ensure input area has proper spacing */
+            .input-area .relative {
+                margin-bottom: 10px;
+            }
+            
             /* Reduce avatar sizes further */
             .teacher-avatar {
                 width: 36px;
                 height: 36px;
+            }
+            
+            /* Ensure images load properly on mobile */
+            img {
+                max-width: 100%;
+                height: auto;
+            }
+            
+            /* Fix image loading issues */
+            img[src*="images/"] {
+                display: block;
+            }
+            
+            /* Add fallback for broken images */
+            img:not([src]), img[src=""], img[src*="undefined"] {
+                display: none;
             }
         }
     </style>
