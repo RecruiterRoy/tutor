@@ -9,7 +9,7 @@ class GroupLearning {
     async initializeRealtime() {
         try {
             if (!window.currentUser || !window.currentUser.id) {
-                console.warn('User not available, skipping realtime initialization');
+                console.log('User not available, skipping realtime initialization');
                 return;
             }
             

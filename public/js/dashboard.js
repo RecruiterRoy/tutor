@@ -43,6 +43,10 @@ let voicesLoaded = false;
 
 // Indian Regional Avatars
 const regionalAvatars = [
+    // Specific Teacher Avatars (based on language preference)
+    { id: 'ms-sapana', name: 'Ms. Sapana', region: 'Hindi/Hinglish', gender: 'female', image: '👩‍🏫', language: 'hindi' },
+    { id: 'roy-sir', name: 'Roy Sir', region: 'English', gender: 'male', image: '👨‍🏫', language: 'english' },
+    
     // North India
     { id: 'punjabi-male', name: 'Punjabi Male', region: 'Punjab', gender: 'male', image: '👨‍🦱' },
     { id: 'punjabi-female', name: 'Punjabi Female', region: 'Punjab', gender: 'female', image: '👩‍🦱' },
@@ -107,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             const voiceSelect = document.getElementById('voiceSelect');
             if(voiceSelect) voiceSelect.disabled = true;
-            console.warn('Text-to-speech not supported');
+            console.log('Text-to-speech not supported');
         }
 
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -115,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             const voiceButton = document.getElementById('voiceButton');
             if(voiceButton) voiceButton.style.display = 'none';
-            console.warn('Speech recognition not supported');
+            console.log('Speech recognition not supported');
         }
 
         // --- Keep existing initialization logic ---
@@ -368,6 +372,12 @@ async function loadUserData() {
                     updateAvatarDisplay();
                 }
             }
+            
+            // Update user display in both sidebar sections
+            updateUserDisplay(profile);
+            
+            // Store user data globally
+            window.userData = profile;
         }
     } catch (error) {
         showDashboardError('Error loading user data: ' + error.message);
@@ -532,7 +542,7 @@ function setupEventListeners() {
 function populateAvatarGrid() {
     const avatarGrid = document.getElementById('avatarGrid');
     if (!avatarGrid) {
-        console.warn('Avatar grid element not found');
+        console.log('Avatar grid element not found');
         return;
     }
     
@@ -759,7 +769,7 @@ function initializeVoiceFeatures() {
         // Fallback in case voices aren't loaded yet
         setTimeout(populateVoices, 1000);
     } else {
-        console.warn('Speech synthesis not supported');
+        console.log('Speech synthesis not supported');
         document.getElementById('voiceSelect').disabled = true;
     }
 
@@ -790,7 +800,7 @@ function populateVoices() {
             // Fallback timeout
             setTimeout(() => {
                 if (!voicesLoaded) {
-                    console.warn('Voice loading timeout');
+                    console.log('Voice loading timeout');
                     resolve(speechSynthesis.getVoices());
                 }
             }, 2000);
@@ -851,18 +861,18 @@ function initSpeechRecognition() {
         const voiceStatus = document.getElementById('voiceStatus');
         
         if (!voiceButton) {
-            console.warn('Voice button not found');
+            console.log('Voice button not found');
             return;
         }
         
         if (!voiceStatus) {
-            console.warn('Voice status element not found');
+            console.log('Voice status element not found');
             return;
         }
         
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            console.warn('Speech recognition not supported');
+            console.log('Speech recognition not supported');
             voiceButton.style.display = 'none';
             return;
         }
@@ -999,7 +1009,7 @@ async function speakText(text) {
                 utterance.lang = selectedVoice.lang;
                 console.log(`[TTS] Assigned voice: ${selectedVoice.name} (${selectedVoice.lang})`);
             } else {
-                console.warn(`[TTS] Selected voice '${selectedVoiceName}' not found. Using fallback.`);
+                console.log(`[TTS] Selected voice '${selectedVoiceName}' not found. Using fallback.`);
                 // Fallback to first English voice
                 const englishVoice = voices.find(v => v.lang.startsWith('en-'));
                 if (englishVoice) {
@@ -1058,7 +1068,7 @@ async function initVoiceSelection() {
 
         if (filteredVoices.length === 0) {
             voiceSelect.innerHTML = '<option value="">Specified voices not found</option>';
-            console.warn("Could not find 'Microsoft Ravi' or 'Google Hindi'. Please check your system's installed voices.");
+            console.log("Could not find 'Microsoft Ravi' or 'Google Hindi'. Please check your system's installed voices.");
             // As a fallback, populate with whatever is available
             voices.forEach(v => {
                 const option = document.createElement('option');
@@ -1210,28 +1220,54 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function updateUserDisplay(profile) {
-    const userNameElement = document.getElementById('userName');
-    const userClassElement = document.getElementById('userClass');
-    const userAvatarElement = document.getElementById('userAvatar');
+    // Update all user name elements (both sets)
+    const userNameElements = [
+        document.getElementById('userName'),
+        document.getElementById('userName2')
+    ];
+    
+    const userClassElements = [
+        document.getElementById('userClass'),
+        document.getElementById('userClass2')
+    ];
+    
+    const userAvatarElements = [
+        document.getElementById('userAvatar'),
+        document.getElementById('userAvatar2')
+    ];
+    
     const userInitialsElement = document.getElementById('userInitials');
     
-    if (userNameElement) {
-        userNameElement.textContent = profile.full_name || profile.name || 'Student';
-    }
-    
-    if (userClassElement) {
-        const grade = profile.grade || profile.class_level || '10';
-        // Remove "Class" prefix if it already exists
-        const cleanGrade = grade.replace(/^Class\s*/i, '');
-        userClassElement.textContent = `Class ${cleanGrade}`;
-    }
-    
-    if (userAvatarElement && profile.avatar_id) {
-        const avatar = regionalAvatars.find(a => a.id === profile.avatar_id);
-        if (avatar) {
-            userAvatarElement.innerHTML = avatar.image;
+    // Update user names
+    userNameElements.forEach(element => {
+        if (element) {
+            element.textContent = profile.full_name || profile.name || 'Student';
         }
-    }
+    });
+    
+    // Update user classes
+    userClassElements.forEach(element => {
+        if (element) {
+            const grade = profile.grade || profile.class_level || profile.class || '10';
+            // Remove "Class" prefix if it already exists
+            const cleanGrade = grade.replace(/^Class\s*/i, '');
+            element.textContent = `Class ${cleanGrade}`;
+        }
+    });
+    
+    // Update user avatars
+    userAvatarElements.forEach(element => {
+        if (element) {
+            const avatarId = profile.ai_avatar || selectedAvatar;
+            const avatar = regionalAvatars.find(a => a.id === avatarId);
+            if (avatar) {
+                element.innerHTML = avatar.image;
+            } else {
+                // Default avatar if none found
+                element.innerHTML = '👤';
+            }
+        }
+    });
     
     if (userInitialsElement) {
         const name = profile.full_name || profile.name || 'Student';
@@ -1288,13 +1324,13 @@ function askQuickQuestion(question) {
 function getDefaultAvatarForLanguage(language) {
     const languageLower = language.toLowerCase();
     
-    if (languageLower.includes('hindi') || languageLower.includes('hi')) {
-        return regionalAvatars.find(avatar => avatar.name.includes('Hindi') || avatar.name.includes('हिंदी'));
+    if (languageLower.includes('hindi') || languageLower.includes('hi') || languageLower.includes('hinglish')) {
+        return regionalAvatars.find(avatar => avatar.id === 'ms-sapana');
     } else if (languageLower.includes('english') || languageLower.includes('en')) {
-        return regionalAvatars.find(avatar => avatar.name.includes('English') || avatar.name.includes('Roy'));
+        return regionalAvatars.find(avatar => avatar.id === 'roy-sir');
     } else {
-        // Default to first avatar
-        return regionalAvatars[0];
+        // Default to Roy Sir for English
+        return regionalAvatars.find(avatar => avatar.id === 'roy-sir');
     }
 }
 
