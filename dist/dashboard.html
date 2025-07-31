@@ -805,8 +805,7 @@
                             </div>
                             <div class="flex items-center space-x-4">
                                 <div class="text-right">
-                                    <h3 class="text-white text-lg font-semibold" id="studentName">Student</h3>
-                                    <p class="text-gray-300 text-sm" id="studentClass">Class</p>
+                                    
                                 </div>
                                 <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                                     <span id="studentInitials" class="text-white font-bold text-sm">S</span>
@@ -1482,7 +1481,7 @@
                 const studentClassElement = document.getElementById('studentClass');
                 const studentInitialsElement = document.getElementById('studentInitials');
                 
-                if (studentNameElement) studentNameElement.textContent = name;
+                // Removed: studentNameElement.textContent = name;
                 if (studentClassElement) {
                     // Remove "Class" prefix if it already exists to avoid duplication
                     const classValue = className.replace(/^Class\s+/i, '');

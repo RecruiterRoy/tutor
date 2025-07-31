@@ -1173,8 +1173,11 @@ async function logout() {
 
 // UI Functions
 function showSection(sectionName) {
+    console.log('Showing section:', sectionName);
+    
     // Hide all sections
-    document.querySelectorAll('.section-content').forEach(section => {
+    const sections = document.querySelectorAll('[id$="Section"]');
+    sections.forEach(section => {
         section.classList.add('hidden');
     });
     
@@ -1188,14 +1191,19 @@ function showSection(sectionName) {
     const selectedSection = document.getElementById(sectionName + 'Section');
     if (selectedSection) {
         selectedSection.classList.remove('hidden');
+        console.log('Section shown:', sectionName + 'Section');
+    } else {
+        console.log('Section not found:', sectionName + 'Section');
     }
     
     // Add active class to nav item
-    const activeNavItem = document.querySelector(`[onclick="showSection('${sectionName}')"]`);
-    if (activeNavItem) {
+    const activeNavItems = document.querySelectorAll(`[onclick*="showSection('${sectionName}')"]`);
+    activeNavItems.forEach(activeNavItem => {
         activeNavItem.classList.add('active', 'bg-white/10', 'text-white');
         activeNavItem.classList.remove('text-gray-300');
-    }
+    });
+    
+    console.log('Section navigation completed for:', sectionName);
 }
 
 function toggleSidebar() {
