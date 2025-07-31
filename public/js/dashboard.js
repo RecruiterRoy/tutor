@@ -355,6 +355,18 @@ async function loadUserData() {
             if (profile.ai_avatar) {
                 selectedAvatar = profile.ai_avatar;
                 updateAvatarDisplay();
+            } else if (profile.preferred_language) {
+                // Set default avatar based on preferred language
+                const defaultAvatar = getDefaultAvatarForLanguage(profile.preferred_language);
+                if (defaultAvatar) {
+                    selectedAvatar = defaultAvatar.id;
+                    // Update user profile with default avatar
+                    await window.supabaseClient
+                        .from('user_profiles')
+                        .update({ ai_avatar: defaultAvatar.id })
+                        .eq('id', currentUser.id);
+                    updateAvatarDisplay();
+                }
             }
         }
     } catch (error) {
@@ -1270,6 +1282,20 @@ function askQuickQuestion(question) {
     const messageInput = document.getElementById('messageInput');
     messageInput.value = question;
     sendMessage();
+}
+
+// Helper function to get default avatar based on language
+function getDefaultAvatarForLanguage(language) {
+    const languageLower = language.toLowerCase();
+    
+    if (languageLower.includes('hindi') || languageLower.includes('hi')) {
+        return regionalAvatars.find(avatar => avatar.name.includes('Hindi') || avatar.name.includes('हिंदी'));
+    } else if (languageLower.includes('english') || languageLower.includes('en')) {
+        return regionalAvatars.find(avatar => avatar.name.includes('English') || avatar.name.includes('Roy'));
+    } else {
+        // Default to first avatar
+        return regionalAvatars[0];
+    }
 }
 
 // Export functions for global access

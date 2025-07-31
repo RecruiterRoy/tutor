@@ -355,6 +355,18 @@ async function loadUserData() {
             if (profile.ai_avatar) {
                 selectedAvatar = profile.ai_avatar;
                 updateAvatarDisplay();
+            } else if (profile.preferred_language) {
+                // Set default avatar based on preferred language
+                const defaultAvatar = getDefaultAvatarForLanguage(profile.preferred_language);
+                if (defaultAvatar) {
+                    selectedAvatar = defaultAvatar.id;
+                    // Update user profile with default avatar
+                    await window.supabaseClient
+                        .from('user_profiles')
+                        .update({ ai_avatar: defaultAvatar.id })
+                        .eq('id', currentUser.id);
+                    updateAvatarDisplay();
+                }
             }
         }
     } catch (error) {
@@ -618,7 +630,7 @@ async function sendMessage() {
         });
         
         // Send to AI backend with complete user profile
-        const response = await fetch('/api/chat', {
+        const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -686,7 +698,12 @@ async function addMessage(role, content) {
     }
 
     if (role === 'ai') {
-        speakText(content);
+        // Use the new TTS system for AI responses
+        if (window.textToSpeech) {
+            window.textToSpeech.speak(content, { role: 'ai' });
+        } else {
+            speakText(content);
+        }
     }
 }
 
@@ -1265,6 +1282,20 @@ function askQuickQuestion(question) {
     const messageInput = document.getElementById('messageInput');
     messageInput.value = question;
     sendMessage();
+}
+
+// Helper function to get default avatar based on language
+function getDefaultAvatarForLanguage(language) {
+    const languageLower = language.toLowerCase();
+    
+    if (languageLower.includes('hindi') || languageLower.includes('hi')) {
+        return regionalAvatars.find(avatar => avatar.name.includes('Hindi') || avatar.name.includes('हिंदी'));
+    } else if (languageLower.includes('english') || languageLower.includes('en')) {
+        return regionalAvatars.find(avatar => avatar.name.includes('English') || avatar.name.includes('Roy'));
+    } else {
+        // Default to first avatar
+        return regionalAvatars[0];
+    }
 }
 
 // Export functions for global access
