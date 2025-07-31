@@ -67,33 +67,46 @@ class TextToSpeech {
         // Check if controls already exist
         if (document.getElementById('tts-controls')) return;
 
-        // Find the avatar section in chat
-        const chatMessages = document.getElementById('chatMessages');
-        if (!chatMessages) return;
+        // Find the avatar section (right side of chat)
+        const avatarSection = document.querySelector('.avatar-section') || 
+                             document.querySelector('.user-info-section') ||
+                             document.querySelector('.sidebar-modern');
+        
+        if (!avatarSection) {
+            // Fallback: create a new section
+            const chatContainer = document.querySelector('.chat-container') || 
+                                 document.getElementById('chatSection');
+            if (!chatContainer) return;
+            
+            const avatarSection = document.createElement('div');
+            avatarSection.className = 'avatar-section fixed right-4 top-20 z-50';
+            document.body.appendChild(avatarSection);
+        }
 
         // Create TTS controls container
         const ttsControls = document.createElement('div');
         ttsControls.id = 'tts-controls';
-        ttsControls.className = 'tts-controls flex items-center justify-center gap-2 mt-4 p-3 bg-gray-800 rounded-lg';
+        ttsControls.className = 'tts-controls flex flex-col items-center gap-2 p-3 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-white/20';
         ttsControls.style.display = 'none'; // Hidden by default
 
         ttsControls.innerHTML = `
-            <button id="tts-play" class="tts-btn bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors">
+            <div class="text-white text-xs mb-2 font-medium">TTS Controls</div>
+            <button id="tts-play" class="tts-btn bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm">
                 ▶️ Play
             </button>
-            <button id="tts-pause" class="tts-btn bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg transition-colors" style="display: none;">
+            <button id="tts-pause" class="tts-btn bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg transition-colors text-sm" style="display: none;">
                 ⏸️ Pause
             </button>
-            <button id="tts-stop" class="tts-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors">
+            <button id="tts-stop" class="tts-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm">
                 ⏹️ Stop
             </button>
-            <div class="tts-status text-white text-sm ml-2">
+            <div class="tts-status text-white text-xs mt-2 text-center">
                 Ready
             </div>
         `;
 
-        // Insert after the last AI message or at the end of chat
-        chatMessages.appendChild(ttsControls);
+        // Insert into avatar section
+        avatarSection.appendChild(ttsControls);
     }
 
     addEventListeners() {

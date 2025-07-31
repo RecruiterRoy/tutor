@@ -36,8 +36,7 @@
         window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
         
         // Anthropic API Key - will be set by Vercel environment variables
-        window.anthropicApiKey = process.env.ANTHROPIC_API_KEY || 
-                                window.TUTOR_CONFIG?.ANTHROPIC_API_KEY || 
+        window.anthropicApiKey = window.TUTOR_CONFIG?.ANTHROPIC_API_KEY || 
                                 null;
         
         // For Vercel deployment, environment variables are available at build time
@@ -59,7 +58,7 @@
     <script src="/public/js/claudeChat.js" defer></script>
     <script src="/public/js/aiHealthCheck.js" defer></script>
     <script src="/public/js/dashboard.js" defer></script>
-    <script src="/public/scripts/integrateEnhancedAI.js" defer></script>
+    <!-- Removed integrateEnhancedAI.js as it's not needed -->
     
     <!-- Load Razorpay for payments -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -675,6 +674,17 @@
             
             <!-- User Info -->
             <div class="p-6 border-t border-white/20">
+                <!-- User Display Info -->
+                <div class="user-info-section mb-4 p-3 bg-white/10 rounded-lg">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <div id="userAvatar" class="text-2xl">👤</div>
+                        <div>
+                            <div id="userName" class="text-white font-medium">Student</div>
+                            <div id="userClass" class="text-white/70 text-sm">Class 10</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <button onclick="logout()" class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
                     <span class="text-xl">🚪</span>
                     <span>Logout</span>
@@ -723,6 +733,17 @@
             
             <!-- User Info -->
             <div class="p-6 border-t border-white/20">
+                <!-- User Display Info -->
+                <div class="user-info-section mb-4 p-3 bg-white/10 rounded-lg">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <div id="userAvatar2" class="text-2xl">👤</div>
+                        <div>
+                            <div id="userName2" class="text-white font-medium">Student</div>
+                            <div id="userClass2" class="text-white/70 text-sm">Class 10</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <button onclick="logout()" class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
                     <span class="text-xl">🚪</span>
                     <span>Logout</span>

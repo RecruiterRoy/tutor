@@ -137,6 +137,13 @@ class VoiceRecognition {
                 this.setupRecognition();
             }
 
+            // Stop any ongoing recognition before starting new one
+            try {
+                this.recognition.stop();
+            } catch (e) {
+                // Ignore errors if not already started
+            }
+
             this.recognition.start();
             this.updateUI('listening');
             
