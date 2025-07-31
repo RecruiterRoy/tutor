@@ -16,7 +16,18 @@ class VoiceRecognition {
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
         this.recognition.maxAlternatives = 1;
-        this.recognition.lang = 'en-US'; // Default language
+        
+        // Set language based on device and user preference
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const userLanguage = window.selectedAvatar === 'ms-sapana' ? 'hi-IN' : 'en-US';
+        
+        this.recognition.lang = isMobile ? userLanguage : 'en-US';
+        
+        // Mobile-specific settings
+        if (isMobile) {
+            this.recognition.continuous = false; // Better for mobile
+            this.recognition.interimResults = false; // Reduce battery usage
+        }
 
         this.recognition.onstart = () => {
             this.isListening = true;

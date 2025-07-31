@@ -362,20 +362,22 @@ class TextToSpeech {
         // Get current avatar from global variable
         const currentAvatar = window.selectedAvatar || 'roy-sir';
         
-        // Set default voices based on avatar
+        // Set default voices based on avatar - PRIORITY OVER TEXT LANGUAGE
         if (currentAvatar === 'ms-sapana') {
-            // Ms. Sapana - prefer Google Hindi or any Hindi voice
+            // Ms. Sapana - ALWAYS use Hindi voice regardless of text
             const hindiVoices = this.voices.filter(voice => 
                 voice.name.toLowerCase().includes('google') && voice.name.toLowerCase().includes('hindi') ||
                 voice.name.toLowerCase().includes('hindi') ||
-                voice.lang.includes('hi-IN')
+                voice.lang.includes('hi-IN') ||
+                voice.lang.includes('hi')
             );
             if (hindiVoices.length > 0) {
                 this.currentVoice = hindiVoices[0];
+                console.log('Ms. Sapana using Hindi voice:', hindiVoices[0].name);
                 return 'hi-IN';
             }
-        } else {
-            // Roy Sir - prefer Microsoft Ravi or any English voice
+        } else if (currentAvatar === 'roy-sir') {
+            // Roy Sir - ALWAYS use English voice regardless of text
             const englishVoices = this.voices.filter(voice => 
                 voice.name.toLowerCase().includes('microsoft') && voice.name.toLowerCase().includes('ravi') ||
                 voice.name.toLowerCase().includes('ravi') ||
@@ -383,11 +385,12 @@ class TextToSpeech {
             );
             if (englishVoices.length > 0) {
                 this.currentVoice = englishVoices[0];
+                console.log('Roy Sir using English voice:', englishVoices[0].name);
                 return 'en-IN';
             }
         }
         
-        // Fallback to language detection
+        // Fallback to language detection only if no avatar-specific voice found
         const hindiPattern = /[\u0900-\u097F]/;
         const isHindi = hindiPattern.test(text);
         

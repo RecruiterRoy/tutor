@@ -665,7 +665,7 @@ async function sendMessage() {
                 grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                 subject: userSubject,
                 userProfile: userProfile,
-                teacher: window.selectedTeacher || 'Roy Sir'
+                teacher: selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir'
             })
         });
         
@@ -1674,11 +1674,11 @@ function showProfilePopup() {
         const emailField = document.getElementById('popupProfileEmail');
         const mobileField = document.getElementById('popupProfileMobile');
         
-        if (nameField) nameField.value = userData?.full_name || '';
-        if (classField) classField.value = userData?.class || '';
-        if (boardField) boardField.value = userData?.board || '';
+        if (nameField) nameField.value = window.userData?.full_name || '';
+        if (classField) classField.value = window.userData?.class || '';
+        if (boardField) boardField.value = window.userData?.board || '';
         if (emailField) emailField.value = (currentUser && currentUser.email) || '';
-        if (mobileField) mobileField.value = userData?.mobile || 'Not set';
+        if (mobileField) mobileField.value = window.userData?.mobile || 'Not set';
         
         // Show popup
         const popup = document.getElementById('profilePopupOverlay');
@@ -1733,10 +1733,10 @@ async function saveProfileFromPopup() {
         }
         
         // Update local userData
-        userData = { ...userData, full_name: name, class: classValue, board: board };
+        window.userData = { ...window.userData, full_name: name, class: classValue, board: board };
         
         // Update display
-        updateUserDisplay(userData);
+        updateUserDisplay(window.userData);
         
         // Close popup
         closeProfilePopup();
