@@ -32,10 +32,11 @@ jobs:
     - name: Copy web assets
       run: |
         mkdir -p dist
-        cp *.html dist/
         cp -r public dist/
         cp -r pages dist/
-        cp api-*.js dist/
+        cp server.js dist/
+        cp package.json dist/
+        cp vercel.json dist/
         
     - name: Build APK
       run: |
