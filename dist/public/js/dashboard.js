@@ -560,7 +560,7 @@ function populateAvatarGrid() {
     });
 }
 
-function selectAvatar(avatarId, event) {
+async function selectAvatar(avatarId, event) {
     selectedAvatar = avatarId;
     
     // Update visual selection
@@ -576,8 +576,25 @@ function selectAvatar(avatarId, event) {
     const avatar = regionalAvatars.find(a => a.id === avatarId);
     if (avatar) {
         const userAvatar = document.getElementById('userAvatar');
+        const userAvatar2 = document.getElementById('userAvatar2');
         if (userAvatar) {
             userAvatar.innerHTML = avatar.image;
+        }
+        if (userAvatar2) {
+            userAvatar2.innerHTML = avatar.image;
+        }
+    }
+    
+    // Save avatar preference to Supabase immediately
+    if (currentUser && currentUser.id) {
+        try {
+            await window.supabaseClient.from('user_profiles').upsert({ 
+                id: currentUser.id, 
+                ai_avatar: selectedAvatar 
+            });
+            console.log('Avatar preference saved:', selectedAvatar);
+        } catch (error) {
+            console.error('Error saving avatar preference:', error);
         }
     }
 }
@@ -1442,7 +1459,16 @@ function setupAvatarSelection() {
 
 async function saveAvatarPreference() {
     try {
-        await window.supabaseClient.from('user_profiles').upsert({ id: currentUser.id, ai_avatar: selectedAvatar });
+        if (currentUser && selectedAvatar) {
+            await window.supabaseClient.from('user_profiles').upsert({ 
+                id: currentUser.id, 
+                ai_avatar: selectedAvatar 
+            });
+            console.log('Avatar preference saved:', selectedAvatar);
+            
+            // Update global variable for TTS to use
+            window.selectedAvatar = selectedAvatar;
+        }
     } catch (error) {
         console.error('Error saving avatar preference:', error);
     }
@@ -1601,9 +1627,128 @@ if (window.mermaid) {
 
 // Show profile popup
 function showProfilePopup() {
-    const profileModal = document.getElementById('profileModal');
-    if (profileModal) {
-        profileModal.classList.remove('hidden');
+    console.log('Opening profile popup...');
+    console.log('User data:', userData);
+    console.log('Current user:', currentUser);
+    
+    // Check if currentUser is available
+    if (!currentUser) {
+        console.error('Current user not available');
+        alert('Please log in again to access your profile.');
+        return;
+    }
+    
+    // Populate popup fields with current user data
+    const nameField = document.getElementById('popupProfileName');
+    const classField = document.getElementById('popupProfileClass');
+    const boardField = document.getElementById('popupProfileBoard');
+    const emailField = document.getElementById('popupProfileEmail');
+    const mobileField = document.getElementById('popupProfileMobile');
+    
+    if (nameField) nameField.value = userData?.full_name || '';
+    if (classField) classField.value = userData?.class || '';
+    if (boardField) boardField.value = userData?.board || '';
+    if (emailField) emailField.value = (currentUser && currentUser.email) || '';
+    if (mobileField) mobileField.value = userData?.mobile || 'Not set';
+    
+    // Show popup
+    const popup = document.getElementById('profilePopupOverlay');
+    if (popup) {
+        popup.classList.remove('hidden');
+        
+        // Add click outside to close functionality
+        popup.addEventListener('click', function(e) {
+            if (e.target === popup) {
+                closeProfilePopup();
+            }
+        });
+    }
+}
+
+// Close profile popup
+function closeProfilePopup() {
+    const popup = document.getElementById('profilePopupOverlay');
+    if (popup) {
+        popup.classList.add('hidden');
+    }
+}
+
+// Save profile from popup
+async function saveProfileFromPopup() {
+    try {
+        const name = document.getElementById('popupProfileName')?.value || '';
+        const classValue = document.getElementById('popupProfileClass')?.value || '';
+        const board = document.getElementById('popupProfileBoard')?.value || '';
+        
+        if (!currentUser) {
+            showError('User not authenticated');
+            return;
+        }
+        
+        // Update user data
+        const { error } = await window.supabaseClient
+            .from('user_profiles')
+            .upsert({
+                id: currentUser.id,
+                full_name: name,
+                class: classValue,
+                board: board,
+                updated_at: new Date().toISOString()
+            });
+        
+        if (error) {
+            console.error('Error updating profile:', error);
+            showError('Failed to update profile');
+            return;
+        }
+        
+        // Update local userData
+        userData = { ...userData, full_name: name, class: classValue, board: board };
+        
+        // Update display
+        updateUserDisplay(userData);
+        
+        // Close popup
+        closeProfilePopup();
+        
+        showSuccess('Profile updated successfully!');
+        
+    } catch (error) {
+        console.error('Error saving profile:', error);
+        showError('Failed to save profile. Please try again.');
+    }
+}
+
+// Show contact us popup
+function showContactUs() {
+    // Populate contact form with user data
+    const nameField = document.getElementById('contactUsName');
+    const emailField = document.getElementById('contactUsEmail');
+    const mobileField = document.getElementById('contactUsMobile');
+    
+    if (nameField) nameField.value = userData?.full_name || (currentUser && currentUser.email) || '';
+    if (emailField) emailField.value = (currentUser && currentUser.email) || '';
+    if (mobileField) mobileField.value = userData?.mobile || 'Not set';
+    
+    // Show popup
+    const popup = document.getElementById('contactUsPopupOverlay');
+    if (popup) {
+        popup.classList.remove('hidden');
+        
+        // Add click outside to close functionality
+        popup.addEventListener('click', function(e) {
+            if (e.target === popup) {
+                closeContactUsPopup();
+            }
+        });
+    }
+}
+
+// Close contact us popup
+function closeContactUsPopup() {
+    const popup = document.getElementById('contactUsPopupOverlay');
+    if (popup) {
+        popup.classList.add('hidden');
     }
 } 
 

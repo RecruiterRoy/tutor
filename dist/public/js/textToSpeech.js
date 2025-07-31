@@ -94,6 +94,18 @@ class TextToSpeech {
                     ⏹️ Stop
                 </button>
             </div>
+            <div class="flex flex-col gap-2 mt-2 w-full">
+                <div class="flex items-center gap-2">
+                    <label class="text-white text-xs">Speed:</label>
+                    <input type="range" id="tts-speed" min="0.5" max="2" step="0.1" value="1.25" class="flex-1">
+                    <span id="tts-speed-value" class="text-white text-xs">1.25x</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-white text-xs">Pitch:</label>
+                    <input type="range" id="tts-pitch" min="0.5" max="2" step="0.1" value="1" class="flex-1">
+                    <span id="tts-pitch-value" class="text-white text-xs">1.0x</span>
+                </div>
+            </div>
             <div class="tts-status text-white text-xs mt-2 text-center">
                 Ready
             </div>
@@ -121,6 +133,28 @@ class TextToSpeech {
         if (stopBtn) {
             stopBtn.addEventListener('click', () => this.stop());
         }
+
+        // Speed control
+        const speedSlider = document.getElementById('tts-speed');
+        const speedValue = document.getElementById('tts-speed-value');
+        if (speedSlider && speedValue) {
+            speedSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                this.setRate(value);
+                speedValue.textContent = value.toFixed(2) + 'x';
+            });
+        }
+
+        // Pitch control
+        const pitchSlider = document.getElementById('tts-pitch');
+        const pitchValue = document.getElementById('tts-pitch-value');
+        if (pitchSlider && pitchValue) {
+            pitchSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                this.setPitch(value);
+                pitchValue.textContent = value.toFixed(2) + 'x';
+            });
+        }
     }
 
     loadSettings() {
@@ -129,10 +163,16 @@ class TextToSpeech {
         if (settings) {
             const parsed = JSON.parse(settings);
             this.autoStart = parsed.autoStart !== undefined ? parsed.autoStart : true;
-            this.rate = parsed.rate || 1.0;
+            this.rate = parsed.rate || 1.25; // Default to 1.25x
             this.pitch = parsed.pitch || 1.0;
             this.volume = parsed.volume || 1.0;
             this.language = parsed.language || 'hi-IN';
+        } else {
+            // Set defaults for new users
+            this.rate = 1.25; // Default to 1.25x
+            this.pitch = 1.0;
+            this.volume = 1.0;
+            this.language = 'hi-IN';
         }
     }
 
@@ -263,6 +303,10 @@ class TextToSpeech {
         const pauseBtn = document.getElementById('tts-pause');
         const stopBtn = document.getElementById('tts-stop');
         const status = document.querySelector('.tts-status');
+        const speedSlider = document.getElementById('tts-speed');
+        const speedValue = document.getElementById('tts-speed-value');
+        const pitchSlider = document.getElementById('tts-pitch');
+        const pitchValue = document.getElementById('tts-pitch-value');
 
         if (!playBtn || !pauseBtn || !stopBtn || !status) return;
 
@@ -285,10 +329,48 @@ class TextToSpeech {
             stopBtn.style.display = 'inline-block';
             status.textContent = this.currentText ? 'Ready to play' : 'No text to speak';
         }
+
+        // Update slider values to match current settings
+        if (speedSlider && speedValue) {
+            speedSlider.value = this.rate;
+            speedValue.textContent = this.rate.toFixed(2) + 'x';
+        }
+        if (pitchSlider && pitchValue) {
+            pitchSlider.value = this.pitch;
+            pitchValue.textContent = this.pitch.toFixed(2) + 'x';
+        }
     }
 
     detectLanguageAndSetVoice(text) {
-        // Simple language detection
+        // Get current avatar from global variable
+        const currentAvatar = window.selectedAvatar || 'roy-sir';
+        
+        // Set default voices based on avatar
+        if (currentAvatar === 'ms-sapana') {
+            // Ms. Sapana - prefer Google Hindi or any Hindi voice
+            const hindiVoices = this.voices.filter(voice => 
+                voice.name.toLowerCase().includes('google') && voice.name.toLowerCase().includes('hindi') ||
+                voice.name.toLowerCase().includes('hindi') ||
+                voice.lang.includes('hi-IN')
+            );
+            if (hindiVoices.length > 0) {
+                this.currentVoice = hindiVoices[0];
+                return 'hi-IN';
+            }
+        } else {
+            // Roy Sir - prefer Microsoft Ravi or any English voice
+            const englishVoices = this.voices.filter(voice => 
+                voice.name.toLowerCase().includes('microsoft') && voice.name.toLowerCase().includes('ravi') ||
+                voice.name.toLowerCase().includes('ravi') ||
+                (voice.lang.includes('en-IN') || voice.lang.includes('en-US'))
+            );
+            if (englishVoices.length > 0) {
+                this.currentVoice = englishVoices[0];
+                return 'en-IN';
+            }
+        }
+        
+        // Fallback to language detection
         const hindiPattern = /[\u0900-\u097F]/;
         const isHindi = hindiPattern.test(text);
         
