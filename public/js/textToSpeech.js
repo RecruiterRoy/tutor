@@ -174,6 +174,23 @@ class TextToSpeech {
             this.volume = 1.0;
             this.language = 'hi-IN';
         }
+        
+        // Force update sliders to reflect current values
+        setTimeout(() => {
+            const speedSlider = document.getElementById('tts-speed');
+            const speedValue = document.getElementById('tts-speed-value');
+            const pitchSlider = document.getElementById('tts-pitch');
+            const pitchValue = document.getElementById('tts-pitch-value');
+            
+            if (speedSlider && speedValue) {
+                speedSlider.value = this.rate;
+                speedValue.textContent = this.rate.toFixed(2) + 'x';
+            }
+            if (pitchSlider && pitchValue) {
+                pitchSlider.value = this.pitch;
+                pitchValue.textContent = this.pitch.toFixed(2) + 'x';
+            }
+        }, 100);
     }
 
     saveSettings() {
