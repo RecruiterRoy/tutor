@@ -686,7 +686,12 @@ async function addMessage(role, content) {
     }
 
     if (role === 'ai') {
-        speakText(content);
+        // Use the new TTS system for AI responses
+        if (window.textToSpeech) {
+            window.textToSpeech.speak(content, { role: 'ai' });
+        } else {
+            speakText(content);
+        }
     }
 }
 

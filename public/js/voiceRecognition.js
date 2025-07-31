@@ -21,6 +21,11 @@ class VoiceRecognition {
         this.recognition.onstart = () => {
             this.isListening = true;
             this.updateUI();
+            
+            // Pause TTS when voice recognition starts to prevent feedback
+            if (window.textToSpeech && window.textToSpeech.isSpeaking) {
+                window.textToSpeech.pause();
+            }
         };
 
         this.recognition.onend = () => {
@@ -29,6 +34,13 @@ class VoiceRecognition {
                 this.recognition.start(); // Keep listening in group mode
             }
             this.updateUI();
+            
+            // Resume TTS after voice recognition ends
+            if (window.textToSpeech && window.textToSpeech.isPaused) {
+                setTimeout(() => {
+                    window.textToSpeech.play();
+                }, 1000); // Wait 1 second before resuming
+            }
         };
 
         this.recognition.onresult = (event) => {
@@ -46,6 +58,29 @@ class VoiceRecognition {
         this.recognition.onerror = (event) => {
             console.error('Speech recognition error:', event.error);
             this.updateUI('error');
+            
+            // Handle specific error types
+            switch (event.error) {
+                case 'not-allowed':
+                    if (window.showError) {
+                        window.showError('Microphone access denied. Please allow microphone access and try again.');
+                    }
+                    break;
+                case 'no-speech':
+                    if (window.showError) {
+                        window.showError('No speech detected. Please speak clearly.');
+                    }
+                    break;
+                case 'audio-capture':
+                    if (window.showError) {
+                        window.showError('Audio capture error. Please check your microphone.');
+                    }
+                    break;
+                default:
+                    if (window.showError) {
+                        window.showError('Voice recognition error: ' + event.error);
+                    }
+            }
         };
     }
 
@@ -65,6 +100,14 @@ class VoiceRecognition {
 
     async startListening(groupMode = false) {
         try {
+            // Check if microphone permission is granted
+            if (navigator.permissions) {
+                const permission = await navigator.permissions.query({ name: 'microphone' });
+                if (permission.state === 'denied') {
+                    throw new Error('Microphone permission denied. Please enable microphone access.');
+                }
+            }
+
             this.groupMode = groupMode;
             if (groupMode) {
                 await this.initializeGroupMode();
@@ -88,11 +131,24 @@ class VoiceRecognition {
                 }
             }
 
+            // Ensure recognition is properly initialized
+            if (!this.recognition) {
+                this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                this.setupRecognition();
+            }
+
             this.recognition.start();
             this.updateUI('listening');
+            
+            console.log('Voice recognition started successfully');
         } catch (error) {
             console.error('Error starting voice recognition:', error);
             this.updateUI('error');
+            
+            // Show user-friendly error message
+            if (window.showError) {
+                window.showError('Could not start voice recognition: ' + error.message);
+            }
         }
     }
 
@@ -281,12 +337,15 @@ class VoiceRecognition {
             // Update UI
             this.updateUI('processed', { transcript });
             
-            // Optionally auto-send the message
-            if (window.sendMessage) {
-                setTimeout(() => {
+            // Auto-send the message after a short delay
+            setTimeout(() => {
+                const sendButton = document.getElementById('sendButton');
+                if (sendButton) {
+                    sendButton.click();
+                } else if (typeof window.sendMessage === 'function') {
                     window.sendMessage();
-                }, 1000);
-            }
+                }
+            }, 1500);
             
         } catch (error) {
             console.error('Error handling user input:', error);
