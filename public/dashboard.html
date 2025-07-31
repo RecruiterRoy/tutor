@@ -837,7 +837,7 @@
                         <div class="flex items-center space-x-3">
                             <div class="relative flex-1">
                                 <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." class="chat-input pr-12">
-                                <button id="voiceButton" onclick="toggleVoiceInput()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                                <button id="voiceButton" onclick="toggleVoiceRecording()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                                     <span id="voiceIcon" class="text-xl">🎤</span>
                                 </button>
                             </div>
@@ -1265,10 +1265,8 @@
                 let supabaseUrl, supabaseKey;
                 
                 // First try environment variables (for Next.js)
-                if (typeof process !== 'undefined' && process.env) {
-                    supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-                    supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-                }
+                        // Environment variables are handled by Vercel at build time
+        // Direct values are set above for fallback
                 
                 // If not found, try window variables
                 if (!supabaseUrl || !supabaseKey) {
@@ -1681,6 +1679,12 @@
         }
         
         function toggleVoiceInput() {
+    // Call the correct voice recognition function
+    if (typeof toggleVoiceRecording === 'function') {
+        toggleVoiceRecording();
+    } else {
+        console.error('toggleVoiceRecording function not found');
+    }
             if (isRecording) {
                 stopVoiceInput();
             } else {

@@ -100,35 +100,23 @@ class VoiceRecognition {
 
     async startListening(groupMode = false) {
         try {
-            // Check if microphone permission is granted
-            if (navigator.permissions) {
-                const permission = await navigator.permissions.query({ name: 'microphone' });
-                if (permission.state === 'denied') {
-                    throw new Error('Microphone permission denied. Please enable microphone access.');
-                }
+            // Check if already listening
+            if (this.isListening) {
+                console.log('Voice recognition already active, stopping first...');
+                this.stop();
+                // Wait a bit before starting again
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
 
-            this.groupMode = groupMode;
-            if (groupMode) {
-                await this.initializeGroupMode();
-            }
-            
-            // Set language based on user preference (optional)
-            if (window.currentUser && window.currentUser.id && window.supabaseClient) {
-                try {
-                    const { data: prefs } = await window.supabaseClient
-                        .from('user_preferences')
-                        .select('preference_value')
-                        .eq('user_id', window.currentUser.id)
-                        .eq('preference_key', 'preferred_language')
-                        .single();
-
-                    if (prefs?.preference_value) {
-                        this.recognition.lang = prefs.preference_value;
-                    }
-                } catch (error) {
-                    console.warn('Could not load user preferences, using default language');
+            // Check microphone permissions
+            try {
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (permissionError) {
+                console.error('Microphone permission denied:', permissionError);
+                if (window.showError) {
+                    window.showError('Microphone access denied. Please allow microphone permissions.');
                 }
+                return;
             }
 
             // Ensure recognition is properly initialized
@@ -137,19 +125,15 @@ class VoiceRecognition {
                 this.setupRecognition();
             }
 
-            // Stop any ongoing recognition before starting new one
-            try {
-                this.recognition.stop();
-            } catch (e) {
-                // Ignore errors if not already started
-            }
-
+            // Set listening state before starting
+            this.isListening = true;
             this.recognition.start();
             this.updateUI('listening');
             
             console.log('Voice recognition started successfully');
         } catch (error) {
             console.error('Error starting voice recognition:', error);
+            this.isListening = false;
             this.updateUI('error');
             
             // Show user-friendly error message
@@ -163,7 +147,7 @@ class VoiceRecognition {
         try {
             // Load speaker profiles
                     if (!window.groupLearning || !window.groupLearning.currentGroup || !window.groupLearning.currentGroup.id) {
-            console.warn('Group not available, skipping speaker profiles load');
+            console.log('Group not available, skipping speaker profiles load');
             return [];
         }
         
@@ -481,10 +465,18 @@ class VoiceRecognition {
     }
 
     stop() {
-        this.recognition.stop();
-        this.synthesis.cancel();
+        try {
+            if (this.recognition && this.isListening) {
+                this.recognition.stop();
+            }
+            if (this.synthesis) {
+                this.synthesis.cancel();
+            }
+        } catch (error) {
+            console.log('Error stopping voice recognition:', error);
+        }
         this.isListening = false;
-        this.updateUI();
+        this.updateUI('idle');
     }
 }
 

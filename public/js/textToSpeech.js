@@ -67,46 +67,40 @@ class TextToSpeech {
         // Check if controls already exist
         if (document.getElementById('tts-controls')) return;
 
-        // Find the avatar section (right side of chat)
-        const avatarSection = document.querySelector('.avatar-section') || 
-                             document.querySelector('.user-info-section') ||
-                             document.querySelector('.sidebar-modern');
+        // Find the user info section in the sidebar
+        const userInfoSection = document.querySelector('.user-info-section');
         
-        if (!avatarSection) {
-            // Fallback: create a new section
-            const chatContainer = document.querySelector('.chat-container') || 
-                                 document.getElementById('chatSection');
-            if (!chatContainer) return;
-            
-            const avatarSection = document.createElement('div');
-            avatarSection.className = 'avatar-section fixed right-4 top-20 z-50';
-            document.body.appendChild(avatarSection);
+        if (!userInfoSection) {
+            console.log('User info section not found for TTS controls');
+            return;
         }
 
         // Create TTS controls container
         const ttsControls = document.createElement('div');
         ttsControls.id = 'tts-controls';
-        ttsControls.className = 'tts-controls flex flex-col items-center gap-2 p-3 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-white/20';
+        ttsControls.className = 'tts-controls flex flex-col items-center gap-2 p-3 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-white/20 mt-3';
         ttsControls.style.display = 'none'; // Hidden by default
 
         ttsControls.innerHTML = `
             <div class="text-white text-xs mb-2 font-medium">TTS Controls</div>
-            <button id="tts-play" class="tts-btn bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm">
-                ▶️ Play
-            </button>
-            <button id="tts-pause" class="tts-btn bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg transition-colors text-sm" style="display: none;">
-                ⏸️ Pause
-            </button>
-            <button id="tts-stop" class="tts-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm">
-                ⏹️ Stop
-            </button>
+            <div class="flex gap-2">
+                <button id="tts-play" class="tts-btn bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm">
+                    ▶️ Play
+                </button>
+                <button id="tts-pause" class="tts-btn bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg transition-colors text-sm" style="display: none;">
+                    ⏸️ Pause
+                </button>
+                <button id="tts-stop" class="tts-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm">
+                    ⏹️ Stop
+                </button>
+            </div>
             <div class="tts-status text-white text-xs mt-2 text-center">
                 Ready
             </div>
         `;
 
-        // Insert into avatar section
-        avatarSection.appendChild(ttsControls);
+        // Insert into user info section
+        userInfoSection.appendChild(ttsControls);
     }
 
     addEventListeners() {

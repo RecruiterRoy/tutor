@@ -837,7 +837,7 @@
                         <div class="flex items-center space-x-3">
                             <div class="relative flex-1">
                                 <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." class="chat-input pr-12">
-                                <button id="voiceButton" onclick="toggleVoiceInput()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                                <button id="voiceButton" onclick="toggleVoiceRecording()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                                     <span id="voiceIcon" class="text-xl">🎤</span>
                                 </button>
                             </div>
@@ -1681,6 +1681,12 @@
         }
         
         function toggleVoiceInput() {
+    // Call the correct voice recognition function
+    if (typeof toggleVoiceRecording === 'function') {
+        toggleVoiceRecording();
+    } else {
+        console.error('toggleVoiceRecording function not found');
+    }
             if (isRecording) {
                 stopVoiceInput();
             } else {
