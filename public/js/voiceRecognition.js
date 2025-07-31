@@ -70,21 +70,22 @@ class VoiceRecognition {
                 await this.initializeGroupMode();
             }
             
-                         // Set language based on user preference
-             if (!window.currentUser || !window.currentUser.id) {
-                 console.warn('User not available, using default language');
-                 return;
-             }
-             
-             const { data: prefs } = await window.supabaseClient
-                 .from('user_preferences')
-                 .select('preference_value')
-                 .eq('user_id', window.currentUser.id)
-                 .eq('preference_key', 'preferred_language')
-                 .single();
+            // Set language based on user preference (optional)
+            if (window.currentUser && window.currentUser.id && window.supabaseClient) {
+                try {
+                    const { data: prefs } = await window.supabaseClient
+                        .from('user_preferences')
+                        .select('preference_value')
+                        .eq('user_id', window.currentUser.id)
+                        .eq('preference_key', 'preferred_language')
+                        .single();
 
-            if (prefs?.preference_value) {
-                this.recognition.lang = prefs.preference_value;
+                    if (prefs?.preference_value) {
+                        this.recognition.lang = prefs.preference_value;
+                    }
+                } catch (error) {
+                    console.warn('Could not load user preferences, using default language');
+                }
             }
 
             this.recognition.start();
@@ -264,14 +265,29 @@ class VoiceRecognition {
 
     async handleSingleUserInput(transcript) {
         try {
-            // Process with AI tutor
-            const response = await this.processWithAI(transcript);
+            console.log('Voice input received:', transcript);
             
-            // Speak response
-            await this.speakResponse(response);
-
+            // Update chat input with transcript
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.value = transcript;
+            }
+            
+            // Show success message
+            if (window.showSuccess) {
+                window.showSuccess('Voice input received: ' + transcript);
+            }
+            
             // Update UI
-            this.updateUI('processed', { transcript, response });
+            this.updateUI('processed', { transcript });
+            
+            // Optionally auto-send the message
+            if (window.sendMessage) {
+                setTimeout(() => {
+                    window.sendMessage();
+                }, 1000);
+            }
+            
         } catch (error) {
             console.error('Error handling user input:', error);
             this.updateUI('error');

@@ -1,5 +1,24 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
+import Cors from 'cors';
+
+// Initialize CORS middleware
+const cors = Cors({
+  methods: ['POST'],
+  origin: process.env.NODE_ENV === 'development' 
+    ? '*' 
+    : ['https://tution.app', 'https://*.vercel.app']
+});
+
+// Helper to run middleware
+function runMiddleware(req, res, fn) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) return reject(result);
+      return resolve(result);
+    });
+  });
+}
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -7,7 +26,7 @@ const anthropic = new Anthropic({
 
 const supabase = createClient(
   'https://vfqdjpiyaabufpaofysz.supabase.co',
-  'process.env.SUPABASE_SERVICE_KEY'
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 // Usage tracking for cost monitoring
@@ -21,6 +40,18 @@ const logUsage = (usage) => {
 
 const bucket = 'educational-content';
 
+// Cache for API responses
+const cache = new Map();
+
+async function getCachedResponse(key, fn) {
+  if (cache.has(key)) {
+    return cache.get(key);
+  }
+  const result = await fn();
+  cache.set(key, result);
+  return result;
+}
+
 class EnhancedAITutor {
   constructor() {
     this.knowledgeBank = null;
@@ -30,24 +61,26 @@ class EnhancedAITutor {
   async loadKnowledgeBank() {
     if (this.isLoaded) return true;
     
-    try {
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .download('knowledge-bank/index.json');
-      
-      if (error) {
+    return await getCachedResponse('knowledge-bank', async () => {
+      try {
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .download('knowledge-bank/index.json');
+        
+        if (error) {
+          console.error('Error loading knowledge bank:', error);
+          return false;
+        }
+        
+        const text = await data.text();
+        this.knowledgeBank = JSON.parse(text);
+        this.isLoaded = true;
+        return true;
+      } catch (error) {
         console.error('Error loading knowledge bank:', error);
         return false;
       }
-      
-      const text = await data.text();
-      this.knowledgeBank = JSON.parse(text);
-      this.isLoaded = true;
-      return true;
-    } catch (error) {
-      console.error('Error loading knowledge bank:', error);
-      return false;
-    }
+    });
   }
 
   async searchKnowledgeBank(query, grade, subject) {
@@ -279,8 +312,22 @@ class EnhancedAITutor {
 const enhancedTutor = new EnhancedAITutor();
 
 export default async function handler(req, res) {
+  // Run CORS middleware
+  await runMiddleware(req, res, cors);
+  
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false,
+      error: 'Method not allowed' 
+    });
+  }
+
+  // Add input validation
+  if (!req.body.message) {
+    return res.status(400).json({ 
+      success: false,
+      error: 'Message is required' 
+    });
   }
 
   try {

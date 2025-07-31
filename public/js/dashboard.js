@@ -618,7 +618,7 @@ async function sendMessage() {
         });
         
         // Send to AI backend with complete user profile
-        const response = await fetch('/api/chat', {
+        const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -914,29 +914,34 @@ function initSpeechRecognition() {
 }
 
 async function toggleVoiceRecording() {
-    if (isRecording) {
-        recognition.stop();
-        return;
-    }
-
     try {
-        // First check microphone permissions
-        const permission = await navigator.permissions.query({ name: 'microphone' });
-        if (permission.state === 'denied') {
-            showError('Microphone access blocked. Please enable it in browser settings.');
+        if (!window.voiceRecognition) {
+            showError('Voice recognition not available');
             return;
         }
 
-        // Request microphone access
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
-        
-        // Initialize fresh recognition instance
-        initSpeechRecognition();
-        recognition.start();
+        if (window.voiceRecognition.isListening) {
+            // Stop listening
+            window.voiceRecognition.stop();
+            const voiceButton = document.getElementById('voiceButton');
+            if (voiceButton) {
+                voiceButton.textContent = '🎤';
+                voiceButton.classList.remove('voice-recording');
+            }
+            showSuccess('Voice recording stopped');
+        } else {
+            // Start listening
+            await window.voiceRecognition.startListening();
+            const voiceButton = document.getElementById('voiceButton');
+            if (voiceButton) {
+                voiceButton.textContent = '🔴';
+                voiceButton.classList.add('voice-recording');
+            }
+            showSuccess('Voice recording started - speak now!');
+        }
         
     } catch (error) {
-        console.error('Microphone error:', error);
+        console.error('Voice recording error:', error);
         showError('Could not access microphone. Please check permissions.');
     }
 }
