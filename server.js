@@ -76,6 +76,14 @@ async function getPDFProcessor() {
 app.use(cors());
 app.use(express.json());
 
+// Serve static files
+app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+app.use('/scripts', express.static(path.join(__dirname, 'public', 'scripts')));
+app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname)));
+
 // API Key middleware
 app.use('/api', (req, res, next) => {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -780,7 +788,7 @@ app.get('/api/book-images', (req, res) => {
 
 // HTML Page routes (must come AFTER static file serving to avoid conflicts)
 app.get('/', (req, res) => {
-    const indexPath = path.join(__dirname, 'index.html');
+    const indexPath = path.join(__dirname, 'public', 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
@@ -789,7 +797,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/dashboard', (req, res) => {
-    const dashboardPath = path.join(__dirname, 'dashboard.html');
+    const dashboardPath = path.join(__dirname, 'public', 'dashboard.html');
     if (fs.existsSync(dashboardPath)) {
         res.sendFile(dashboardPath);
     } else {
@@ -798,7 +806,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-    const loginPath = path.join(__dirname, 'login.html');
+    const loginPath = path.join(__dirname, 'public', 'login.html');
     if (fs.existsSync(loginPath)) {
         res.sendFile(loginPath);
     } else {
@@ -807,7 +815,7 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-    const registerPath = path.join(__dirname, 'register.html');
+    const registerPath = path.join(__dirname, 'public', 'register.html');
     if (fs.existsSync(registerPath)) {
         res.sendFile(registerPath);
     } else {
@@ -816,7 +824,7 @@ app.get('/register', (req, res) => {
 });
 
 app.get('/admin', (req, res) => {
-    const adminPath = path.join(__dirname, 'admin.html');
+    const adminPath = path.join(__dirname, 'public', 'admin.html');
     if (fs.existsSync(adminPath)) {
         res.sendFile(adminPath);
     } else {
@@ -832,7 +840,7 @@ app.get('*', (req, res) => {
     }
     
     // For all other routes, serve index.html (SPA behavior)
-    const indexPath = path.join(__dirname, 'index.html');
+    const indexPath = path.join(__dirname, 'public', 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {

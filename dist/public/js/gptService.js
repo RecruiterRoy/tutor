@@ -4,17 +4,8 @@ class GPTService {
         this.currentSubject = null;
         this.currentTeacher = null;
         this.chatHistory = [];
-        // Dynamic API URL based on current domain
-        const hostname = window.location.hostname;
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            this.baseUrl = 'http://localhost:3000/api/chat';
-        } else if (hostname === 'tution.app') {
-            this.baseUrl = 'https://tution.app/api/chat';
-        } else if (hostname === 'tutor-omega-seven.vercel.app') {
-            this.baseUrl = 'https://tutor-omega-seven.vercel.app/api/chat';
-        } else {
-            this.baseUrl = `${window.location.origin}/api/chat`;
-        }
+        // Always use relative path for API calls
+        this.baseUrl = '/api/enhanced-chat';
     }
     
     setContext(grade, subject) {
@@ -34,16 +25,25 @@ class GPTService {
         try {
             this.chatHistory.push({ role: 'user', content: userMessage });
             
-            // Format request for the simple chat API
+            // Validate input
+            if (!userMessage || typeof userMessage !== 'string') {
+                throw new Error('Invalid message format');
+            }
+            
+            // Format request for the enhanced chat API
             const requestBody = {
-                messages: this.chatHistory, // Send full chat history
+                message: userMessage,
                 grade: this.currentGrade || '6',
                 subject: this.currentSubject || 'General',
-                language: this.currentTeacher === 'Ms. Sapana' ? 'hi' : 'en',
-                user_profile: userProfile // Send user profile to API
+                teacher: this.currentTeacher || 'Roy Sir',
+                userProfile: userProfile || {
+                    full_name: 'Student',
+                    class: this.currentGrade || '6',
+                    board: 'CBSE'
+                }
             };
 
-            console.log('Sending request to chat API:', JSON.stringify(requestBody, null, 2));
+            console.log('Sending request to enhanced chat API:', JSON.stringify(requestBody, null, 2));
 
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
@@ -53,15 +53,15 @@ class GPTService {
                 },
                 body: JSON.stringify(requestBody)
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `API request failed with status ${response.status}`);
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();
-            if (!data.response) {
-                throw new Error('Invalid response format from API');
+            if (!data.success) {
+                throw new Error(data.error || 'API request failed');
             }
             
             // Log usage for cost monitoring
@@ -76,8 +76,9 @@ class GPTService {
             this.chatHistory.push({ role: 'assistant', content: data.response });
             return data.response;
         } catch (error) {
-            console.error('API Error:', error);
-            return `I'm having trouble connecting right now. ${error.message}`;
+            console.error('GPT Service Error:', error);
+            // Fallback response
+            return `I'm having trouble connecting right now. ${error.message || 'Please try again later.'}`;
         }
     }
 

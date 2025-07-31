@@ -27,7 +27,7 @@
     
     <!-- Load essential scripts with defer -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="js/config.js" defer></script>
+    <script src="/js/config.js" defer></script>
     
     <!-- Environment Variables Loader -->
     <script>
@@ -36,20 +36,9 @@
         window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
         
         // Anthropic API Key - will be set by Vercel environment variables
-        window.anthropicApiKey = null;
-        
-        // Try to load environment variables first (for Next.js)
-        if (typeof process !== 'undefined' && process.env) {
-            if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-                window.supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-            }
-            if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-                window.supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-            }
-            if (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
-                window.anthropicApiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
-            }
-        }
+        window.anthropicApiKey = process.env.ANTHROPIC_API_KEY || 
+                                window.TUTOR_CONFIG?.ANTHROPIC_API_KEY || 
+                                null;
         
         // For Vercel deployment, environment variables are available at build time
         // The actual API key will be injected by Vercel during deployment
@@ -58,25 +47,25 @@
         console.log('🔧 Supabase Key:', window.supabaseKey ? 'Available' : 'Not found');
         console.log('🔧 Anthropic API Key:', window.anthropicApiKey ? 'Available' : 'Not found');
     </script>
-    <script src="js/supabaseClient.js" defer></script>
-    <script src="js/gptService.js" defer></script>
-    <script src="js/voiceRecognition.js" defer></script>
-    <script src="js/textToSpeech.js" defer></script>
-    <script src="js/learningProgress.js" defer></script>
-    <script src="js/classBookManager.js" defer></script>
-    <script src="js/groupLearning.js" defer></script>
-    <script src="js/imageSearch.js" defer></script>
-    <script src="js/enhancedAIService.js" defer></script>
-    <script src="js/claudeChat.js" defer></script>
-    <script src="js/aiHealthCheck.js" defer></script>
-    <script src="js/dashboard.js" defer></script>
-    <script src="scripts/integrateEnhancedAI.js" defer></script>
+    <!-- Load essential scripts -->
+    <script src="/public/js/gptService.js" defer></script>
+    <script src="/public/js/voiceRecognition.js" defer></script>
+    <script src="/public/js/textToSpeech.js" defer></script>
+    <script src="/public/js/learningProgress.js" defer></script>
+    <script src="/public/js/classBookManager.js" defer></script>
+    <script src="/public/js/groupLearning.js" defer></script>
+    <script src="/public/js/imageSearch.js" defer></script>
+    <script src="/public/js/enhancedAIService.js" defer></script>
+    <script src="/public/js/claudeChat.js" defer></script>
+    <script src="/public/js/aiHealthCheck.js" defer></script>
+    <script src="/public/js/dashboard.js" defer></script>
+    <script src="/public/scripts/integrateEnhancedAI.js" defer></script>
     
     <!-- Load Razorpay for payments -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
     <!-- Load payment system -->
-    <script src="js/paymentSystem.js" defer></script>
+    <script src="/public/js/paymentSystem.js" defer></script>
     
     <!-- Load non-critical scripts after page load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
@@ -563,6 +552,92 @@
         
         .subscription-badge.expired {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        /* Mobile Responsiveness Improvements */
+        @media (max-width: 640px) {
+            /* Chat input area */
+            .input-area {
+                padding: 12px;
+                margin: 12px;
+            }
+            
+            .chat-input {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            /* Chat messages */
+            .message-bubble {
+                max-width: 90%;
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            /* Header adjustments */
+            header.nav-modern {
+                padding: 8px;
+            }
+            
+            /* Teacher/student info in chat header */
+            .chat-header .flex.items-center.space-x-4 {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            /* Avatar sizes */
+            .teacher-avatar {
+                width: 40px;
+                height: 40px;
+            }
+            
+            /* Quick actions grid */
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            /* Buttons */
+            .btn-modern {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            /* Cards */
+            .card-modern {
+                padding: 16px;
+            }
+            
+            /* Hide non-essential elements on mobile */
+            .student-info-details {
+                display: none;
+            }
+        }
+
+        /* Very small devices (phones, 400px and down) */
+        @media (max-width: 400px) {
+            /* Further reduce padding */
+            .input-area {
+                padding: 10px;
+                margin: 10px;
+            }
+            
+            /* Stack send button below input */
+            .input-area .flex.items-center.space-x-3 {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .input-area button {
+                width: 100%;
+            }
+            
+            /* Reduce avatar sizes further */
+            .teacher-avatar {
+                width: 36px;
+                height: 36px;
+            }
         }
     </style>
 </head>
@@ -1463,63 +1538,7 @@
             sendMessage();
         }
         
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            // Check trial status
-            const trialActive = await checkTrialStatus();
-            if (!trialActive) {
-                console.log('❌ Trial expired, message blocked');
-                showTrialExpiredOverlay();
-                return;
-            }
-            
-            // Add user message
-            addMessage('user', message);
-            input.value = '';
-            
-            try {
-                // Show loading
-                showLoading(true);
-                
-                // Get AI response - try Claude first, then fallback to GPT
-                let response;
-                try {
-                    if (window.claudeChat) {
-                        response = await window.claudeChat.sendMessage(message, userData);
-                    } else {
-                        throw new Error('Claude service not available');
-                    }
-                } catch (claudeError) {
-                    console.log('⚠️ Claude error, falling back to GPT:', claudeError);
-                    if (window.gptService) {
-                        response = await window.gptService.sendMessage(message, userData);
-                    } else {
-                        throw new Error('No AI service available');
-                    }
-                }
-                
-                // Add AI response
-                addMessage('ai', response);
-                
-                // Save to history
-                await saveChatMessage(message, response);
-                
-                // Auto-play TTS if enabled
-                if (ttsEnabled) {
-                    playTTS(response);
-                }
-                
-            } catch (error) {
-                console.error('Error sending message:', error);
-                addMessage('ai', 'Sorry, I encountered an error. Please try again.');
-            } finally {
-                showLoading(false);
-            }
-        }
+
         
         // Save chat message to history
         async function saveChatMessage(userMessage, aiResponse) {
@@ -2393,6 +2412,109 @@
 
         // ========== DASHBOARD INITIALIZATION ==========
         
+        // Mobile setup function
+        function setupMobileFeatures() {
+            // Handle viewport scaling
+            const viewportMeta = document.createElement('meta');
+            viewportMeta.name = 'viewport';
+            viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            document.head.appendChild(viewportMeta);
+            
+            // Prevent zooming on input focus
+            document.addEventListener('focusin', function(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    window.scrollTo(0, 0);
+                    document.body.style.zoom = "100%";
+                }
+            });
+            
+            // Handle keyboard appearance
+            window.addEventListener('resize', function() {
+                if (window.visualViewport && window.visualViewport.height < window.innerHeight / 2) {
+                    // Keyboard is showing, scroll input into view
+                    const activeElement = document.activeElement;
+                    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+                        activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            });
+            
+            // Better touch feedback
+            document.addEventListener('touchstart', function() {}, { passive: true });
+        }
+
+        // Update sendMessage function with better error handling
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Check trial status
+            const trialActive = await checkTrialStatus();
+            if (!trialActive) {
+                console.log('❌ Trial expired, message blocked');
+                showTrialExpiredOverlay();
+                return;
+            }
+            
+            // Add user message
+            addMessage('user', message);
+            input.value = '';
+            
+            try {
+                // Show loading
+                showLoading(true);
+                
+                // Get AI response directly from API
+                const response = await fetch('/api/enhanced-chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        subject: userData?.subject || 'Mathematics',
+                        grade: userData?.class || '6',
+                        action: 'chat',
+                        userProfile: userData
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Add AI response
+                    addMessage('ai', data.response);
+                    
+                    // Save to history
+                    await saveChatMessage(message, data.response);
+                    
+                    // Auto-play TTS if enabled
+                    if (ttsEnabled && window.textToSpeech) {
+                        playTTS(data.response);
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to get AI response');
+                }
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessage('ai', 'Sorry, I encountered an error. Please try again later.');
+                showError('AI service is currently unavailable. Please check your internet connection.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Initialize mobile features
+        document.addEventListener('DOMContentLoaded', function() {
+            setupMobileFeatures();
+        });
 
     </script>
 </body>

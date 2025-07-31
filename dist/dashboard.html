@@ -32,8 +32,11 @@
     <!-- Environment Variables Loader -->
     <script>
         // Direct Supabase credentials (fallback if .env doesn't work)
-                    window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
+        window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
         window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
+        
+        // Anthropic API Key - will be set by Vercel environment variables
+        window.anthropicApiKey = null;
         
         // Try to load environment variables first (for Next.js)
         if (typeof process !== 'undefined' && process.env) {
@@ -43,32 +46,42 @@
             if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
                 window.supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
             }
+            if (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY) {
+                window.anthropicApiKey = process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY;
+            }
         }
+        
+        // For Vercel deployment, environment variables are available at build time
+        // The actual API key will be injected by Vercel during deployment
         
         console.log('🔧 Supabase URL:', window.supabaseUrl);
         console.log('🔧 Supabase Key:', window.supabaseKey ? 'Available' : 'Not found');
+        console.log('🔧 Anthropic API Key:', window.anthropicApiKey ? 'Available' : 'Not found');
     </script>
-    <script src="js/supabaseClient.js" defer></script>
-    <script src="js/gptService.js" defer></script>
-    <script src="js/voiceRecognition.js" defer></script>
-    <script src="js/textToSpeech.js" defer></script>
-    <script src="js/learningProgress.js" defer></script>
-    <script src="js/classBookManager.js" defer></script>
-    <script src="js/groupLearning.js" defer></script>
-    <script src="js/imageSearch.js" defer></script>
-    <script src="js/enhancedAIService.js" defer></script>
-    <script src="js/claudeChat.js" defer></script>
-    <script src="js/dashboard.js" defer></script>
+    <script src="public/js/supabaseClient.js" defer></script>
+    <script src="public/js/gptService.js" defer></script>
+    <script src="public/js/voiceRecognition.js" defer></script>
+    <script src="public/js/textToSpeech.js" defer></script>
+    <script src="public/js/learningProgress.js" defer></script>
+    <script src="public/js/classBookManager.js" defer></script>
+    <script src="public/js/groupLearning.js" defer></script>
+    <script src="public/js/imageSearch.js" defer></script>
+    <script src="public/js/enhancedAIService.js" defer></script>
+    <script src="public/js/claudeChat.js" defer></script>
+    <script src="public/js/aiHealthCheck.js" defer></script>
+    <script src="public/js/dashboard.js" defer></script>
+    <script src="public/scripts/integrateEnhancedAI.js" defer></script>
     
     <!-- Load Razorpay for payments -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
     <!-- Load payment system -->
-    <script src="js/paymentSystem.js" defer></script>
+    <script src="public/js/paymentSystem.js" defer></script>
     
     <!-- Load non-critical scripts after page load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.3/dist/purify.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js" defer></script>
     
     <!-- Load fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -420,6 +433,43 @@
             .quick-action-btn {
                 padding: 10px 6px;
             }
+            
+            /* Mobile header adjustments */
+            header.nav-modern {
+                padding: 12px;
+            }
+            
+            /* Mobile sidebar adjustments */
+            #mobileSidebar {
+                width: 280px;
+            }
+            
+            /* Input area adjustments */
+            .input-area .flex {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .input-area button {
+                width: 100%;
+            }
+            
+            /* Chat header adjustments */
+            .chat-header .flex {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            /* Settings content adjustments */
+            .settings-content {
+                padding: 15px;
+            }
+            
+            /* Avatar selection grid */
+            .avatar-selection-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         /* Teacher Avatar */
@@ -640,8 +690,6 @@
                     <div class="hidden lg:block">
                         <div id="google_translate_element"></div>
                     </div>
-                    
-
                 </div>
             </header>
             
@@ -687,8 +735,6 @@
                             </div>
                         </div>
                     </div>
-                    
-
                     
                     <!-- Input Area -->
                     <div class="input-area">
@@ -834,6 +880,29 @@
                                         <input type="checkbox" id="voiceInputEnabled" checked class="rounded" onchange="handleVoiceInputToggle()">
                                         <span class="text-white">Enable Voice Input</span>
                                     </label>
+                                    
+                                    <!-- Voice Selection -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Voice:</label>
+                                        <select id="voiceSelect" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400">
+                                            <option value="">Loading voices...</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Voice Rate -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Speed: <span id="voiceRateValue">1.0</span>x</label>
+                                        <input type="range" id="voiceRate" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full">
+                                    </div>
+                                    
+                                    <!-- Voice Pitch -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Pitch: <span id="voicePitchValue">1.0</span></label>
+                                        <input type="range" id="voicePitch" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full">
+                                    </div>
+                                    
+                                    <!-- Voice Status -->
+                                    <div id="voiceStatus" class="text-green-400 text-sm">Voice ready</div>
                                 </div>
                                 <div id="voiceWarning" class="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg hidden">
                                     <p class="text-yellow-200 text-sm">⚠️ <strong>Note:</strong> If voice features are disabled, chat will support typing only.</p>
@@ -983,7 +1052,7 @@
     
     <script>
         // Global variables
-        let currentUser = null;
+        // currentUser will be set by the authentication flow
         let userData = {
             full_name: 'User',
             class: 'Class 1',
@@ -996,6 +1065,7 @@
             image: "images/roy_sir.jpg",
             language: "en"
         };
+        // supabaseClient is initialized globally via supabaseClient.js
         
         // TTS Variables
         let currentSpeech = null;
@@ -1012,7 +1082,7 @@
                 await initSupabase();
                 
                 // Check authentication
-                const { data: { user }, error } = await supabaseClient.auth.getUser();
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
                 if (error || !user) {
                     console.log('❌ No authenticated user, redirecting to login');
                     window.location.href = 'login.html';
@@ -1020,10 +1090,46 @@
                 }
                 
                 currentUser = user;
+                window.currentUser = user; // Ensure global access
+                
+                // Check if user has a complete profile
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('user_profiles')
+                    .select('verification_status, full_name, email, class, board')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (profileError || !profile) {
+                    console.log('❌ No user profile found, redirecting to login');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Check verification status
+                if (profile.verification_status !== 'approved' && profile.verification_status !== 'verified') {
+                    console.log('❌ User not verified, redirecting to login');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Check if profile is complete
+                if (!profile.full_name || !profile.email || !profile.class || !profile.board) {
+                    console.log('❌ Profile incomplete, redirecting to login');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
                 console.log('✅ User authenticated:', user.email);
+                console.log('🔍 User provider:', user.app_metadata?.provider);
+                console.log('🔍 User metadata:', user.user_metadata);
                 
                 // Load user profile
                 await loadUserProfile();
+                
+                // Ensure Google OAuth users have profiles
+                if (currentUser.app_metadata?.provider === 'google') {
+                    await ensureGoogleOAuthProfile();
+                }
                 
                 // Check trial status
                 const trialActive = await checkTrialStatus();
@@ -1083,7 +1189,7 @@
                 // Final fallback to hardcoded values (for development)
                 if (!supabaseUrl || !supabaseKey) {
                     supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
-                                          supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
+                    supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
                 }
                 
                 console.log('🔧 Supabase URL:', supabaseUrl ? 'Found' : 'Not found');
@@ -1095,13 +1201,12 @@
                 
                 // Create Supabase client
                 if (typeof window.supabase !== 'undefined') {
-                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                    window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                 } else {
                     // Fallback to CDN
                     const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-                    supabaseClient = createClient(supabaseUrl, supabaseKey);
+                    window.supabaseClient = createClient(supabaseUrl, supabaseKey);
                 }
-                window.supabaseClient = supabaseClient;
                 
                 console.log('✅ Supabase client initialized successfully');
             } catch (error) {
@@ -1113,8 +1218,10 @@
         async function loadUserProfile() {
             try {
                 console.log('🔍 Loading user profile for:', currentUser.id);
+                console.log('🔍 User metadata:', currentUser.user_metadata);
+                console.log('🔍 User email:', currentUser.email);
                 
-                const { data, error } = await supabaseClient
+                const { data, error } = await window.supabaseClient
                     .from('user_profiles')
                     .select('*')
                     .eq('id', currentUser.id)
@@ -1145,44 +1252,126 @@
         async function createUserProfile() {
             try {
                 console.log('🔧 Creating new user profile...');
+                console.log('🔧 User data from auth:', {
+                    id: currentUser.id,
+                    email: currentUser.email,
+                    metadata: currentUser.user_metadata,
+                    phone: currentUser.phone
+                });
                 
-                const { data, error } = await supabaseClient
+                // Don't extract name from Google OAuth - should come from registration form
+                const fullName = 'User'; // Placeholder until registration is completed
+                
+                const profileData = {
+                    id: currentUser.id,
+                    full_name: fullName,
+                    email: currentUser.email,
+                    class: 'Class 1',
+                    board: 'CBSE',
+                    board_abbr: 'CBSE',
+                    phone: currentUser.phone || '',
+                    city: '',
+                    state: '',
+                    preferred_language: 'English',
+                    avatar: 'teacher-avatar1.png',
+                    economic_status: 'Premium',
+                    verification_status: 'approved',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                
+                console.log('📋 Profile data to insert:', profileData);
+                
+                const { data, error } = await window.supabaseClient
                     .from('user_profiles')
-                    .insert({
-                        id: currentUser.id,
-                        full_name: currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'User',
-                        email: currentUser.email,
-                        class: 'Class 1',
-                        board: 'CBSE',
-                        board_abbr: 'CBSE',
-                        phone: currentUser.phone || '',
-                        city: '',
-                        state: '',
-                        preferred_language: 'English',
-                        avatar: 'teacher-avatar1.png',
-                        economic_status: 'Premium',
-                        verification_status: 'approved',
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    })
+                    .insert(profileData)
                     .select()
                     .single();
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('❌ Profile creation error:', error);
+                    throw error;
+                }
                 
                 userData = data;
-                console.log('✅ New user profile created:', userData);
+                console.log('✅ New user profile created successfully:', userData);
                 updateUserInterface();
                 
             } catch (error) {
-                console.error('Failed to create user profile:', error);
+                console.error('❌ Failed to create user profile:', error);
                 // Set default user data if creation fails
                 userData = {
-                    full_name: currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'User',
+                    full_name: currentUser.user_metadata?.full_name || 
+                              currentUser.user_metadata?.name ||
+                              currentUser.email?.split('@')[0] || 
+                              'User',
                     class: 'Class 1',
                     board: 'CBSE'
                 };
                 updateUserInterface();
+            }
+        }
+        
+        // Ensure Google OAuth users have complete profiles
+        async function ensureGoogleOAuthProfile() {
+            try {
+                console.log('🔍 Ensuring Google OAuth user has complete profile...');
+                
+                // Check if profile exists and is complete
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (profileError) {
+                    console.log('❌ No profile found for Google OAuth user, creating...');
+                    await createUserProfile();
+                    return;
+                }
+                
+                // Check if profile is complete with registration data
+                const isComplete = profile.full_name && 
+                                 profile.email && 
+                                 profile.phone &&
+                                 profile.class && 
+                                 profile.board &&
+                                 profile.verification_status === 'approved';
+                
+                if (!isComplete) {
+                    console.log('⚠️ Google OAuth profile incomplete, user needs to complete registration...');
+                    
+                    // Show message to user about completing registration
+                    showMessage('Please complete your profile registration to access all features.', 'warning');
+                    
+                    // Update basic info from OAuth only
+                    const updateData = {
+                        email: currentUser.email,
+                        verification_status: 'approved',
+                        economic_status: 'Premium',
+                        updated_at: new Date().toISOString()
+                    };
+                    
+                    const { data: updatedProfile, error: updateError } = await supabaseClient
+                        .from('user_profiles')
+                        .update(updateData)
+                        .eq('id', currentUser.id)
+                        .select()
+                        .single();
+                    
+                    if (updateError) {
+                        console.error('❌ Failed to update Google OAuth profile:', updateError);
+                    } else {
+                        console.log('✅ Google OAuth profile updated:', updatedProfile);
+                        userData = updatedProfile;
+                        updateUserInterface();
+                    }
+                } else {
+                    console.log('✅ Google OAuth profile is complete');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error ensuring Google OAuth profile:', error);
             }
         }
         
@@ -1200,7 +1389,11 @@
                 const studentInitialsElement = document.getElementById('studentInitials');
                 
                 if (studentNameElement) studentNameElement.textContent = name;
-                if (studentClassElement) studentClassElement.textContent = className;
+                if (studentClassElement) {
+                    // Remove "Class" prefix if it already exists to avoid duplication
+                    const classValue = className.replace(/^Class\s+/i, '');
+                    studentClassElement.textContent = `Class ${classValue}`;
+                }
                 if (studentInitialsElement) studentInitialsElement.textContent = initials;
                 
                 // Update teacher avatar
@@ -1292,8 +1485,22 @@
                 // Show loading
                 showLoading(true);
                 
-                // Get AI response
-                const response = await getAIResponse(message);
+                // Get AI response - try Claude first, then fallback to GPT
+                let response;
+                try {
+                    if (window.claudeChat) {
+                        response = await window.claudeChat.sendMessage(message, userData);
+                    } else {
+                        throw new Error('Claude service not available');
+                    }
+                } catch (claudeError) {
+                    console.log('⚠️ Claude error, falling back to GPT:', claudeError);
+                    if (window.gptService) {
+                        response = await window.gptService.sendMessage(message, userData);
+                    } else {
+                        throw new Error('No AI service available');
+                    }
+                }
                 
                 // Add AI response
                 addMessage('ai', response);
@@ -1311,21 +1518,6 @@
                 addMessage('ai', 'Sorry, I encountered an error. Please try again.');
             } finally {
                 showLoading(false);
-            }
-        }
-        
-        // Get AI response using gptService
-        async function getAIResponse(message) {
-            if (!window.gptService) {
-                throw new Error('GPT Service not available');
-            }
-            
-            try {
-                const response = await window.gptService.sendMessage(message, userData);
-                return response;
-            } catch (error) {
-                console.error('Error getting AI response:', error);
-                throw error;
             }
         }
         
@@ -1408,7 +1600,9 @@
             
             // Convert markdown to HTML if it's an AI message
             if (role === 'ai') {
-                bubbleDiv.innerHTML = DOMPurify.sanitize(marked.parse(content));
+                // Ensure content is a string before passing to marked
+                const contentString = typeof content === 'string' ? content : JSON.stringify(content);
+                bubbleDiv.innerHTML = DOMPurify.sanitize(marked.parse(contentString));
             } else {
                 bubbleDiv.textContent = content;
             }
@@ -1424,11 +1618,25 @@
         
         function initVoiceFeatures() {
             // Initialize voice recognition and TTS
-            if (window.initVoiceRecognition) {
-                window.initVoiceRecognition();
+            console.log('🔊 Initializing voice features...');
+            
+            // Check if services are available
+            if (window.voiceRecognition) {
+                console.log('✅ Voice Recognition service available');
+            } else {
+                console.warn('⚠️ Voice Recognition service not available');
             }
-            if (window.initTextToSpeech) {
-                window.initTextToSpeech();
+            
+            if (window.textToSpeech) {
+                console.log('✅ Text-to-Speech service available');
+            } else {
+                console.warn('⚠️ Text-to-Speech service not available');
+            }
+            
+            if (window.gptService) {
+                console.log('✅ GPT Service available');
+            } else {
+                console.warn('⚠️ GPT Service not available');
             }
         }
         
@@ -1441,24 +1649,30 @@
         }
         
         function startVoiceInput() {
-            if (window.startVoiceRecognition) {
-                window.startVoiceRecognition();
+            if (window.voiceRecognition) {
+                window.voiceRecognition.startListening();
                 isRecording = true;
                 document.getElementById('voiceIcon').textContent = '⏹️';
+                showSuccess('Voice input started! Speak now...');
+            } else {
+                showError('Voice recognition not available');
             }
         }
         
         function stopVoiceInput() {
-            if (window.stopVoiceRecognition) {
-                window.stopVoiceRecognition();
+            if (window.voiceRecognition) {
+                window.voiceRecognition.stop();
                 isRecording = false;
                 document.getElementById('voiceIcon').textContent = '🎤';
+                showSuccess('Voice input stopped');
             }
         }
         
         function playTTS(text) {
-            if (window.speakText) {
-                window.speakText(text);
+            if (window.textToSpeech) {
+                window.textToSpeech.speak(text);
+            } else {
+                showError('Text-to-speech not available');
             }
         }
         
@@ -1506,7 +1720,7 @@
         
         async function checkTrialStatus() {
             try {
-                const { data: { user } } = await supabaseClient.auth.getUser();
+                const { data: { user } } = await window.supabaseClient.auth.getUser();
                 if (!user) {
                     console.log('No user found, skipping trial check');
                     return true; // Allow access even without user
@@ -1559,7 +1773,9 @@
                 }
                 
                 if (studentClassElement && profile.class) {
-                    studentClassElement.textContent = `Class ${profile.class}`;
+                    // Remove "Class" prefix if it already exists to avoid duplication
+                    const classValue = profile.class.replace(/^Class\s+/i, '');
+                    studentClassElement.textContent = `Class ${classValue}`;
                 }
                 
                 if (studentInitialsElement && profile.full_name) {
@@ -1637,8 +1853,8 @@
         // Logout function
         async function logout() {
             try {
-                if (supabaseClient) {
-                    await supabaseClient.auth.signOut();
+                if (window.supabaseClient) {
+                    await window.supabaseClient.auth.signOut();
                 }
                 window.location.href = 'login.html';
             } catch (error) {
@@ -1753,27 +1969,35 @@
         
         // ========== EVENT LISTENERS ==========
         
-        document.addEventListener('DOMContentLoaded', function() {
-            // Request microphone permission for mobile
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(function(stream) {
-                        console.log('✅ Microphone permission granted');
-                        // Stop the stream to release the microphone
-                        stream.getTracks().forEach(track => track.stop());
-                    })
-                    .catch(function(err) {
-                        console.log('❌ Microphone permission denied:', err);
-                        // Show a helpful message for mobile users
-                        if (err.name === 'NotAllowedError') {
-                            setTimeout(() => {
-                                showError('Microphone access denied. Please enable it in your browser settings for voice features.');
-                            }, 2000);
-                        }
-                    });
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Request microphone permission for mobile
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(function(stream) {
+                            console.log('✅ Microphone permission granted');
+                            // Stop the stream to release the microphone
+                            stream.getTracks().forEach(track => track.stop());
+                        })
+                        .catch(function(err) {
+                            console.log('❌ Microphone permission denied:', err);
+                            // Show a helpful message for mobile users
+                            if (err.name === 'NotAllowedError') {
+                                setTimeout(() => {
+                                    showError('Microphone access denied. Please enable it in your browser settings for voice features.');
+                                }, 2000);
+                            }
+                        });
+                }
+                
+                await initSupabase();
+                
+                console.log('✅ App initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ App initialization failed:', error);
+                showError('Failed to initialize app. Please refresh the page.');
             }
-            
-            initApp();
         });
         
         // Handle Enter key in chat input
@@ -1869,11 +2093,18 @@
             console.log('User data:', userData);
             console.log('Current user:', currentUser);
             
+            // Check if currentUser is available
+            if (!currentUser) {
+                console.error('Current user not available');
+                alert('Please log in again to access your profile.');
+                return;
+            }
+            
             // Populate popup fields with current user data
             document.getElementById('popupProfileName').value = userData.full_name || '';
             document.getElementById('popupProfileClass').value = userData.class || '';
             document.getElementById('popupProfileBoard').value = userData.board || '';
-            document.getElementById('popupProfileEmail').value = currentUser.email || '';
+                            document.getElementById('popupProfileEmail').value = (currentUser && currentUser.email) || '';
             document.getElementById('popupProfileMobile').value = userData.mobile || 'Not set';
             
             // Show popup
@@ -1943,8 +2174,8 @@
         // Show contact us popup
         function showContactUs() {
             // Populate contact form with user data
-            document.getElementById('contactUsName').value = userData.full_name || currentUser.email || '';
-            document.getElementById('contactUsEmail').value = currentUser.email || '';
+            document.getElementById('contactUsName').value = userData.full_name || (currentUser && currentUser.email) || '';
+            document.getElementById('contactUsEmail').value = (currentUser && currentUser.email) || '';
             document.getElementById('contactUsMobile').value = userData.mobile || 'Not set';
             
             // Show popup
@@ -1999,10 +2230,6 @@
                 showError('Failed to send message. Please try again.');
             }
         }
-
-
-
-
 
         // Contact admin function
         async function contactAdmin() {
@@ -2163,7 +2390,10 @@
             // Show success message
             showSuccess('App download started! Check your downloads folder.');
         }
+
+        // ========== DASHBOARD INITIALIZATION ==========
+        
+
     </script>
 </body>
 </html>
-
