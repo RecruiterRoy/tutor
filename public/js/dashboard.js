@@ -148,6 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => {
             loadVoiceSettings();
             setupVoiceSettingsListeners();
+            setupSmallTTSControls();
         }, 1000);
         
         initSpeechRecognition();
@@ -1861,4 +1862,29 @@ function closeContactUsPopup() {
         popup.classList.add('hidden');
     }
 } 
+
+    // Setup small TTS controls below avatar
+    function setupSmallTTSControls() {
+        const playBtn = document.getElementById('tts-play-small');
+        const stopBtn = document.getElementById('tts-stop-small');
+        
+        if (playBtn && stopBtn) {
+            playBtn.addEventListener('click', () => {
+                if (window.textToSpeech) {
+                    if (window.textToSpeech.isPaused) {
+                        window.textToSpeech.play();
+                    } else {
+                        // If not paused, start from beginning of current response
+                        window.textToSpeech.speak(window.textToSpeech.currentAIResponse || '');
+                    }
+                }
+            });
+            
+            stopBtn.addEventListener('click', () => {
+                if (window.textToSpeech) {
+                    window.textToSpeech.stop();
+                }
+            });
+        }
+    } 
 

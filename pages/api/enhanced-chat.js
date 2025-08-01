@@ -341,7 +341,7 @@ export default async function handler(req, res) {
       weekNumber = null,
       month = null,
       userProfile = null,
-      teacher = 'Roy Sir',
+      teacher,
       isFirstResponseOfDay = false
     } = req.body;
 
