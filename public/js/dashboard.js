@@ -42,10 +42,6 @@ let preWarmedRecognition = null;
 let voicesLoaded = false;
 let lastResponseDate = null; // Track the date of last AI response
 
-// Global chat history array
-let chatHistory = [];
-let todayChatLoaded = false;
-
 // Indian Regional Avatars
 const regionalAvatars = [
     // Specific Teacher Avatars (based on language preference)
@@ -164,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Test voice services
         setTimeout(() => {
-            if (window.speechSynthesis && window.speechSynthesis.getVoices().length > 0) {
+            if (speechSynthesis && speechSynthesis.getVoices().length > 0) {
                 speakText("Welcome to Tutor AI. Voice services are ready.");
             } else {
                  console.log("Skipping welcome message as voices are not ready yet.");
@@ -253,20 +249,15 @@ async function initializeDashboard() {
         setupEventListeners();
         populateAvatarGrid();
         initializeVoiceFeatures();
+        populateVoices();
         
-        // Initialize voice recognition immediately
-        initSpeechRecognition();
-        
-        // Load today's chat history
-        await loadTodayChatHistory();
-        
-        // Initialize voice features after a short delay
+        // Wait for TTS to be ready before loading voice settings
         setTimeout(() => {
-            populateVoices();
             loadVoiceSettings();
             setupVoiceSettingsListeners();
-        }, 500);
+        }, 1000);
         
+        initSpeechRecognition();
         showWelcomeMessage();
         
         // Initialize additional features
@@ -312,10 +303,6 @@ async function loadUserData() {
         }
         
         if (profile) {
-            // Set global user data for use throughout the app
-            window.userData = profile;
-            window.currentUser = currentUser;
-            
             // Populate welcome section
             const welcomeMessage = document.getElementById('welcomeMessage');
             const userInfo = document.getElementById('userInfo');
@@ -701,7 +688,6 @@ async function sendMessage() {
                 grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                 subject: userSubject,
                 userProfile: userProfile,
-                avatar: selectedAvatar, // Send the actual avatar ID
                 teacher: selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
                 isFirstResponseOfDay: isFirstResponseOfDay
             })
@@ -712,16 +698,11 @@ async function sendMessage() {
         
         if (data.success && data.response) {
             await addMessage('ai', data.response);
-            // Save chat to database
-            await saveChatToDatabase(text, data.response);
             // Update the last response date after successful response
             lastResponseDate = today;
         } else {
             console.error('AI response error:', data);
-            const errorMessage = 'Sorry, I could not get a response from the AI.';
-            await addMessage('ai', errorMessage);
-            // Save error message to database as well
-            await saveChatToDatabase(text, errorMessage);
+            await addMessage('ai', 'Sorry, I could not get a response from the AI.');
         }
     } catch (err) {
         console.error('Send message error:', err);
@@ -820,7 +801,7 @@ function initializeVoiceFeatures() {
     // Initialize speech synthesis
     if (window.speechSynthesis) {
         // Some browsers need this event to populate voices
-        window.speechSynthesis.onvoiceschanged = function() {
+        speechSynthesis.onvoiceschanged = function() {
             console.log('Voices changed, refreshing voice list');
             populateVoices();
         };
@@ -847,23 +828,23 @@ function initializeVoiceFeatures() {
 
 function populateVoices() {
     return new Promise((resolve) => {
-        if (!window.speechSynthesis) {
+        if (!speechSynthesis) {
             return resolve([]);
         }
-        const voices = window.speechSynthesis.getVoices();
+        const voices = speechSynthesis.getVoices();
         if (voices.length > 0) {
             voicesLoaded = true;
             resolve(voices);
         } else {
-            window.speechSynthesis.onvoiceschanged = () => {
+            speechSynthesis.onvoiceschanged = () => {
                 voicesLoaded = true;
-                resolve(window.speechSynthesis.getVoices());
+                resolve(speechSynthesis.getVoices());
             };
             // Fallback timeout
             setTimeout(() => {
                 if (!voicesLoaded) {
                     console.log('Voice loading timeout');
-                    resolve(window.speechSynthesis.getVoices());
+                    resolve(speechSynthesis.getVoices());
                 }
             }, 2000);
         }
@@ -970,9 +951,15 @@ function setupVoiceSettingsListeners() {
 function initSpeechRecognition() {
     try {
         const voiceButton = document.getElementById('voiceButton');
+        const voiceStatus = document.getElementById('voiceStatus');
         
         if (!voiceButton) {
             console.log('Voice button not found');
+            return;
+        }
+        
+        if (!voiceStatus) {
+            console.log('Voice status element not found');
             return;
         }
         
@@ -1008,11 +995,8 @@ function initSpeechRecognition() {
             clearTimeout(recognitionTimeout);
             const transcript = event.results[0][0].transcript;
             console.log('Speech recognized:', transcript);
-            const chatInput = document.getElementById('chatInput');
-            if (chatInput) {
-                chatInput.value = transcript;
-                showSuccess("Voice input received");
-            }
+            document.getElementById('chatInput').value = transcript;
+            showSuccess("Voice input received");
         };
 
         recognition.onerror = (event) => {
@@ -1039,12 +1023,7 @@ function initSpeechRecognition() {
 
         recognition.onend = () => {
             clearTimeout(recognitionTimeout);
-            isRecording = false;
-            const voiceButton = document.getElementById('voiceButton');
-            if (voiceButton) {
-                voiceButton.textContent = '🎤';
-                voiceButton.classList.remove('voice-recording');
-            }
+            stopRecording();
         };
 
     } catch (error) {
@@ -1056,14 +1035,14 @@ function initSpeechRecognition() {
 
 async function toggleVoiceRecording() {
     try {
-        if (!recognition) {
+        if (!window.voiceRecognition) {
             showError('Voice recognition not available');
             return;
         }
 
-        if (isRecording) {
+        if (window.voiceRecognition.isListening) {
             // Stop listening
-            recognition.stop();
+            window.voiceRecognition.stop();
             const voiceButton = document.getElementById('voiceButton');
             if (voiceButton) {
                 voiceButton.textContent = '🎤';
@@ -1072,7 +1051,7 @@ async function toggleVoiceRecording() {
             showSuccess('Voice recording stopped');
         } else {
             // Start listening
-            recognition.start();
+            await window.voiceRecognition.startListening();
             const voiceButton = document.getElementById('voiceButton');
             if (voiceButton) {
                 voiceButton.textContent = '🔴';
@@ -1089,14 +1068,14 @@ async function toggleVoiceRecording() {
 
 async function speakText(text) {
     console.log('[TTS] Attempting to speak:', text);
-    if (!window.speechSynthesis) {
+    if (!speechSynthesis) {
         console.error('[TTS] Speech synthesis not supported.');
         return;
     }
 
     try {
         // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
+        speechSynthesis.cancel();
         console.log('[TTS] Cancelled previous speech.');
 
         // Wait for voices to load
@@ -1142,7 +1121,7 @@ async function speakText(text) {
             showError(`TTS Error: ${event.error}`);
         };
 
-        window.speechSynthesis.speak(utterance);
+        speechSynthesis.speak(utterance);
     } catch (error) {
         console.error('[TTS] Error in speakText function:', error);
     }
@@ -1637,10 +1616,7 @@ async function sendChatMessage() {
             if (imgData.images && imgData.images.length > 0) {
                 removeTypingIndicator();
                 const img = imgData.images[0];
-                const imageResponse = `<img src='${img.imgPath.replace(/\\/g, '/')}' alt='Book Diagram' class='max-w-full max-h-80 rounded shadow mb-2'><div class='text-xs text-gray-300'>From book: <b>${img.file}</b>, page ${img.page}</div>`;
-                await addMessage('ai', imageResponse);
-                // Save image response to database
-                await saveChatToDatabase(message, imageResponse);
+                await addMessage('ai', `<img src='${img.imgPath.replace(/\\/g, '/')}' alt='Book Diagram' class='max-w-full max-h-80 rounded shadow mb-2'><div class='text-xs text-gray-300'>From book: <b>${img.file}</b>, page ${img.page}</div>`);
                 return;
             }
         } catch (e) {
@@ -1658,15 +1634,10 @@ async function sendChatMessage() {
         const data = await response.json();
         removeTypingIndicator();
         await addMessage('ai', data.response);
-        // Save chat to database
-        await saveChatToDatabase(message, data.response);
         speakText(data.response);
     } catch (error) {
         removeTypingIndicator();
-        const errorMessage = 'Error connecting to AI server.';
-        await addMessage('ai', errorMessage);
-        // Save error message to database as well
-        await saveChatToDatabase(message, errorMessage);
+        await addMessage('ai', 'Error connecting to AI server.');
     }
 }
 
@@ -1928,104 +1899,4 @@ function closeContactUsPopup() {
             });
         }
     } 
-
-async function loadTodayChatHistory() {
-    try {
-        if (!currentUser || !currentUser.id) {
-            console.log('No user logged in, skipping chat history load');
-            return;
-        }
-
-        // Get today's date in user's timezone
-        const today = new Date();
-        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-
-        console.log('Loading chat history for today:', startOfDay.toISOString(), 'to', endOfDay.toISOString());
-
-        const { data: chatData, error } = await window.supabaseClient
-            .from('chat_history')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .gte('created_at', startOfDay.toISOString())
-            .lte('created_at', endOfDay.toISOString())
-            .order('created_at', { ascending: true });
-
-        if (error) {
-            console.error('Error loading chat history:', error);
-            return;
-        }
-
-        if (chatData && chatData.length > 0) {
-            console.log(`Loaded ${chatData.length} chat messages from today`);
-            
-            // Clear existing chat display
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                chatMessages.innerHTML = '';
-            }
-
-            // Load chat history into memory and display
-            chatHistory = [];
-            for (const chat of chatData) {
-                chatHistory.push({
-                    user: chat.user_message,
-                    ai: chat.ai_response,
-                    timestamp: chat.created_at
-                });
-                
-                // Display the messages
-                await addMessage('user', chat.user_message);
-                await addMessage('ai', chat.ai_response);
-            }
-
-            // Scroll to bottom
-            if (chatMessages) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            todayChatLoaded = true;
-            console.log('Today\'s chat history loaded successfully');
-        } else {
-            console.log('No chat history found for today');
-            todayChatLoaded = true;
-        }
-    } catch (error) {
-        console.error('Error in loadTodayChatHistory:', error);
-        todayChatLoaded = true; // Mark as loaded even if there's an error
-    }
-}
-
-async function saveChatToDatabase(userMessage, aiResponse) {
-    try {
-        if (!currentUser || !currentUser.id) {
-            console.log('No user logged in, skipping chat save');
-            return;
-        }
-
-        // Get current subject and grade
-        const userClass = userData?.class || userData?.class_level || '';
-        const currentSubject = window.currentSubject || '';
-
-        const { error } = await window.supabaseClient
-            .from('chat_history')
-            .insert({
-                user_id: currentUser.id,
-                user_message: userMessage,
-                ai_response: aiResponse,
-                subject: currentSubject,
-                grade: userClass,
-                teacher_name: selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
-                created_at: new Date().toISOString()
-            });
-
-        if (error) {
-            console.error('Error saving chat to database:', error);
-        } else {
-            console.log('Chat message saved to database successfully');
-        }
-    } catch (error) {
-        console.error('Error in saveChatToDatabase:', error);
-    }
-} 
 

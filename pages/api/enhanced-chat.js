@@ -342,7 +342,6 @@ export default async function handler(req, res) {
       month = null,
       userProfile = null,
       teacher,
-      avatar,
       isFirstResponseOfDay = false
     } = req.body;
 
@@ -392,9 +391,7 @@ export default async function handler(req, res) {
       }
     };
 
-    // Determine teacher based on avatar or teacher parameter
-    const teacherName = avatar === 'ms-sapana' ? 'Ms. Sapana' : (teacher || 'Roy Sir');
-    const teacherPersona = getTeacherPersona(teacherName);
+    const teacherPersona = getTeacherPersona(teacher);
 
     // Language script detection and conversion instructions
     const languageInstructions = teacherPersona.name === 'Ms. Sapana' ? 

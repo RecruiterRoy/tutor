@@ -327,6 +327,8 @@
                             <div class="error-message" id="cityError"></div>
                         </div>
                         
+
+                        
                         <div>
                             <select id="language" class="input-style w-full px-4 py-3 rounded-lg" onchange="updateAvatarBasedOnLanguage()">
                                 <option value="English">English</option>
@@ -661,7 +663,6 @@
             const board = document.getElementById('board').value;
             const state = document.getElementById('state').value;
             const city = document.getElementById('city').value.trim();
-            const schoolName = document.getElementById('schoolName').value.trim();
 
             if (!classValue) {
                 showFieldError('classError', 'Please select your class');
@@ -691,12 +692,7 @@
                 hideFieldError('cityError');
             }
 
-            if (!schoolName) {
-                showFieldError('schoolNameError', 'School name is required');
-                isValid = false;
-            } else {
-                hideFieldError('schoolNameError');
-            }
+
 
             return isValid;
         }
@@ -765,9 +761,9 @@
                     <h3 class="text-white font-semibold mb-2">Academic Information</h3>
                     <p class="text-gray-300">Class: ${document.getElementById('class').value}</p>
                     <p class="text-gray-300">Board: ${document.getElementById('board').value}</p>
+                    <p class="text-gray-300">School: ${document.getElementById('schoolName').value}</p>
                     <p class="text-gray-300">State: ${document.getElementById('state').value}</p>
                     <p class="text-gray-300">City: ${document.getElementById('city').value}</p>
-                    <p class="text-gray-300">School: ${document.getElementById('schoolName').value}</p>
                     <p class="text-gray-300">Language: ${document.getElementById('language').value}</p>
                 </div>
                 <div class="bg-white/10 p-4 rounded-lg">
@@ -826,6 +822,7 @@
                 const phone = document.getElementById('phone').value.trim();
                 const userClass = `Class ${document.getElementById('class').value}`;
                 const board = document.getElementById('board').value;
+                const schoolName = document.getElementById('schoolName').value.trim();
                 const city = document.getElementById('city').value.trim();
                 const state = document.getElementById('state').value;
                 const language = document.getElementById('language').value;
@@ -865,9 +862,9 @@
                                 phone: phone,
                                 class: userClass,
                                 board: board,
+                                school_name: schoolName,
                                 city: city,
                                 state: state,
-                                school_name: document.getElementById('schoolName').value.trim(),
                                 preferred_language: language,
                                 avatar: selectedAvatar || 'teacher-avatar1.png',
                                 economic_status: 'Premium',
@@ -941,9 +938,9 @@
                         class: userClass, // From registration form
                         board: board, // From registration form
                         board_abbr: board, // From registration form
+                        school_name: schoolName, // From registration form
                         city: city, // From registration form
                         state: state, // From registration form
-                        school_name: document.getElementById('schoolName').value.trim(), // From registration form
                         preferred_language: language, // From registration form
                         avatar: selectedAvatar || 'teacher-avatar1.png',
                         economic_status: 'Premium',
@@ -1039,7 +1036,6 @@
                 board: board,
                 city: city,
                 state: state,
-                school_name: document.getElementById('schoolName').value.trim(),
                 preferred_language: language,
                 avatar: selectedAvatar
             });
@@ -1055,7 +1051,6 @@
                     board: board,
                     city: city,
                     state: state,
-                    school_name: document.getElementById('schoolName').value.trim(),
                     preferred_language: language,
                     avatar: selectedAvatar || 'teacher-avatar1.png',
                     economic_status: 'Premium',
@@ -1275,7 +1270,6 @@
                phone: window.registrationData.phone.replace('+91', ''),
                city: window.registrationData.city,
                state: window.registrationData.state,
-               school_name: window.registrationData.school_name,
                preferred_language: window.registrationData.language,
                avatar: selectedAvatar || 'teacher-avatar1.png',
                economic_status: 'Premium',
@@ -1368,7 +1362,6 @@
             const city = document.getElementById('city').value.trim();
             const state = document.getElementById('state').value;
             const language = document.getElementById('language').value;
-            const schoolName = document.getElementById('schoolName').value.trim();
             await supabase
                 .from('user_profiles')
                 .upsert({
@@ -1379,7 +1372,6 @@
                     phone: document.getElementById('phone').value.trim(),
                     city: city,
                     state: state,
-                    school_name: schoolName,
                     preferred_language: language,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
