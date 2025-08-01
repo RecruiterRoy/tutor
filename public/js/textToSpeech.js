@@ -54,55 +54,9 @@ class TextToSpeech {
     }
 
     createTTSControls() {
-        // Check if controls already exist
-        if (document.getElementById('tts-controls')) return;
-
-        // Find the chat header where the avatar is located
-        const chatHeader = document.querySelector('#chatSection .p-4.border-b');
-        
-        if (!chatHeader) {
-            console.log('Chat header not found for TTS controls');
-            return;
-        }
-
-        // Create TTS controls container
-        const ttsControls = document.createElement('div');
-        ttsControls.id = 'tts-controls';
-        ttsControls.className = 'tts-controls flex flex-col items-center gap-2 p-3 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-white/20 mt-3';
-        ttsControls.style.display = 'none'; // Hidden by default
-
-        ttsControls.innerHTML = `
-            <div class="text-white text-xs mb-2 font-medium">TTS Controls</div>
-            <div class="flex gap-2">
-                <button id="tts-play" class="tts-btn bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm">
-                    ▶️ Play
-                </button>
-                <button id="tts-pause" class="tts-btn bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg transition-colors text-sm" style="display: none;">
-                    ⏸️ Pause
-                </button>
-                <button id="tts-stop" class="tts-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm">
-                    ⏹️ Stop
-                </button>
-            </div>
-            <div class="flex flex-col gap-2 mt-2 w-full">
-                <div class="flex items-center gap-2">
-                    <label class="text-white text-xs">Speed:</label>
-                    <input type="range" id="tts-speed" min="0.5" max="2" step="0.1" value="1.25" class="flex-1">
-                    <span id="tts-speed-value" class="text-white text-xs">1.25x</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <label class="text-white text-xs">Pitch:</label>
-                    <input type="range" id="tts-pitch" min="0.5" max="2" step="0.1" value="1" class="flex-1">
-                    <span id="tts-pitch-value" class="text-white text-xs">1.0x</span>
-                </div>
-            </div>
-            <div class="tts-status text-white text-xs mt-2 text-center">
-                Ready
-            </div>
-        `;
-
-        // Insert into chat header after the existing content
-        chatHeader.appendChild(ttsControls);
+        // Remove TTS controls from chat header - they should only be in settings
+        // This method is now deprecated as controls are handled in settings only
+        console.log('TTS controls are now managed in settings only');
     }
 
     addEventListeners() {
@@ -364,143 +318,103 @@ class TextToSpeech {
     }
 
     detectLanguageAndSetVoice(text) {
-        // Get current avatar from global variable
         const currentAvatar = window.selectedAvatar || 'roy-sir';
-        
         console.log('TTS Voice Selection - Current Avatar:', currentAvatar);
         console.log('Available voices:', this.voices.map(v => `${v.name} (${v.lang})`));
-        
-        // Set default voices based on avatar - PRIORITY OVER TEXT LANGUAGE
+
         if (currentAvatar === 'ms-sapana') {
-            // Ms. Sapana - ALWAYS use Google Hindi voice (FEMALE)
-            console.log('Selecting voice for Ms. Sapana (should be female Hindi voice)');
-            
-            // Priority 1: Google Hindi voice (female)
-            let hindiVoice = this.voices.find(voice => 
-                voice.name.toLowerCase().includes('google') && 
+            console.log('Selecting voice for Ms. Sapana (Hindi voice)');
+            // Priority 1: Google Hindi voice
+            let hindiVoice = this.voices.find(voice =>
+                voice.name.toLowerCase().includes('google') &&
                 (voice.name.toLowerCase().includes('hindi') || voice.lang.includes('hi-IN'))
             );
-            
             // Priority 2: Any Hindi voice (prefer female)
             if (!hindiVoice) {
-                hindiVoice = this.voices.find(voice => 
+                hindiVoice = this.voices.find(voice =>
                     (voice.name.toLowerCase().includes('hindi') || voice.lang.includes('hi-IN') || voice.lang.includes('hi')) &&
                     !voice.name.toLowerCase().includes('male')
                 );
             }
-            
             // Priority 3: Any Hindi voice (any gender)
             if (!hindiVoice) {
-                hindiVoice = this.voices.find(voice => 
-                    voice.name.toLowerCase().includes('hindi') || 
+                hindiVoice = this.voices.find(voice =>
+                    voice.name.toLowerCase().includes('hindi') ||
                     voice.lang.includes('hi-IN') ||
                     voice.lang.includes('hi')
                 );
             }
-            
             // Priority 4: Any Indian voice
             if (!hindiVoice) {
-                hindiVoice = this.voices.find(voice => 
-                    voice.lang.includes('IN') || 
+                hindiVoice = this.voices.find(voice =>
+                    voice.lang.includes('IN') ||
                     voice.name.toLowerCase().includes('india')
                 );
             }
-            
             if (hindiVoice) {
                 this.currentVoice = hindiVoice;
                 console.log('✅ Ms. Sapana using Hindi voice:', hindiVoice.name, 'Language:', hindiVoice.lang);
                 return 'hi-IN';
             } else {
                 console.warn('❌ No Hindi voice found for Ms. Sapana. Available voices:', this.voices.map(v => v.name));
-                // Don't fall back to text-based detection for Ms. Sapana
                 return 'hi-IN';
             }
-        } else if (currentAvatar === 'roy-sir') {
-            // Roy Sir - ALWAYS use Microsoft Ravi or English voice (MALE)
-            console.log('Selecting voice for Roy Sir (should be male English voice)');
-            
-            // Priority 1: Microsoft Ravi (male)
-            let englishVoice = this.voices.find(voice => 
-                voice.name.toLowerCase().includes('microsoft') && 
+        } else {
+            // Roy Sir - ALWAYS use English voice
+            console.log('Selecting voice for Roy Sir (English voice)');
+            // Priority 1: Microsoft Ravi
+            let englishVoice = this.voices.find(voice =>
+                voice.name.toLowerCase().includes('microsoft') &&
                 voice.name.toLowerCase().includes('ravi')
             );
-            
             // Priority 2: Any Ravi voice (male)
             if (!englishVoice) {
-                englishVoice = this.voices.find(voice => 
+                englishVoice = this.voices.find(voice =>
                     voice.name.toLowerCase().includes('ravi') &&
                     !voice.name.toLowerCase().includes('female')
                 );
             }
-            
             // Priority 3: Any Ravi voice (any gender)
             if (!englishVoice) {
-                englishVoice = this.voices.find(voice => 
+                englishVoice = this.voices.find(voice =>
                     voice.name.toLowerCase().includes('ravi')
                 );
             }
-            
             // Priority 4: Any Indian English voice (prefer male)
             if (!englishVoice) {
-                englishVoice = this.voices.find(voice => 
+                englishVoice = this.voices.find(voice =>
                     voice.lang.includes('en-IN') &&
                     !voice.name.toLowerCase().includes('female')
                 );
             }
-            
             // Priority 5: Any Indian English voice (any gender)
             if (!englishVoice) {
-                englishVoice = this.voices.find(voice => 
+                englishVoice = this.voices.find(voice =>
                     voice.lang.includes('en-IN')
                 );
             }
-            
             // Priority 6: Any English voice (prefer male)
             if (!englishVoice) {
-                englishVoice = this.voices.find(voice => 
+                englishVoice = this.voices.find(voice =>
                     (voice.lang.includes('en-US') || voice.lang.includes('en-GB')) &&
                     !voice.name.toLowerCase().includes('female')
                 );
             }
-            
             // Priority 7: Any English voice (any gender)
             if (!englishVoice) {
-                englishVoice = this.voices.find(voice => 
+                englishVoice = this.voices.find(voice =>
                     voice.lang.includes('en-US') || voice.lang.includes('en-GB')
                 );
             }
-            
             if (englishVoice) {
                 this.currentVoice = englishVoice;
                 console.log('✅ Roy Sir using English voice:', englishVoice.name, 'Language:', englishVoice.lang);
                 return 'en-IN';
             } else {
                 console.warn('❌ No English voice found for Roy Sir. Available voices:', this.voices.map(v => v.name));
-                // Don't fall back to text-based detection for Roy Sir
                 return 'en-IN';
             }
         }
-        
-        // Only fall back to language detection if no avatar is set
-        console.log('No avatar set, falling back to text-based language detection');
-        const hindiPattern = /[\u0900-\u097F]/;
-        const isHindi = hindiPattern.test(text);
-        
-        const targetLang = isHindi ? 'hi-IN' : 'en-IN';
-        
-        // Find appropriate voice
-        const targetVoices = this.voices.filter(voice => 
-            voice.lang.includes(targetLang) || 
-            (isHindi && voice.lang.includes('hi')) ||
-            (!isHindi && voice.lang.includes('en'))
-        );
-        
-        if (targetVoices.length > 0) {
-            this.currentVoice = targetVoices[0];
-            console.log('Fallback voice selected:', this.currentVoice.name, 'Language:', this.currentVoice.lang);
-        }
-        
-        return targetLang;
     }
 
     setVoice(voiceName) {

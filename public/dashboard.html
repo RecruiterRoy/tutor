@@ -676,6 +676,54 @@
                 display: none;
             }
         }
+
+        /* APK-specific fixes for side buttons */
+        @media (max-width: 768px) {
+            .sidebar {
+                background: rgba(17, 24, 39, 0.95) !important;
+                backdrop-filter: blur(10px);
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                z-index: 50;
+            }
+            
+            .sidebar-nav {
+                background: rgba(31, 41, 55, 0.98) !important;
+                border-radius: 8px;
+                margin: 8px;
+                padding: 8px;
+            }
+            
+            .sidebar-nav button {
+                background: rgba(55, 65, 81, 0.9) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                margin-bottom: 4px;
+            }
+            
+            .sidebar-nav button:hover {
+                background: rgba(75, 85, 99, 0.95) !important;
+            }
+            
+            .sidebar-nav button.active {
+                background: rgba(59, 130, 246, 0.9) !important;
+                border-color: rgba(59, 130, 246, 0.5);
+            }
+            
+            /* Ensure chat area doesn't overlap */
+            #chatSection {
+                margin-left: 0;
+                width: 100%;
+                z-index: 10;
+            }
+            
+            /* Make sure content is readable */
+            .content-section {
+                background: rgba(17, 24, 39, 0.95) !important;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                margin: 8px;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen overflow-x-hidden">
@@ -834,11 +882,18 @@
                     <!-- Chat Header -->
                     <div class="p-4 border-b border-white/20">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <img id="teacher-avatar-chat" class="teacher-avatar" src="images/roy_sir.jpg" alt="Teacher Avatar">
-                                <div>
-                                    <h2 class="text-white text-xl font-bold" id="teacherName">Roy Sir</h2>
-                                    <p class="text-gray-300 text-sm" id="teacherStatus">Online • Ready to help</p>
+                            <!-- Teacher Avatar and Info -->
+                            <div class="flex flex-col items-center">
+                                <img id="teacherAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-white/20" src="images/roy_sir.jpg" alt="Teacher Avatar">
+                                <h2 class="text-white text-xl font-bold mt-2" id="teacherName">Roy Sir</h2>
+                                <!-- Small TTS Control Button -->
+                                <div class="flex gap-1 mt-2">
+                                    <button id="tts-play-small" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs transition-colors">
+                                        ▶️
+                                    </button>
+                                    <button id="tts-stop-small" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs transition-colors">
+                                        ⏹️
+                                    </button>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-4">
