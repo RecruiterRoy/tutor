@@ -393,6 +393,20 @@ export default async function handler(req, res) {
 
     const teacherPersona = getTeacherPersona(teacher);
 
+    // Language script detection and conversion instructions
+    const languageInstructions = teacherPersona.name === 'Ms. Sapana' ? 
+      `LANGUAGE SCRIPT RULES:
+- When responding in Hindi, ALWAYS use Devanagari script (हिंदी) NOT Roman script (Hindi)
+- Convert any Hindi words from Roman to Devanagari script
+- Example: "samjha" should be "समझा", "achha" should be "अच्छा"
+- Use proper Hindi grammar and sentence structure
+- For technical terms, use English but explain in Hindi context
+- Mix Hindi and English naturally but ensure Hindi is in Devanagari script` :
+      `LANGUAGE SCRIPT RULES:
+- Use clear, proper English with structured explanations
+- Maintain professional tone throughout
+- Use international examples while keeping Indian context in mind`;
+
     // Only include teacher name in first response of the day
     const teacherIntroduction = isFirstResponseOfDay ? 
       `You are ${teacherPersona.name}, an expert AI tutor for Indian students with access to comprehensive educational resources.` :
@@ -407,6 +421,8 @@ TEACHER PERSONA:
 - Cultural Context: ${teacherPersona.cultural}
 - Special Features: ${teacherPersona.specialFeatures}
 - Teaching Methodology: ${teacherPersona.teachingStyle}
+
+${languageInstructions}
 
 STUDENT INFORMATION (DO NOT ASK FOR THIS - USE WHAT'S PROVIDED):
 - Name: ${userContext.name}

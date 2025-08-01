@@ -32,7 +32,7 @@ let isAmbientListening = false;
 let currentUser = null;
 let currentGrade = null;
 let currentSubject = null;
-let selectedAvatar = 'professor';
+let selectedAvatar = 'roy-sir'; // Default to Roy Sir, will be overridden by user preference
 let conversationHistory = [];
 let synth = window.speechSynthesis;
 let selectedVoice = null;
@@ -374,12 +374,14 @@ async function loadUserData() {
             // Set avatar if saved
             if (profile.ai_avatar) {
                 selectedAvatar = profile.ai_avatar;
+                window.selectedAvatar = profile.ai_avatar; // Set global variable for TTS
                 updateAvatarDisplay();
             } else if (profile.preferred_language) {
                 // Set default avatar based on preferred language
                 const defaultAvatar = getDefaultAvatarForLanguage(profile.preferred_language);
                 if (defaultAvatar) {
                     selectedAvatar = defaultAvatar.id;
+                    window.selectedAvatar = defaultAvatar.id; // Set global variable for TTS
                     // Update user profile with default avatar
                     await window.supabaseClient
                         .from('user_profiles')
@@ -1480,7 +1482,7 @@ async function saveProfileChanges() {
 // Update avatar display
 function updateAvatarDisplay() {
     const aiAvatar = document.getElementById('aiAvatar');
-    const avatarOptions = document.querySelectorAll('.avatar-option');
+    const avatarCards = document.querySelectorAll('.avatar-selection-card');
     
     // Update AI avatar icon
     if (aiAvatar) {
@@ -1507,23 +1509,36 @@ function updateAvatarDisplay() {
         aiAvatar.appendChild(icon);
     }
     
-    // Update avatar option selection
-    avatarOptions.forEach(option => {
-        option.classList.remove('selected');
-        if (option.dataset.avatar === selectedAvatar) {
-            option.classList.add('selected');
+    // Update avatar card selection
+    avatarCards.forEach(card => {
+        card.classList.remove('selected');
+        // Check if this card corresponds to the selected avatar
+        const isHindiCard = card.querySelector('img[alt="Ms. Sapana"]') && selectedAvatar === 'ms-sapana';
+        const isEnglishCard = card.querySelector('img[alt="Roy Sir"]') && selectedAvatar === 'roy-sir';
+        if (isHindiCard || isEnglishCard) {
+            card.classList.add('selected');
         }
     });
 }
 
 // Setup avatar selection
 function setupAvatarSelection() {
-    const avatarOptions = document.querySelectorAll('.avatar-option');
-    avatarOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            avatarOptions.forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
-            selectedAvatar = option.dataset.avatar;
+    const avatarCards = document.querySelectorAll('.avatar-selection-card');
+    avatarCards.forEach(card => {
+        card.addEventListener('click', () => {
+            avatarCards.forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            
+            // Determine which avatar was selected based on the image alt text
+            const img = card.querySelector('img');
+            if (img && img.alt === 'Ms. Sapana') {
+                selectedAvatar = 'ms-sapana';
+                window.selectedAvatar = 'ms-sapana';
+            } else if (img && img.alt === 'Roy Sir') {
+                selectedAvatar = 'roy-sir';
+                window.selectedAvatar = 'roy-sir';
+            }
+            
             updateAvatarDisplay();
             saveAvatarPreference();
         });
@@ -1533,17 +1548,14 @@ function setupAvatarSelection() {
 
 async function saveAvatarPreference() {
     try {
-        const selectedAvatar = document.querySelector('input[name="avatar"]:checked');
-        if (!selectedAvatar) {
+        // Use the current selectedAvatar from window object
+        const avatarId = window.selectedAvatar;
+        if (!avatarId) {
             console.log('No avatar selected');
             return;
         }
 
-        const avatarId = selectedAvatar.value;
         console.log('Saving avatar preference:', avatarId);
-
-        // Update global variable
-        window.selectedAvatar = avatarId;
 
         // Save to Supabase user_profiles table
         if (currentUser) {

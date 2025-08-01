@@ -913,8 +913,8 @@
                         <div class="message message-ai">
                             <div class="message-bubble">
                                 <div class="flex items-center space-x-3 mb-3">
-                                    <img src="images/roy_sir.jpg" alt="Roy Sir" class="w-8 h-8 rounded-full">
-                                    <span class="text-sm font-medium text-blue-200">Roy Sir</span>
+                                    <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full">
+                                    <span id="welcomeTeacherName" class="text-sm font-medium text-blue-200">Roy Sir</span>
                                 </div>
                                 <p>Hello! I'm your AI teacher. How can I help you today? You can ask me anything about your studies, homework, or any subject you're learning.</p>
                                 <div class="mt-3 text-xs text-gray-300">
@@ -1245,6 +1245,7 @@
             image: "images/roy_sir.jpg",
             language: "en"
         };
+        // This will be updated based on user's avatar preference
         // supabaseClient is initialized globally via supabaseClient.js
         
         // TTS Variables
@@ -1323,9 +1324,6 @@
                 
                 // Connect teacher avatar to AI
                 connectTeacherAvatar();
-                
-                // Set default selected avatar
-                document.querySelector('[onclick="handleAvatarSelection(\'english\')"]').classList.add('selected');
                 
                 console.log('✅ App initialized successfully');
                 
@@ -1414,6 +1412,33 @@
                 
                 userData = data;
                 console.log('✅ User profile loaded:', userData);
+                
+                // Load avatar preference
+                if (data.ai_avatar) {
+                    window.selectedAvatar = data.ai_avatar;
+                    if (data.ai_avatar === 'ms-sapana') {
+                        currentTeacher = {
+                            name: "Ms. Sapana",
+                            image: "images/miss_sapna.jpg",
+                            language: "hi"
+                        };
+                        // Set Hindi avatar as selected
+                        document.querySelector('[onclick="handleAvatarSelection(\'hindi\')"]').classList.add('selected');
+                    } else {
+                        currentTeacher = {
+                            name: "Roy Sir",
+                            image: "images/roy_sir.jpg",
+                            language: "en"
+                        };
+                        // Set English avatar as selected
+                        document.querySelector('[onclick="handleAvatarSelection(\'english\')"]').classList.add('selected');
+                    }
+                } else {
+                    // Default to Roy Sir if no preference
+                    window.selectedAvatar = 'roy-sir';
+                    document.querySelector('[onclick="handleAvatarSelection(\'english\')"]').classList.add('selected');
+                }
+                
                 updateUserInterface();
                 
             } catch (error) {
@@ -1575,14 +1600,22 @@
                 if (studentInitialsElement) studentInitialsElement.textContent = initials;
                 
                 // Update teacher avatar
-                const teacherAvatarElement = document.getElementById('teacher-avatar-chat');
+                const teacherAvatarElement = document.getElementById('teacherAvatar');
                 const teacherNameElement = document.getElementById('teacherName');
+                const welcomeTeacherAvatarElement = document.getElementById('welcomeTeacherAvatar');
+                const welcomeTeacherNameElement = document.getElementById('welcomeTeacherName');
                 
                 if (teacherAvatarElement && currentTeacher?.image) {
                     teacherAvatarElement.src = currentTeacher.image;
                 }
                 if (teacherNameElement && currentTeacher?.name) {
                     teacherNameElement.textContent = currentTeacher.name;
+                }
+                if (welcomeTeacherAvatarElement && currentTeacher?.image) {
+                    welcomeTeacherAvatarElement.src = currentTeacher.image;
+                }
+                if (welcomeTeacherNameElement && currentTeacher?.name) {
+                    welcomeTeacherNameElement.textContent = currentTeacher.name;
                 }
                 
                 console.log('✅ User interface updated:', { name, className, initials });
@@ -1828,6 +1861,7 @@
                     image: "images/miss_sapna.jpg",
                     language: "hi"
                 };
+                window.selectedAvatar = 'ms-sapana'; // Set global avatar variable
                 // Add selected class to Hindi teacher card
                 document.querySelector('[onclick="handleAvatarSelection(\'hindi\')"]').classList.add('selected');
             } else {
@@ -1836,11 +1870,21 @@
                     image: "images/roy_sir.jpg",
                     language: "en"
                 };
+                window.selectedAvatar = 'roy-sir'; // Set global avatar variable
                 // Add selected class to English teacher card
                 document.querySelector('[onclick="handleAvatarSelection(\'english\')"]').classList.add('selected');
             }
             
             updateUserInterface();
+            
+            // Force TTS voice update
+            if (window.textToSpeech) {
+                window.textToSpeech.forceVoiceUpdate();
+            }
+            
+            // Save avatar preference to Supabase
+            saveAvatarPreference();
+            
             showSuccess(`Switched to ${currentTeacher.name} (${teacher === 'hindi' ? 'Google Hindi' : 'Microsoft Ravi English'})`);
         }
         
