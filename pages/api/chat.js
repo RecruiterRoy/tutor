@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages, grade, subject, response_format, language, user_profile } = req.body;
+    const { messages, grade, subject, response_format, language, user_profile, avatar } = req.body;
 
     // Get the last user message
     const lastUserMessage = messages[messages.length - 1]?.content || '';
@@ -65,8 +65,8 @@ export default async function handler(req, res) {
       subject: subject
     };
 
-    // Determine teacher persona based on language
-    const isHindiTeacher = language === 'hi';
+    // Determine teacher persona based on avatar or language
+    const isHindiTeacher = avatar === 'ms-sapana' || language === 'hi';
     const teacherName = isHindiTeacher ? 'Ms. Sapana' : 'Roy Sir';
     
     const teacherPersona = isHindiTeacher ? {
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
       name: 'Roy Sir',
       style: 'English',
       personality: 'professional and structured',
-      language: 'Use clear, proper English with structured explanations.',
+      language: 'ALWAYS respond in English only, regardless of the language of the question. If the student asks a question in Hindi, respond in English and politely suggest they switch to Miss Sapana in settings for Hindi comfort.',
       greeting: 'Hello! I am Roy Sir.',
       cultural: 'Use international examples but keep Indian context in mind.'
     };
@@ -127,7 +127,13 @@ ${knowledgeContext ? `Knowledge Bank Context: ${knowledgeContext}` : ''}
 
 Available Resources: You have access to textbooks and educational materials. When relevant, mention specific books, chapters, or visual resources that could help ${userContext.name}.
 
-Remember: Guide ${userContext.name} to understand through simple, clear plain text explanations as ${teacherPersona.name}. Use natural language without any formatting or special characters. Stay true to your teaching persona.`;
+Remember: Guide ${userContext.name} to understand through simple, clear plain text explanations as ${teacherPersona.name}. Use natural language without any formatting or special characters. Stay true to your teaching persona.
+
+${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR: 
+- ALWAYS respond in English only, regardless of the language of the question
+- If the student asks a question in Hindi, respond in English and add: "If you are more comfortable in Hindi, please select Miss Sapana in the settings for a better experience."
+- Never respond in Hindi, even if the question is in Hindi
+- Maintain professional English tone at all times` : ''}`;
 
     const completion = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022",
@@ -161,7 +167,7 @@ Remember: Guide ${userContext.name} to understand through simple, clear plain te
 // For App Router (Next.js 13+)
 export async function POST(request) {
   try {
-    const { messages, grade, subject, response_format, language, user_profile } = await request.json();
+    const { messages, grade, subject, response_format, language, user_profile, avatar } = await request.json();
 
     // Get the last user message
     const lastUserMessage = messages[messages.length - 1]?.content || '';
@@ -206,8 +212,8 @@ export async function POST(request) {
       subject: subject
     };
 
-    // Determine teacher persona based on language
-    const isHindiTeacher = language === 'hi';
+    // Determine teacher persona based on avatar or language
+    const isHindiTeacher = avatar === 'ms-sapana' || language === 'hi';
     const teacherName = isHindiTeacher ? 'Ms. Sapana' : 'Roy Sir';
     
     const teacherPersona = isHindiTeacher ? {
@@ -221,7 +227,7 @@ export async function POST(request) {
       name: 'Roy Sir',
       style: 'English',
       personality: 'professional and structured',
-      language: 'Use clear, proper English with structured explanations.',
+      language: 'ALWAYS respond in English only, regardless of the language of the question. If the student asks a question in Hindi, respond in English and politely suggest they switch to Miss Sapana in settings for Hindi comfort.',
       greeting: 'Hello! I am Roy Sir.',
       cultural: 'Use international examples but keep Indian context in mind.'
     };

@@ -382,11 +382,11 @@ export default async function handler(req, res) {
           name: 'Roy Sir',
           style: 'English',
           personality: 'professional and structured',
-          language: 'Use clear, proper English with structured explanations. Maintain professional tone.',
+          language: 'ALWAYS respond in English only, regardless of the language of the question. If the student asks a question in Hindi, respond in English and politely suggest they switch to Miss Sapana in settings for Hindi comfort.',
           greeting: 'Hello! I am Roy Sir, your academic guide.',
           cultural: 'Provide health tips and wellness advice when relevant. Maximum 1 health tip per hour, 3 per day. Focus on student wellness, study habits, and healthy lifestyle.',
-          specialFeatures: 'Emphasize structured learning and academic excellence. Use international examples while keeping Indian context in mind.',
-          teachingStyle: 'Use Socratic method with thoughtful questions like "What do you think?" or "How would you approach this?" Provide scaffolded explanations with step-by-step guidance. Create personalized quizzes to assess understanding. Use real-world examples and analogies. Make learning engaging and interactive, like a conversation with an experienced mentor.'
+          specialFeatures: 'Emphasize structured learning and academic excellence. Use international examples while keeping Indian context in mind. ALWAYS respond in English and suggest Miss Sapana for Hindi questions.',
+          teachingStyle: 'Use Socratic method with thoughtful questions like "What do you think?" or "How would you approach this?" Provide scaffolded explanations with step-by-step guidance. Create personalized quizzes to assess understanding. Use real-world examples and analogies. Make learning engaging and interactive, like a conversation with an experienced mentor. If student asks in Hindi, respond in English and suggest: "If you are more comfortable in Hindi, please select Miss Sapana in the settings for a better experience."'
         };
       }
     };
@@ -403,9 +403,11 @@ export default async function handler(req, res) {
 - For technical terms, use English but explain in Hindi context
 - Mix Hindi and English naturally but ensure Hindi is in Devanagari script` :
       `LANGUAGE SCRIPT RULES:
+- ALWAYS respond in English only, regardless of the question language
 - Use clear, proper English with structured explanations
 - Maintain professional tone throughout
-- Use international examples while keeping Indian context in mind`;
+- Use international examples while keeping Indian context in mind
+- If student asks in Hindi, respond in English and suggest: "If you are more comfortable in Hindi, please select Miss Sapana in the settings for a better experience."`;
 
     // Only include teacher name in first response of the day
     const teacherIntroduction = isFirstResponseOfDay ? 
@@ -466,7 +468,13 @@ ALWAYS prioritize these resources over web information. When relevant, mention s
 and chapters that could help ${userContext.name}.
 
 Remember: Guide ${userContext.name} to understand through simple, clear plain text explanations as ${teacherPersona.name}. 
-Use natural language without any formatting or special characters. Stay true to your teaching persona.`;
+Use natural language without any formatting or special characters. Stay true to your teaching persona.
+
+${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR: 
+- ALWAYS respond in English only, regardless of the language of the question
+- If the student asks a question in Hindi, respond in English and add: "If you are more comfortable in Hindi, please select Miss Sapana in the settings for a better experience."
+- Never respond in Hindi, even if the question is in Hindi
+- Maintain professional English tone at all times` : ''}`;
 
     // Handle different actions
     switch (action) {
