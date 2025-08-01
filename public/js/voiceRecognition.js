@@ -13,9 +13,10 @@ class VoiceRecognition {
     }
 
     setupRecognition() {
+        // Enhanced settings for better sensitivity and performance
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
-        this.recognition.maxAlternatives = 1;
+        this.recognition.maxAlternatives = 3; // Increased for better accuracy
         
         // Set language based on device and user preference
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -23,12 +24,14 @@ class VoiceRecognition {
         
         this.recognition.lang = isMobile ? userLanguage : 'en-US';
         
-        // Mobile-specific settings
+        // Mobile-specific settings - optimized for better performance
         if (isMobile) {
             this.recognition.continuous = false; // Better for mobile
-            this.recognition.interimResults = false; // Reduce battery usage
+            this.recognition.interimResults = true; // Enable for better responsiveness
+            this.recognition.maxAlternatives = 2; // Reduced for mobile efficiency
         }
 
+        // Enhanced error handling and recovery
         this.recognition.onstart = () => {
             this.isListening = true;
             this.updateUI();
@@ -37,6 +40,8 @@ class VoiceRecognition {
             if (window.textToSpeech && window.textToSpeech.isSpeaking) {
                 window.textToSpeech.pause();
             }
+            
+            console.log('Voice recognition started - listening for speech...');
         };
 
         this.recognition.onend = () => {
@@ -50,18 +55,29 @@ class VoiceRecognition {
             if (window.textToSpeech && window.textToSpeech.isPaused) {
                 setTimeout(() => {
                     window.textToSpeech.play();
-                }, 1000); // Wait 1 second before resuming
+                }, 500); // Reduced delay for faster response
             }
         };
 
         this.recognition.onresult = (event) => {
             const result = event.results[event.results.length - 1];
+            
+            // Handle both final and interim results for better responsiveness
             if (result.isFinal) {
-                const transcript = result[0].transcript;
-                if (this.groupMode) {
-                    this.handleGroupDiscussion(transcript);
-                } else {
-                    this.handleSingleUserInput(transcript);
+                const transcript = result[0].transcript.trim();
+                if (transcript.length > 0) {
+                    console.log('Final transcript:', transcript);
+                    if (this.groupMode) {
+                        this.handleGroupDiscussion(transcript);
+                    } else {
+                        this.handleSingleUserInput(transcript);
+                    }
+                }
+            } else {
+                // Show interim results for better user feedback
+                const interimTranscript = result[0].transcript.trim();
+                if (interimTranscript.length > 0) {
+                    this.updateUI('processing', { transcript: interimTranscript });
                 }
             }
         };
@@ -70,7 +86,7 @@ class VoiceRecognition {
             console.error('Speech recognition error:', event.error);
             this.updateUI('error');
             
-            // Handle specific error types
+            // Enhanced error handling with automatic recovery
             switch (event.error) {
                 case 'not-allowed':
                     if (window.showError) {
@@ -78,20 +94,48 @@ class VoiceRecognition {
                     }
                     break;
                 case 'no-speech':
-                    if (window.showError) {
-                        window.showError('No speech detected. Please speak clearly.');
-                    }
+                    // Don't show error for no-speech, just restart quietly
+                    console.log('No speech detected, restarting recognition...');
+                    setTimeout(() => {
+                        if (!this.isListening) {
+                            this.startListening();
+                        }
+                    }, 1000);
                     break;
                 case 'audio-capture':
                     if (window.showError) {
                         window.showError('Audio capture error. Please check your microphone.');
                     }
                     break;
-                default:
+                case 'network':
                     if (window.showError) {
-                        window.showError('Voice recognition error: ' + event.error);
+                        window.showError('Network error. Please check your internet connection.');
                     }
+                    break;
+                case 'service-not-allowed':
+                    if (window.showError) {
+                        window.showError('Speech recognition service not available.');
+                    }
+                    break;
+                default:
+                    // For other errors, try to restart automatically
+                    console.log('Recovering from error:', event.error);
+                    setTimeout(() => {
+                        if (!this.isListening) {
+                            this.startListening();
+                        }
+                    }, 2000);
             }
+        };
+        
+        // Add speech start/end detection for better responsiveness
+        this.recognition.onspeechstart = () => {
+            console.log('Speech detected - processing...');
+            this.updateUI('processing');
+        };
+        
+        this.recognition.onspeechend = () => {
+            console.log('Speech ended - finalizing...');
         };
     }
 
@@ -115,13 +159,23 @@ class VoiceRecognition {
             if (this.isListening) {
                 console.log('Voice recognition already active, stopping first...');
                 this.stop();
-                // Wait a bit before starting again
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Reduced wait time for faster response
+                await new Promise(resolve => setTimeout(resolve, 50));
             }
 
-            // Check microphone permissions
+            // Check microphone permissions with enhanced error handling
             try {
-                await navigator.mediaDevices.getUserMedia({ audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 44100
+                    } 
+                });
+                
+                // Store stream for cleanup
+                this.audioStream = stream;
             } catch (permissionError) {
                 console.error('Microphone permission denied:', permissionError);
                 if (window.showError) {
@@ -138,10 +192,34 @@ class VoiceRecognition {
 
             // Set listening state before starting
             this.isListening = true;
-            this.recognition.start();
-            this.updateUI('listening');
+            this.groupMode = groupMode;
             
-            console.log('Voice recognition started successfully');
+            // Start recognition with retry logic
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            const attemptStart = async () => {
+                try {
+                    this.recognition.start();
+                    this.updateUI('listening');
+                    console.log('Voice recognition started successfully');
+                } catch (startError) {
+                    console.error('Error starting recognition (attempt ' + (retryCount + 1) + '):', startError);
+                    retryCount++;
+                    
+                    if (retryCount < maxRetries) {
+                        console.log('Retrying in 500ms...');
+                        setTimeout(attemptStart, 500);
+                    } else {
+                        console.error('Failed to start voice recognition after ' + maxRetries + ' attempts');
+                        this.isListening = false;
+                        this.updateUI('error');
+                    }
+                }
+            };
+            
+            attemptStart();
+            
         } catch (error) {
             console.error('Error starting voice recognition:', error);
             this.isListening = false;
@@ -323,21 +401,30 @@ class VoiceRecognition {
         try {
             console.log('Voice input received:', transcript);
             
+            // Clean and validate transcript
+            const cleanTranscript = transcript.trim();
+            if (cleanTranscript.length === 0) {
+                console.log('Empty transcript received, ignoring');
+                return;
+            }
+            
             // Update chat input with transcript
             const chatInput = document.getElementById('chatInput');
             if (chatInput) {
-                chatInput.value = transcript;
+                chatInput.value = cleanTranscript;
+                // Trigger input event to update any listeners
+                chatInput.dispatchEvent(new Event('input', { bubbles: true }));
             }
             
-            // Show success message
+            // Show success message with reduced delay
             if (window.showSuccess) {
-                window.showSuccess('Voice input received: ' + transcript);
+                window.showSuccess('Voice input: ' + cleanTranscript);
             }
             
             // Update UI
-            this.updateUI('processed', { transcript });
+            this.updateUI('processed', { transcript: cleanTranscript });
             
-            // Auto-send the message after a short delay
+            // Auto-send the message after a shorter delay for better responsiveness
             setTimeout(() => {
                 const sendButton = document.getElementById('sendButton');
                 if (sendButton) {
@@ -345,7 +432,7 @@ class VoiceRecognition {
                 } else if (typeof window.sendMessage === 'function') {
                     window.sendMessage();
                 }
-            }, 1500);
+            }, 800); // Reduced from 1500ms to 800ms
             
         } catch (error) {
             console.error('Error handling user input:', error);
@@ -481,10 +568,23 @@ class VoiceRecognition {
             if (this.synthesis) {
                 this.synthesis.cancel();
             }
+            
+            // Clean up audio stream
+            if (this.audioStream) {
+                this.audioStream.getTracks().forEach(track => track.stop());
+                this.audioStream = null;
+            }
+            
+            // Clean up audio context if exists
+            if (this.audioContext) {
+                this.audioContext.close();
+                this.audioContext = null;
+            }
         } catch (error) {
             console.log('Error stopping voice recognition:', error);
         }
         this.isListening = false;
+        this.groupMode = false;
         this.updateUI('idle');
     }
 }

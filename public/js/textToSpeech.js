@@ -13,6 +13,8 @@ class TextToSpeech {
         this.rate = 1.0;
         this.pitch = 1.0;
         this.volume = 1.0;
+        this.currentAIResponse = ''; // Track the current AI response text
+        this.lastSpokenResponse = ''; // Track the last response that was spoken
         
         this.initializeVoices();
         this.setupControls();
@@ -34,21 +36,9 @@ class TextToSpeech {
     loadVoices() {
         this.voices = this.synth.getVoices();
         
-        // Find Hindi and English voices
-        const hindiVoices = this.voices.filter(voice => 
-            voice.lang.includes('hi') || voice.lang.includes('IN')
-        );
-        const englishVoices = this.voices.filter(voice => 
-            voice.lang.includes('en-IN') || voice.lang.includes('en-US')
-        );
-
-        // Set default voice
-        if (hindiVoices.length > 0) {
-            this.currentVoice = hindiVoices[0];
-        } else if (englishVoices.length > 0) {
-            this.currentVoice = englishVoices[0];
-        } else if (this.voices.length > 0) {
-            this.currentVoice = this.voices[0];
+        // Set voice based on current avatar
+        if (this.voices.length > 0) {
+            this.detectLanguageAndSetVoice('');
         }
 
         // Update voice selector UI
@@ -67,11 +57,11 @@ class TextToSpeech {
         // Check if controls already exist
         if (document.getElementById('tts-controls')) return;
 
-        // Find the user info section in the sidebar
-        const userInfoSection = document.querySelector('.user-info-section');
+        // Find the chat header where the avatar is located
+        const chatHeader = document.querySelector('#chatSection .p-4.border-b');
         
-        if (!userInfoSection) {
-            console.log('User info section not found for TTS controls');
+        if (!chatHeader) {
+            console.log('Chat header not found for TTS controls');
             return;
         }
 
@@ -111,8 +101,8 @@ class TextToSpeech {
             </div>
         `;
 
-        // Insert into user info section
-        userInfoSection.appendChild(ttsControls);
+        // Insert into chat header after the existing content
+        chatHeader.appendChild(ttsControls);
     }
 
     addEventListeners() {
@@ -219,10 +209,18 @@ class TextToSpeech {
         // Stop any ongoing speech
         this.stop();
 
+        // Update current AI response tracking
+        if (options.role === 'ai') {
+            this.currentAIResponse = text;
+        }
+
         this.currentText = text;
         this.pausedAt = 0;
         this.isPaused = false;
 
+        // Set voice based on avatar BEFORE creating utterance
+        const language = this.detectLanguageAndSetVoice(text);
+        
         // Create utterance
         this.currentUtterance = new SpeechSynthesisUtterance(text);
         
@@ -231,7 +229,7 @@ class TextToSpeech {
         this.currentUtterance.rate = this.rate;
         this.currentUtterance.pitch = this.pitch;
         this.currentUtterance.volume = this.volume;
-        this.currentUtterance.lang = this.detectLanguageAndSetVoice(text);
+        this.currentUtterance.lang = language;
 
         // Event handlers
         this.currentUtterance.onstart = () => {
@@ -245,6 +243,7 @@ class TextToSpeech {
             this.isSpeaking = false;
             this.isPaused = false;
             this.currentUtterance = null;
+            this.lastSpokenResponse = this.currentAIResponse; // Mark this response as spoken
             this.updateControls();
             console.log('TTS finished speaking');
         };
@@ -276,11 +275,17 @@ class TextToSpeech {
 
     play() {
         if (this.isPaused && this.currentUtterance) {
-            // Resume from where it was paused
+            // Resume from where it was paused (same response)
             this.synth.resume();
-        } else if (this.currentText && !this.isSpeaking) {
-            // Start speaking the current text from beginning
-            this.speak(this.currentText, { role: 'ai' });
+        } else if (this.currentAIResponse && !this.isSpeaking) {
+            // Check if this is the same response as last spoken
+            if (this.currentAIResponse === this.lastSpokenResponse && this.pausedAt > 0) {
+                // Resume from where it was stopped (same response)
+                this.speak(this.currentAIResponse, { role: 'ai' });
+            } else {
+                // Start from beginning (new response or first time)
+                this.speak(this.currentAIResponse, { role: 'ai' });
+            }
         }
     }
 
@@ -362,35 +367,122 @@ class TextToSpeech {
         // Get current avatar from global variable
         const currentAvatar = window.selectedAvatar || 'roy-sir';
         
+        console.log('TTS Voice Selection - Current Avatar:', currentAvatar);
+        console.log('Available voices:', this.voices.map(v => `${v.name} (${v.lang})`));
+        
         // Set default voices based on avatar - PRIORITY OVER TEXT LANGUAGE
         if (currentAvatar === 'ms-sapana') {
-            // Ms. Sapana - ALWAYS use Hindi voice regardless of text
-            const hindiVoices = this.voices.filter(voice => 
-                voice.name.toLowerCase().includes('google') && voice.name.toLowerCase().includes('hindi') ||
-                voice.name.toLowerCase().includes('hindi') ||
-                voice.lang.includes('hi-IN') ||
-                voice.lang.includes('hi')
+            // Ms. Sapana - ALWAYS use Google Hindi voice (FEMALE)
+            console.log('Selecting voice for Ms. Sapana (should be female Hindi voice)');
+            
+            // Priority 1: Google Hindi voice (female)
+            let hindiVoice = this.voices.find(voice => 
+                voice.name.toLowerCase().includes('google') && 
+                (voice.name.toLowerCase().includes('hindi') || voice.lang.includes('hi-IN'))
             );
-            if (hindiVoices.length > 0) {
-                this.currentVoice = hindiVoices[0];
-                console.log('Ms. Sapana using Hindi voice:', hindiVoices[0].name);
+            
+            // Priority 2: Any Hindi voice (prefer female)
+            if (!hindiVoice) {
+                hindiVoice = this.voices.find(voice => 
+                    (voice.name.toLowerCase().includes('hindi') || voice.lang.includes('hi-IN') || voice.lang.includes('hi')) &&
+                    !voice.name.toLowerCase().includes('male')
+                );
+            }
+            
+            // Priority 3: Any Hindi voice (any gender)
+            if (!hindiVoice) {
+                hindiVoice = this.voices.find(voice => 
+                    voice.name.toLowerCase().includes('hindi') || 
+                    voice.lang.includes('hi-IN') ||
+                    voice.lang.includes('hi')
+                );
+            }
+            
+            // Priority 4: Any Indian voice
+            if (!hindiVoice) {
+                hindiVoice = this.voices.find(voice => 
+                    voice.lang.includes('IN') || 
+                    voice.name.toLowerCase().includes('india')
+                );
+            }
+            
+            if (hindiVoice) {
+                this.currentVoice = hindiVoice;
+                console.log('✅ Ms. Sapana using Hindi voice:', hindiVoice.name, 'Language:', hindiVoice.lang);
+                return 'hi-IN';
+            } else {
+                console.warn('❌ No Hindi voice found for Ms. Sapana. Available voices:', this.voices.map(v => v.name));
+                // Don't fall back to text-based detection for Ms. Sapana
                 return 'hi-IN';
             }
         } else if (currentAvatar === 'roy-sir') {
-            // Roy Sir - ALWAYS use English voice regardless of text
-            const englishVoices = this.voices.filter(voice => 
-                voice.name.toLowerCase().includes('microsoft') && voice.name.toLowerCase().includes('ravi') ||
-                voice.name.toLowerCase().includes('ravi') ||
-                (voice.lang.includes('en-IN') || voice.lang.includes('en-US'))
+            // Roy Sir - ALWAYS use Microsoft Ravi or English voice (MALE)
+            console.log('Selecting voice for Roy Sir (should be male English voice)');
+            
+            // Priority 1: Microsoft Ravi (male)
+            let englishVoice = this.voices.find(voice => 
+                voice.name.toLowerCase().includes('microsoft') && 
+                voice.name.toLowerCase().includes('ravi')
             );
-            if (englishVoices.length > 0) {
-                this.currentVoice = englishVoices[0];
-                console.log('Roy Sir using English voice:', englishVoices[0].name);
+            
+            // Priority 2: Any Ravi voice (male)
+            if (!englishVoice) {
+                englishVoice = this.voices.find(voice => 
+                    voice.name.toLowerCase().includes('ravi') &&
+                    !voice.name.toLowerCase().includes('female')
+                );
+            }
+            
+            // Priority 3: Any Ravi voice (any gender)
+            if (!englishVoice) {
+                englishVoice = this.voices.find(voice => 
+                    voice.name.toLowerCase().includes('ravi')
+                );
+            }
+            
+            // Priority 4: Any Indian English voice (prefer male)
+            if (!englishVoice) {
+                englishVoice = this.voices.find(voice => 
+                    voice.lang.includes('en-IN') &&
+                    !voice.name.toLowerCase().includes('female')
+                );
+            }
+            
+            // Priority 5: Any Indian English voice (any gender)
+            if (!englishVoice) {
+                englishVoice = this.voices.find(voice => 
+                    voice.lang.includes('en-IN')
+                );
+            }
+            
+            // Priority 6: Any English voice (prefer male)
+            if (!englishVoice) {
+                englishVoice = this.voices.find(voice => 
+                    (voice.lang.includes('en-US') || voice.lang.includes('en-GB')) &&
+                    !voice.name.toLowerCase().includes('female')
+                );
+            }
+            
+            // Priority 7: Any English voice (any gender)
+            if (!englishVoice) {
+                englishVoice = this.voices.find(voice => 
+                    voice.lang.includes('en-US') || voice.lang.includes('en-GB')
+                );
+            }
+            
+            if (englishVoice) {
+                this.currentVoice = englishVoice;
+                console.log('✅ Roy Sir using English voice:', englishVoice.name, 'Language:', englishVoice.lang);
+                return 'en-IN';
+            } else {
+                console.warn('❌ No English voice found for Roy Sir. Available voices:', this.voices.map(v => v.name));
+                // Don't fall back to text-based detection for Roy Sir
                 return 'en-IN';
             }
         }
         
-        // Fallback to language detection only if no avatar-specific voice found
+        // Only fall back to language detection if no avatar is set
+        console.log('No avatar set, falling back to text-based language detection');
         const hindiPattern = /[\u0900-\u097F]/;
         const isHindi = hindiPattern.test(text);
         
@@ -405,6 +497,7 @@ class TextToSpeech {
         
         if (targetVoices.length > 0) {
             this.currentVoice = targetVoices[0];
+            console.log('Fallback voice selected:', this.currentVoice.name, 'Language:', this.currentVoice.lang);
         }
         
         return targetLang;
@@ -446,6 +539,13 @@ class TextToSpeech {
     setAutoStart(enabled) {
         this.autoStart = enabled;
         this.saveSettings();
+    }
+
+    forceVoiceUpdate() {
+        // Force update voice selection based on current avatar
+        console.log('Forcing voice update for current avatar:', window.selectedAvatar);
+        this.detectLanguageAndSetVoice('');
+        console.log('Voice updated to:', this.currentVoice?.name || 'No voice selected');
     }
 
     updateVoiceSelector() {
@@ -514,4 +614,11 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = textToSpeech;
 }
 
-console.log('✅ Text-to-Speech initialized successfully'); 
+console.log('✅ Text-to-Speech initialized successfully');
+
+// Force voice update after a short delay to ensure avatar is loaded
+setTimeout(() => {
+    if (window.textToSpeech) {
+        window.textToSpeech.forceVoiceUpdate();
+    }
+}, 2000); 

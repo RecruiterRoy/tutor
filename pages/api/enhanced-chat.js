@@ -341,7 +341,8 @@ export default async function handler(req, res) {
       weekNumber = null,
       month = null,
       userProfile = null,
-      teacher = 'Roy Sir'
+      teacher = 'Roy Sir',
+      isFirstResponseOfDay = false
     } = req.body;
 
     let response = '';
@@ -392,7 +393,12 @@ export default async function handler(req, res) {
 
     const teacherPersona = getTeacherPersona(teacher);
 
-    const systemPrompt = `You are ${teacherPersona.name}, an expert AI tutor for Indian students with access to comprehensive educational resources.
+    // Only include teacher name in first response of the day
+    const teacherIntroduction = isFirstResponseOfDay ? 
+      `You are ${teacherPersona.name}, an expert AI tutor for Indian students with access to comprehensive educational resources.` :
+      `You are an expert AI tutor for Indian students with access to comprehensive educational resources.`;
+
+    const systemPrompt = `${teacherIntroduction}
 
 TEACHER PERSONA:
 - Name: ${teacherPersona.name}
@@ -417,6 +423,7 @@ CRITICAL RULES:
 - NEVER mention images, pictures, or visual resources
 - RESPOND IN PLAIN TEXT ONLY - no markdown, no formatting, no special characters
 - Stay in character as ${teacherPersona.name} at all times
+- ${isFirstResponseOfDay ? `This is the first response of the day, so you may introduce yourself as ${teacherPersona.name}.` : 'Do not introduce yourself by name in this response.'}
 
 Key Guidelines for ${teacherPersona.name}:
 - ALWAYS search the provided educational resources FIRST before using web information

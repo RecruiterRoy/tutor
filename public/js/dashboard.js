@@ -40,6 +40,7 @@ let voiceRate = 1.0;
 let voicePitch = 1.0;
 let preWarmedRecognition = null;
 let voicesLoaded = false;
+let lastResponseDate = null; // Track the date of last AI response
 
 // Indian Regional Avatars
 const regionalAvatars = [
@@ -140,8 +141,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadUserData();
         setupEventListeners();
         populateAvatarGrid();
-        loadUserPreferences();
-        await loadBooks();
+        initializeVoiceFeatures();
+        populateVoices();
+        
+        // Wait for TTS to be ready before loading voice settings
+        setTimeout(() => {
+            loadVoiceSettings();
+            setupVoiceSettingsListeners();
+        }, 1000);
+        
+        initSpeechRecognition();
+        showWelcomeMessage();
         
         // Show welcome message
         showWelcomeMessage();
@@ -239,8 +249,13 @@ async function initializeDashboard() {
         populateAvatarGrid();
         initializeVoiceFeatures();
         populateVoices();
-        loadVoiceSettings();
-        setupVoiceSettingsListeners();
+        
+        // Wait for TTS to be ready before loading voice settings
+        setTimeout(() => {
+            loadVoiceSettings();
+            setupVoiceSettingsListeners();
+        }, 1000);
+        
         initSpeechRecognition();
         showWelcomeMessage();
         
@@ -649,11 +664,16 @@ async function sendMessage() {
         const userSubject = window.currentSubject || '';
         const userBoard = userProfile?.board || 'CBSE';
         
+        // Check if this is the first response of the day
+        const today = new Date().toDateString();
+        const isFirstResponseOfDay = lastResponseDate !== today;
+        
         console.log('Sending message with user data:', {
             name: userProfile?.full_name,
             class: userClass,
             board: userBoard,
-            subject: userSubject
+            subject: userSubject,
+            isFirstResponseOfDay: isFirstResponseOfDay
         });
         
         // Send to AI backend with complete user profile
@@ -665,7 +685,8 @@ async function sendMessage() {
                 grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                 subject: userSubject,
                 userProfile: userProfile,
-                teacher: selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir'
+                teacher: selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
+                isFirstResponseOfDay: isFirstResponseOfDay
             })
         });
         
@@ -674,6 +695,8 @@ async function sendMessage() {
         
         if (data.success && data.response) {
             await addMessage('ai', data.response);
+            // Update the last response date after successful response
+            lastResponseDate = today;
         } else {
             console.error('AI response error:', data);
             await addMessage('ai', 'Sorry, I could not get a response from the AI.');
@@ -826,44 +849,94 @@ function populateVoices() {
 }
 
 function loadVoiceSettings() {
-    const voiceSelect = document.getElementById('voiceSelect');
     const voiceRate = document.getElementById('voiceRate');
     const voicePitch = document.getElementById('voicePitch');
+    const voiceRateValue = document.getElementById('voiceRateValue');
+    const voicePitchValue = document.getElementById('voicePitchValue');
     
-    if (voiceSelect) {
-        voiceSelect.value = localStorage.getItem('selectedVoice') || '';
+    // Load settings from TTS system if available, otherwise from localStorage
+    if (window.textToSpeech) {
+        if (voiceRate) {
+            voiceRate.value = window.textToSpeech.rate || 1.25;
+        }
+        if (voicePitch) {
+            voicePitch.value = window.textToSpeech.pitch || 1.0;
+        }
+    } else {
+        // Fallback to localStorage
+        if (voiceRate) {
+            voiceRate.value = localStorage.getItem('voiceRate') || '1.25';
+        }
+        if (voicePitch) {
+            voicePitch.value = localStorage.getItem('voicePitch') || '1.0';
+        }
     }
-    if (voiceRate) {
-        voiceRate.value = localStorage.getItem('voiceRate') || '1.0';
+    
+    // Update display values
+    if (voiceRateValue && voiceRate) {
+        voiceRateValue.textContent = voiceRate.value;
     }
-    if (voicePitch) {
-        voicePitch.value = localStorage.getItem('voicePitch') || '1.0';
+    if (voicePitchValue && voicePitch) {
+        voicePitchValue.textContent = voicePitch.value;
     }
 }
 
 function setupVoiceSettingsListeners() {
-    const voiceSelect = document.getElementById('voiceSelect');
     const voiceRate = document.getElementById('voiceRate');
     const voicePitch = document.getElementById('voicePitch');
+    const voiceRateValue = document.getElementById('voiceRateValue');
+    const voicePitchValue = document.getElementById('voicePitchValue');
     const voiceButton = document.getElementById('voiceButton');
 
-    if (voiceSelect) {
-        voiceSelect.addEventListener('change', () => {
-            const voices = window.speechSynthesis.getVoices();
-            selectedVoice = voices.find(v => v.name === voiceSelect.value);
-            localStorage.setItem('selectedVoice', voiceSelect.value);
-        });
-    }
-
     if (voiceRate) {
-        voiceRate.addEventListener('change', () => {
-            localStorage.setItem('voiceRate', voiceRate.value);
+        voiceRate.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            // Update display
+            if (voiceRateValue) {
+                voiceRateValue.textContent = value.toFixed(2);
+            }
+            // Update TTS system
+            if (window.textToSpeech) {
+                window.textToSpeech.setRate(value);
+            }
+            // Save to localStorage as backup
+            localStorage.setItem('voiceRate', value.toString());
+        });
+        
+        voiceRate.addEventListener('change', (e) => {
+            const value = parseFloat(e.target.value);
+            // Update TTS system
+            if (window.textToSpeech) {
+                window.textToSpeech.setRate(value);
+            }
+            // Save to localStorage
+            localStorage.setItem('voiceRate', value.toString());
         });
     }
 
     if (voicePitch) {
-        voicePitch.addEventListener('change', () => {
-            localStorage.setItem('voicePitch', voicePitch.value);
+        voicePitch.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            // Update display
+            if (voicePitchValue) {
+                voicePitchValue.textContent = value.toFixed(2);
+            }
+            // Update TTS system
+            if (window.textToSpeech) {
+                window.textToSpeech.setPitch(value);
+            }
+            // Save to localStorage as backup
+            localStorage.setItem('voicePitch', value.toString());
+        });
+        
+        voicePitch.addEventListener('change', (e) => {
+            const value = parseFloat(e.target.value);
+            // Update TTS system
+            if (window.textToSpeech) {
+                window.textToSpeech.setPitch(value);
+            }
+            // Save to localStorage
+            localStorage.setItem('voicePitch', value.toString());
         });
     }
 
@@ -1494,6 +1567,13 @@ async function saveAvatarPreference() {
             if (userData) {
                 userData.ai_avatar = avatarId;
             }
+            
+                            // Force TTS to update voice selection for new avatar
+                if (window.textToSpeech) {
+                    console.log('Updating TTS voice for new avatar:', avatarId);
+                    // Trigger voice selection update
+                    window.textToSpeech.forceVoiceUpdate();
+                }
         }
     } catch (error) {
         console.error('Error in saveAvatarPreference:', error);
