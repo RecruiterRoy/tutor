@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Test voice services
         setTimeout(() => {
-            if (speechSynthesis && speechSynthesis.getVoices().length > 0) {
+            if (window.speechSynthesis && window.speechSynthesis.getVoices().length > 0) {
                 speakText("Welcome to Tutor AI. Voice services are ready.");
             } else {
                  console.log("Skipping welcome message as voices are not ready yet.");
@@ -813,7 +813,7 @@ function initializeVoiceFeatures() {
     // Initialize speech synthesis
     if (window.speechSynthesis) {
         // Some browsers need this event to populate voices
-        speechSynthesis.onvoiceschanged = function() {
+        window.speechSynthesis.onvoiceschanged = function() {
             console.log('Voices changed, refreshing voice list');
             populateVoices();
         };
@@ -840,23 +840,23 @@ function initializeVoiceFeatures() {
 
 function populateVoices() {
     return new Promise((resolve) => {
-        if (!speechSynthesis) {
+        if (!window.speechSynthesis) {
             return resolve([]);
         }
-        const voices = speechSynthesis.getVoices();
+        const voices = window.speechSynthesis.getVoices();
         if (voices.length > 0) {
             voicesLoaded = true;
             resolve(voices);
         } else {
-            speechSynthesis.onvoiceschanged = () => {
+            window.speechSynthesis.onvoiceschanged = () => {
                 voicesLoaded = true;
-                resolve(speechSynthesis.getVoices());
+                resolve(window.speechSynthesis.getVoices());
             };
             // Fallback timeout
             setTimeout(() => {
                 if (!voicesLoaded) {
                     console.log('Voice loading timeout');
-                    resolve(speechSynthesis.getVoices());
+                    resolve(window.speechSynthesis.getVoices());
                 }
             }, 2000);
         }
@@ -1035,7 +1035,12 @@ function initSpeechRecognition() {
 
         recognition.onend = () => {
             clearTimeout(recognitionTimeout);
-            stopRecording();
+            isRecording = false;
+            const voiceButton = document.getElementById('voiceButton');
+            if (voiceButton) {
+                voiceButton.textContent = '🎤';
+                voiceButton.classList.remove('voice-recording');
+            }
         };
 
     } catch (error) {
@@ -1047,14 +1052,14 @@ function initSpeechRecognition() {
 
 async function toggleVoiceRecording() {
     try {
-        if (!window.voiceRecognition) {
+        if (!recognition) {
             showError('Voice recognition not available');
             return;
         }
 
-        if (window.voiceRecognition.isListening) {
+        if (isRecording) {
             // Stop listening
-            window.voiceRecognition.stop();
+            recognition.stop();
             const voiceButton = document.getElementById('voiceButton');
             if (voiceButton) {
                 voiceButton.textContent = '🎤';
@@ -1063,7 +1068,7 @@ async function toggleVoiceRecording() {
             showSuccess('Voice recording stopped');
         } else {
             // Start listening
-            await window.voiceRecognition.startListening();
+            recognition.start();
             const voiceButton = document.getElementById('voiceButton');
             if (voiceButton) {
                 voiceButton.textContent = '🔴';
@@ -1080,14 +1085,14 @@ async function toggleVoiceRecording() {
 
 async function speakText(text) {
     console.log('[TTS] Attempting to speak:', text);
-    if (!speechSynthesis) {
+    if (!window.speechSynthesis) {
         console.error('[TTS] Speech synthesis not supported.');
         return;
     }
 
     try {
         // Cancel any ongoing speech
-        speechSynthesis.cancel();
+        window.speechSynthesis.cancel();
         console.log('[TTS] Cancelled previous speech.');
 
         // Wait for voices to load
@@ -1133,7 +1138,7 @@ async function speakText(text) {
             showError(`TTS Error: ${event.error}`);
         };
 
-        speechSynthesis.speak(utterance);
+        window.speechSynthesis.speak(utterance);
     } catch (error) {
         console.error('[TTS] Error in speakText function:', error);
     }

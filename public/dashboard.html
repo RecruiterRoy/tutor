@@ -1679,32 +1679,11 @@
         // Save chat message to history
         async function saveChatMessage(userMessage, aiResponse) {
             try {
-                // Add to local chat history
-                chatHistory.push({
-                    user: userMessage,
-                    ai: aiResponse,
-                    timestamp: new Date().toISOString()
-                });
-                
-                // Keep only last 50 messages
-                if (chatHistory.length > 50) {
-                    chatHistory = chatHistory.slice(-50);
-                }
-                
-                // Save to Supabase if available
-                if (supabaseClient && currentUser) {
-                    const { error } = await supabaseClient
-                        .from('chat_history')
-                        .insert({
-                            user_id: currentUser.id,
-                            user_message: userMessage,
-                            ai_response: aiResponse,
-                            created_at: new Date().toISOString()
-                        });
-                    
-                    if (error) {
-                        console.warn('Failed to save chat to database:', error);
-                    }
+                // Use the saveChatToDatabase function from dashboard.js
+                if (typeof saveChatToDatabase === 'function') {
+                    await saveChatToDatabase(userMessage, aiResponse);
+                } else {
+                    console.warn('saveChatToDatabase function not available');
                 }
             } catch (error) {
                 console.warn('Failed to save chat message:', error);
