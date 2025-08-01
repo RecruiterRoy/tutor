@@ -6,8 +6,6 @@ let userData = null;
 let selectedAvatar = 'roy-sir'; // Default avatar
 let isRecording = false;
 let recognition = null;
-let chatHistory = [];
-let todayChatLoaded = false;
 
 // Initialize Supabase
 async function initializeSupabase() {
@@ -52,10 +50,6 @@ async function initializeDashboard() {
         setupEventListeners();
         populateAvatarGrid();
         initializeVoiceFeatures();
-        
-        // Load today's chat history
-        await loadTodayChatHistory();
-        
         showWelcomeMessage();
         
         // Load books
@@ -364,19 +358,13 @@ async function sendMessage() {
         // Add AI response
         addMessage('ai', data.response);
         
-        // Save chat to database
-        await saveChatToDatabase(message, data.response);
-        
         // Save study session
         await saveStudySession(message, data.response);
         
     } catch (error) {
         console.error('❌ Error sending message:', error);
         removeTypingIndicator();
-        const errorMessage = 'Sorry, I encountered an error. Please try again.';
-        addMessage('ai', errorMessage);
-        // Save error message to database as well
-        await saveChatToDatabase(message, errorMessage);
+        addMessage('ai', 'Sorry, I encountered an error. Please try again.');
     }
 }
 
@@ -891,107 +879,6 @@ function showSuccess(message, duration = 3000) {
         toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
         setTimeout(() => toast.remove(), 300);
     }, duration);
-}
-
-// Chat persistence functions
-async function loadTodayChatHistory() {
-    try {
-        if (!currentUser || !currentUser.id) {
-            console.log('No user logged in, skipping chat history load');
-            return;
-        }
-
-        // Get today's date in user's timezone
-        const today = new Date();
-        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-
-        console.log('Loading chat history for today:', startOfDay.toISOString(), 'to', endOfDay.toISOString());
-
-        const { data: chatData, error } = await window.supabaseClient
-            .from('chat_history')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .gte('created_at', startOfDay.toISOString())
-            .lte('created_at', endOfDay.toISOString())
-            .order('created_at', { ascending: true });
-
-        if (error) {
-            console.error('Error loading chat history:', error);
-            return;
-        }
-
-        if (chatData && chatData.length > 0) {
-            console.log(`Loaded ${chatData.length} chat messages from today`);
-            
-            // Clear existing chat display
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                chatMessages.innerHTML = '';
-            }
-
-            // Load chat history into memory and display
-            chatHistory = [];
-            for (const chat of chatData) {
-                chatHistory.push({
-                    user: chat.user_message,
-                    ai: chat.ai_response,
-                    timestamp: chat.created_at
-                });
-                
-                // Display the messages
-                await addMessage('user', chat.user_message);
-                await addMessage('ai', chat.ai_response);
-            }
-
-            // Scroll to bottom
-            if (chatMessages) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            todayChatLoaded = true;
-            console.log('Today\'s chat history loaded successfully');
-        } else {
-            console.log('No chat history found for today');
-            todayChatLoaded = true;
-        }
-    } catch (error) {
-        console.error('Error in loadTodayChatHistory:', error);
-        todayChatLoaded = true; // Mark as loaded even if there's an error
-    }
-}
-
-async function saveChatToDatabase(userMessage, aiResponse) {
-    try {
-        if (!currentUser || !currentUser.id) {
-            console.log('No user logged in, skipping chat save');
-            return;
-        }
-
-        // Get current subject and grade
-        const userClass = userData?.class || userData?.class_level || '';
-        const currentSubject = window.currentSubject || '';
-
-        const { error } = await window.supabaseClient
-            .from('chat_history')
-            .insert({
-                user_id: currentUser.id,
-                user_message: userMessage,
-                ai_response: aiResponse,
-                subject: currentSubject,
-                grade: userClass,
-                teacher_name: selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
-                created_at: new Date().toISOString()
-            });
-
-        if (error) {
-            console.error('Error saving chat to database:', error);
-        } else {
-            console.log('Chat message saved to database successfully');
-        }
-    } catch (error) {
-        console.error('Error in saveChatToDatabase:', error);
-    }
 }
 
 // Initialize when DOM is loaded
