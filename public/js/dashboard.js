@@ -580,6 +580,7 @@ function populateAvatarGrid() {
 
 async function selectAvatar(avatarId, event) {
     selectedAvatar = avatarId;
+    window.selectedAvatar = avatarId; // Set global variable
     
     // Update visual selection
     document.querySelectorAll('.avatar-option').forEach(option => {
@@ -679,6 +680,9 @@ async function sendMessage() {
             isFirstResponseOfDay: isFirstResponseOfDay
         });
         
+        // Get the current avatar from user profile or global variable
+        const currentAvatar = userProfile?.ai_avatar || window.selectedAvatar || selectedAvatar || 'roy-sir';
+        
         // Send to AI backend with complete user profile
         const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
@@ -688,7 +692,7 @@ async function sendMessage() {
                 grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                 subject: userSubject,
                 userProfile: userProfile,
-                teacher: selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
+                teacher: currentAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
                 isFirstResponseOfDay: isFirstResponseOfDay
             })
         });
@@ -1580,6 +1584,9 @@ async function saveAvatarPreference() {
             if (userData) {
                 userData.ai_avatar = avatarId;
             }
+            if (window.userData) {
+                window.userData.ai_avatar = avatarId;
+            }
             
                             // Force TTS to update voice selection for new avatar
                 if (window.textToSpeech) {
@@ -1625,10 +1632,17 @@ async function sendChatMessage() {
     }
     // Get AI response as before
     try {
+        // Get the current avatar from user profile or global variable
+        const currentAvatar = window.userData?.ai_avatar || window.selectedAvatar || selectedAvatar || 'roy-sir';
+        
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, avatar: selectedAvatar, userId: currentUser.id })
+            body: JSON.stringify({ 
+                message, 
+                avatar: currentAvatar, 
+                userId: currentUser.id 
+            })
         });
         if (!response.ok) throw new Error('Chat API error: ' + response.status);
         const data = await response.json();
