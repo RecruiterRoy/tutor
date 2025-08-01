@@ -253,18 +253,20 @@ async function initializeDashboard() {
         setupEventListeners();
         populateAvatarGrid();
         initializeVoiceFeatures();
-        populateVoices();
+        
+        // Initialize voice recognition immediately
+        initSpeechRecognition();
         
         // Load today's chat history
         await loadTodayChatHistory();
         
-        // Wait for TTS to be ready before loading voice settings
+        // Initialize voice features after a short delay
         setTimeout(() => {
+            populateVoices();
             loadVoiceSettings();
             setupVoiceSettingsListeners();
-        }, 1000);
+        }, 500);
         
-        initSpeechRecognition();
         showWelcomeMessage();
         
         // Initialize additional features
@@ -310,6 +312,10 @@ async function loadUserData() {
         }
         
         if (profile) {
+            // Set global user data for use throughout the app
+            window.userData = profile;
+            window.currentUser = currentUser;
+            
             // Populate welcome section
             const welcomeMessage = document.getElementById('welcomeMessage');
             const userInfo = document.getElementById('userInfo');
@@ -695,6 +701,7 @@ async function sendMessage() {
                 grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                 subject: userSubject,
                 userProfile: userProfile,
+                avatar: selectedAvatar, // Send the actual avatar ID
                 teacher: selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
                 isFirstResponseOfDay: isFirstResponseOfDay
             })
@@ -963,15 +970,9 @@ function setupVoiceSettingsListeners() {
 function initSpeechRecognition() {
     try {
         const voiceButton = document.getElementById('voiceButton');
-        const voiceStatus = document.getElementById('voiceStatus');
         
         if (!voiceButton) {
             console.log('Voice button not found');
-            return;
-        }
-        
-        if (!voiceStatus) {
-            console.log('Voice status element not found');
             return;
         }
         
@@ -1007,8 +1008,11 @@ function initSpeechRecognition() {
             clearTimeout(recognitionTimeout);
             const transcript = event.results[0][0].transcript;
             console.log('Speech recognized:', transcript);
-            document.getElementById('chatInput').value = transcript;
-            showSuccess("Voice input received");
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.value = transcript;
+                showSuccess("Voice input received");
+            }
         };
 
         recognition.onerror = (event) => {
