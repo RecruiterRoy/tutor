@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   'https://vfqdjpiyaabufpaofysz.supabase.co',
-  'process.env.SUPABASE_SERVICE_KEY'
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 const bucket = 'educational-content';

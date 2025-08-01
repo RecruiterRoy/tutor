@@ -42,6 +42,10 @@ let preWarmedRecognition = null;
 let voicesLoaded = false;
 let lastResponseDate = null; // Track the date of last AI response
 
+// Global chat history array
+let chatHistory = [];
+let todayChatLoaded = false;
+
 // Indian Regional Avatars
 const regionalAvatars = [
     // Specific Teacher Avatars (based on language preference)
@@ -250,6 +254,9 @@ async function initializeDashboard() {
         populateAvatarGrid();
         initializeVoiceFeatures();
         populateVoices();
+        
+        // Load today's chat history
+        await loadTodayChatHistory();
         
         // Wait for TTS to be ready before loading voice settings
         setTimeout(() => {
@@ -698,11 +705,16 @@ async function sendMessage() {
         
         if (data.success && data.response) {
             await addMessage('ai', data.response);
+            // Save chat to database
+            await saveChatToDatabase(text, data.response);
             // Update the last response date after successful response
             lastResponseDate = today;
         } else {
             console.error('AI response error:', data);
-            await addMessage('ai', 'Sorry, I could not get a response from the AI.');
+            const errorMessage = 'Sorry, I could not get a response from the AI.';
+            await addMessage('ai', errorMessage);
+            // Save error message to database as well
+            await saveChatToDatabase(text, errorMessage);
         }
     } catch (err) {
         console.error('Send message error:', err);
@@ -1616,7 +1628,10 @@ async function sendChatMessage() {
             if (imgData.images && imgData.images.length > 0) {
                 removeTypingIndicator();
                 const img = imgData.images[0];
-                await addMessage('ai', `<img src='${img.imgPath.replace(/\\/g, '/')}' alt='Book Diagram' class='max-w-full max-h-80 rounded shadow mb-2'><div class='text-xs text-gray-300'>From book: <b>${img.file}</b>, page ${img.page}</div>`);
+                const imageResponse = `<img src='${img.imgPath.replace(/\\/g, '/')}' alt='Book Diagram' class='max-w-full max-h-80 rounded shadow mb-2'><div class='text-xs text-gray-300'>From book: <b>${img.file}</b>, page ${img.page}</div>`;
+                await addMessage('ai', imageResponse);
+                // Save image response to database
+                await saveChatToDatabase(message, imageResponse);
                 return;
             }
         } catch (e) {
@@ -1634,10 +1649,15 @@ async function sendChatMessage() {
         const data = await response.json();
         removeTypingIndicator();
         await addMessage('ai', data.response);
+        // Save chat to database
+        await saveChatToDatabase(message, data.response);
         speakText(data.response);
     } catch (error) {
         removeTypingIndicator();
-        await addMessage('ai', 'Error connecting to AI server.');
+        const errorMessage = 'Error connecting to AI server.';
+        await addMessage('ai', errorMessage);
+        // Save error message to database as well
+        await saveChatToDatabase(message, errorMessage);
     }
 }
 
@@ -1899,4 +1919,104 @@ function closeContactUsPopup() {
             });
         }
     } 
+
+async function loadTodayChatHistory() {
+    try {
+        if (!currentUser || !currentUser.id) {
+            console.log('No user logged in, skipping chat history load');
+            return;
+        }
+
+        // Get today's date in user's timezone
+        const today = new Date();
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
+        console.log('Loading chat history for today:', startOfDay.toISOString(), 'to', endOfDay.toISOString());
+
+        const { data: chatData, error } = await window.supabaseClient
+            .from('chat_history')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .gte('created_at', startOfDay.toISOString())
+            .lte('created_at', endOfDay.toISOString())
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Error loading chat history:', error);
+            return;
+        }
+
+        if (chatData && chatData.length > 0) {
+            console.log(`Loaded ${chatData.length} chat messages from today`);
+            
+            // Clear existing chat display
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.innerHTML = '';
+            }
+
+            // Load chat history into memory and display
+            chatHistory = [];
+            for (const chat of chatData) {
+                chatHistory.push({
+                    user: chat.user_message,
+                    ai: chat.ai_response,
+                    timestamp: chat.created_at
+                });
+                
+                // Display the messages
+                await addMessage('user', chat.user_message);
+                await addMessage('ai', chat.ai_response);
+            }
+
+            // Scroll to bottom
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            todayChatLoaded = true;
+            console.log('Today\'s chat history loaded successfully');
+        } else {
+            console.log('No chat history found for today');
+            todayChatLoaded = true;
+        }
+    } catch (error) {
+        console.error('Error in loadTodayChatHistory:', error);
+        todayChatLoaded = true; // Mark as loaded even if there's an error
+    }
+}
+
+async function saveChatToDatabase(userMessage, aiResponse) {
+    try {
+        if (!currentUser || !currentUser.id) {
+            console.log('No user logged in, skipping chat save');
+            return;
+        }
+
+        // Get current subject and grade
+        const userClass = userData?.class || userData?.class_level || '';
+        const currentSubject = window.currentSubject || '';
+
+        const { error } = await window.supabaseClient
+            .from('chat_history')
+            .insert({
+                user_id: currentUser.id,
+                user_message: userMessage,
+                ai_response: aiResponse,
+                subject: currentSubject,
+                grade: userClass,
+                teacher_name: selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
+                created_at: new Date().toISOString()
+            });
+
+        if (error) {
+            console.error('Error saving chat to database:', error);
+        } else {
+            console.log('Chat message saved to database successfully');
+        }
+    } catch (error) {
+        console.error('Error in saveChatToDatabase:', error);
+    }
+} 
 

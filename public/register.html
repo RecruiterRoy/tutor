@@ -201,7 +201,7 @@
                     <h2 class="text-2xl font-semibold text-white mb-6">Basic Information</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <input type="text" id="fullName" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Full Name">
+                            <input type="text" id="fullName" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Student's Name">
                             <div class="error-message" id="fullNameError"></div>
                         </div>
                         
@@ -318,11 +318,14 @@
                         </div>
                         
                         <div>
+                            <input type="text" id="schoolName" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="School Name">
+                            <div class="error-message" id="schoolNameError"></div>
+                        </div>
+                        
+                        <div>
                             <input type="text" id="city" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="City">
                             <div class="error-message" id="cityError"></div>
                         </div>
-                        
-
                         
                         <div>
                             <select id="language" class="input-style w-full px-4 py-3 rounded-lg" onchange="updateAvatarBasedOnLanguage()">
@@ -658,6 +661,7 @@
             const board = document.getElementById('board').value;
             const state = document.getElementById('state').value;
             const city = document.getElementById('city').value.trim();
+            const schoolName = document.getElementById('schoolName').value.trim();
 
             if (!classValue) {
                 showFieldError('classError', 'Please select your class');
@@ -687,7 +691,12 @@
                 hideFieldError('cityError');
             }
 
-
+            if (!schoolName) {
+                showFieldError('schoolNameError', 'School name is required');
+                isValid = false;
+            } else {
+                hideFieldError('schoolNameError');
+            }
 
             return isValid;
         }
@@ -758,6 +767,7 @@
                     <p class="text-gray-300">Board: ${document.getElementById('board').value}</p>
                     <p class="text-gray-300">State: ${document.getElementById('state').value}</p>
                     <p class="text-gray-300">City: ${document.getElementById('city').value}</p>
+                    <p class="text-gray-300">School: ${document.getElementById('schoolName').value}</p>
                     <p class="text-gray-300">Language: ${document.getElementById('language').value}</p>
                 </div>
                 <div class="bg-white/10 p-4 rounded-lg">
@@ -857,6 +867,7 @@
                                 board: board,
                                 city: city,
                                 state: state,
+                                school_name: document.getElementById('schoolName').value.trim(),
                                 preferred_language: language,
                                 avatar: selectedAvatar || 'teacher-avatar1.png',
                                 economic_status: 'Premium',
@@ -932,6 +943,7 @@
                         board_abbr: board, // From registration form
                         city: city, // From registration form
                         state: state, // From registration form
+                        school_name: document.getElementById('schoolName').value.trim(), // From registration form
                         preferred_language: language, // From registration form
                         avatar: selectedAvatar || 'teacher-avatar1.png',
                         economic_status: 'Premium',
@@ -1027,6 +1039,7 @@
                 board: board,
                 city: city,
                 state: state,
+                school_name: document.getElementById('schoolName').value.trim(),
                 preferred_language: language,
                 avatar: selectedAvatar
             });
@@ -1042,6 +1055,7 @@
                     board: board,
                     city: city,
                     state: state,
+                    school_name: document.getElementById('schoolName').value.trim(),
                     preferred_language: language,
                     avatar: selectedAvatar || 'teacher-avatar1.png',
                     economic_status: 'Premium',
@@ -1261,6 +1275,7 @@
                phone: window.registrationData.phone.replace('+91', ''),
                city: window.registrationData.city,
                state: window.registrationData.state,
+               school_name: window.registrationData.school_name,
                preferred_language: window.registrationData.language,
                avatar: selectedAvatar || 'teacher-avatar1.png',
                economic_status: 'Premium',
@@ -1353,6 +1368,7 @@
             const city = document.getElementById('city').value.trim();
             const state = document.getElementById('state').value;
             const language = document.getElementById('language').value;
+            const schoolName = document.getElementById('schoolName').value.trim();
             await supabase
                 .from('user_profiles')
                 .upsert({
@@ -1363,6 +1379,7 @@
                     phone: document.getElementById('phone').value.trim(),
                     city: city,
                     state: state,
+                    school_name: schoolName,
                     preferred_language: language,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()

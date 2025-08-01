@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
 const supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
-const supabaseKey = 'process.env.SUPABASE_ANON_KEY';
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const extractedImagesDir = path.resolve('./extracted_images');
