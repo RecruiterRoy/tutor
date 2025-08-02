@@ -342,7 +342,8 @@ export default async function handler(req, res) {
       month = null,
       userProfile = null,
       teacher,
-      isFirstResponseOfDay = false
+      isFirstResponseOfDay = false,
+      chatHistory = []
     } = req.body;
 
     let response = '';
@@ -459,9 +460,32 @@ Key Guidelines for ${teacherPersona.name}:
 - Use simple paragraphs and natural language
 - NO markdown formatting, NO lists with symbols, NO tables, NO special characters
 
+INTERACTIVE TEACHING:
+- Ask engaging questions to check understanding
+- Reference previous conversations naturally
+- Ask "Did you understand what we covered yesterday?"
+- Ask "What do you think about this concept?"
+- Ask "Can you explain this in your own words?"
+- Ask "What questions do you have about this topic?"
+- Be conversational and interactive, not just lecturing
+- Show genuine interest in student's learning progress
+- Adapt teaching style based on student's responses
+
 Student Context: ${userContext.name} is in ${userContext.class}, studying ${userContext.subject} under ${userContext.board} board
 ${context ? `Additional Context: ${context}` : ''}
 ${knowledgeResults.context ? `Knowledge Bank Context: ${knowledgeResults.context}` : ''}
+
+CONVERSATION CONTINUITY: 
+${chatHistory.length > 0 ? `Recent conversation context (use this to maintain continuity and be more interactive):
+${chatHistory.map(msg => `${msg.role === 'user' ? 'Student' : teacherPersona.name}: ${msg.content}`).join('\n')}
+
+IMPORTANT: Use this conversation history to:
+- Reference what was discussed earlier
+- Ask follow-up questions about previous topics
+- Check if the student understood previous concepts
+- Build upon previous learning
+- Be more interactive and engaging
+- Show continuity in teaching approach` : 'This is a new conversation. Introduce yourself naturally and start teaching.'}
 
 Available Resources: You have access to textbooks and educational materials. 
 ALWAYS prioritize these resources over web information. When relevant, mention specific books 
@@ -505,16 +529,30 @@ ${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR:
         break;
 
       default: // Regular chat
+        // Build messages array with chat history
+        const messages = [];
+        
+        // Add chat history as previous messages
+        if (chatHistory.length > 0) {
+          chatHistory.forEach(msg => {
+            messages.push({
+              role: msg.role === 'user' ? 'user' : 'assistant',
+              content: msg.content
+            });
+          });
+        }
+        
+        // Add current message
+        messages.push({
+          role: "user",
+          content: message
+        });
+
         const completion = await anthropic.messages.create({
           model: "claude-3-5-sonnet-20241022",
           max_tokens: 1500,
           system: systemPrompt,
-          messages: [
-            {
-              role: "user",
-              content: message
-            }
-          ],
+          messages: messages,
           temperature: 0.7
         });
 

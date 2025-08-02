@@ -57,6 +57,7 @@
     <script src="/public/js/enhancedAIService.js" defer></script>
     <script src="/public/js/claudeChat.js" defer></script>
     <script src="/public/js/aiHealthCheck.js" defer></script>
+    <script src="/public/js/subjectManager.js" defer></script>
     <script src="/public/js/dashboard.js" defer></script>
     <!-- Removed integrateEnhancedAI.js as it's not needed -->
     
@@ -85,6 +86,7 @@
             overscroll-behavior-y: contain;
             touch-action: manipulation;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow-y: auto;
         }
         
         /* Modern Glass Effect */
@@ -107,7 +109,7 @@
         
         /* Modern Chat Interface */
         .chat-container {
-            height: calc(100vh - 200px);
+            height: calc(100vh - 40px);
             overflow-y: auto;
             scroll-behavior: smooth;
             padding: 20px;
@@ -390,7 +392,7 @@
         /* Mobile Optimizations */
         @media (max-width: 768px) {
             .chat-container {
-                height: calc(100vh - 180px);
+                height: calc(100vh - 60px);
                 padding: 15px;
             }
             
@@ -728,7 +730,7 @@
 </head>
 <body class="min-h-screen overflow-x-hidden">
     <!-- Mobile Sidebar -->
-    <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-white/10 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
+    <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
         <div class="flex flex-col h-full">
             <!-- Sidebar Header -->
             <div class="flex items-center justify-between p-6 border-b border-white/20">
@@ -741,8 +743,8 @@
             <!-- Sidebar Navigation -->
             <nav class="flex-1 p-6 space-y-4">
                 <div class="nav-item active" onclick="showSection('chat')">
-                    <span class="text-xl">💬</span>
-                    <span>AI Chat</span>
+                    <span class="text-xl">🏫</span>
+                    <span>Classroom</span>
                 </div>
                 <div class="nav-item" onclick="showSection('materials')">
                     <span class="text-xl">📚</span>
@@ -761,7 +763,7 @@
             <!-- User Info -->
             <div class="p-6 border-t border-white/20">
                 <!-- User Display Info -->
-                <div class="user-info-section mb-4 p-3 bg-white/10 rounded-lg">
+                <div class="user-info-section mb-4 p-3 bg-white/20 rounded-lg">
                     <div class="flex items-center space-x-3 mb-2">
                         <div id="userAvatar" class="text-2xl">👤</div>
                         <div>
@@ -800,8 +802,8 @@
             <!-- Sidebar Navigation -->
             <nav class="flex-1 p-6 space-y-4">
                 <div class="nav-item active" onclick="showSection('chat')">
-                    <span class="text-xl">💬</span>
-                    <span>AI Chat</span>
+                    <span class="text-xl">🏫</span>
+                    <span>Classroom</span>
                 </div>
                 <div class="nav-item" onclick="showSection('materials')">
                     <span class="text-xl">📚</span>
@@ -820,7 +822,7 @@
             <!-- User Info -->
             <div class="p-6 border-t border-white/20">
                 <!-- User Display Info -->
-                <div class="user-info-section mb-4 p-3 bg-white/10 rounded-lg">
+                <div class="user-info-section mb-4 p-3 bg-white/20 rounded-lg">
                     <div class="flex items-center space-x-3 mb-2">
                         <div id="userAvatar2" class="text-2xl">👤</div>
                         <div>
@@ -878,37 +880,29 @@
             <!-- Content Area -->
             <main class="flex-1 overflow-hidden">
                 <!-- Chat Section -->
-                <div id="chatSection" class="h-full flex flex-col">
-                    <!-- Chat Header -->
-                    <div class="p-4 border-b border-white/20">
+                <div id="chatSection" class="h-full flex flex-col overflow-y-auto">
+
+                    
+                    <!-- Chat Header - Compact -->
+                    <div class="chat-header p-2 border-b border-gray-700 bg-gray-800/50">
                         <div class="flex items-center justify-between">
-                            <!-- Teacher Avatar and Info -->
-                            <div class="flex flex-col items-center">
-                                <img id="teacherAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-white/20" src="images/roy_sir.jpg" alt="Teacher Avatar">
-                                <h2 class="text-white text-xl font-bold mt-2" id="teacherName">Roy Sir</h2>
-                                <!-- Small TTS Control Button -->
-                                <div class="flex gap-1 mt-2">
-                                    <button id="tts-play-small" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs transition-colors">
-                                        ▶️
-                                    </button>
-                                    <button id="tts-stop-small" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs transition-colors">
-                                        ⏹️
-                                    </button>
-                                </div>
+                            <div class="flex items-center space-x-2">
+                                <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full">
+                                <span id="welcomeTeacherName" class="text-white font-semibold text-sm">Roy Sir</span>
                             </div>
-                            <div class="flex items-center space-x-4">
-                                <div class="text-right">
-                                    
-                                </div>
-                                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                                    <span id="studentInitials" class="text-white font-bold text-sm">S</span>
-                                </div>
+                            <div class="flex items-center space-x-1">
+                                <button id="playButton" onclick="playTTS()" class="p-1 bg-purple-600 rounded hover:bg-purple-700 transition-colors">
+                                    <span class="text-white text-xs">▶️</span>
+                                </button>
+                                <button id="stopButton" onclick="stopTTS()" class="p-1 bg-red-600 rounded hover:bg-red-700 transition-colors">
+                                    <span class="text-white text-xs">⏹️</span>
+                                </button>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Chat Messages -->
-                    <div id="chatMessages" class="chat-container flex-1">
+                    <div id="chatMessages" class="chat-container flex-1 overflow-y-auto">
                         <!-- Welcome Message -->
                         <div class="message message-ai">
                             <div class="message-bubble">
@@ -925,7 +919,7 @@
                     </div>
                     
                     <!-- Input Area -->
-                    <div class="input-area">
+                    <div class="input-area mt-20">
                         <div class="flex items-center space-x-3">
                             <div class="relative flex-1">
                                 <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." class="chat-input pr-12">
@@ -942,6 +936,24 @@
                         </div>
                         <div class="mt-3 text-xs text-gray-400 text-center">
                             Press Enter to send • Use voice input for hands-free learning
+                        </div>
+                    </div>
+                    
+                    <!-- Small Subject Header in Chat Area -->
+                    <div class="subject-header mt-4 mb-3 p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <span id="currentSubjectName" class="text-white font-semibold text-sm">Select Subject</span>
+                            </div>
+                            <button onclick="showSection('progress')" class="text-purple-300 hover:text-white text-xs flex items-center space-x-1">
+                                <span>⚙️</span>
+                                <span>Manage</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Small Subject Buttons -->
+                        <div id="subjectButtonsGrid" class="flex flex-wrap gap-1 mt-2">
+                            <!-- All user-added subjects will be shown here -->
                         </div>
                     </div>
                 </div>
@@ -988,6 +1000,53 @@
                                     </div>
                                     <div class="text-center p-4 bg-purple-600/20 rounded-lg">
                                         <p class="text-white text-lg font-semibold" id="monthsRemaining">Months remaining to final exam: 8</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Subject Management Section -->
+                            <div class="card-modern">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-white text-lg font-semibold">📚 My Subjects</h3>
+                                    <button onclick="showSubjectManager()" class="btn-modern text-sm">
+                                        <span>⚙️</span>
+                                        <span>Manage Subjects</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Current Subject Display -->
+                                <div id="currentSubjectDisplay" class="mb-4 p-3 bg-purple-600/20 rounded-lg border border-purple-500/30">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="text-purple-200 text-sm">Current Subject:</span>
+                                            <span id="currentSubjectNameProgress" class="text-white font-semibold ml-2">Select a subject to start learning</span>
+                                        </div>
+                                        <div id="subjectProgressDisplay" class="text-right">
+                                            <div class="text-xs text-gray-300">Progress</div>
+                                            <div class="text-sm text-green-400 font-semibold">0%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Subject Buttons Grid -->
+                                <div id="subjectButtonsGridProgress" class="grid grid-cols-3 gap-3 mb-4">
+                                    <!-- All subjects will be shown here -->
+                                </div>
+                                
+                                <!-- Subject Recall and Next Topic -->
+                                <div id="subjectRecallSection" class="mt-4 p-4 bg-blue-600/20 rounded-lg border border-blue-500/30 hidden">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="text-blue-400 text-lg">📖</div>
+                                        <div class="flex-1">
+                                            <h4 class="text-white font-semibold mb-2">Quick Recall</h4>
+                                            <div id="subjectRecall" class="text-gray-200 text-sm mb-3">
+                                                <!-- Recall content will be loaded here -->
+                                            </div>
+                                            <h4 class="text-white font-semibold mb-2">Next Topic</h4>
+                                            <div id="nextTopic" class="text-gray-200 text-sm">
+                                                <!-- Next topic will be loaded here -->
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1046,7 +1105,7 @@
                                     <div class="avatar-selection-card p-4 rounded-lg cursor-pointer" onclick="handleAvatarSelection('english')">
                                         <img class="teacher-avatar mx-auto mb-2" src="images/roy_sir.jpg" alt="Roy Sir" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiM2NjdlZWEiLz4KPGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlI8L3RleHQ+Cjwvc3ZnPgo='">
                                         <h4 class="text-white text-center text-sm">Roy Sir</h4>
-                                        <p class="text-gray-300 text-center text-xs">Microsoft Ravi (English)</p>
+                                        <p class="text-gray-300 text-center text-xs">Indian English Voice</p>
                                     </div>
                                     <div class="avatar-selection-card p-4 rounded-lg cursor-pointer" onclick="handleAvatarSelection('hindi')">
                                         <img class="teacher-avatar mx-auto mb-2" src="images/miss_sapna.jpg" alt="Ms. Sapana" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNhODU1ZjciLz4KPGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+Cjwvc3ZnPgo='">
@@ -2667,8 +2726,66 @@
         // Initialize mobile features
         document.addEventListener('DOMContentLoaded', function() {
             setupMobileFeatures();
+            setupScrollToTop();
         });
 
+        // Setup scroll to top functionality
+        function setupScrollToTop() {
+            const scrollToTopBtn = document.createElement('button');
+            scrollToTopBtn.className = 'scroll-to-top';
+            scrollToTopBtn.innerHTML = '↑';
+            scrollToTopBtn.onclick = () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+            document.body.appendChild(scrollToTopBtn);
+
+            // Show/hide scroll to top button
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    scrollToTopBtn.classList.add('visible');
+                } else {
+                    scrollToTopBtn.classList.remove('visible');
+                }
+            });
+        }
+
     </script>
+    
+    <!-- Subject Manager Modal -->
+    <div id="subjectManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden overflow-y-auto">
+        <div class="bg-gray-800 rounded-lg p-4 w-full max-w-6xl mx-4 my-4 max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h2 class="text-white text-lg font-bold">📚 Manage Subjects</h2>
+                <button onclick="hideSubjectManager()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 flex-1 overflow-hidden">
+                <!-- Available Subjects -->
+                <div class="flex flex-col">
+                    <h3 class="text-white text-sm font-semibold mb-3 flex-shrink-0">Available Subjects</h3>
+                    <div id="availableSubjectsGrid" class="grid grid-cols-4 gap-2 overflow-y-auto flex-1" style="max-height: 50vh;">
+                        <!-- Available subjects will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Selected Subjects -->
+                <div class="flex flex-col">
+                    <h3 class="text-white text-sm font-semibold mb-3 flex-shrink-0">My Selected Subjects</h3>
+                    <div id="selectedSubjectsGrid" class="grid grid-cols-4 gap-2 overflow-y-auto flex-1" style="max-height: 50vh;">
+                        <!-- Selected subjects will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-2 mt-4 flex-shrink-0">
+                <button onclick="hideSubjectManager()" class="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                    Cancel
+                </button>
+                <button onclick="saveSubjectChanges()" class="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700">
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
