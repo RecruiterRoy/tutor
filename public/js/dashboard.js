@@ -42,6 +42,11 @@ let preWarmedRecognition = null;
 let voicesLoaded = false;
 let lastResponseDate = null; // Track the date of last AI response
 
+// Make variables globally accessible
+window.currentUser = currentUser;
+window.isRecording = isRecording;
+window.selectedAvatar = selectedAvatar;
+
 // Indian Regional Avatars
 const regionalAvatars = [
     // Specific Teacher Avatars (based on language preference)
@@ -2255,3 +2260,10 @@ function closeContactUsPopup() {
         }
     } 
 
+// Make functions globally accessible for HTML onclick handlers
+window.toggleVoiceRecording = toggleVoiceRecording;
+window.closeSidebar = closeSidebar;
+window.showSection = showSection;
+window.saveChatMessage = saveChatMessage;
+window.currentUser = currentUser;
+window.isMobile = isMobile;
