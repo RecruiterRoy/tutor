@@ -43,11 +43,121 @@ window.saveChatMessage = function(message, response) {
     }
 };
 
+window.closeMobileSidebar = function() {
+    console.log('closeMobileSidebar called');
+    if (typeof window._closeMobileSidebar === 'function') {
+        return window._closeMobileSidebar();
+    } else {
+        console.error('closeMobileSidebar function not available yet');
+    }
+};
+
+window.showSubjectManager = function() {
+    console.log('showSubjectManager called');
+    if (window.subjectManager && window.subjectManager.showSubjectManager) {
+        return window.subjectManager.showSubjectManager();
+    } else {
+        console.error('Subject manager not available yet');
+    }
+};
+
+// Add other missing global functions
+window.openMobileSidebar = function() {
+    console.log('openMobileSidebar called');
+    if (typeof window._openMobileSidebar === 'function') {
+        return window._openMobileSidebar();
+    } else {
+        console.error('openMobileSidebar function not available yet');
+    }
+};
+
+window.playTTS = function() {
+    console.log('playTTS called');
+    if (typeof window._playTTS === 'function') {
+        return window._playTTS();
+    } else {
+        console.error('playTTS function not available yet');
+    }
+};
+
+window.stopTTS = function() {
+    console.log('stopTTS called');
+    if (typeof window._stopTTS === 'function') {
+        return window._stopTTS();
+    } else {
+        console.error('stopTTS function not available yet');
+    }
+};
+
+window.addNewSubject = function() {
+    console.log('addNewSubject called');
+    if (window.subjectManager && window.subjectManager.addNewSubject) {
+        return window.subjectManager.addNewSubject();
+    } else {
+        console.error('Subject manager not available yet');
+    }
+};
+
+window.handleAvatarSelection = function(language) {
+    console.log('handleAvatarSelection called:', language);
+    if (typeof window._handleAvatarSelection === 'function') {
+        return window._handleAvatarSelection(language);
+    } else {
+        console.error('handleAvatarSelection function not available yet');
+    }
+};
+
+window.downloadApp = function() {
+    console.log('downloadApp called');
+    if (typeof window._downloadApp === 'function') {
+        return window._downloadApp();
+    } else {
+        console.error('downloadApp function not available yet');
+    }
+};
+
+window.scrollToTop = function() {
+    console.log('scrollToTop called');
+    if (typeof window._scrollToTop === 'function') {
+        return window._scrollToTop();
+    } else {
+        console.error('scrollToTop function not available yet');
+    }
+};
+
+window.forceShowTrialOverlay = function() {
+    console.log('forceShowTrialOverlay called');
+    if (typeof window._forceShowTrialOverlay === 'function') {
+        return window._forceShowTrialOverlay();
+    } else {
+        console.error('forceShowTrialOverlay function not available yet');
+    }
+};
+
+window.upgradeToPremium = function() {
+    console.log('upgradeToPremium called');
+    if (typeof window._upgradeToPremium === 'function') {
+        return window._upgradeToPremium();
+    } else {
+        console.error('upgradeToPremium function not available yet');
+    }
+};
+
+window.closeTrialOverlay = function() {
+    console.log('closeTrialOverlay called');
+    if (typeof window._closeTrialOverlay === 'function') {
+        return window._closeTrialOverlay();
+    } else {
+        console.error('closeTrialOverlay function not available yet');
+    }
+};
+
 // Make variables globally accessible immediately
 window.currentUser = null;
 window.isRecording = false;
 window.selectedAvatar = 'roy-sir';
 window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+window.userDataLoaded = false; // Flag to track if user data is loaded
 
 // Initialize Supabase when page loads
 async function initializeSupabase() {
@@ -487,7 +597,9 @@ async function initializeDashboard() {
         console.log('✅ User verified and ready for dashboard');
         
         // Continue with dashboard initialization
+        console.log('🔄 Loading user data...');
         await loadUserData();
+        console.log('✅ User data loaded, loading books...');
         await loadBooks();
         setupEventListeners();
         populateAvatarGrid();
@@ -572,13 +684,12 @@ async function loadUserData() {
             window.userData = profile;
             window.currentUser = currentUser;
             
+            // Update all UI elements using the centralized function
+            updateUserDisplay(profile);
+            
             // Populate welcome section
             const welcomeMessage = document.getElementById('welcomeMessage');
             const userInfo = document.getElementById('userInfo');
-            const userAvatar = document.getElementById('userAvatar');
-            const userInitials = document.getElementById('userInitials');
-            const userName = document.getElementById('userName');
-            const userClass = document.getElementById('userClass');
             
             if (welcomeMessage) {
                 welcomeMessage.textContent = `Welcome back, ${profile.full_name || 'Student'}!`;
@@ -590,27 +701,10 @@ async function loadUserData() {
                 userInfo.textContent = `Class ${cleanClassLevel} • ${profile.board || 'N/A'}`;
             }
             
-            if (userAvatar) {
-                userAvatar.innerHTML = `<i class="fas fa-user"></i>`;
-            }
+            console.log('✅ User display updated:', profile.full_name, 'Class', profile.class || profile.class_level);
             
-            if (userInitials) {
-                const initials = (profile.full_name || 'S').split(' ').map(n => n[0]).join('').toUpperCase();
-                userInitials.textContent = initials;
-            }
-            
-            if (userName) {
-                userName.textContent = profile.full_name || 'Student';
-            }
-            
-            if (userClass) {
-                const classLevel = profile.class_level || profile.class || 'N/A';
-                const cleanClassLevel = classLevel.replace(/^Class\s*/i, '');
-                userClass.textContent = `Class ${cleanClassLevel}`;
-            }
-            
-            // Store user data globally
-            window.userData = profile;
+            // Set flag that user data is loaded
+            window.userDataLoaded = true;
             
             // Initialize subject manager with user data
             if (window.subjectManager) {
@@ -997,41 +1091,44 @@ async function sendMessage() {
     const text = input.value.trim();
     if (!text) return;
     
+    // Check if user data is loaded
+    if (!window.userDataLoaded) {
+        console.error('❌ User data not loaded yet');
+        await addMessage('ai', 'Please wait, loading your profile...');
+        return;
+    }
+    
     // Add user message to chat
     await addMessage('user', text);
     input.value = '';
     showTypingIndicator();
     
     try {
-        // Get user profile data from Supabase
-        let userProfile = null;
-        if (window.currentUser && window.currentUser.id) {
-            const { data: profile, error } = await window.supabaseClient
-                .from('user_profiles')
-                .select('*')
-                .eq('id', window.currentUser.id)
-                .single();
-            
-            if (!error && profile) {
-                userProfile = profile;
-            }
+        // Use already loaded user data instead of fetching again
+        const userProfile = window.userData;
+        
+        if (!userProfile) {
+            console.error('❌ No user profile available');
+            await addMessage('ai', 'Error: User profile not loaded. Please refresh the page.');
+            return;
         }
         
-        // Get user class/subject from profile or UI
-        const userClass = userProfile?.class || userProfile?.class_level || window.currentUser?.user_metadata?.class || document.getElementById('userClass')?.textContent || '';
+        // Get user class/subject from profile
+        const userClass = userProfile.class || userProfile.class_level || 'Class 6';
         const userSubject = window.currentSubject || '';
-        const userBoard = userProfile?.board || 'CBSE';
+        const userBoard = userProfile.board || 'CBSE';
         
         // Check if this is the first response of the day
         const today = new Date().toDateString();
         const isFirstResponseOfDay = lastResponseDate !== today;
         
-        console.log('Sending message with user data:', {
-            name: userProfile?.full_name,
+        console.log('📤 Sending message with user data:', {
+            name: userProfile.full_name,
             class: userClass,
             board: userBoard,
             subject: userSubject,
-            isFirstResponseOfDay: isFirstResponseOfDay
+            isFirstResponseOfDay: isFirstResponseOfDay,
+            userProfile: userProfile
         });
         
         // Get the current avatar from user profile or global variable
@@ -1751,15 +1848,29 @@ function toggleSidebar() {
 function closeSidebar() {
     // Assign to global variable for HTML onclick access
     window._closeSidebar = closeSidebar;
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+    }
+}
+
+function closeMobileSidebar() {
+    // Assign to global variable for HTML onclick access
+    window._closeMobileSidebar = closeMobileSidebar;
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
     
-    sidebar.classList.add('-translate-x-full');
-    overlay.classList.add('opacity-0', 'pointer-events-none');
-    
-    // Restore body scroll
-    if (isMobile) {
-        document.body.style.overflow = '';
+    if (sidebar && overlay) {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+        
+        // Restore body scroll
+        if (window.isMobile) {
+            document.body.style.overflow = '';
+        }
     }
 }
 
@@ -2344,12 +2455,7 @@ function closeContactUsPopup() {
         if (playBtn && stopBtn) {
             playBtn.addEventListener('click', () => {
                 if (window.textToSpeech) {
-                    if (window.textToSpeech.isPaused) {
-                        window.textToSpeech.play();
-                    } else {
-                        // If not paused, start from beginning of current response
-                        window.textToSpeech.speak(window.textToSpeech.currentAIResponse || '');
-                    }
+                    window.textToSpeech.playLastMessage();
                 }
             });
             
@@ -2359,6 +2465,88 @@ function closeContactUsPopup() {
                 }
             });
         }
-    } 
+    }
 
+    // Assign actual function implementations to global proxies
+    window._toggleVoiceRecording = toggleVoiceRecording;
+    window._closeSidebar = closeSidebar;
+    window._closeMobileSidebar = closeMobileSidebar;
+    window._showSection = showSection;
+    window._openMobileSidebar = function() {
+        const sidebar = document.getElementById('mobileSidebar');
+        const overlay = document.getElementById('mobileSidebarOverlay');
+        
+        if (sidebar && overlay) {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            
+            // Prevent body scroll on mobile
+            if (window.isMobile) {
+                document.body.style.overflow = 'hidden';
+            }
+        }
+    };
+    
+    window._playTTS = function() {
+        if (window.textToSpeech) {
+            window.textToSpeech.playLastMessage();
+        }
+    };
+    
+    window._stopTTS = function() {
+        if (window.textToSpeech) {
+            window.textToSpeech.stop();
+        }
+    };
+    
+    window._handleAvatarSelection = function(language) {
+        const englishCard = document.querySelector('[onclick="handleAvatarSelection(\'english\')"]');
+        const hindiCard = document.querySelector('[onclick="handleAvatarSelection(\'hindi\')"]');
+        
+        // Remove selected class from both
+        englishCard?.classList.remove('selected');
+        hindiCard?.classList.remove('selected');
+        
+        // Add selected class to chosen language
+        if (language === 'english') {
+            englishCard?.classList.add('selected');
+            selectedAvatar = 'roy-sir';
+        } else if (language === 'hindi') {
+            hindiCard?.classList.add('selected');
+            selectedAvatar = 'ms-sapana';
+        }
+        
+        // Update avatar display
+        updateAvatarDisplay();
+        
+        // Save preference
+        saveAvatarPreference();
+    };
+    
+    window._downloadApp = function() {
+        // For now, just show a message
+        showSuccess('APK download will be available soon!');
+    };
+    
+    window._scrollToTop = function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    
+    window._forceShowTrialOverlay = function() {
+        const overlay = document.getElementById('trialExpiredOverlay');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+        }
+    };
+    
+    window._upgradeToPremium = function() {
+        window.location.href = 'payment.html';
+    };
+    
+    window._closeTrialOverlay = function() {
+        const overlay = document.getElementById('trialExpiredOverlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+        }
+    };
 // Functions are already made globally accessible at the top of the file
