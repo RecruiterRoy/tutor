@@ -654,9 +654,32 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
         try {
             console.log('saveSubjectChanges method called');
             
+            // Try to get current user from multiple sources
             if (!this.currentUser) {
-                console.error('No current user found');
-                return;
+                // Try to get from window.currentUser
+                if (window.currentUser) {
+                    this.currentUser = window.currentUser;
+                } else {
+                    // Try to get from Supabase auth
+                    try {
+                        const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                        if (user && !error) {
+                            this.currentUser = user;
+                        } else {
+                            console.error('No current user found in any source');
+                            if (window.showError) {
+                                window.showError('User session expired. Please log in again.');
+                            }
+                            return;
+                        }
+                    } catch (authError) {
+                        console.error('Failed to get current user:', authError);
+                        if (window.showError) {
+                            window.showError('Authentication error. Please log in again.');
+                        }
+                        return;
+                    }
+                }
             }
 
             console.log('Saving subjects:', this.userSubjects);

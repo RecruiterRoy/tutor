@@ -25,8 +25,8 @@ let pdfProcessor = null;
 
 // Global state - currentUser is managed by dashboard.html
 let recognition;
-// isRecording is managed by dashboard.html
 let recognitionTimeout;
+let isRecording = false;
 let isAmbientListening = false;
 // Global variables
 let currentUser = null;
@@ -93,11 +93,51 @@ const regionalAvatars = [
 
 // Mobile detection and optimization
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+window.isMobile = isMobile; // Make it globally accessible
 
-// Mobile optimization function
-function applyMobileOptimizations() {
-    // Prevent zoom on input focus (iOS)
-    const inputs = document.querySelectorAll('input, textarea, select');
+        // Request microphone permission
+        async function requestMicrophonePermission() {
+            try {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    console.log('✅ Microphone permission granted');
+                    stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
+                    
+                    // Update voice button to show permission granted
+                    const voiceButton = document.getElementById('voiceButton');
+                    if (voiceButton) {
+                        voiceButton.title = 'Voice input ready';
+                        voiceButton.classList.remove('text-red-400');
+                        voiceButton.classList.add('text-green-400');
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Microphone permission denied or not available:', error);
+                
+                // Update voice button to show permission needed
+                const voiceButton = document.getElementById('voiceButton');
+                if (voiceButton) {
+                    voiceButton.title = 'Microphone permission needed';
+                    voiceButton.classList.remove('text-green-400');
+                    voiceButton.classList.add('text-red-400');
+                }
+                
+                // Show permission request on first voice button click
+                if (error.name === 'NotAllowedError') {
+                    showError('Microphone permission is required for voice input. Please allow microphone access in your browser settings.');
+                }
+            }
+        }
+        
+        // Mobile optimization function
+        function applyMobileOptimizations() {
+            // Prevent zoom on input focus (iOS)
+            const inputs = document.querySelectorAll('input, textarea, select');
+            
+            // Request microphone permission on mobile devices
+            if (isMobile) {
+                requestMicrophonePermission();
+            }
     inputs.forEach(input => {
         input.addEventListener('focus', () => {
             if (isMobile) {
@@ -304,6 +344,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                  console.log("Skipping welcome message as voices are not ready yet.");
             }
         }, 1500);
+        
+        // Set up periodic user session refresh for multiple users
+        setInterval(async () => {
+            try {
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                if (error || !user) {
+                    console.warn('⚠️ User session expired, redirecting to login...');
+                    window.location.href = '/login.html';
+                } else {
+                    currentUser = user; // Update current user
+                    console.log('✅ User session refreshed:', user.id);
+                }
+            } catch (sessionError) {
+                console.warn('⚠️ Session check failed:', sessionError);
+            }
+        }, 300000); // Check every 5 minutes
 
     } catch (error) {
         console.error('Initialization error:', error);
@@ -422,11 +478,30 @@ async function loadUserData() {
     try {
         clearDashboardError();
         
-        // Check if currentUser exists
-        if (!currentUser || !currentUser.id) {
-            console.error('❌ No current user available');
+        // Get current user from Supabase auth
+        const { data: { user }, error: authError } = await window.supabaseClient.auth.getUser();
+        
+        if (authError) {
+            console.error('❌ Auth error:', authError);
+            showDashboardError('Authentication error. Please log in again.');
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 2000);
             return;
         }
+        
+        if (!user || !user.id) {
+            console.error('❌ No authenticated user found');
+            showDashboardError('No user found. Please log in again.');
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 2000);
+            return;
+        }
+        
+        // Update currentUser with fresh data
+        currentUser = user;
+        console.log('✅ Current user loaded:', user.id);
         
         // Get user profile from user_profiles table
         const { data: profile, error } = await window.supabaseClient
@@ -1121,7 +1196,6 @@ function setupVoiceSettingsListeners() {
 }
 
 // Global variables for voice recognition
-let isRecording = false;
 
 function initSpeechRecognition() {
     try {
@@ -1251,9 +1325,17 @@ async function toggleVoiceRecording() {
             stopRecording();
             showSuccess('Voice recording stopped');
         } else {
-            // Start listening
-            recognition.start();
-            showSuccess('Voice recording started - speak now!');
+            // Check microphone permission first
+            try {
+                await requestMicrophonePermission();
+                
+                // Start listening
+                recognition.start();
+                showSuccess('Voice recording started - speak now!');
+            } catch (permissionError) {
+                console.error('Microphone permission error:', permissionError);
+                showError('Microphone permission required. Please allow microphone access and try again.');
+            }
         }
         
     } catch (error) {
