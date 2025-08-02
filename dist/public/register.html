@@ -975,12 +975,18 @@
                         }
                         
                         // Manually confirm email in database for instant access
-                        const { error: confirmError } = await supabase.rpc('manual_confirm_email', {
-                            user_email: email
-                        });
-                        
-                        if (confirmError) {
+                        try {
+                            const { error: confirmError } = await supabase.rpc('manual_confirm_email', {
+                                user_email: email
+                            });
+                            
+                            if (confirmError) {
+                                console.warn('⚠️ Manual email confirmation failed:', confirmError);
+                                // Continue anyway since profile is already created with approved status
+                            }
+                        } catch (confirmError) {
                             console.warn('⚠️ Manual email confirmation failed:', confirmError);
+                            // Continue anyway since profile is already created with approved status
                         }
                         
                         console.log('✅ Profile created with instant approved status');
