@@ -4,6 +4,50 @@
 // Use the global supabaseClient that's initialized in config.js
 // No need to declare supabase here as it's already available via window.supabaseClient
 
+// Make functions globally accessible IMMEDIATELY for HTML onclick handlers
+window.toggleVoiceRecording = function() {
+    console.log('toggleVoiceRecording called');
+    // This will be replaced when the actual function is defined
+    if (typeof window._toggleVoiceRecording === 'function') {
+        return window._toggleVoiceRecording();
+    } else {
+        console.error('toggleVoiceRecording function not available yet');
+    }
+};
+
+window.closeSidebar = function() {
+    console.log('closeSidebar called');
+    if (typeof window._closeSidebar === 'function') {
+        return window._closeSidebar();
+    } else {
+        console.error('closeSidebar function not available yet');
+    }
+};
+
+window.showSection = function(sectionName) {
+    console.log('showSection called:', sectionName);
+    if (typeof window._showSection === 'function') {
+        return window._showSection(sectionName);
+    } else {
+        console.error('showSection function not available yet');
+    }
+};
+
+window.saveChatMessage = function(message, response) {
+    console.log('saveChatMessage called');
+    if (typeof window._saveChatMessage === 'function') {
+        return window._saveChatMessage(message, response);
+    } else {
+        console.error('saveChatMessage function not available yet');
+    }
+};
+
+// Make variables globally accessible immediately
+window.currentUser = null;
+window.isRecording = false;
+window.selectedAvatar = 'roy-sir';
+window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
 // Initialize Supabase when page loads
 async function initializeSupabase() {
     try {
@@ -554,6 +598,10 @@ async function loadUserData() {
         if (profile) {
             console.log('✅ User profile loaded:', profile);
             
+            // Store user data globally
+            window.userData = profile;
+            window.currentUser = currentUser;
+            
             // Populate welcome section
             const welcomeMessage = document.getElementById('welcomeMessage');
             const userInfo = document.getElementById('userInfo');
@@ -632,8 +680,38 @@ async function loadUserData() {
             
             // Store basic user data
             window.userData = { full_name: 'Student', class: 'N/A', board: 'N/A' };
-        }
             
+            // Populate profile modal fields with basic info
+            const profileName = document.getElementById('profileName');
+            const profileEmail = document.getElementById('profileEmail');
+            const profilePhone = document.getElementById('profilePhone');
+            const profileClass = document.getElementById('profileClass');
+            const learningStyle = document.getElementById('learningStyle');
+            const preferredLanguage = document.getElementById('preferredLanguage');
+            
+            if (profileName) profileName.value = 'Student';
+            if (profileEmail) profileEmail.value = currentUser.email || '';
+            if (profilePhone) profilePhone.value = '';
+            if (profileClass) profileClass.value = 'Class N/A';
+            if (learningStyle) learningStyle.value = 'visual';
+            if (preferredLanguage) preferredLanguage.value = 'en';
+            
+            // Set default avatar
+            selectedAvatar = 'roy-sir';
+            window.selectedAvatar = 'roy-sir';
+            updateAvatarDisplay();
+            
+            // Update user display
+            updateUserDisplay({ full_name: 'Student', class: 'N/A', board: 'N/A' });
+            
+            // Initialize subject manager with basic info
+            if (window.subjectManager) {
+                await window.subjectManager.initialize(currentUser, 'Class 6', 'CBSE');
+            }
+        }
+        
+        // If profile exists, populate additional fields
+        if (profile) {
             // Populate profile modal fields
             const profileName = document.getElementById('profileName');
             const profileEmail = document.getElementById('profileEmail');
@@ -1395,6 +1473,8 @@ function stopRecording() {
 }
 
 async function toggleVoiceRecording() {
+    // Assign to global variable for HTML onclick access
+    window._toggleVoiceRecording = toggleVoiceRecording;
     try {
         if (!recognition) {
             showError('Voice recognition not initialized');
@@ -1626,6 +1706,8 @@ async function logout() {
 
 // UI Functions
 function showSection(sectionName) {
+    // Assign to global variable for HTML onclick access
+    window._showSection = showSection;
     console.log('Showing section:', sectionName);
     
     // Hide all sections
@@ -1697,6 +1779,8 @@ function toggleSidebar() {
 }
 
 function closeSidebar() {
+    // Assign to global variable for HTML onclick access
+    window._closeSidebar = closeSidebar;
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
     
@@ -2307,15 +2391,4 @@ function closeContactUsPopup() {
         }
     } 
 
-// Make functions globally accessible for HTML onclick handlers
-window.toggleVoiceRecording = toggleVoiceRecording;
-window.closeSidebar = closeSidebar;
-window.showSection = showSection;
-window.saveChatMessage = saveChatMessage;
-window.currentUser = currentUser;
-window.isMobile = isMobile;
-
-// Also make variables globally accessible
-window.currentUser = currentUser;
-window.isRecording = isRecording;
-window.selectedAvatar = selectedAvatar;
+// Functions are already made globally accessible at the top of the file
