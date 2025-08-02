@@ -5,151 +5,69 @@
 // No need to declare supabase here as it's already available via window.supabaseClient
 
 // Make functions globally accessible IMMEDIATELY for HTML onclick handlers
+// These will be replaced with actual implementations later
 window.toggleVoiceRecording = function() {
-    console.log('toggleVoiceRecording called');
-    // This will be replaced when the actual function is defined
-    if (typeof window._toggleVoiceRecording === 'function') {
-        return window._toggleVoiceRecording();
-    } else {
-        console.error('toggleVoiceRecording function not available yet');
-    }
+    console.log('toggleVoiceRecording called - waiting for implementation');
 };
 
 window.closeSidebar = function() {
-    console.log('closeSidebar called');
-    if (typeof window._closeSidebar === 'function') {
-        return window._closeSidebar();
-    } else {
-        console.error('closeSidebar function not available yet');
-    }
+    console.log('closeSidebar called - waiting for implementation');
 };
 
 window.showSection = function(sectionName) {
-    console.log('showSection called:', sectionName);
-    if (typeof window._showSection === 'function') {
-        return window._showSection(sectionName);
-    } else {
-        console.error('showSection function not available yet');
-    }
+    console.log('showSection called - waiting for implementation:', sectionName);
 };
 
 window.saveChatMessage = function(message, response) {
-    console.log('saveChatMessage called');
-    // This is handled by subjectManager, not a local function
-    if (window.subjectManager && window.subjectManager.saveChatMessage) {
-        return window.subjectManager.saveChatMessage(message, response);
-    } else {
-        console.error('Subject manager not available yet');
-    }
+    console.log('saveChatMessage called - waiting for implementation');
 };
 
 window.closeMobileSidebar = function() {
-    console.log('closeMobileSidebar called');
-    if (typeof window._closeMobileSidebar === 'function') {
-        return window._closeMobileSidebar();
-    } else {
-        console.error('closeMobileSidebar function not available yet');
-    }
+    console.log('closeMobileSidebar called - waiting for implementation');
 };
 
 window.showSubjectManager = function() {
-    console.log('showSubjectManager called');
-    if (window.subjectManager && window.subjectManager.showSubjectManager) {
-        return window.subjectManager.showSubjectManager();
-    } else {
-        console.error('Subject manager not available yet');
-    }
+    console.log('showSubjectManager called - waiting for implementation');
 };
 
-// Add other missing global functions
 window.openMobileSidebar = function() {
-    console.log('openMobileSidebar called');
-    if (typeof window._openMobileSidebar === 'function') {
-        return window._openMobileSidebar();
-    } else {
-        console.error('openMobileSidebar function not available yet');
-    }
+    console.log('openMobileSidebar called - waiting for implementation');
 };
 
 window.playTTS = function() {
-    console.log('playTTS called');
-    if (typeof window._playTTS === 'function') {
-        return window._playTTS();
-    } else {
-        console.error('playTTS function not available yet');
-    }
+    console.log('playTTS called - waiting for implementation');
 };
 
 window.stopTTS = function() {
-    console.log('stopTTS called');
-    if (typeof window._stopTTS === 'function') {
-        return window._stopTTS();
-    } else {
-        console.error('stopTTS function not available yet');
-    }
+    console.log('stopTTS called - waiting for implementation');
 };
 
 window.addNewSubject = function() {
-    console.log('addNewSubject called');
-    if (window.subjectManager && window.subjectManager.addNewSubject) {
-        return window.subjectManager.addNewSubject();
-    } else {
-        console.error('Subject manager not available yet');
-    }
+    console.log('addNewSubject called - waiting for implementation');
 };
 
 window.handleAvatarSelection = function(language) {
-    console.log('handleAvatarSelection called:', language);
-    if (typeof window._handleAvatarSelection === 'function') {
-        return window._handleAvatarSelection(language);
-    } else {
-        console.error('handleAvatarSelection function not available yet');
-    }
+    console.log('handleAvatarSelection called - waiting for implementation:', language);
 };
 
 window.downloadApp = function() {
-    console.log('downloadApp called');
-    if (typeof window._downloadApp === 'function') {
-        return window._downloadApp();
-    } else {
-        console.error('downloadApp function not available yet');
-    }
+    console.log('downloadApp called - waiting for implementation');
 };
 
 window.scrollToTop = function() {
-    console.log('scrollToTop called');
-    if (typeof window._scrollToTop === 'function') {
-        return window._scrollToTop();
-    } else {
-        console.error('scrollToTop function not available yet');
-    }
+    console.log('scrollToTop called - waiting for implementation');
 };
 
 window.forceShowTrialOverlay = function() {
-    console.log('forceShowTrialOverlay called');
-    if (typeof window._forceShowTrialOverlay === 'function') {
-        return window._forceShowTrialOverlay();
-    } else {
-        console.error('forceShowTrialOverlay function not available yet');
-    }
+    console.log('forceShowTrialOverlay called - waiting for implementation');
 };
 
 window.upgradeToPremium = function() {
-    console.log('upgradeToPremium called');
-    if (typeof window._upgradeToPremium === 'function') {
-        return window._upgradeToPremium();
-    } else {
-        console.error('upgradeToPremium function not available yet');
-    }
+    console.log('upgradeToPremium called - waiting for implementation');
 };
 
 window.closeTrialOverlay = function() {
-    console.log('closeTrialOverlay called');
-    if (typeof window._closeTrialOverlay === 'function') {
-        return window._closeTrialOverlay();
-    } else {
-        console.error('closeTrialOverlay function not available yet');
-    }
+    console.log('closeTrialOverlay called - waiting for implementation');
 };
 
 // Make variables globally accessible immediately
@@ -2467,12 +2385,12 @@ function closeContactUsPopup() {
         }
     }
 
-    // Assign actual function implementations to global proxies
-    window._toggleVoiceRecording = toggleVoiceRecording;
-    window._closeSidebar = closeSidebar;
-    window._closeMobileSidebar = closeMobileSidebar;
-    window._showSection = showSection;
-    window._openMobileSidebar = function() {
+    // Replace placeholder functions with actual implementations
+    window.toggleVoiceRecording = toggleVoiceRecording;
+    window.closeSidebar = closeSidebar;
+    window.closeMobileSidebar = closeMobileSidebar;
+    window.showSection = showSection;
+    window.openMobileSidebar = function() {
         const sidebar = document.getElementById('mobileSidebar');
         const overlay = document.getElementById('mobileSidebarOverlay');
         
@@ -2487,19 +2405,19 @@ function closeContactUsPopup() {
         }
     };
     
-    window._playTTS = function() {
+    window.playTTS = function() {
         if (window.textToSpeech) {
             window.textToSpeech.playLastMessage();
         }
     };
     
-    window._stopTTS = function() {
+    window.stopTTS = function() {
         if (window.textToSpeech) {
             window.textToSpeech.stop();
         }
     };
     
-    window._handleAvatarSelection = function(language) {
+    window.handleAvatarSelection = function(language) {
         const englishCard = document.querySelector('[onclick="handleAvatarSelection(\'english\')"]');
         const hindiCard = document.querySelector('[onclick="handleAvatarSelection(\'hindi\')"]');
         
@@ -2523,30 +2441,49 @@ function closeContactUsPopup() {
         saveAvatarPreference();
     };
     
-    window._downloadApp = function() {
+    window.downloadApp = function() {
         // For now, just show a message
         showSuccess('APK download will be available soon!');
     };
     
-    window._scrollToTop = function() {
+    window.scrollToTop = function() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     
-    window._forceShowTrialOverlay = function() {
+    window.forceShowTrialOverlay = function() {
         const overlay = document.getElementById('trialExpiredOverlay');
         if (overlay) {
             overlay.classList.remove('hidden');
         }
     };
     
-    window._upgradeToPremium = function() {
+    window.upgradeToPremium = function() {
         window.location.href = 'payment.html';
     };
     
-    window._closeTrialOverlay = function() {
+    window.closeTrialOverlay = function() {
         const overlay = document.getElementById('trialExpiredOverlay');
         if (overlay) {
             overlay.classList.add('hidden');
+        }
+    };
+    
+    // Subject manager functions
+    window.showSubjectManager = function() {
+        if (window.subjectManager && window.subjectManager.showSubjectManager) {
+            return window.subjectManager.showSubjectManager();
+        }
+    };
+    
+    window.addNewSubject = function() {
+        if (window.subjectManager && window.subjectManager.addNewSubject) {
+            return window.subjectManager.addNewSubject();
+        }
+    };
+    
+    window.saveChatMessage = function(message, response) {
+        if (window.subjectManager && window.subjectManager.saveChatMessage) {
+            return window.subjectManager.saveChatMessage(message, response);
         }
     };
 // Functions are already made globally accessible at the top of the file
