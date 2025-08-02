@@ -120,6 +120,55 @@
                 max-height: calc(100vh - 200px);
             }
             
+            /* Mobile chat header improvements - keep items in horizontal line */
+            .chat-header {
+                padding: 8px 12px;
+            }
+            
+            .chat-header .flex.items-center.justify-between {
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .chat-header .flex.items-center.space-x-2 {
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                flex-shrink: 0;
+            }
+            
+            .chat-header .flex.items-center.space-x-1 {
+                flex-direction: row;
+                align-items: center;
+                gap: 4px;
+                flex-shrink: 0;
+            }
+            
+            /* Ensure avatar and name stay together */
+            .chat-header img {
+                width: 32px;
+                height: 32px;
+                flex-shrink: 0;
+            }
+            
+            .chat-header span {
+                white-space: nowrap;
+                font-size: 14px;
+            }
+            
+            /* Ensure buttons stay small and horizontal */
+            .chat-header button {
+                padding: 4px 6px;
+                min-width: 32px;
+                min-height: 32px;
+                flex-shrink: 0;
+            }
+            
+            .chat-header button span {
+                font-size: 12px;
+            }
+            
             /* Mobile input improvements */
             .chat-input {
                 font-size: 16px; /* Prevent zoom on iOS */
