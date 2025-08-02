@@ -13,7 +13,28 @@ const ESSENTIAL_ASSETS = [
   '/public/error.html',
   '/public/js/config.js',
   '/public/js/auth.js',
-  '/public/images/favicon.ico'
+  '/public/js/dashboard.js',
+  '/public/js/textToSpeech.js',
+  '/public/js/subjectManager.js',
+  '/public/js/supabaseClient.js',
+  '/public/images/favicon.ico',
+  '/public/images/tution_logo.png',
+  '/public/images/roy_sir.jpg',
+  '/public/images/miss_sapana.jpg'
+];
+
+// API endpoints to cache
+const API_CACHE = [
+  '/api/health',
+  '/api/chat',
+  '/api/enhanced-chat'
+];
+
+// Static assets that should be cached aggressively
+const STATIC_ASSETS = [
+  '/public/js/',
+  '/public/images/',
+  '/public/css/'
 ];
 
 // Cache strategies
