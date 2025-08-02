@@ -172,6 +172,13 @@ class SubjectManager {
         try {
             console.log('Selecting subject:', subjectName);
             
+            // Prevent rapid subject changes
+            if (this.lastSubjectChange && Date.now() - this.lastSubjectChange < 2000) {
+                console.log('Subject change blocked - too frequent');
+                return;
+            }
+            this.lastSubjectChange = Date.now();
+            
             // If switching to a different subject, ask for confirmation
             if (this.currentSubject && this.currentSubject !== subjectName) {
                 const confirmed = confirm(`Do you want to switch from ${this.currentSubject} to ${subjectName}? Your current conversation will be saved.`);
