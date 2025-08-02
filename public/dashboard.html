@@ -859,19 +859,19 @@
             
             <!-- Sidebar Navigation -->
             <nav class="flex-1 p-6 space-y-4">
-                <div class="nav-item active" onclick="showSection('chat')">
+                <div class="nav-item active" onclick="showSection('chat'); closeMobileSidebar();">
                     <span class="text-xl">🏫</span>
                     <span>Classroom</span>
                 </div>
-                <div class="nav-item" onclick="showSection('materials')">
+                <div class="nav-item" onclick="showSection('materials'); closeMobileSidebar();">
                     <span class="text-xl">📚</span>
                     <span>Study Materials</span>
                 </div>
-                <div class="nav-item" onclick="showSection('progress')">
+                <div class="nav-item" onclick="showSection('progress'); closeMobileSidebar();">
                     <span class="text-xl">📊</span>
                     <span>Progress</span>
                 </div>
-                <div class="nav-item" onclick="showSection('settings')">
+                <div class="nav-item" onclick="showSection('settings'); closeMobileSidebar();">
                     <span class="text-xl">⚙️</span>
                     <span>Settings</span>
                 </div>
@@ -890,11 +890,11 @@
                     </div>
                 </div>
                 
-                <button onclick="logout()" class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                <button onclick="logout(); closeMobileSidebar();" class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
                     <span class="text-xl">🚪</span>
                     <span>Logout</span>
                 </button>
-                <button onclick="forceShowTrialOverlay()" class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
+                <button onclick="forceShowTrialOverlay(); closeMobileSidebar();" class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
                     <span class="text-xl">⏰</span>
                     <span>Test Trial</span>
                 </button>
@@ -1834,13 +1834,30 @@
         }
         
         function openMobileSidebar() {
-            document.getElementById('mobileSidebar').classList.remove('-translate-x-full');
-            document.getElementById('mobileSidebarOverlay').classList.remove('opacity-0', 'pointer-events-none');
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            
+            // Mobile-specific improvements
+            if (isMobile) {
+                // Prevent body scroll when sidebar is open
+                document.body.style.overflow = 'hidden';
+            }
         }
         
         function closeMobileSidebar() {
-            document.getElementById('mobileSidebar').classList.add('-translate-x-full');
-            document.getElementById('mobileSidebarOverlay').classList.add('opacity-0', 'pointer-events-none');
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            
+            // Restore body scroll
+            if (isMobile) {
+                document.body.style.overflow = '';
+            }
         }
         
         // ========== CHAT FUNCTIONS ==========
@@ -2358,6 +2375,20 @@
         
         // Close sidebar when clicking overlay
         document.getElementById('mobileSidebarOverlay').addEventListener('click', closeMobileSidebar);
+        
+        // Close mobile sidebar on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeMobileSidebar();
+            }
+        });
+        
+        // Close mobile sidebar on window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 1024) {
+                closeMobileSidebar();
+            }
+        });
         
         // Update subscription UI
         function updateSubscriptionUI(subscription) {
