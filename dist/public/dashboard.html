@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
     <title>Dashboard - tution.app</title>
     
     <!-- Google Translate -->
@@ -87,6 +91,119 @@
             touch-action: manipulation;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             overflow-y: auto;
+            /* Mobile-specific improvements */
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        
+        /* Mobile-specific touch improvements */
+        @media (max-width: 768px) {
+            body {
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+            
+            /* Improve touch targets */
+            button, .btn-modern, .nav-item {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            /* Better mobile spacing */
+            .p-6 {
+                padding: 1rem;
+            }
+            
+            /* Mobile chat improvements */
+            .chat-container {
+                height: calc(100vh - 200px);
+                max-height: calc(100vh - 200px);
+            }
+            
+            /* Mobile input improvements */
+            .chat-input {
+                font-size: 16px; /* Prevent zoom on iOS */
+                padding: 12px 16px;
+                border-radius: 12px;
+            }
+            
+            /* Mobile sidebar improvements */
+            #mobileSidebar {
+                width: 85vw;
+                max-width: 320px;
+            }
+            
+            /* Mobile subject buttons */
+            .subject-button {
+                padding: 8px 12px;
+                font-size: 14px;
+                border-radius: 8px;
+            }
+            
+            /* Mobile modal improvements */
+            .modal-content {
+                width: 95vw;
+                max-width: 400px;
+                max-height: 80vh;
+                margin: 2.5vh auto;
+            }
+            
+            /* Mobile-specific touch improvements */
+            .mobile-device button,
+            .mobile-device .btn-modern,
+            .mobile-device .nav-item {
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            }
+            
+            /* Mobile chat message improvements */
+            .mobile-device .message {
+                margin-bottom: 12px;
+                padding: 12px;
+                border-radius: 12px;
+            }
+            
+            /* Mobile subject manager improvements */
+            .mobile-device .subject-manager-modal {
+                padding: 16px;
+            }
+            
+            .mobile-device .subject-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 8px;
+            }
+            
+            /* Mobile keyboard handling */
+            .mobile-device .input-area {
+                position: sticky;
+                bottom: 0;
+                background: rgba(102, 126, 234, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 12px;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            /* Mobile voice button improvements */
+            .mobile-device #voiceButton {
+                min-width: 48px;
+                min-height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Mobile sidebar improvements */
+            .mobile-device #mobileSidebar {
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+            }
+            
+            /* Mobile scroll improvements */
+            .mobile-device .chat-container {
+                -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
+            }
         }
         
         /* Modern Glass Effect */

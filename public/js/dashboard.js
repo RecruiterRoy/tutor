@@ -91,9 +91,137 @@ const regionalAvatars = [
     { id: 'kashmiri-female', name: 'Kashmiri Female', region: 'Kashmir', gender: 'female', image: '👩‍🦲' }
 ];
 
+// Mobile detection and optimization
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
+// Mobile optimization function
+function applyMobileOptimizations() {
+    // Prevent zoom on input focus (iOS)
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            if (isMobile) {
+                setTimeout(() => {
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        });
+    });
+    
+    // Improve touch scrolling
+    const scrollableElements = document.querySelectorAll('.chat-container, .modal-content, .subject-manager-modal');
+    scrollableElements.forEach(element => {
+        element.style.webkitOverflowScrolling = 'touch';
+        element.style.overflowScrolling = 'touch';
+    });
+    
+    // Add mobile-specific event listeners
+    setupMobileEventListeners();
+    
+    // Optimize for mobile performance
+    if (isMobile) {
+        // Reduce animations on mobile for better performance
+        document.body.style.setProperty('--transition-duration', '0.2s');
+        
+        // Enable mobile-specific features
+        enableMobileFeatures();
+    }
+}
+
+function setupMobileEventListeners() {
+    // Handle mobile-specific gestures
+    let touchStartY = 0;
+    let touchEndY = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    document.addEventListener('touchend', (e) => {
+        touchEndY = e.changedTouches[0].clientY;
+        handleSwipeGesture();
+    }, { passive: true });
+    
+    // Handle swipe gestures
+    function handleSwipeGesture() {
+        const swipeThreshold = 50;
+        const diff = touchStartY - touchEndY;
+        
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                // Swipe up - could be used for quick actions
+                console.log('Swipe up detected');
+            } else {
+                // Swipe down - could be used to close modals
+                console.log('Swipe down detected');
+                const activeModal = document.querySelector('.modal-content:not(.hidden)');
+                if (activeModal) {
+                    // Close modal on swipe down
+                    const closeButton = activeModal.querySelector('[onclick*="close"], [onclick*="hide"]');
+                    if (closeButton) {
+                        closeButton.click();
+                    }
+                }
+            }
+        }
+    }
+}
+
+function enableMobileFeatures() {
+    // Enable mobile-specific voice recognition improvements
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        // Mobile voice recognition optimizations
+        const recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (recognition) {
+            // Set mobile-optimized settings
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+        }
+    }
+    
+    // Mobile-specific TTS optimizations
+    if ('speechSynthesis' in window) {
+        // Optimize for mobile speakers
+        const utterance = new SpeechSynthesisUtterance();
+        utterance.volume = 0.8; // Slightly lower volume for mobile
+        utterance.rate = 0.9; // Slightly slower for mobile
+    }
+    
+    // Mobile-specific UI improvements
+    if (isMobile) {
+        // Add mobile-specific CSS classes
+        document.body.classList.add('mobile-device');
+        
+        // Optimize chat container for mobile
+        const chatContainer = document.querySelector('.chat-container');
+        if (chatContainer) {
+            chatContainer.style.height = 'calc(100vh - 200px)';
+            chatContainer.style.maxHeight = 'calc(100vh - 200px)';
+        }
+        
+        // Add mobile-specific keyboard handling
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+            chatInput.addEventListener('focus', () => {
+                // Scroll to input on mobile
+                setTimeout(() => {
+                    chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            });
+        }
+    }
+}
+
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Mobile-specific optimizations
+        if (isMobile) {
+            console.log('📱 Mobile device detected - applying optimizations');
+            applyMobileOptimizations();
+        }
+        
         // Register service worker for caching
         if ('serviceWorker' in navigator) {
             try {
@@ -1368,23 +1496,60 @@ function showSection(sectionName) {
 }
 
 function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('mobileOverlay');
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
     
-    if (sidebar.classList.contains('sidebar-hidden')) {
-        sidebar.classList.remove('sidebar-hidden');
-        overlay.classList.remove('hidden');
+    if (sidebar.classList.contains('-translate-x-full')) {
+        // Open sidebar
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        
+        // Mobile-specific improvements
+        if (isMobile) {
+            // Prevent body scroll when sidebar is open
+            document.body.style.overflow = 'hidden';
+            
+            // Add touch-to-close functionality
+            overlay.addEventListener('click', closeSidebar, { once: true });
+            
+            // Add swipe-to-close functionality
+            let touchStartX = 0;
+            sidebar.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            
+            sidebar.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                const diff = touchStartX - touchEndX;
+                
+                if (diff > 50) { // Swipe left to close
+                    closeSidebar();
+                }
+            }, { passive: true });
+        }
     } else {
-        sidebar.classList.add('sidebar-hidden');
-        overlay.classList.add('hidden');
+        closeSidebar();
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('opacity-0', 'pointer-events-none');
+    
+    // Restore body scroll
+    if (isMobile) {
+        document.body.style.overflow = '';
     }
 }
 
 // Close sidebar when clicking overlay
 document.addEventListener('DOMContentLoaded', function() {
-    const overlay = document.getElementById('mobileOverlay');
+    const overlay = document.getElementById('mobileSidebarOverlay');
     if (overlay) {
-        overlay.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
     }
 });
 
