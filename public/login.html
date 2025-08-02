@@ -694,9 +694,22 @@
                 
                 console.log('🔐 Attempting login for:', email);
                 
-                // Sign in with email and password
+                // Check if input is email or phone number
+                let loginIdentifier = email;
+                let isPhoneLogin = false;
+                
+                // If it looks like a phone number (starts with +91 or 10 digits), format it
+                if (email.startsWith('+91') || (email.length === 10 && /^\d+$/.test(email))) {
+                    loginIdentifier = email.startsWith('+91') ? email : `+91${email}`;
+                    isPhoneLogin = true;
+                    console.log('📱 Detected phone login:', loginIdentifier);
+                } else {
+                    console.log('📧 Detected email login:', loginIdentifier);
+                }
+                
+                // Sign in with email/phone and password
                 const { data: authData, error: authError } = await window.supabaseClient.auth.signInWithPassword({
-                    email,
+                    [isPhoneLogin ? 'phone' : 'email']: loginIdentifier,
                     password
                 });
                 
@@ -745,7 +758,7 @@
                 let errorMessage = 'Login failed. Please try again.';
                 
                 if (error.message.includes('Invalid login credentials')) {
-                    errorMessage = 'Invalid email or password. Please try again.';
+                    errorMessage = 'Invalid email/mobile or password. Please try again.';
                 } else if (error.message.includes('Email not confirmed')) {
                     errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
                 }

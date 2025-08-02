@@ -390,55 +390,50 @@ async function initializeDashboard() {
         currentUser = user; // Set local variable too
         console.log('✅ User authenticated:', user.id);
         
-        // Check user verification status
+        // Check user verification status - be more lenient for all users
         const { data: profile, error } = await window.supabaseClient
             .from('user_profiles')
-            .select('verification_status, full_name, email, class, board')
+            .select('verification_status, full_name, email, class, board, ai_avatar')
             .eq('id', user.id)
             .single();
         
         if (error) {
             console.error('❌ Error fetching user profile:', error);
-            // Don't redirect immediately, try to create profile
-            console.log('🔄 Attempting to create user profile...');
-            // Continue with basic functionality
-            console.log('⚠️ Profile error, continuing with basic features...');
+            console.log('🔄 User profile not found, but continuing with basic features...');
+            // Don't redirect, just continue with basic functionality
         } else {
-            // Ensure user is verified
-            if (!profile || (profile.verification_status !== 'approved' && profile.verification_status !== 'verified')) {
-                console.error('❌ User not verified. Status:', profile?.verification_status);
-                // Auto-approve if email is confirmed
-                if (user.email_confirmed_at) {
-                    console.log('✅ Email confirmed, auto-approving user...');
-                    try {
-                        await window.supabaseClient.rpc('manual_confirm_email', { user_email: user.email });
-                        // Refresh profile
-                        const { data: updatedProfile } = await window.supabaseClient
-                            .from('user_profiles')
-                            .select('verification_status, full_name, email, class, board')
-                            .eq('id', user.id)
-                            .single();
-                        
-                        if (updatedProfile && updatedProfile.verification_status === 'approved') {
-                            console.log('✅ User auto-approved successfully');
-                        } else {
-                            console.log('⚠️ Auto-approval may have failed, but continuing...');
-                        }
-                    } catch (confirmError) {
-                        console.warn('⚠️ Manual email confirmation failed:', confirmError);
-                        // Continue anyway since user is authenticated
+            console.log('✅ User profile found:', profile);
+            
+            // Auto-approve all users regardless of verification status
+            if (profile && profile.verification_status !== 'approved') {
+                console.log('🔄 Auto-approving user...');
+                try {
+                    // Update profile to approved status
+                    const { error: updateError } = await window.supabaseClient
+                        .from('user_profiles')
+                        .update({
+                            verification_status: 'approved',
+                            economic_status: 'Premium',
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', user.id);
+                    
+                    if (updateError) {
+                        console.warn('⚠️ Auto-approval update failed:', updateError);
+                    } else {
+                        console.log('✅ User auto-approved successfully');
+                        profile.verification_status = 'approved';
                     }
-                } else {
-                    console.log('⚠️ Email not confirmed, but continuing with basic features...');
-                    // Don't redirect, just continue with basic functionality
+                } catch (approvalError) {
+                    console.warn('⚠️ Auto-approval failed:', approvalError);
+                    // Continue anyway since user is authenticated
                 }
             }
             
-            // Ensure all required profile fields are present
-            if (!profile.full_name || !profile.email || (!profile.class && !profile.class_level) || !profile.board) {
-                console.error('❌ Incomplete user profile');
-                // Don't redirect to profile page, just continue with basic functionality
-                console.log('⚠️ Profile incomplete, continuing with basic features...');
+            // Set selected avatar from profile
+            if (profile.ai_avatar) {
+                selectedAvatar = profile.ai_avatar;
+                window.selectedAvatar = profile.ai_avatar;
             }
         }
         
@@ -561,6 +556,21 @@ async function loadUserData() {
                 const cleanClassLevel = classLevel.replace(/^Class\s*/i, '');
                 userClass.textContent = `Class ${cleanClassLevel}`;
             }
+            
+            // Store user data globally
+            window.userData = profile;
+            
+            // Initialize subject manager with user data
+            if (window.subjectManager) {
+                const userClass = profile.class_level || profile.class || 'Class 6';
+                const userBoard = profile.board || 'CBSE';
+                await window.subjectManager.initialize(currentUser, userClass, userBoard);
+                
+                // Load current subject if saved
+                if (profile.current_subject) {
+                    await window.subjectManager.selectSubject(profile.current_subject);
+                }
+            }
         } else {
             console.log('⚠️ No profile found, using basic user info');
             
@@ -585,6 +595,9 @@ async function loadUserData() {
             if (userClass) {
                 userClass.textContent = `Class N/A`;
             }
+            
+            // Store basic user data
+            window.userData = { full_name: 'Student', class: 'N/A', board: 'N/A' };
         }
             
             // Populate profile modal fields
