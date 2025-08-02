@@ -2390,6 +2390,8 @@ function closeContactUsPopup() {
     window.closeSidebar = closeSidebar;
     window.closeMobileSidebar = closeMobileSidebar;
     window.showSection = showSection;
+    
+    console.log('✅ All global functions assigned successfully');
     window.openMobileSidebar = function() {
         const sidebar = document.getElementById('mobileSidebar');
         const overlay = document.getElementById('mobileSidebarOverlay');
