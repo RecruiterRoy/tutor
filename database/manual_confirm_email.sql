@@ -25,7 +25,7 @@ EXCEPTION
         RAISE NOTICE 'Error confirming email for %: %', user_email, SQLERRM;
         RAISE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Grant execute permission
 GRANT EXECUTE ON FUNCTION manual_confirm_email(TEXT) TO authenticated;

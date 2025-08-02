@@ -42,10 +42,43 @@ let preWarmedRecognition = null;
 let voicesLoaded = false;
 let lastResponseDate = null; // Track the date of last AI response
 
-// Make variables globally accessible
+// Make variables globally accessible immediately
 window.currentUser = currentUser;
 window.isRecording = isRecording;
 window.selectedAvatar = selectedAvatar;
+
+// Make functions globally accessible immediately
+window.toggleVoiceRecording = function() {
+    if (typeof toggleVoiceRecording === 'function') {
+        return toggleVoiceRecording();
+    } else {
+        console.error('toggleVoiceRecording function not available yet');
+    }
+};
+
+window.closeSidebar = function() {
+    if (typeof closeSidebar === 'function') {
+        return closeSidebar();
+    } else {
+        console.error('closeSidebar function not available yet');
+    }
+};
+
+window.showSection = function(sectionName) {
+    if (typeof showSection === 'function') {
+        return showSection(sectionName);
+    } else {
+        console.error('showSection function not available yet');
+    }
+};
+
+window.saveChatMessage = function(message, response) {
+    if (typeof saveChatMessage === 'function') {
+        return saveChatMessage(message, response);
+    } else {
+        console.error('saveChatMessage function not available yet');
+    }
+};
 
 // Indian Regional Avatars
 const regionalAvatars = [
@@ -503,6 +536,7 @@ async function loadUserData() {
         
         // Update currentUser with fresh data
         currentUser = user;
+        window.currentUser = user; // Set global variable
         console.log('✅ Current user loaded:', user.id);
         
         // Get user profile from user_profiles table
@@ -2280,3 +2314,8 @@ window.showSection = showSection;
 window.saveChatMessage = saveChatMessage;
 window.currentUser = currentUser;
 window.isMobile = isMobile;
+
+// Also make variables globally accessible
+window.currentUser = currentUser;
+window.isRecording = isRecording;
+window.selectedAvatar = selectedAvatar;
