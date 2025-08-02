@@ -1001,14 +1001,21 @@
                 } else if (selectedOAuth === 'phone') {
                     console.log('📱 Processing phone registration...');
                     
-                    // Phone registration with OTP
+                    // Phone registration with OTP - Auto-approved like email
                     const { data, error } = await supabase.auth.signUp({
                         phone: `+91${phone}`,
                         password: password,
                         options: {
                             data: { 
-                                full_name: fullName,
-                                email: email // Store email for future use
+                                full_name: fullName || 'Mobile User',
+                                email: email, // Store email for future use
+                                phone: phone,
+                                class: userClass,
+                                board: board,
+                                school_name: schoolName,
+                                city: city,
+                                state: state,
+                                preferred_language: language
                             }
                         }
                     });
@@ -1021,28 +1028,91 @@
                     if (data.user) {
                         console.log('✅ Phone user created:', data.user.id);
                         
-                        // Store registration data for OTP verification
-                        window.registrationData = {
-                            fullName,
-                            email,
-                            phone,
-                            userClass,
-                            board,
-                            schoolName,
-                            city,
-                            state,
-                            language,
-                            password
-                        };
+                        // Create profile immediately for phone users (auto-approved)
+                        console.log('📝 Creating user profile for phone user...');
                         
-                        // Move to OTP verification step
-                        document.getElementById(`step${currentStep}`).classList.add('hidden');
-                        currentStep = 5;
-                        document.getElementById(`step${currentStep}`).classList.remove('hidden');
-                        updateStepIndicator();
+                        // Ensure user is properly authenticated before creating profile
+                        console.log('🔐 Ensuring user authentication...');
+                        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
                         
-                        showMessage('OTP sent to your phone! Please check your messages.', 'success');
-                        return; // Don't proceed with profile creation yet
+                        if (authError || !currentUser) {
+                            console.error('❌ User authentication failed:', authError);
+                            throw new Error('User authentication failed. Please try again.');
+                        }
+                        
+                        console.log('✅ User authenticated:', currentUser.id);
+                        
+                        const { error: profileError } = await supabase
+                            .from('user_profiles')
+                            .upsert({
+                                id: currentUser.id,
+                                full_name: fullName || 'Mobile User',
+                                email: email,
+                                phone: phone,
+                                class: userClass,
+                                board: board,
+                                school_name: schoolName,
+                                city: city,
+                                state: state,
+                                preferred_language: language,
+                                avatar: selectedAvatar || 'teacher-avatar1.png',
+                                economic_status: 'Premium',
+                                verification_status: 'approved', // Instant approval for phone users
+                                ai_avatar: 'roy-sir', // Default AI avatar
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            }, {
+                                onConflict: 'id',
+                                ignoreDuplicates: false
+                            });
+                        
+                        if (profileError) {
+                            console.error('❌ Profile creation failed:', profileError);
+                            
+                            // Check if it's a foreign key constraint error
+                            if (profileError.message.includes('foreign key constraint') || 
+                                profileError.message.includes('user_profiles_id_key')) {
+                                console.log('🔄 Profile might already exist, trying to update...');
+                                
+                                // Try to update existing profile
+                                const { error: updateError } = await supabase
+                                    .from('user_profiles')
+                                    .update({
+                                        full_name: fullName || 'Mobile User',
+                                        email: email,
+                                        phone: phone,
+                                        class: userClass,
+                                        board: board,
+                                        school_name: schoolName,
+                                        city: city,
+                                        state: state,
+                                        preferred_language: language,
+                                        avatar: selectedAvatar || 'teacher-avatar1.png',
+                                        economic_status: 'Premium',
+                                        verification_status: 'approved', // Instant approval for phone users
+                                        ai_avatar: 'roy-sir', // Default AI avatar
+                                        updated_at: new Date().toISOString()
+                                    })
+                                    .eq('id', currentUser.id);
+                                
+                                if (updateError) {
+                                    console.error('❌ Profile update also failed:', updateError);
+                                    throw new Error('Failed to create/update user profile: ' + updateError.message);
+                                }
+                                
+                                console.log('✅ Profile updated successfully');
+                            } else {
+                                throw new Error('Failed to create user profile: ' + profileError.message);
+                            }
+                        }
+                        
+                        console.log('✅ Profile created with instant approved status');
+                        showMessage('Registration successful! You have instant access. Redirecting to dashboard...', 'success');
+                        
+                        // Auto-login and redirect to dashboard for instant access
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 2000);
                     }
                     
                 } else if (selectedOAuth === 'google') {
