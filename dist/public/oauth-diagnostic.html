@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Diagnostic - tution.app</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/config.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .test-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-btn:hover { background: #5a6fd8; }
+        .test-btn:disabled { background: #ccc; cursor: not-allowed; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 OAuth Configuration Diagnostic</h1>
+        <p>This tool will help diagnose Google OAuth configuration issues.</p>
+        
+        <div id="diagnosticResults"></div>
+        
+        <h2>🧪 Test OAuth</h2>
+        <button id="testOAuth" class="test-btn" onclick="testOAuth()">Test Google OAuth</button>
+        <button id="testConfig" class="test-btn" onclick="testConfiguration()">Test Configuration</button>
+        <button id="clearResults" class="test-btn" onclick="clearResults()">Clear Results</button>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        let supabaseClient;
+        
+        async function initializeSupabase() {
+            try {
+                supabaseClient = window.supabase.createClient(window.supabaseUrl, window.supabaseKey);
+                console.log('✅ Supabase client initialized');
+                return true;
+            } catch (error) {
+                console.error('❌ Failed to initialize Supabase:', error);
+                return false;
+            }
+        }
+        
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+        
+        function addTestResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+        
+        async function runDiagnostics() {
+            addResult('🔍 Starting OAuth diagnostics...', 'info');
+            
+            // Check Supabase configuration
+            if (!window.supabaseUrl || !window.supabaseKey) {
+                addResult('❌ Supabase configuration missing', 'error');
+                return;
+            }
+            
+            addResult('✅ Supabase configuration found', 'success');
+            addResult(`🔧 Supabase URL: ${window.supabaseUrl}`, 'info');
+            addResult(`🔧 Supabase Key: ${window.supabaseKey.substring(0, 20)}...`, 'info');
+            
+            // Check current URL
+            addResult(`🌐 Current URL: ${window.location.href}`, 'info');
+            addResult(`🌐 Origin: ${window.location.origin}`, 'info');
+            
+            // Check if we're on HTTPS
+            if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                addResult('⚠️ OAuth requires HTTPS (except localhost)', 'warning');
+            } else {
+                addResult('✅ HTTPS protocol detected', 'success');
+            }
+            
+            // Initialize Supabase
+            const initialized = await initializeSupabase();
+            if (!initialized) {
+                addResult('❌ Failed to initialize Supabase client', 'error');
+                return;
+            }
+            
+            addResult('✅ Supabase client initialized successfully', 'success');
+        }
+        
+        async function testOAuth() {
+            const testBtn = document.getElementById('testOAuth');
+            testBtn.disabled = true;
+            testBtn.textContent = 'Testing...';
+            
+            addTestResult('🧪 Testing Google OAuth...', 'info');
+            
+            try {
+                if (!supabaseClient) {
+                    await initializeSupabase();
+                }
+                
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/oauth-diagnostic.html?test=success',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        }
+                    }
+                });
+                
+                if (error) {
+                    addTestResult(`❌ OAuth Error: ${error.message}`, 'error');
+                    addTestResult(`🔍 Error Details: <pre>${JSON.stringify(error, null, 2)}</pre>`, 'error');
+                } else {
+                    addTestResult('✅ OAuth initiated successfully', 'success');
+                    addTestResult(`📋 Response: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                }
+                
+            } catch (error) {
+                addTestResult(`❌ Test failed: ${error.message}`, 'error');
+                addTestResult(`🔍 Error Details: <pre>${JSON.stringify(error, null, 2)}</pre>`, 'error');
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = 'Test Google OAuth';
+            }
+        }
+        
+        async function testConfiguration() {
+            addTestResult('🔧 Testing Supabase configuration...', 'info');
+            
+            try {
+                if (!supabaseClient) {
+                    await initializeSupabase();
+                }
+                
+                // Test basic Supabase connection
+                const { data, error } = await supabaseClient.from('user_profiles').select('count').limit(1);
+                
+                if (error) {
+                    addTestResult(`❌ Database connection failed: ${error.message}`, 'error');
+                } else {
+                    addTestResult('✅ Database connection successful', 'success');
+                }
+                
+                // Test auth configuration
+                const { data: authData, error: authError } = await supabaseClient.auth.getSession();
+                
+                if (authError) {
+                    addTestResult(`❌ Auth configuration error: ${authError.message}`, 'error');
+                } else {
+                    addTestResult('✅ Auth configuration successful', 'success');
+                }
+                
+            } catch (error) {
+                addTestResult(`❌ Configuration test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('diagnosticResults').innerHTML = '';
+            document.getElementById('testResults').innerHTML = '';
+        }
+        
+        // Check for OAuth callback
+        function checkOAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const testParam = urlParams.get('test');
+            
+            if (testParam === 'success') {
+                addResult('🎉 OAuth callback received successfully!', 'success');
+                addResult('✅ Google OAuth is working correctly', 'success');
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await runDiagnostics();
+            checkOAuthCallback();
+        });
+    </script>
+</body>
+</html> 

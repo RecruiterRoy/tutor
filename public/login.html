@@ -792,10 +792,14 @@
                 }
 
                 // Attempt Google OAuth login
+                console.log('🔍 Initiating Google OAuth login...');
+                console.log('🔧 Supabase URL:', window.supabaseClient.supabaseUrl);
+                console.log('🔧 Current URL:', window.location.href);
+                
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'dashboard.html',
+                        redirectTo: window.location.origin + '/dashboard.html',
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent'
@@ -804,12 +808,14 @@
                 });
 
                 if (error) {
-                    console.error('Google OAuth error:', error);
+                    console.error('❌ Google OAuth error:', error);
                     
                     // Handle specific error types
-                    if (error.message.includes('provider is not enabled')) {
+                    if (error.message.includes('500') || error.message.includes('unexpected_failure')) {
+                        throw new Error('Google OAuth server configuration error. Please try email login or contact support.');
+                    } else if (error.message.includes('provider is not enabled')) {
                         throw new Error('Google OAuth is not enabled in Supabase. Please contact support.');
-                    } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+                    } else if (error.message.includes('Internal Server Error')) {
                         throw new Error('Google OAuth configuration error. Please try email login instead.');
                     } else {
                         throw error;

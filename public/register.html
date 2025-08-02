@@ -517,22 +517,58 @@
         async function handleGoogleSignIn() {
             if (!supabase) {
                 showMessage('Please wait for the app to load completely', 'error');
-                    return;
-                }
-                
+                return;
+            }
+            
             try {
+                console.log('🔍 Initiating Google OAuth...');
+                console.log('🔧 Supabase URL:', supabase.supabaseUrl);
+                console.log('🔧 Current URL:', window.location.href);
+                
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'register.html?step=2'
+                        redirectTo: window.location.origin + '/register.html?step=2',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        }
                     }
                 });
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('❌ Google OAuth error:', error);
+                    
+                    // Handle specific error types
+                    if (error.message.includes('500') || error.message.includes('unexpected_failure')) {
+                        showMessage('Google OAuth server error. Please check your Supabase configuration or try email registration instead.', 'error');
+                    } else if (error.message.includes('provider is not enabled')) {
+                        showMessage('Google OAuth is not enabled in Supabase. Please contact support.', 'error');
+                    } else if (error.message.includes('popup')) {
+                        showMessage('Please allow popups for Google login to work.', 'error');
+                    } else {
+                        showMessage('Google sign in failed: ' + error.message, 'error');
+                    }
+                    return;
+                }
+                
+                console.log('✅ Google OAuth initiated successfully:', data);
                 
             } catch (error) {
-                console.error('Google sign in error:', error);
-                showMessage('Google sign in failed. Please try again.', 'error');
+                console.error('❌ Google sign in error:', error);
+                
+                // Enhanced error handling
+                let errorMessage = 'Google sign in failed. Please try again.';
+                
+                if (error.message.includes('500') || error.message.includes('unexpected_failure')) {
+                    errorMessage = 'Server configuration error. Please try email registration or contact support.';
+                } else if (error.message.includes('network')) {
+                    errorMessage = 'Network error. Please check your internet connection.';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'Request timeout. Please try again.';
+                }
+                
+                showMessage(errorMessage, 'error');
             }
         }
 
