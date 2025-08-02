@@ -405,25 +405,27 @@ async function initializeDashboard() {
                 // Auto-approve if email is confirmed
                 if (user.email_confirmed_at) {
                     console.log('✅ Email confirmed, auto-approving user...');
-                    await window.supabaseClient.rpc('manual_confirm_email', { user_email: user.email });
-                    // Refresh profile
-                    const { data: updatedProfile } = await window.supabaseClient
-                        .from('user_profiles')
-                        .select('verification_status, full_name, email, class, board')
-                        .eq('id', user.id)
-                        .single();
-                    
-                    if (updatedProfile && updatedProfile.verification_status === 'approved') {
-                        console.log('✅ User auto-approved successfully');
-                    } else {
-                        console.error('❌ Auto-approval failed');
-                        window.location.href = '/login.html';
-                        return;
+                    try {
+                        await window.supabaseClient.rpc('manual_confirm_email', { user_email: user.email });
+                        // Refresh profile
+                        const { data: updatedProfile } = await window.supabaseClient
+                            .from('user_profiles')
+                            .select('verification_status, full_name, email, class, board')
+                            .eq('id', user.id)
+                            .single();
+                        
+                        if (updatedProfile && updatedProfile.verification_status === 'approved') {
+                            console.log('✅ User auto-approved successfully');
+                        } else {
+                            console.log('⚠️ Auto-approval may have failed, but continuing...');
+                        }
+                    } catch (confirmError) {
+                        console.warn('⚠️ Manual email confirmation failed:', confirmError);
+                        // Continue anyway since user is authenticated
                     }
                 } else {
-                    console.error('❌ User not verified and email not confirmed');
-                    window.location.href = '/login.html';
-                    return;
+                    console.log('⚠️ Email not confirmed, but continuing with basic features...');
+                    // Don't redirect, just continue with basic functionality
                 }
             }
             
@@ -516,6 +518,8 @@ async function loadUserData() {
         }
         
         if (profile) {
+            console.log('✅ User profile loaded:', profile);
+            
             // Populate welcome section
             const welcomeMessage = document.getElementById('welcomeMessage');
             const userInfo = document.getElementById('userInfo');
@@ -552,6 +556,31 @@ async function loadUserData() {
                 const cleanClassLevel = classLevel.replace(/^Class\s*/i, '');
                 userClass.textContent = `Class ${cleanClassLevel}`;
             }
+        } else {
+            console.log('⚠️ No profile found, using basic user info');
+            
+            // Use basic user info from auth
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            const userInfo = document.getElementById('userInfo');
+            const userName = document.getElementById('userName');
+            const userClass = document.getElementById('userClass');
+            
+            if (welcomeMessage) {
+                welcomeMessage.textContent = `Welcome back, Student!`;
+            }
+            
+            if (userInfo) {
+                userInfo.textContent = `Class N/A • N/A`;
+            }
+            
+            if (userName) {
+                userName.textContent = 'Student';
+            }
+            
+            if (userClass) {
+                userClass.textContent = `Class N/A`;
+            }
+        }
             
             // Populate profile modal fields
             const profileName = document.getElementById('profileName');
@@ -1196,6 +1225,7 @@ function setupVoiceSettingsListeners() {
 }
 
 // Global variables for voice recognition
+// Note: isRecording is already declared at the top of the file
 
 function initSpeechRecognition() {
     try {
