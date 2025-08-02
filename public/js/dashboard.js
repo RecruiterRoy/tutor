@@ -94,6 +94,16 @@ const regionalAvatars = [
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Register service worker for caching
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                console.log('✅ Service Worker registered:', registration);
+            } catch (error) {
+                console.warn('⚠️ Service Worker registration failed:', error);
+            }
+        }
+        
         await initializeSupabase();
         
         // Initialize dashboard
@@ -982,18 +992,15 @@ function setupVoiceSettingsListeners() {
     }
 }
 
+// Global variables for voice recognition
+let isRecording = false;
+
 function initSpeechRecognition() {
     try {
         const voiceButton = document.getElementById('voiceButton');
-        const voiceStatus = document.getElementById('voiceStatus');
         
         if (!voiceButton) {
             console.log('Voice button not found');
-            return;
-        }
-        
-        if (!voiceStatus) {
-            console.log('Voice status element not found');
             return;
         }
         
@@ -1001,6 +1008,7 @@ function initSpeechRecognition() {
         if (!SpeechRecognition) {
             console.log('Speech recognition not supported');
             voiceButton.style.display = 'none';
+            showError('Voice recognition not supported in this browser');
             return;
         }
 
@@ -1008,12 +1016,22 @@ function initSpeechRecognition() {
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
-        recognition.lang = 'en-US'; // Default to English, can be enhanced later
+        
+        // Set language based on current avatar
+        const currentAvatar = window.selectedAvatar || 'roy-sir';
+        if (currentAvatar === 'ms-sapana') {
+            recognition.lang = 'hi-IN'; // Hindi for Ms. Sapana
+        } else {
+            recognition.lang = 'en-IN'; // English for Roy Sir
+        }
 
         recognition.onstart = () => {
             console.log('Speech recognition started');
             isRecording = true;
-            voiceButton.textContent = '🔴'; // Changed from voiceIcon to voiceButton
+            const voiceIcon = document.getElementById('voiceIcon');
+            if (voiceIcon) {
+                voiceIcon.textContent = '🔴';
+            }
             voiceButton.classList.add('voice-recording');
             
             // Set timeout (15 seconds)
@@ -1030,7 +1048,8 @@ function initSpeechRecognition() {
             const transcript = event.results[0][0].transcript;
             console.log('Speech recognized:', transcript);
             document.getElementById('chatInput').value = transcript;
-            showSuccess("Voice input received");
+            showSuccess("Voice input received: " + transcript);
+            stopRecording();
         };
 
         recognition.onerror = (event) => {
@@ -1048,11 +1067,18 @@ function initSpeechRecognition() {
                 case 'not-allowed':
                     errorMessage = 'Microphone access denied. Please allow microphone access in your browser settings.';
                     break;
+                case 'network':
+                    errorMessage = 'Network error. Please check your internet connection.';
+                    break;
+                case 'service-not-allowed':
+                    errorMessage = 'Speech recognition service not allowed. Please check permissions.';
+                    break;
                 default:
                     errorMessage += event.error;
             }
             
             showError(errorMessage);
+            stopRecording();
         };
 
         recognition.onend = () => {
@@ -1060,37 +1086,45 @@ function initSpeechRecognition() {
             stopRecording();
         };
 
+        console.log('Speech recognition initialized successfully');
+
     } catch (error) {
         console.error('Failed to initialize speech recognition:', error);
-        document.getElementById('voiceButton').style.display = 'none';
+        const voiceButton = document.getElementById('voiceButton');
+        if (voiceButton) {
+            voiceButton.style.display = 'none';
+        }
         showError('Voice input not available in this browser');
+    }
+}
+
+function stopRecording() {
+    isRecording = false;
+    const voiceButton = document.getElementById('voiceButton');
+    const voiceIcon = document.getElementById('voiceIcon');
+    if (voiceButton) {
+        voiceButton.classList.remove('voice-recording');
+    }
+    if (voiceIcon) {
+        voiceIcon.textContent = '🎤';
     }
 }
 
 async function toggleVoiceRecording() {
     try {
-        if (!window.voiceRecognition) {
-            showError('Voice recognition not available');
+        if (!recognition) {
+            showError('Voice recognition not initialized');
             return;
         }
 
-        if (window.voiceRecognition.isListening) {
+        if (isRecording) {
             // Stop listening
-            window.voiceRecognition.stop();
-            const voiceButton = document.getElementById('voiceButton');
-            if (voiceButton) {
-                voiceButton.textContent = '🎤';
-                voiceButton.classList.remove('voice-recording');
-            }
+            recognition.stop();
+            stopRecording();
             showSuccess('Voice recording stopped');
         } else {
             // Start listening
-            await window.voiceRecognition.startListening();
-            const voiceButton = document.getElementById('voiceButton');
-            if (voiceButton) {
-                voiceButton.textContent = '🔴';
-                voiceButton.classList.add('voice-recording');
-            }
+            recognition.start();
             showSuccess('Voice recording started - speak now!');
         }
         
