@@ -557,7 +557,7 @@ async function loadUserData() {
         const { data: profile, error } = await window.supabaseClient
             .from('user_profiles')
             .select('*')
-            .eq('id', currentUser.id)
+            .eq('id', window.currentUser.id)
             .single();
         
         if (error && error.code !== 'PGRST116') {
@@ -660,7 +660,7 @@ async function loadUserData() {
             const preferredLanguage = document.getElementById('preferredLanguage');
             
             if (profileName) profileName.value = 'Student';
-            if (profileEmail) profileEmail.value = currentUser.email || '';
+            if (profileEmail) profileEmail.value = window.currentUser.email || '';
             if (profilePhone) profilePhone.value = '';
             if (profileClass) profileClass.value = 'Class N/A';
             if (learningStyle) learningStyle.value = 'visual';
@@ -691,7 +691,7 @@ async function loadUserData() {
             const preferredLanguage = document.getElementById('preferredLanguage');
             
             if (profileName) profileName.value = profile.full_name || '';
-            if (profileEmail) profileEmail.value = currentUser.email || '';
+            if (profileEmail) profileEmail.value = window.currentUser.email || '';
             if (profilePhone) profilePhone.value = profile.phone || '';
             if (profileClass) {
                 const classLevel = profile.class_level || profile.class || 'N/A';
@@ -728,7 +728,7 @@ async function loadUserData() {
                     await window.supabaseClient
                         .from('user_profiles')
                         .update({ ai_avatar: defaultAvatar.id })
-                        .eq('id', currentUser.id);
+                        .eq('id', window.currentUser.id);
                     updateAvatarDisplay();
                 }
             }
@@ -787,7 +787,7 @@ function showWelcomeMessage() {
 async function loadBooks() {
     try {
         // Get user's class from the profile or UI
-        const userClass = currentUser?.user_metadata?.class || 
+                const userClass = window.currentUser?.user_metadata?.class ||
                          document.getElementById('userClass')?.textContent?.replace('Class ', '') || 
                          '10'; // Default fallback
         
@@ -1005,11 +1005,11 @@ async function sendMessage() {
     try {
         // Get user profile data from Supabase
         let userProfile = null;
-        if (currentUser && currentUser.id) {
+        if (window.currentUser && window.currentUser.id) {
             const { data: profile, error } = await window.supabaseClient
                 .from('user_profiles')
                 .select('*')
-                .eq('id', currentUser.id)
+                .eq('id', window.currentUser.id)
                 .single();
             
             if (!error && profile) {
@@ -1018,7 +1018,7 @@ async function sendMessage() {
         }
         
         // Get user class/subject from profile or UI
-        const userClass = userProfile?.class || userProfile?.class_level || currentUser?.user_metadata?.class || document.getElementById('userClass')?.textContent || '';
+        const userClass = userProfile?.class || userProfile?.class_level || window.currentUser?.user_metadata?.class || document.getElementById('userClass')?.textContent || '';
         const userSubject = window.currentSubject || '';
         const userBoard = userProfile?.board || 'CBSE';
         
@@ -2264,7 +2264,7 @@ async function saveProfileFromPopup() {
         const classValue = document.getElementById('popupProfileClass')?.value || '';
         const board = document.getElementById('popupProfileBoard')?.value || '';
         
-        if (!currentUser) {
+        if (!window.currentUser) {
             showError('User not authenticated');
             return;
         }
@@ -2273,7 +2273,7 @@ async function saveProfileFromPopup() {
         const { error } = await window.supabaseClient
             .from('user_profiles')
             .upsert({
-                id: currentUser.id,
+                id: window.currentUser.id,
                 full_name: name,
                 class: classValue,
                 board: board,
@@ -2310,9 +2310,9 @@ function showContactUs() {
     const emailField = document.getElementById('contactUsEmail');
     const mobileField = document.getElementById('contactUsMobile');
     
-    if (nameField) nameField.value = userData?.full_name || (currentUser && currentUser.email) || '';
+    if (nameField) nameField.value = window.userData?.full_name || (currentUser && currentUser.email) || '';
     if (emailField) emailField.value = (currentUser && currentUser.email) || '';
-    if (mobileField) mobileField.value = userData?.mobile || 'Not set';
+    if (mobileField) mobileField.value = window.userData?.mobile || 'Not set';
     
     // Show popup
     const popup = document.getElementById('contactUsPopupOverlay');
