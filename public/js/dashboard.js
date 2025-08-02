@@ -35,10 +35,11 @@ window.showSection = function(sectionName) {
 
 window.saveChatMessage = function(message, response) {
     console.log('saveChatMessage called');
-    if (typeof window._saveChatMessage === 'function') {
-        return window._saveChatMessage(message, response);
+    // This is handled by subjectManager, not a local function
+    if (window.subjectManager && window.subjectManager.saveChatMessage) {
+        return window.subjectManager.saveChatMessage(message, response);
     } else {
-        console.error('saveChatMessage function not available yet');
+        console.error('Subject manager not available yet');
     }
 };
 
@@ -90,8 +91,6 @@ let lastResponseDate = null; // Track the date of last AI response
 window.currentUser = currentUser;
 window.isRecording = isRecording;
 window.selectedAvatar = selectedAvatar;
-
-// Functions are already defined above
 
 // Functions are already defined above
 

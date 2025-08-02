@@ -35,10 +35,11 @@ window.showSection = function(sectionName) {
 
 window.saveChatMessage = function(message, response) {
     console.log('saveChatMessage called');
-    if (typeof window._saveChatMessage === 'function') {
-        return window._saveChatMessage(message, response);
+    // This is handled by subjectManager, not a local function
+    if (window.subjectManager && window.subjectManager.saveChatMessage) {
+        return window.subjectManager.saveChatMessage(message, response);
     } else {
-        console.error('saveChatMessage function not available yet');
+        console.error('Subject manager not available yet');
     }
 };
 
@@ -91,38 +92,7 @@ window.currentUser = currentUser;
 window.isRecording = isRecording;
 window.selectedAvatar = selectedAvatar;
 
-// Make functions globally accessible immediately
-window.toggleVoiceRecording = function() {
-    if (typeof toggleVoiceRecording === 'function') {
-        return toggleVoiceRecording();
-    } else {
-        console.error('toggleVoiceRecording function not available yet');
-    }
-};
-
-window.closeSidebar = function() {
-    if (typeof closeSidebar === 'function') {
-        return closeSidebar();
-    } else {
-        console.error('closeSidebar function not available yet');
-    }
-};
-
-window.showSection = function(sectionName) {
-    if (typeof showSection === 'function') {
-        return showSection(sectionName);
-    } else {
-        console.error('showSection function not available yet');
-    }
-};
-
-window.saveChatMessage = function(message, response) {
-    if (typeof saveChatMessage === 'function') {
-        return saveChatMessage(message, response);
-    } else {
-        console.error('saveChatMessage function not available yet');
-    }
-};
+// Functions are already defined above
 
 // Indian Regional Avatars
 const regionalAvatars = [
