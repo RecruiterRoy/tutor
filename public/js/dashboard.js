@@ -1458,8 +1458,6 @@ function stopRecording() {
 }
 
 async function toggleVoiceRecording() {
-    // Assign to global variable for HTML onclick access
-    window._toggleVoiceRecording = toggleVoiceRecording;
     try {
         if (!recognition) {
             showError('Voice recognition not initialized');
@@ -1490,6 +1488,9 @@ async function toggleVoiceRecording() {
         showError('Could not access microphone. Please check permissions.');
     }
 }
+
+// Assign to global immediately
+window.toggleVoiceRecording = toggleVoiceRecording;
 
 async function speakText(text) {
     console.log('[TTS] Attempting to speak:', text);
@@ -1691,8 +1692,6 @@ async function logout() {
 
 // UI Functions
 function showSection(sectionName) {
-    // Assign to global variable for HTML onclick access
-    window._showSection = showSection;
     console.log('Showing section:', sectionName);
     
     // Hide all sections
@@ -1725,6 +1724,9 @@ function showSection(sectionName) {
     
     console.log('Section navigation completed for:', sectionName);
 }
+
+// Assign to global immediately
+window.showSection = showSection;
 
 function toggleSidebar() {
     const sidebar = document.getElementById('mobileSidebar');
@@ -1764,8 +1766,6 @@ function toggleSidebar() {
 }
 
 function closeSidebar() {
-    // Assign to global variable for HTML onclick access
-    window._closeSidebar = closeSidebar;
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
     
@@ -1775,9 +1775,10 @@ function closeSidebar() {
     }
 }
 
+// Assign to global immediately
+window.closeSidebar = closeSidebar;
+
 function closeMobileSidebar() {
-    // Assign to global variable for HTML onclick access
-    window._closeMobileSidebar = closeMobileSidebar;
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
     
@@ -1791,6 +1792,9 @@ function closeMobileSidebar() {
         }
     }
 }
+
+// Assign to global immediately
+window.closeMobileSidebar = closeMobileSidebar;
 
 // Close sidebar when clicking overlay
 document.addEventListener('DOMContentLoaded', function() {
@@ -2385,11 +2389,7 @@ function closeContactUsPopup() {
         }
     }
 
-    // Replace placeholder functions with actual implementations
-    window.toggleVoiceRecording = toggleVoiceRecording;
-    window.closeSidebar = closeSidebar;
-    window.closeMobileSidebar = closeMobileSidebar;
-    window.showSection = showSection;
+    // All functions are now assigned immediately after definition
     
     console.log('✅ All global functions assigned successfully');
     window.openMobileSidebar = function() {
