@@ -870,18 +870,40 @@ function setupEventListeners() {
         subjectSelect.addEventListener('change', updateContext);
     }
     
-    // Message input
-    const messageInput = document.getElementById('messageInput');
-    if (messageInput) {
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+    // Chat input - use the correct ID
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Also add input event for real-time updates
+        chatInput.addEventListener('input', (e) => {
+            // Enable/disable send button based on input
+            const sendButton = document.getElementById('sendButton');
+            if (sendButton) {
+                sendButton.disabled = !e.target.value.trim();
+            }
         });
     }
     
-    // Voice button
+    // Voice button - remove onclick handler to avoid conflicts
     const voiceButton = document.getElementById('voiceButton');
     if (voiceButton) {
+        // Remove any existing onclick to avoid conflicts
+        voiceButton.removeAttribute('onclick');
         voiceButton.addEventListener('click', toggleVoiceRecording);
+    }
+    
+    // Send button - remove onclick handler to avoid conflicts
+    const sendButton = document.getElementById('sendButton');
+    if (sendButton) {
+        // Remove any existing onclick to avoid conflicts
+        sendButton.removeAttribute('onclick');
+        sendButton.addEventListener('click', sendMessage);
     }
     
     // Accessibility options
@@ -921,6 +943,80 @@ function setupEventListeners() {
     if (saveProfile) {
         saveProfile.addEventListener('click', saveProfileChanges);
     }
+    
+    // Mobile sidebar overlay click handler
+    const mobileSidebarOverlay = document.getElementById('mobileSidebarOverlay');
+    if (mobileSidebarOverlay) {
+        mobileSidebarOverlay.addEventListener('click', closeMobileSidebar);
+    }
+    
+    // Mobile sidebar button
+    const mobileSidebarButton = document.querySelector('button[onclick="openMobileSidebar()"]');
+    if (mobileSidebarButton) {
+        // Remove onclick to avoid conflicts
+        mobileSidebarButton.removeAttribute('onclick');
+        mobileSidebarButton.addEventListener('click', openMobileSidebar);
+    }
+    
+    // Close mobile sidebar button
+    const closeMobileSidebarButton = document.querySelector('button[onclick="closeMobileSidebar()"]');
+    if (closeMobileSidebarButton) {
+        // Remove onclick to avoid conflicts
+        closeMobileSidebarButton.removeAttribute('onclick');
+        closeMobileSidebarButton.addEventListener('click', closeMobileSidebar);
+    }
+    
+    // TTS buttons
+    const playButton = document.getElementById('playButton');
+    if (playButton) {
+        playButton.removeAttribute('onclick');
+        playButton.addEventListener('click', playTTS);
+    }
+    
+    const stopButton = document.getElementById('stopButton');
+    if (stopButton) {
+        stopButton.removeAttribute('onclick');
+        stopButton.addEventListener('click', stopTTS);
+    }
+    
+    // Sidebar navigation items
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        const onclick = item.getAttribute('onclick');
+        if (onclick) {
+            item.removeAttribute('onclick');
+            
+            // Parse the onclick content and create event listener
+            if (onclick.includes('showSection')) {
+                const sectionMatch = onclick.match(/showSection\('([^']+)'\)/);
+                if (sectionMatch) {
+                    const sectionName = sectionMatch[1];
+                    item.addEventListener('click', () => {
+                        showSection(sectionName);
+                        if (onclick.includes('closeMobileSidebar')) {
+                            closeMobileSidebar();
+                        }
+                    });
+                }
+            } else if (onclick.includes('logout')) {
+                item.addEventListener('click', () => {
+                    logout();
+                    if (onclick.includes('closeMobileSidebar')) {
+                        closeMobileSidebar();
+                    }
+                });
+            } else if (onclick.includes('forceShowTrialOverlay')) {
+                item.addEventListener('click', () => {
+                    forceShowTrialOverlay();
+                    if (onclick.includes('closeMobileSidebar')) {
+                        closeMobileSidebar();
+                    }
+                });
+            }
+        }
+    });
+    
+    console.log('✅ Event listeners setup complete');
 }
 
 function populateAvatarGrid() {
@@ -1351,11 +1447,19 @@ function initSpeechRecognition() {
             return;
         }
         
+        // Check for speech recognition support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
             console.log('Speech recognition not supported');
             voiceButton.style.display = 'none';
             showError('Voice recognition not supported in this browser');
+            return;
+        }
+
+        // Check if voice features are enabled in config
+        if (!window.TUTOR_CONFIG?.features?.voiceInput) {
+            console.log('Voice input disabled in config');
+            voiceButton.style.display = 'none';
             return;
         }
 
@@ -1459,9 +1563,23 @@ function stopRecording() {
 
 async function toggleVoiceRecording() {
     try {
-        if (!recognition) {
-            showError('Voice recognition not initialized');
+        // Check if voice features are enabled
+        if (!window.TUTOR_CONFIG?.features?.voiceInput) {
+            showError('Voice input is disabled');
             return;
+        }
+
+        if (!recognition) {
+            console.log('Speech recognition not initialized, attempting to initialize...');
+            initSpeechRecognition();
+            
+            // Wait a moment for initialization
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            if (!recognition) {
+                showError('Voice recognition not available');
+                return;
+            }
         }
 
         if (isRecording) {
@@ -1795,6 +1913,9 @@ function closeMobileSidebar() {
 
 // Assign to global immediately
 window.closeMobileSidebar = closeMobileSidebar;
+
+// Assign to global immediately
+window.toggleSidebar = toggleSidebar;
 
 // Close sidebar when clicking overlay
 document.addEventListener('DOMContentLoaded', function() {
@@ -2392,100 +2513,183 @@ function closeContactUsPopup() {
     // All functions are now assigned immediately after definition
     
     console.log('✅ All global functions assigned successfully');
-    window.openMobileSidebar = function() {
-        const sidebar = document.getElementById('mobileSidebar');
-        const overlay = document.getElementById('mobileSidebarOverlay');
+// Assign to global immediately
+window.openMobileSidebar = function() {
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
         
-        if (sidebar && overlay) {
-            sidebar.classList.remove('-translate-x-full');
-            overlay.classList.remove('opacity-0', 'pointer-events-none');
-            
-            // Prevent body scroll on mobile
-            if (window.isMobile) {
-                document.body.style.overflow = 'hidden';
-            }
+        // Prevent body scroll on mobile
+        if (window.isMobile) {
+            document.body.style.overflow = 'hidden';
         }
-    };
+    }
+};
     
-    window.playTTS = function() {
-        if (window.textToSpeech) {
-            window.textToSpeech.playLastMessage();
-        }
-    };
+// Assign to global immediately
+window.playTTS = function() {
+    if (window.textToSpeech) {
+        window.textToSpeech.playLastMessage();
+    }
+};
+
+// Assign to global immediately
+window.stopTTS = function() {
+    if (window.textToSpeech) {
+        window.textToSpeech.stop();
+    }
+};
     
-    window.stopTTS = function() {
-        if (window.textToSpeech) {
-            window.textToSpeech.stop();
-        }
-    };
+// Assign to global immediately
+window.handleAvatarSelection = function(language) {
+    const englishCard = document.querySelector('[onclick="handleAvatarSelection(\'english\')"]');
+    const hindiCard = document.querySelector('[onclick="handleAvatarSelection(\'hindi\')"]');
     
-    window.handleAvatarSelection = function(language) {
-        const englishCard = document.querySelector('[onclick="handleAvatarSelection(\'english\')"]');
-        const hindiCard = document.querySelector('[onclick="handleAvatarSelection(\'hindi\')"]');
-        
-        // Remove selected class from both
-        englishCard?.classList.remove('selected');
-        hindiCard?.classList.remove('selected');
-        
-        // Add selected class to chosen language
-        if (language === 'english') {
-            englishCard?.classList.add('selected');
-            selectedAvatar = 'roy-sir';
-        } else if (language === 'hindi') {
-            hindiCard?.classList.add('selected');
-            selectedAvatar = 'ms-sapana';
-        }
-        
-        // Update avatar display
-        updateAvatarDisplay();
-        
-        // Save preference
-        saveAvatarPreference();
-    };
+    // Remove selected class from both
+    englishCard?.classList.remove('selected');
+    hindiCard?.classList.remove('selected');
     
-    window.downloadApp = function() {
-        // For now, just show a message
-        showSuccess('APK download will be available soon!');
-    };
+    // Add selected class to chosen language
+    if (language === 'english') {
+        englishCard?.classList.add('selected');
+        selectedAvatar = 'roy-sir';
+    } else if (language === 'hindi') {
+        hindiCard?.classList.add('selected');
+        selectedAvatar = 'ms-sapana';
+    }
     
-    window.scrollToTop = function() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    // Update avatar display
+    updateAvatarDisplay();
     
-    window.forceShowTrialOverlay = function() {
-        const overlay = document.getElementById('trialExpiredOverlay');
-        if (overlay) {
-            overlay.classList.remove('hidden');
-        }
-    };
+    // Save preference
+    saveAvatarPreference();
+};
     
-    window.upgradeToPremium = function() {
-        window.location.href = 'payment.html';
-    };
+// Assign to global immediately
+window.downloadApp = function() {
+    // For now, just show a message
+    showSuccess('APK download will be available soon!');
+};
+
+// Assign to global immediately
+window.scrollToTop = function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Assign to global immediately
+window.forceShowTrialOverlay = function() {
+    const overlay = document.getElementById('trialExpiredOverlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+    }
+};
+
+// Assign to global immediately
+window.upgradeToPremium = function() {
+    window.location.href = 'payment.html';
+};
+
+// Assign to global immediately
+window.closeTrialOverlay = function() {
+    const overlay = document.getElementById('trialExpiredOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
+};
     
-    window.closeTrialOverlay = function() {
-        const overlay = document.getElementById('trialExpiredOverlay');
-        if (overlay) {
-            overlay.classList.add('hidden');
-        }
-    };
-    
-    // Subject manager functions
-    window.showSubjectManager = function() {
-        if (window.subjectManager && window.subjectManager.showSubjectManager) {
-            return window.subjectManager.showSubjectManager();
-        }
-    };
-    
-    window.addNewSubject = function() {
-        if (window.subjectManager && window.subjectManager.addNewSubject) {
-            return window.subjectManager.addNewSubject();
-        }
-    };
-    
-    window.saveChatMessage = function(message, response) {
-        if (window.subjectManager && window.subjectManager.saveChatMessage) {
-            return window.subjectManager.saveChatMessage(message, response);
-        }
-    };
+// Assign to global immediately
+window.showSubjectManager = function() {
+    if (window.subjectManager && window.subjectManager.showSubjectManager) {
+        return window.subjectManager.showSubjectManager();
+    }
+};
+
+// Assign to global immediately
+window.addNewSubject = function() {
+    if (window.subjectManager && window.subjectManager.addNewSubject) {
+        return window.subjectManager.addNewSubject();
+    }
+};
+
+// Assign to global immediately
+window.saveChatMessage = function(message, response) {
+    if (window.subjectManager && window.subjectManager.saveChatMessage) {
+        return window.subjectManager.saveChatMessage(message, response);
+    }
+};
 // Functions are already made globally accessible at the top of the file
+
+// Initialize dashboard when DOM is loaded
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 DOM loaded, initializing dashboard...');
+    
+    try {
+        // Test that key functions are available
+        console.log('🔧 Testing function availability:');
+        console.log('- toggleVoiceRecording:', typeof window.toggleVoiceRecording);
+        console.log('- openMobileSidebar:', typeof window.openMobileSidebar);
+        console.log('- closeMobileSidebar:', typeof window.closeMobileSidebar);
+        console.log('- showSection:', typeof window.showSection);
+        console.log('- sendMessage:', typeof window.sendMessage);
+        
+        // Initialize Supabase first
+        await initializeSupabase();
+        
+        // Initialize the dashboard
+        await initializeDashboard();
+        
+        // Test voice recognition initialization
+        console.log('🔧 Testing voice recognition:');
+        const voiceButton = document.getElementById('voiceButton');
+        if (voiceButton) {
+            console.log('- Voice button found:', voiceButton);
+            console.log('- Voice button display:', voiceButton.style.display);
+        } else {
+            console.log('- Voice button not found');
+        }
+        
+        // Test sidebar buttons
+        console.log('🔧 Testing sidebar buttons:');
+        const navItems = document.querySelectorAll('.nav-item');
+        console.log('- Nav items found:', navItems.length);
+        navItems.forEach((item, index) => {
+            console.log(`- Nav item ${index}:`, item.textContent.trim());
+        });
+        
+        // Apply mobile optimizations
+        if (window.isMobile) {
+            applyMobileOptimizations();
+            setupMobileEventListeners();
+            enableMobileFeatures();
+        }
+        
+        console.log('✅ Dashboard initialization complete');
+        
+    } catch (error) {
+        console.error('❌ Dashboard initialization failed:', error);
+        showError('Failed to initialize dashboard. Please refresh the page.');
+    }
+});
+
+// Also initialize when window loads (fallback)
+window.addEventListener('load', function() {
+    console.log('🔄 Window loaded, checking dashboard status...');
+    
+    // Only initialize if not already done
+    if (!window.dashboardInitialized) {
+        console.log('🔄 Dashboard not initialized, starting initialization...');
+        window.dashboardInitialized = true;
+        
+        // The DOMContentLoaded listener should handle this, but this is a fallback
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', async function() {
+                await initializeDashboard();
+            });
+        } else {
+            initializeDashboard();
+        }
+    }
+});

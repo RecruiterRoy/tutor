@@ -21,7 +21,7 @@ window.TUTOR_CONFIG = {
   
   // Mobile Optimization Settings
   mobile: {
-    enableVoiceFeatures: false, // Disabled by default for stability
+    enableVoiceFeatures: true, // Enabled for voice functionality
     enableAnimations: true,
     enableOfflineSupport: false,
     maxCacheSize: "50MB",
@@ -41,8 +41,8 @@ window.TUTOR_CONFIG = {
   // Feature Flags
   features: {
     chat: true,
-    voiceInput: false, // Disabled for mobile stability
-    textToSpeech: false, // Disabled for mobile stability
+    voiceInput: true, // Enabled for voice input functionality
+    textToSpeech: true, // Enabled for text-to-speech functionality
     progressTracking: true,
     bookReader: true,
     lessonPlanner: true,

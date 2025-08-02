@@ -903,24 +903,24 @@
                 <div class="flex items-center space-x-3">
                     <img src="images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
                 </div>
-                <button class="text-purple-800 text-2xl" onclick="closeMobileSidebar()">×</button>
+                <button class="text-purple-800 text-2xl">×</button>
             </div>
             
             <!-- Sidebar Navigation -->
             <nav class="flex-1 p-6 space-y-4">
-                <div class="nav-item active" onclick="showSection('chat'); closeMobileSidebar();">
+                <div class="nav-item active">
                     <span class="text-xl">🏫</span>
                     <span>Classroom</span>
                 </div>
-                <div class="nav-item" onclick="showSection('materials'); closeMobileSidebar();">
+                <div class="nav-item">
                     <span class="text-xl">📚</span>
                     <span>Study Materials</span>
                 </div>
-                <div class="nav-item" onclick="showSection('progress'); closeMobileSidebar();">
+                <div class="nav-item">
                     <span class="text-xl">📊</span>
                     <span>Progress</span>
                 </div>
-                <div class="nav-item" onclick="showSection('settings'); closeMobileSidebar();">
+                <div class="nav-item">
                     <span class="text-xl">⚙️</span>
                     <span>Settings</span>
                 </div>
@@ -939,11 +939,11 @@
                     </div>
                 </div>
                 
-                <button onclick="logout(); closeMobileSidebar();" class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                <button class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
                     <span class="text-xl">🚪</span>
                     <span>Logout</span>
                 </button>
-                <button onclick="forceShowTrialOverlay(); closeMobileSidebar();" class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
+                <button class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
                     <span class="text-xl">⏰</span>
                     <span>Test Trial</span>
                 </button>
@@ -967,19 +967,19 @@
             
             <!-- Sidebar Navigation -->
             <nav class="flex-1 p-6 space-y-4">
-                <div class="nav-item active" onclick="showSection('chat')">
+                <div class="nav-item active">
                     <span class="text-xl">🏫</span>
                     <span>Classroom</span>
                 </div>
-                <div class="nav-item" onclick="showSection('materials')">
+                <div class="nav-item">
                     <span class="text-xl">📚</span>
                     <span>Study Materials</span>
                 </div>
-                <div class="nav-item" onclick="showSection('progress')">
+                <div class="nav-item">
                     <span class="text-xl">📊</span>
                     <span>Progress</span>
                 </div>
-                <div class="nav-item" onclick="showSection('settings')">
+                <div class="nav-item">
                     <span class="text-xl">⚙️</span>
                     <span>Settings</span>
                 </div>
@@ -998,11 +998,11 @@
                     </div>
                 </div>
                 
-                <button onclick="logout()" class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                <button class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
                     <span class="text-xl">🚪</span>
                     <span>Logout</span>
                 </button>
-                <button onclick="forceShowTrialOverlay()" class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
+                <button class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
                     <span class="text-xl">⏰</span>
                     <span>Test Trial</span>
                 </button>
@@ -1015,7 +1015,7 @@
             <header class="nav-modern p-4">
                 <div class="flex items-center justify-between">
                     <!-- Mobile Menu Button -->
-                    <button class="lg:hidden text-white text-2xl hover:text-blue-300 transition-colors" onclick="openMobileSidebar()">☰</button>
+                    <button class="lg:hidden text-white text-2xl hover:text-blue-300 transition-colors">☰</button>
                     
                     <!-- Logo (Mobile) -->
                     <div class="lg:hidden flex items-center">
@@ -1057,10 +1057,10 @@
                                 <span id="welcomeTeacherName" class="text-white font-semibold text-sm">Roy Sir</span>
                             </div>
                             <div class="flex items-center space-x-1">
-                                <button id="playButton" onclick="playTTS()" class="p-1 bg-purple-600 rounded hover:bg-purple-700 transition-colors">
+                                <button id="playButton" class="p-1 bg-purple-600 rounded hover:bg-purple-700 transition-colors">
                                     <span class="text-white text-xs">▶️</span>
                                 </button>
-                                <button id="stopButton" onclick="stopTTS()" class="p-1 bg-red-600 rounded hover:bg-red-700 transition-colors">
+                                <button id="stopButton" class="p-1 bg-red-600 rounded hover:bg-red-700 transition-colors">
                                     <span class="text-white text-xs">⏹️</span>
                                 </button>
                             </div>
@@ -1090,10 +1090,10 @@
                             <div class="relative flex-1">
                                 <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." class="chat-input">
                             </div>
-                            <button id="voiceButton" onclick="toggleVoiceRecording()" class="text-gray-400 hover:text-white transition-colors p-2 rounded-lg bg-gray-700/50">
+                            <button id="voiceButton" class="text-gray-400 hover:text-white transition-colors p-2 rounded-lg bg-gray-700/50">
                                 <span id="voiceIcon" class="text-xl">🎤</span>
                             </button>
-                            <button id="sendButton" onclick="sendMessage()" class="btn-modern">
+                            <button id="sendButton" class="btn-modern">
                                 <span>Send</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
