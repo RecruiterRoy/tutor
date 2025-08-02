@@ -396,6 +396,18 @@ async function loadUserData() {
             
             // Store user data globally
             window.userData = profile;
+            
+            // Initialize subject manager
+            if (window.subjectManager) {
+                const userClass = profile.class_level || profile.class || 'Class 6';
+                const userBoard = profile.board || 'CBSE';
+                await window.subjectManager.initialize(currentUser, userClass, userBoard);
+                
+                // Load current subject if saved
+                if (profile.current_subject) {
+                    await window.subjectManager.selectSubject(profile.current_subject);
+                }
+            }
         }
     } catch (error) {
         showDashboardError('Error loading user data: ' + error.message);
@@ -683,7 +695,14 @@ async function sendMessage() {
         // Get the current avatar from user profile or global variable
         const currentAvatar = userProfile?.ai_avatar || window.selectedAvatar || selectedAvatar || 'roy-sir';
         
-        // Send to AI backend with complete user profile
+        // Get recent chat history for context
+        let chatHistory = [];
+        if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
+            const subjectHistory = window.subjectManager.subjectChatHistory[window.subjectManager.getCurrentSubject()] || [];
+            chatHistory = subjectHistory.slice(-10); // Last 10 messages for context
+        }
+
+        // Send to AI backend with complete user profile and chat history
         const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -693,7 +712,8 @@ async function sendMessage() {
                 subject: userSubject,
                 userProfile: userProfile,
                 teacher: currentAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
-                isFirstResponseOfDay: isFirstResponseOfDay
+                isFirstResponseOfDay: isFirstResponseOfDay,
+                chatHistory: chatHistory
             })
         });
         
@@ -702,6 +722,16 @@ async function sendMessage() {
         
         if (data.success && data.response) {
             await addMessage('ai', data.response);
+            
+            // Save message to subject history if subject manager is active
+            if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
+                await window.subjectManager.saveChatMessage(
+                    window.subjectManager.getCurrentSubject(),
+                    text,
+                    data.response
+                );
+            }
+            
             // Update the last response date after successful response
             lastResponseDate = today;
         } else {
@@ -864,7 +894,7 @@ function loadVoiceSettings() {
     // Load settings from TTS system if available, otherwise from localStorage
     if (window.textToSpeech) {
         if (voiceRate) {
-            voiceRate.value = window.textToSpeech.rate || 1.25;
+            voiceRate.value = window.textToSpeech.rate || 1.0;
         }
         if (voicePitch) {
             voicePitch.value = window.textToSpeech.pitch || 1.0;
@@ -872,7 +902,7 @@ function loadVoiceSettings() {
     } else {
         // Fallback to localStorage
         if (voiceRate) {
-            voiceRate.value = localStorage.getItem('voiceRate') || '1.25';
+            voiceRate.value = localStorage.getItem('voiceRate') || '1.0';
         }
         if (voicePitch) {
             voicePitch.value = localStorage.getItem('voicePitch') || '1.0';

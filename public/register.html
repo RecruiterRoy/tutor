@@ -524,7 +524,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://tution.app/register.html?step=2'
+                        redirectTo: 'register.html?step=2'
                     }
                 });
                 
@@ -968,7 +968,7 @@
                     
                     // Redirect to dashboard after short delay
                     setTimeout(() => {
-                        window.location.href = 'https://tution.app/dashboard.html';
+                        window.location.href = 'dashboard.html';
                     }, 2000);
                 }
                 

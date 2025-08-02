@@ -107,13 +107,13 @@ class TextToSpeech {
         if (settings) {
             const parsed = JSON.parse(settings);
             this.autoStart = parsed.autoStart !== undefined ? parsed.autoStart : true;
-            this.rate = parsed.rate || 1.25; // Default to 1.25x
+            this.rate = parsed.rate || 1.0; // Default to 1.0x
             this.pitch = parsed.pitch || 1.0;
             this.volume = parsed.volume || 1.0;
             this.language = parsed.language || 'hi-IN';
         } else {
             // Set defaults for new users
-            this.rate = 1.25; // Default to 1.25x
+            this.rate = 1.0; // Default to 1.0x
             this.pitch = 1.0;
             this.volume = 1.0;
             this.language = 'hi-IN';
@@ -362,44 +362,61 @@ class TextToSpeech {
         } else {
             // Roy Sir - ALWAYS use English voice
             console.log('Selecting voice for Roy Sir (English voice)');
-            // Priority 1: Microsoft Ravi
+            // Priority 1: Microsoft Ravi (if available)
             let englishVoice = this.voices.find(voice =>
                 voice.name.toLowerCase().includes('microsoft') &&
                 voice.name.toLowerCase().includes('ravi')
             );
-            // Priority 2: Any Ravi voice (male)
+            
+            // Priority 2: Google Indian English voices (more natural)
             if (!englishVoice) {
                 englishVoice = this.voices.find(voice =>
-                    voice.name.toLowerCase().includes('ravi') &&
+                    voice.name.toLowerCase().includes('google') &&
+                    voice.lang.includes('en-IN') &&
                     !voice.name.toLowerCase().includes('female')
                 );
             }
-            // Priority 3: Any Ravi voice (any gender)
             if (!englishVoice) {
                 englishVoice = this.voices.find(voice =>
-                    voice.name.toLowerCase().includes('ravi')
+                    voice.name.toLowerCase().includes('google') &&
+                    voice.lang.includes('en-IN') &&
+                    !voice.name.toLowerCase().includes('female')
                 );
             }
-            // Priority 4: Any Indian English voice (prefer male)
+            
+            // Priority 3: Any Indian English voice (prefer male)
             if (!englishVoice) {
                 englishVoice = this.voices.find(voice =>
                     voice.lang.includes('en-IN') &&
                     !voice.name.toLowerCase().includes('female')
                 );
             }
+            
+            // Priority 4: Any Ravi voice (male)
+            if (!englishVoice) {
+                englishVoice = this.voices.find(voice =>
+                    voice.name.toLowerCase().includes('ravi') &&
+                    !voice.name.toLowerCase().includes('female')
+                );
+            }
+            
             // Priority 5: Any Indian English voice (any gender)
             if (!englishVoice) {
                 englishVoice = this.voices.find(voice =>
                     voice.lang.includes('en-IN')
                 );
             }
-            // Priority 6: Any English voice (prefer male)
+            
+            // Priority 6: Any English voice with neutral accent (prefer male)
             if (!englishVoice) {
                 englishVoice = this.voices.find(voice =>
                     (voice.lang.includes('en-US') || voice.lang.includes('en-GB')) &&
-                    !voice.name.toLowerCase().includes('female')
+                    !voice.name.toLowerCase().includes('female') &&
+                    !voice.name.toLowerCase().includes('southern') &&
+                    !voice.name.toLowerCase().includes('australian')
                 );
             }
+            
             // Priority 7: Any English voice (any gender)
             if (!englishVoice) {
                 englishVoice = this.voices.find(voice =>

@@ -491,7 +491,7 @@
                             // Ensure user profile exists
                             await ensureUserProfile(data.user);
                             // Redirect to dashboard
-                            window.location.href = 'https://tution.app/dashboard.html';
+                            window.location.href = 'dashboard.html';
                             return;
                         }
                     } catch (sessionError) {
@@ -514,7 +514,7 @@
                             // Ensure user profile exists
                             await ensureUserProfile(user);
                             // Redirect to dashboard
-                            window.location.href = 'https://tution.app/dashboard.html';
+                            window.location.href = 'dashboard.html';
                             return;
                         }
                     } catch (verificationError) {
@@ -554,7 +554,7 @@
                         if (profile && profile.verification_status === 'approved' && 
                             profile.full_name && profile.email && profile.class && profile.board) {
                             console.log('✅ User verified and profile complete, redirecting to dashboard');
-                            window.location.href = 'https://tution.app/dashboard.html';
+                            window.location.href = 'dashboard.html';
                             return;
                         } else {
                             console.log('❌ User not verified or profile incomplete, staying on login page');
@@ -736,7 +736,7 @@
                     }
                     
                     console.log('✅ All checks passed, redirecting to dashboard');
-                    window.location.href = 'https://tution.app/dashboard.html';
+                    window.location.href = 'dashboard.html';
                 }
                 
             } catch (error) {
@@ -765,7 +765,7 @@
                 const { error } = await window.supabaseClient.auth.signInWithOtp({
                     email,
                     options: {
-                        emailRedirectTo: 'https://tution.app/dashboard.html'
+                        emailRedirectTo: 'dashboard.html'
                     }
                 });
                 
@@ -795,7 +795,7 @@
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://tution.app/dashboard.html',
+                        redirectTo: 'dashboard.html',
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent'

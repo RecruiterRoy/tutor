@@ -201,7 +201,7 @@
                     <h2 class="text-2xl font-semibold text-white mb-6">Basic Information</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <input type="text" id="fullName" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Full Name">
+                            <input type="text" id="fullName" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Student's Name">
                             <div class="error-message" id="fullNameError"></div>
                         </div>
                         
@@ -315,6 +315,11 @@
                                 <option value="Puducherry">Puducherry</option>
                             </select>
                             <div class="error-message" id="stateError"></div>
+                        </div>
+                        
+                        <div>
+                            <input type="text" id="schoolName" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="School Name">
+                            <div class="error-message" id="schoolNameError"></div>
                         </div>
                         
                         <div>
@@ -519,7 +524,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://tution.app/register.html?step=2'
+                        redirectTo: 'register.html?step=2'
                     }
                 });
                 
@@ -756,6 +761,7 @@
                     <h3 class="text-white font-semibold mb-2">Academic Information</h3>
                     <p class="text-gray-300">Class: ${document.getElementById('class').value}</p>
                     <p class="text-gray-300">Board: ${document.getElementById('board').value}</p>
+                    <p class="text-gray-300">School: ${document.getElementById('schoolName').value}</p>
                     <p class="text-gray-300">State: ${document.getElementById('state').value}</p>
                     <p class="text-gray-300">City: ${document.getElementById('city').value}</p>
                     <p class="text-gray-300">Language: ${document.getElementById('language').value}</p>
@@ -816,6 +822,7 @@
                 const phone = document.getElementById('phone').value.trim();
                 const userClass = `Class ${document.getElementById('class').value}`;
                 const board = document.getElementById('board').value;
+                const schoolName = document.getElementById('schoolName').value.trim();
                 const city = document.getElementById('city').value.trim();
                 const state = document.getElementById('state').value;
                 const language = document.getElementById('language').value;
@@ -855,6 +862,7 @@
                                 phone: phone,
                                 class: userClass,
                                 board: board,
+                                school_name: schoolName,
                                 city: city,
                                 state: state,
                                 preferred_language: language,
@@ -930,6 +938,7 @@
                         class: userClass, // From registration form
                         board: board, // From registration form
                         board_abbr: board, // From registration form
+                        school_name: schoolName, // From registration form
                         city: city, // From registration form
                         state: state, // From registration form
                         preferred_language: language, // From registration form
@@ -959,7 +968,7 @@
                     
                     // Redirect to dashboard after short delay
                     setTimeout(() => {
-                        window.location.href = 'https://tution.app/dashboard.html';
+                        window.location.href = 'dashboard.html';
                     }, 2000);
                 }
                 
