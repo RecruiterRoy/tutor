@@ -3600,15 +3600,21 @@ function getCurrentUserGender() {
 function showAvatarWelcomeMessage() {
     const welcomeMessage = getAvatarWelcomeMessage();
     const avatarName = getCurrentAvatarName();
-    
+
     console.log('🔧 Showing welcome message for:', avatarName);
     console.log('🔧 Welcome message:', welcomeMessage);
+
+    // Add welcome message to chat only if not already added
+    const chatMessages = document.querySelectorAll('.message.ai');
+    const lastMessage = chatMessages[chatMessages.length - 1];
+    const lastMessageText = lastMessage?.textContent || '';
     
-    // Add welcome message to chat
-    addMessage('ai', welcomeMessage);
-    
-    // Speak the welcome message
-    if (window.textToSpeech) {
+    if (!lastMessageText.includes(welcomeMessage.substring(0, 50))) {
+        addMessage('ai', welcomeMessage);
+    }
+
+    // Speak the welcome message only once
+    if (window.textToSpeech && !window.textToSpeech.isSpeaking) {
         window.textToSpeech.speak(welcomeMessage, { role: 'ai' });
     }
 }

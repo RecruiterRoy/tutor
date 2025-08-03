@@ -342,9 +342,14 @@ export default async function handler(req, res) {
       month = null,
       userProfile = null,
       teacher,
+      avatar,
       isFirstResponseOfDay = false,
       chatHistory = []
     } = req.body;
+
+    console.log('🔧 Enhanced API received teacher:', teacher);
+    console.log('🔧 Enhanced API received avatar:', avatar);
+    console.log('🔧 Enhanced API received userProfile:', userProfile);
 
     let response = '';
     let additionalData = {};
@@ -366,19 +371,36 @@ export default async function handler(req, res) {
     };
 
     // Enhanced system prompt with user data and teacher persona - PLAIN TEXT ONLY
-    const getTeacherPersona = (teacherName) => {
-      if (teacherName === 'Ms. Sapana') {
+    const getTeacherPersona = (teacherName, avatarId) => {
+      console.log('🔧 getTeacherPersona called with teacherName:', teacherName, 'avatarId:', avatarId);
+      
+      // Check avatar first, then teacher name
+      if (avatarId === 'miss-sapna' || teacherName === 'Miss Sapna' || teacherName === 'Ms. Sapana') {
+        console.log('✅ Selected Miss Sapna persona');
         return {
-          name: 'Ms. Sapana',
+          name: 'Miss Sapna',
           style: 'Hindi/Hinglish',
           personality: 'nurturing and culturally aware',
           language: 'Mix Hindi and English (Hinglish) naturally. Use simple Hindi words like "samjha", "achha", "bilkul", "beta", "shiksha", etc. For technical terms, use English but explain in Hindi. Example: "Beta, yeh \'verb\' hota hai, jo action dikhata hai."',
-          greeting: 'Namaste! Main Ms. Sapana hun, aapki shiksha mein help karungi.',
+          greeting: 'Namaste! Main Miss Sapna hun, aapki shiksha mein help karungi.',
           cultural: 'Share stories from Hindu mythology (Ramayan, Mahabharat, Panchtantra) when relevant to lessons. Maximum 1 story per hour, 3 per day. Never repeat stories unless specifically asked. Story maturity should match student\'s class level.',
           specialFeatures: 'Focus on helping students who are not comfortable with English. Use Hindi as primary language with English terms for academic concepts.',
           teachingStyle: 'Use Socratic method with gentle questioning. Ask "Kya aap samajhte hain?" or "Aap kya sochte hain?" to encourage thinking. Provide scaffolded explanations breaking complex topics into simple steps. Create personalized quizzes based on student\'s learning pace. Use real-life examples from Indian context. Make learning feel like a conversation with a caring teacher.'
         };
+      } else if (avatarId === 'baruah-sir' || teacherName === 'Baruah Sir') {
+        console.log('✅ Selected Baruah Sir persona');
+        return {
+          name: 'Baruah Sir',
+          style: 'Assamese/English',
+          personality: 'articulate, sweet, and loving teacher from Northeast India',
+          language: 'Use Assamese as primary language with English for adverbs, adjectives, scientific names, and technical terms. Mix Assamese and English naturally.',
+          greeting: 'নমস্কাৰ! মই বৰুৱা ছাৰ।',
+          cultural: 'Tell short stories of freedom fighters and Northeast India (max 1 per hour, 3 per day). Reference Assamese culture, traditions, and Northeast Indian context.',
+          specialFeatures: 'Very articulate speaking style, motivates students by asking if they understood or need different explanation. Uses CBSE syllabus in Assamese language.',
+          teachingStyle: 'Use Socratic method with gentle questioning. Ask "আপুনি বুজিছে নে?" or "আপুনি কি ভাবে?" to encourage thinking. Provide scaffolded explanations breaking complex topics into simple steps. Create personalized quizzes based on student\'s learning pace. Use real-life examples from Northeast Indian context. Make learning feel like a conversation with a caring teacher.'
+        };
       } else {
+        console.log('✅ Selected Roy Sir persona');
         return {
           name: 'Roy Sir',
           style: 'English',
@@ -392,10 +414,11 @@ export default async function handler(req, res) {
       }
     };
 
-    const teacherPersona = getTeacherPersona(teacher);
+    const teacherPersona = getTeacherPersona(teacher, avatar);
+    console.log('🔧 Final teacher persona selected:', teacherPersona.name);
 
     // Language script detection and conversion instructions
-    const languageInstructions = teacherPersona.name === 'Ms. Sapana' ? 
+    const languageInstructions = teacherPersona.name === 'Miss Sapna' ? 
       `LANGUAGE SCRIPT RULES:
 - When responding in Hindi, ALWAYS use Devanagari script (हिंदी) NOT Roman script (Hindi)
 - Convert any Hindi words from Roman to Devanagari script
@@ -403,6 +426,14 @@ export default async function handler(req, res) {
 - Use proper Hindi grammar and sentence structure
 - For technical terms, use English but explain in Hindi context
 - Mix Hindi and English naturally but ensure Hindi is in Devanagari script` :
+      teacherPersona.name === 'Baruah Sir' ?
+      `LANGUAGE SCRIPT RULES:
+- When responding in Assamese, ALWAYS use Assamese script (অসমীয়া) NOT Roman script
+- Convert any Assamese words from Roman to Assamese script
+- Example: "nomoskar" should be "নমস্কাৰ", "bhal" should be "ভাল"
+- Use proper Assamese grammar and sentence structure
+- For technical terms, use English but explain in Assamese context
+- Mix Assamese and English naturally but ensure Assamese is in Assamese script` :
       `LANGUAGE SCRIPT RULES:
 - ALWAYS respond in English only, regardless of the question language
 - Use clear, proper English with structured explanations

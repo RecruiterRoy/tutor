@@ -327,6 +327,21 @@ class TextToSpeech {
         console.log('🔧 Available voices:', this.voices.length);
         console.log('🔧 Voice languages:', this.voices.map(v => `${v.name} (${v.lang})`));
 
+        // If no voices available, try to load them
+        if (this.voices.length === 0) {
+            console.log('⚠️ No voices available, trying to load voices...');
+            this.loadVoices();
+            if (this.voices.length === 0) {
+                console.error('❌ Still no voices available after reload');
+                this.currentVoice = null;
+                return 'en-US';
+            }
+        }
+
+        // Use any available voice as fallback
+        const fallbackVoice = this.voices[0];
+        console.log('🔧 Fallback voice:', fallbackVoice?.name || 'None');
+
         if (currentAvatar === 'miss-sapna') {
             console.log('🎯 Miss Sapna detected, selecting Hindi voice');
             // Force Hindi voice for Miss Sapna
@@ -353,10 +368,9 @@ class TextToSpeech {
                 console.log('✅ Miss Sapna using Hindi voice:', hindiVoice.name);
                 return 'hi-IN';
             } else {
-                console.warn('❌ No Hindi voice found, using default');
-                // Use any available voice as fallback
-                this.currentVoice = this.voices[0] || null;
-                return 'en-US';
+                console.warn('❌ No Hindi voice found, using fallback');
+                this.currentVoice = fallbackVoice;
+                return fallbackVoice?.lang || 'en-US';
             }
         } else if (currentAvatar === 'baruah-sir') {
             console.log('🎯 Baruah Sir detected, selecting Assamese voice');
@@ -391,10 +405,9 @@ class TextToSpeech {
                 console.log('✅ Baruah Sir using voice:', assameseVoice.name);
                 return assameseVoice.lang;
             } else {
-                console.warn('❌ No suitable voice found, using default');
-                // Use any available voice as fallback
-                this.currentVoice = this.voices[0] || null;
-                return 'en-US';
+                console.warn('❌ No suitable voice found, using fallback');
+                this.currentVoice = fallbackVoice;
+                return fallbackVoice?.lang || 'en-US';
             }
         } else {
             console.log('🎯 Roy Sir detected, selecting English voice');
@@ -430,10 +443,9 @@ class TextToSpeech {
                 console.log('✅ Roy Sir using English voice:', englishVoice.name);
                 return englishVoice.lang;
             } else {
-                console.warn('❌ No English voice found, using default');
-                // Use any available voice as fallback
-                this.currentVoice = this.voices[0] || null;
-                return 'en-US';
+                console.warn('❌ No English voice found, using fallback');
+                this.currentVoice = fallbackVoice;
+                return fallbackVoice?.lang || 'en-US';
             }
         }
     }
@@ -548,6 +560,32 @@ class TextToSpeech {
             });
             voiceSelector.appendChild(assameseGroup);
         }
+
+        // If no Assamese voices found, show a message
+        if (assameseVoices.length === 0) {
+            console.log('⚠️ No Assamese voices found. Consider installing Assamese language pack.');
+            // Try to suggest installing Assamese voices
+            this.suggestAssameseVoiceInstallation();
+        }
+    }
+
+    suggestAssameseVoiceInstallation() {
+        console.log('🔧 Suggesting Assamese voice installation...');
+        
+        // Check if we can detect any Indian voices that might work
+        const indianVoices = this.voices.filter(voice => 
+            voice.lang.includes('IN') && 
+            (voice.name.toLowerCase().includes('hindi') || voice.name.toLowerCase().includes('bengali'))
+        );
+        
+        if (indianVoices.length > 0) {
+            console.log('✅ Found Indian voices that might work for Assamese:', indianVoices.map(v => v.name));
+            // Use the first Indian voice as fallback for Assamese
+            this.currentVoice = indianVoices[0];
+            console.log('✅ Using Indian voice as Assamese fallback:', indianVoices[0].name);
+        } else {
+            console.log('⚠️ No suitable Indian voices found for Assamese fallback');
+        }
     }
 
     getVoicesInfo() {
@@ -558,6 +596,31 @@ class TextToSpeech {
             assamese: this.voices.filter(v => v.lang.includes('as')).length,
             current: this.currentVoice?.name || 'None'
         };
+    }
+
+    checkAndSuggestLanguagePacks() {
+        console.log('🔧 Checking available voices for language support...');
+        
+        const voiceInfo = this.getVoicesInfo();
+        console.log('🔧 Voice availability:', voiceInfo);
+        
+        if (voiceInfo.hindi === 0) {
+            console.log('⚠️ No Hindi voices found. Consider installing Hindi language pack.');
+        }
+        
+        if (voiceInfo.assamese === 0) {
+            console.log('⚠️ No Assamese voices found. Consider installing Assamese language pack.');
+            console.log('💡 To install Assamese voices:');
+            console.log('   1. Go to Windows Settings > Time & Language > Language');
+            console.log('   2. Add Assamese (India) language');
+            console.log('   3. Install language pack');
+        }
+        
+        if (voiceInfo.total === 0) {
+            console.error('❌ No voices available at all. Speech synthesis may not be supported.');
+        }
+        
+        return voiceInfo;
     }
 }
 
@@ -571,6 +634,13 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 console.log('✅ Text-to-Speech initialized successfully');
+
+// Check language packs after initialization
+setTimeout(() => {
+    if (window.textToSpeech) {
+        window.textToSpeech.checkAndSuggestLanguagePacks();
+    }
+}, 1000);
 
 // Force voice update after a short delay to ensure avatar is loaded
 setTimeout(() => {
