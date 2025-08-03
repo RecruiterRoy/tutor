@@ -963,7 +963,7 @@
                                     preferred_language: language,
                                     avatar: selectedAvatar || 'teacher-avatar1.png',
                                     economic_status: 'Premium',
-                                    verification_status: 'approved', // Instant approval for all users
+                                    verification_status: 'pending', // Start as pending
                                     ai_avatar: 'roy-sir', // Default AI avatar
                                     created_at: new Date().toISOString(),
                                     updated_at: new Date().toISOString()
@@ -1028,7 +1028,7 @@
                                             preferred_language: language,
                                             avatar: selectedAvatar || 'teacher-avatar1.png',
                                             economic_status: 'Premium',
-                                            verification_status: 'approved', // Instant approval for all users
+                                            verification_status: 'pending', // Keep as pending
                                             ai_avatar: 'roy-sir', // Default AI avatar
                                             updated_at: new Date().toISOString()
                                         })
@@ -1047,6 +1047,31 @@
                             } else {
                                 console.log('✅ Profile created successfully:', profileData);
                             }
+                            
+                            // Schedule automatic approval after 3 seconds
+                            console.log('⏰ Scheduling automatic approval in 3 seconds...');
+                            setTimeout(async () => {
+                                try {
+                                    console.log('🔐 Auto-approving user profile...');
+                                    const { data: approvalData, error: approvalError } = await supabase
+                                        .from('user_profiles')
+                                        .update({
+                                            verification_status: 'approved',
+                                            economic_status: 'Premium',
+                                            updated_at: new Date().toISOString()
+                                        })
+                                        .eq('id', currentUser.id)
+                                        .select();
+                                    
+                                    if (approvalError) {
+                                        console.error('❌ Auto-approval failed:', approvalError);
+                                    } else {
+                                        console.log('✅ User auto-approved successfully:', approvalData);
+                                    }
+                                } catch (approvalError) {
+                                    console.error('❌ Auto-approval error:', approvalError);
+                                }
+                            }, 3000); // 3 seconds delay
                             
                             // Wait a moment for the profile to be fully saved
                             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1188,7 +1213,7 @@
                                     preferred_language: language,
                                     avatar: selectedAvatar || 'teacher-avatar1.png',
                                     economic_status: 'Premium',
-                                    verification_status: 'approved', // Instant approval for phone users
+                                    verification_status: 'pending', // Start as pending
                                     ai_avatar: 'roy-sir', // Default AI avatar
                                     created_at: new Date().toISOString(),
                                     updated_at: new Date().toISOString()
@@ -1253,7 +1278,7 @@
                                             preferred_language: language,
                                             avatar: selectedAvatar || 'teacher-avatar1.png',
                                             economic_status: 'Premium',
-                                            verification_status: 'approved', // Instant approval for phone users
+                                            verification_status: 'pending', // Keep as pending
                                             ai_avatar: 'roy-sir', // Default AI avatar
                                             updated_at: new Date().toISOString()
                                         })
@@ -1272,6 +1297,31 @@
                             } else {
                                 console.log('✅ Profile created successfully:', profileData);
                             }
+                            
+                            // Schedule automatic approval after 3 seconds
+                            console.log('⏰ Scheduling automatic approval in 3 seconds...');
+                            setTimeout(async () => {
+                                try {
+                                    console.log('🔐 Auto-approving user profile...');
+                                    const { data: approvalData, error: approvalError } = await supabase
+                                        .from('user_profiles')
+                                        .update({
+                                            verification_status: 'approved',
+                                            economic_status: 'Premium',
+                                            updated_at: new Date().toISOString()
+                                        })
+                                        .eq('id', currentUser.id)
+                                        .select();
+                                    
+                                    if (approvalError) {
+                                        console.error('❌ Auto-approval failed:', approvalError);
+                                    } else {
+                                        console.log('✅ User auto-approved successfully:', approvalData);
+                                    }
+                                } catch (approvalError) {
+                                    console.error('❌ Auto-approval error:', approvalError);
+                                }
+                            }, 3000); // 3 seconds delay
                             
                             // Wait a moment for the profile to be fully saved
                             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1379,7 +1429,7 @@
                         preferred_language: language, // From registration form
                         avatar: selectedAvatar || 'teacher-avatar1.png',
                         economic_status: 'Premium',
-                        verification_status: 'approved', // Auto-approved for OAuth users
+                        verification_status: 'pending', // Start as pending
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     };
@@ -1426,7 +1476,7 @@
                                     preferred_language: language,
                                     avatar: selectedAvatar || 'teacher-avatar1.png',
                                     economic_status: 'Premium',
-                                    verification_status: 'approved',
+                                    verification_status: 'pending', // Keep as pending
                                     updated_at: new Date().toISOString()
                                 })
                                 .eq('id', currentUser.id);
@@ -1552,7 +1602,7 @@
                     preferred_language: language,
                     avatar: selectedAvatar || 'teacher-avatar1.png',
                     economic_status: 'Premium',
-                    verification_status: 'approved',
+                    verification_status: 'pending',
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 }, {
