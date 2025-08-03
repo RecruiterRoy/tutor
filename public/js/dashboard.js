@@ -1378,9 +1378,21 @@ async function updateContext() {
 }
 
 async function sendMessage() {
+    console.log('🔧 sendMessage function called');
+    
     const input = document.getElementById('chatInput');
+    if (!input) {
+        console.error('❌ Chat input not found');
+        return;
+    }
+    
     const text = input.value.trim();
-    if (!text) return;
+    console.log('🔧 Input text:', text);
+    
+    if (!text) {
+        console.log('⚠️ Empty text, not sending');
+        return;
+    }
     
     // Check if user data is loaded
     if (!window.userDataLoaded) {
@@ -1389,6 +1401,7 @@ async function sendMessage() {
         return;
     }
     
+    console.log('🔧 Adding user message to chat...');
     // Add user message to chat
     await addMessage('user', text);
     input.value = '';
@@ -1432,6 +1445,7 @@ async function sendMessage() {
             chatHistory = subjectHistory.slice(-10); // Last 10 messages for context
         }
 
+        console.log('🔧 Sending to AI backend...');
         // Send to AI backend with complete user profile and chat history
         const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
@@ -1447,10 +1461,12 @@ async function sendMessage() {
             })
         });
         
+        console.log('🔧 Response received:', response.status);
         const data = await response.json();
         removeTypingIndicator();
         
         if (data.success && data.response) {
+            console.log('✅ AI response received');
             await addMessage('ai', data.response);
             
             // Save message to subject history if subject manager is active
@@ -1465,62 +1481,13 @@ async function sendMessage() {
             // Update the last response date after successful response
             lastResponseDate = today;
         } else {
-            console.error('AI response error:', data);
+            console.error('❌ AI response error:', data);
             await addMessage('ai', 'Sorry, I could not get a response from the AI.');
         }
     } catch (err) {
-        console.error('Send message error:', err);
+        console.error('❌ Send message error:', err);
         removeTypingIndicator();
         await addMessage('ai', 'Error connecting to AI server.');
-    }
-}
-
-async function addMessage(role, content) {
-    const chatMessages = document.getElementById('chatMessages');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-${role} p-4 rounded-2xl mb-4`;
-    
-    // Process Mermaid diagrams
-    // Ensure content is a string before processing
-    const contentString = typeof content === 'string' ? content : JSON.stringify(content);
-    let processedContent = contentString;
-    const hasMermaid = contentString.includes('```mermaid');
-    
-    if (hasMermaid) {
-        processedContent = contentString.replace(/```mermaid([\s\S]*?)```/g, 
-            '<div class="mermaid bg-gray-800 p-4 rounded-lg my-4">$1</div>');
-    }
-    
-    // Process other markdown
-    processedContent = marked.parse(processedContent);
-    
-    messageDiv.innerHTML = `
-        <div class="flex items-start space-x-4">
-            <div class="w-10 h-10 ${role === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gradient-to-r from-green-500 to-blue-600'} rounded-full flex items-center justify-center flex-shrink-0">
-                <span class="text-white font-bold text-sm">${role === 'user' ? 'You' : 'AI'}</span>
-            </div>
-            <div class="flex-1 overflow-x-auto">
-                <div class="text-white message-content prose prose-invert max-w-none">${processedContent}</div>
-                <p class="text-gray-400 text-xs mt-2">Just now</p>
-            </div>
-        </div>
-    `;
-    
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    // Render diagrams after a small delay
-    if (hasMermaid) {
-        setTimeout(renderDiagrams, 100);
-    }
-
-    if (role === 'ai') {
-        // Use the new TTS system for AI responses
-        if (window.textToSpeech) {
-            window.textToSpeech.speak(content, { role: 'ai' });
-        } else {
-            speakText(content);
-        }
     }
 }
 
@@ -1883,14 +1850,36 @@ async function toggleVoiceRecording() {
             console.log('🔧 Starting voice recording...');
             // Check microphone permission first
             try {
-                await requestMicrophonePermission();
+                console.log('🔧 Checking microphone permission...');
+                
+                // Try to get microphone access
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log('✅ Microphone permission granted');
+                
+                // Stop the stream immediately after getting permission
+                stream.getTracks().forEach(track => track.stop());
                 
                 // Start listening
                 recognition.start();
                 showSuccess('Voice recording started - speak now!');
+                
             } catch (permissionError) {
                 console.error('❌ Microphone permission error:', permissionError);
-                showError('Microphone permission required. Please allow microphone access and try again.');
+                
+                // Check if it's actually a permission error or just a browser quirk
+                if (permissionError.name === 'NotAllowedError') {
+                    showError('Microphone permission required. Please allow microphone access and try again.');
+                } else {
+                    // For other errors, try to start recognition anyway
+                    console.log('⚠️ Permission error, but trying to start recognition anyway...');
+                    try {
+                        recognition.start();
+                        showSuccess('Voice recording started - speak now!');
+                    } catch (startError) {
+                        console.error('❌ Failed to start recognition:', startError);
+                        showError('Could not start voice recording. Please try again.');
+                    }
+                }
             }
         }
         
@@ -3066,3 +3055,62 @@ window.testButtonClick = function(buttonName) {
 };
 
 console.log('✅ All functions assigned to window object');
+
+async function addMessage(role, content) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message-${role} p-4 rounded-2xl mb-4`;
+    
+    // Process Mermaid diagrams
+    // Ensure content is a string before processing
+    const contentString = typeof content === 'string' ? content : JSON.stringify(content);
+    let processedContent = contentString;
+    const hasMermaid = contentString.includes('```mermaid');
+    
+    if (hasMermaid) {
+        processedContent = contentString.replace(/```mermaid([\s\S]*?)```/g, 
+            '<div class="mermaid bg-gray-800 p-4 rounded-lg my-4">$1</div>');
+    }
+    
+    // Process other markdown
+    processedContent = marked.parse(processedContent);
+    
+    messageDiv.innerHTML = `
+        <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 ${role === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gradient-to-r from-green-500 to-blue-600'} rounded-full flex items-center justify-center flex-shrink-0">
+                <span class="text-white font-bold text-sm">${role === 'user' ? 'You' : 'AI'}</span>
+            </div>
+            <div class="flex-1 overflow-x-auto">
+                <div class="text-white message-content prose prose-invert max-w-none">${processedContent}</div>
+                <p class="text-gray-400 text-xs mt-2">Just now</p>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Render diagrams after a small delay
+    if (hasMermaid) {
+        setTimeout(renderDiagrams, 100);
+    }
+
+    if (role === 'ai') {
+        // Use the new TTS system for AI responses
+        if (window.textToSpeech) {
+            window.textToSpeech.speak(content, { role: 'ai' });
+        } else {
+            speakText(content);
+        }
+    }
+}
+
+function showTypingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typing-indicator';
+    typingDiv.className = 'typing-indicator';
+    typingDiv.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
