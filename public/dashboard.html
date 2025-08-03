@@ -49,6 +49,15 @@
         console.log('🔧 Supabase URL:', window.supabaseUrl);
         console.log('🔧 Supabase Key:', window.supabaseKey ? 'Available' : 'Not found');
         console.log('🔧 Anthropic API Key:', window.anthropicApiKey ? 'Available' : 'Not found');
+        
+        // Add error handling for script loading
+        window.addEventListener('error', function(e) {
+            console.error('❌ Script loading error:', e);
+            if (e.target && e.target.src && e.target.src.includes('supabase')) {
+                console.error('❌ Supabase script failed to load');
+                showError('Failed to load database library. Please check your internet connection.');
+            }
+        });
     </script>
     <!-- Load essential scripts -->
     <script src="/public/js/gptService.js" defer></script>

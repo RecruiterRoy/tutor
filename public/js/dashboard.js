@@ -80,16 +80,68 @@ window.userDataLoaded = false; // Flag to track if user data is loaded
 // Initialize Supabase when page loads
 async function initializeSupabase() {
     try {
-        // Use the global supabaseClient that's initialized in config.js
+        console.log('🔧 Initializing Supabase...');
+        
+        // Check if Supabase client already exists
         if (window.supabaseClient) {
-            console.log('Supabase initialized successfully');
-        } else {
-            throw new Error('Supabase client not available');
+            console.log('✅ Supabase client already available');
+            return window.supabaseClient;
         }
+        
+        // Try to initialize Supabase client
+        console.log('🔄 Attempting to initialize Supabase client...');
+        
+        // Check if Supabase library is loaded
+        if (typeof window.supabase === 'undefined') {
+            console.error('❌ Supabase library not loaded');
+            throw new Error('Supabase library not available. Please check your internet connection.');
+        }
+        
+        // Check if config is available
+        if (!window.TUTOR_CONFIG) {
+            console.error('❌ TUTOR_CONFIG not available');
+            throw new Error('Application configuration not loaded.');
+        }
+        
+        // Create Supabase client
+        const supabaseUrl = window.TUTOR_CONFIG.SUPABASE_URL;
+        const supabaseKey = window.TUTOR_CONFIG.SUPABASE_ANON_KEY;
+        
+        if (!supabaseUrl || !supabaseKey) {
+            console.error('❌ Supabase credentials not found in config');
+            throw new Error('Database configuration incomplete.');
+        }
+        
+        console.log('🔧 Creating Supabase client with URL:', supabaseUrl);
+        window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Test the connection
+        const { data, error } = await window.supabaseClient.auth.getUser();
+        if (error) {
+            console.warn('⚠️ Auth check failed, but client created:', error);
+            // Don't throw error here, client might still work for other operations
+        } else {
+            console.log('✅ Supabase client initialized and tested successfully');
+        }
+        
+        return window.supabaseClient;
+        
     } catch (error) {
-        console.error('Failed to initialize Supabase:', error);
-        alert('Failed to initialize database connection. Please try again.');
-        window.location.href = '/login';
+        console.error('❌ Failed to initialize Supabase:', error);
+        
+        // Show user-friendly error message
+        const errorMessage = error.message || 'Failed to initialize database connection.';
+        showError(errorMessage + ' Please check your internet connection and try again.');
+        
+        // Don't redirect immediately, let the user see the error
+        // Only redirect if it's a critical auth error
+        if (error.message && error.message.includes('auth')) {
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 3000);
+        }
+        
+        throw error;
     }
 }
 
@@ -454,9 +506,22 @@ async function initializeDashboard() {
         // Get current user from Supabase auth
         const { data: { user }, error: authError } = await window.supabaseClient.auth.getUser();
         
-        if (authError || !user) {
-            console.error('❌ No authenticated user found:', authError);
-            window.location.href = '/login.html';
+        if (authError) {
+            console.error('❌ Auth error:', authError);
+            // Don't redirect immediately, show error instead
+            showError('Authentication error. Please log in again.');
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 3000);
+            return;
+        }
+        
+        if (!user) {
+            console.error('❌ No authenticated user found');
+            showError('No user found. Please log in again.');
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 3000);
             return;
         }
         
@@ -547,10 +612,8 @@ async function initializeDashboard() {
     } catch (error) {
         console.error('❌ Dashboard initialization failed:', error);
         showError('Failed to initialize dashboard. Please refresh the page.');
+        // Don't redirect immediately, let user see the error
     }
-    
-    // currentUser is already set from authentication
-    await loadUserData();
 }
 
 async function loadUserData() {
@@ -2627,6 +2690,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 DOM loaded, initializing dashboard...');
     
     try {
+        // Wait for Supabase to be available
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        while (typeof window.supabase === 'undefined' && attempts < maxAttempts) {
+            console.log(`🔄 Waiting for Supabase to load... (attempt ${attempts + 1}/${maxAttempts})`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            attempts++;
+        }
+        
+        if (typeof window.supabase === 'undefined') {
+            throw new Error('Supabase library failed to load after multiple attempts');
+        }
+        
+        console.log('✅ Supabase library loaded successfully');
+        
         // Test that key functions are available
         console.log('🔧 Testing function availability:');
         console.log('- toggleVoiceRecording:', typeof window.toggleVoiceRecording);
@@ -2671,6 +2750,37 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch (error) {
         console.error('❌ Dashboard initialization failed:', error);
         showError('Failed to initialize dashboard. Please refresh the page.');
+        
+        // Fallback: Initialize basic UI functionality even if Supabase fails
+        try {
+            console.log('🔄 Attempting fallback initialization...');
+            
+            // Set up basic event listeners
+            setupEventListeners();
+            
+            // Show basic welcome message
+            showWelcomeMessage();
+            
+            // Initialize voice features if possible
+            try {
+                initializeVoiceFeatures();
+                initSpeechRecognition();
+            } catch (voiceError) {
+                console.warn('⚠️ Voice features failed to initialize:', voiceError);
+            }
+            
+            // Apply mobile optimizations
+            if (window.isMobile) {
+                applyMobileOptimizations();
+                setupMobileEventListeners();
+                enableMobileFeatures();
+            }
+            
+            console.log('✅ Fallback initialization completed');
+            
+        } catch (fallbackError) {
+            console.error('❌ Fallback initialization also failed:', fallbackError);
+        }
     }
 });
 
