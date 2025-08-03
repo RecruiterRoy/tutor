@@ -1668,19 +1668,28 @@
             const refreshToken = urlParams.get('refresh_token');
             const error = urlParams.get('error');
             const errorDescription = urlParams.get('error_description');
+            const type = urlParams.get('type');
             
-            console.log('🔍 URL parameters:', { accessToken, refreshToken, error, errorDescription });
+            console.log('🔍 URL parameters:', { accessToken, refreshToken, error, errorDescription, type });
             
             if (error) {
                 console.error('❌ Email confirmation error:', error, errorDescription);
-                showMessage('Email confirmation encountered an error. Please try logging in directly.', 'error');
+                
+                // Handle specific error types
+                if (error === '500' || errorDescription?.includes('confirming user')) {
+                    showMessage('Email confirmation encountered a server error. Please try logging in directly - your email may already be confirmed.', 'warning');
+                } else {
+                    showMessage('Email confirmation encountered an error. Please try logging in directly.', 'error');
+                }
+                
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 3000);
                 return;
             }
             
-            if (accessToken && refreshToken) {
+            // Check for email confirmation type
+            if (type === 'email_confirmation' || accessToken) {
                 console.log('📧 Email confirmation detected');
                 handleEmailConfirmation();
             }
