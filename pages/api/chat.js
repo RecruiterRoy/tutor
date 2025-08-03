@@ -22,6 +22,10 @@ export default async function handler(req, res) {
   try {
     const { messages, grade, subject, response_format, language, user_profile, avatar } = req.body;
 
+    console.log('🔧 API received avatar:', avatar);
+    console.log('🔧 API received language:', language);
+    console.log('🔧 API received user_profile:', user_profile);
+
     // Get the last user message
     const lastUserMessage = messages[messages.length - 1]?.content || '';
     
@@ -69,6 +73,9 @@ export default async function handler(req, res) {
     const isHindiTeacher = avatar === 'miss-sapna' || language === 'hi';
     const isAssameseTeacher = avatar === 'baruah-sir' || language === 'as';
     
+    console.log('🔧 Avatar check - isHindiTeacher:', isHindiTeacher, 'isAssameseTeacher:', isAssameseTeacher);
+    console.log('🔧 Avatar value:', avatar, 'Language value:', language);
+    
     let teacherPersona;
     
     if (isAssameseTeacher) {
@@ -81,6 +88,7 @@ export default async function handler(req, res) {
         cultural: 'Tell short stories of freedom fighters and Northeast India (max 1 per hour, 3 per day). Reference Assamese culture, traditions, and Northeast Indian context.',
         specialFeatures: 'Very articulate speaking style, motivates students by asking if they understood or need different explanation. Uses CBSE syllabus in Assamese language.'
       };
+      console.log('✅ Selected Baruah Sir persona');
     } else if (isHindiTeacher) {
       teacherPersona = {
         name: 'Miss Sapna',
@@ -90,6 +98,7 @@ export default async function handler(req, res) {
         greeting: 'Namaste! Main Miss Sapna hun.',
         cultural: 'Reference Indian festivals, traditions, and relatable examples from Indian daily life.'
       };
+      console.log('✅ Selected Miss Sapna persona');
     } else {
       teacherPersona = {
         name: 'Roy Sir',
@@ -99,7 +108,10 @@ export default async function handler(req, res) {
         greeting: 'Hello! I am Roy Sir.',
         cultural: 'Use international examples but keep Indian context in mind.'
       };
+      console.log('✅ Selected Roy Sir persona');
     }
+    
+    console.log('🔧 Final teacher persona:', teacherPersona.name);
 
     // Enhanced system prompt with teacher persona and user data
     const systemPrompt = `You are ${teacherPersona.name}, an expert AI tutor for Indian students with access to a comprehensive knowledge bank of educational content.
@@ -201,6 +213,10 @@ export async function POST(request) {
   try {
     const { messages, grade, subject, response_format, language, user_profile, avatar } = await request.json();
 
+    console.log('🔧 API received avatar:', avatar);
+    console.log('🔧 API received language:', language);
+    console.log('🔧 API received user_profile:', user_profile);
+
     // Get the last user message
     const lastUserMessage = messages[messages.length - 1]?.content || '';
     
@@ -248,6 +264,9 @@ export async function POST(request) {
     const isHindiTeacher = avatar === 'miss-sapna' || language === 'hi';
     const isAssameseTeacher = avatar === 'baruah-sir' || language === 'as';
     
+    console.log('🔧 Avatar check - isHindiTeacher:', isHindiTeacher, 'isAssameseTeacher:', isAssameseTeacher);
+    console.log('🔧 Avatar value:', avatar, 'Language value:', language);
+    
     let teacherPersona;
     
     if (isAssameseTeacher) {
@@ -260,6 +279,7 @@ export async function POST(request) {
         cultural: 'Tell short stories of freedom fighters and Northeast India (max 1 per hour, 3 per day). Reference Assamese culture, traditions, and Northeast Indian context.',
         specialFeatures: 'Very articulate speaking style, motivates students by asking if they understood or need different explanation. Uses CBSE syllabus in Assamese language.'
       };
+      console.log('✅ Selected Baruah Sir persona');
     } else if (isHindiTeacher) {
       teacherPersona = {
         name: 'Miss Sapna',
@@ -269,6 +289,7 @@ export async function POST(request) {
         greeting: 'Namaste! Main Miss Sapna hun.',
         cultural: 'Reference Indian festivals, traditions, and relatable examples from Indian daily life.'
       };
+      console.log('✅ Selected Miss Sapna persona');
     } else {
       teacherPersona = {
         name: 'Roy Sir',
@@ -278,7 +299,10 @@ export async function POST(request) {
         greeting: 'Hello! I am Roy Sir.',
         cultural: 'Use international examples but keep Indian context in mind.'
       };
+      console.log('✅ Selected Roy Sir persona');
     }
+    
+    console.log('🔧 Final teacher persona:', teacherPersona.name);
 
     // Enhanced system prompt with teacher persona and user data
     const systemPrompt = `You are ${teacherPersona.name}, an expert AI tutor for Indian students with access to a comprehensive knowledge bank of educational content.

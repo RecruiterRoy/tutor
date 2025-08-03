@@ -1396,8 +1396,10 @@ async function sendMessage() {
             shortWelcomeMessage: getShortWelcomeMessage()
         };
         
+        console.log('�� Sending to AI with avatar ID:', requestBody.avatar);
         console.log('🔧 Sending to AI with teacher name:', requestBody.teacher);
         console.log('🔧 Sending to AI with avatar gender:', requestBody.avatarGender);
+        console.log('🔧 Full request body:', requestBody);
         
         const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
