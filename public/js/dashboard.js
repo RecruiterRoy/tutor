@@ -2894,6 +2894,12 @@ window.saveChatMessage = function(message, response) {
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 DOM loaded, initializing dashboard...');
     
+    // Prevent multiple initializations
+    if (window.dashboardInitialized) {
+        console.log('⚠️ Dashboard already initialized, skipping...');
+        return;
+    }
+    
     try {
         // Wait for Supabase to be available
         let attempts = 0;
@@ -2953,6 +2959,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             enableMobileFeatures();
         }
         
+        // Mark as initialized
+        window.dashboardInitialized = true;
         console.log('✅ Dashboard initialization complete');
         
     } catch (error) {
@@ -2969,9 +2977,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Show basic welcome message
             showWelcomeMessage();
             
-            // Initialize voice features if possible
+            // Initialize voice features
             try {
                 initializeVoiceFeatures();
+                populateVoices();
                 initSpeechRecognition();
             } catch (voiceError) {
                 console.warn('⚠️ Voice features failed to initialize:', voiceError);
@@ -2984,6 +2993,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 enableMobileFeatures();
             }
             
+            // Mark as initialized
+            window.dashboardInitialized = true;
             console.log('✅ Fallback initialization completed');
             
         } catch (fallbackError) {
@@ -2999,14 +3010,15 @@ window.addEventListener('load', function() {
     // Only initialize if not already done
     if (!window.dashboardInitialized) {
         console.log('🔄 Dashboard not initialized, starting initialization...');
-        window.dashboardInitialized = true;
         
         // The DOMContentLoaded listener should handle this, but this is a fallback
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', async function() {
-                await initializeDashboard();
+                if (!window.dashboardInitialized) {
+                    await initializeDashboard();
+                }
             });
-        } else {
+        } else if (!window.dashboardInitialized) {
             initializeDashboard();
         }
     }
@@ -3295,12 +3307,20 @@ async function processRequestQueue() {
     lastRequestTime = now;
     
     try {
-        const { requestFunction, resolve, reject } = requestQueue.shift();
+        const request = requestQueue.shift();
+        if (!request) {
+            isProcessingRequest = false;
+            return;
+        }
+        
+        const { requestFunction, resolve, reject } = request;
         const result = await requestFunction();
         resolve(result);
     } catch (error) {
-        const { reject } = requestQueue.shift();
-        reject(error);
+        const request = requestQueue.shift();
+        if (request) {
+            request.reject(error);
+        }
     } finally {
         isProcessingRequest = false;
         
@@ -3326,12 +3346,18 @@ async function loadUserData() {
                 }
             }
             
-            const { data: { user }, error: userError } = await window.supabase.auth.getUser();
+            // Use the correct Supabase client
+            const supabaseClient = window.supabaseClient || window.supabase;
+            if (!supabaseClient) {
+                throw new Error('Supabase client not available');
+            }
+            
+            const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
             if (userError || !user) {
                 throw new Error('User not authenticated');
             }
             
-            const { data: profile, error: profileError } = await window.supabase
+            const { data: profile, error: profileError } = await supabaseClient
                 .from('user_profiles')
                 .select('*')
                 .eq('id', user.id)
@@ -3383,10 +3409,20 @@ async function sendMessage() {
     }
     
     // Check if user data is loaded
-    if (!window.userDataLoaded) {
+    if (!window.userDataLoaded || !window.userData) {
         console.error('❌ User data not loaded yet');
         await addMessage('ai', 'Please wait, loading your profile...');
-        return;
+        
+        // Try to load user data
+        try {
+            console.log('🔄 Attempting to load user data...');
+            await loadUserData();
+            console.log('✅ User data loaded successfully');
+        } catch (error) {
+            console.error('❌ Failed to load user data:', error);
+            await addMessage('ai', 'Sorry, I cannot process your message right now. Please refresh the page and try again.');
+            return;
+        }
     }
     
     console.log('🔧 Adding user message to chat...');
