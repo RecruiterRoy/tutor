@@ -320,115 +320,45 @@ class TextToSpeech {
     detectLanguageAndSetVoice(text) {
         const currentAvatar = window.selectedAvatar || 'roy-sir';
         console.log('TTS Voice Selection - Current Avatar:', currentAvatar);
-        console.log('Available voices:', this.voices.map(v => `${v.name} (${v.lang})`));
 
         if (currentAvatar === 'ms-sapana') {
-            console.log('Selecting voice for Ms. Sapana (Hindi voice)');
-            // Priority 1: Google Hindi voice
+            // Simplified Hindi voice selection
             let hindiVoice = this.voices.find(voice =>
-                voice.name.toLowerCase().includes('google') &&
-                (voice.name.toLowerCase().includes('hindi') || voice.lang.includes('hi-IN'))
+                voice.lang.includes('hi-IN') || voice.lang.includes('hi')
             );
-            // Priority 2: Any Hindi voice (prefer female)
+            
             if (!hindiVoice) {
                 hindiVoice = this.voices.find(voice =>
-                    (voice.name.toLowerCase().includes('hindi') || voice.lang.includes('hi-IN') || voice.lang.includes('hi')) &&
-                    !voice.name.toLowerCase().includes('male')
+                    voice.lang.includes('IN')
                 );
             }
-            // Priority 3: Any Hindi voice (any gender)
-            if (!hindiVoice) {
-                hindiVoice = this.voices.find(voice =>
-                    voice.name.toLowerCase().includes('hindi') ||
-                    voice.lang.includes('hi-IN') ||
-                    voice.lang.includes('hi')
-                );
-            }
-            // Priority 4: Any Indian voice
-            if (!hindiVoice) {
-                hindiVoice = this.voices.find(voice =>
-                    voice.lang.includes('IN') ||
-                    voice.name.toLowerCase().includes('india')
-                );
-            }
+            
             if (hindiVoice) {
                 this.currentVoice = hindiVoice;
-                console.log('✅ Ms. Sapana using Hindi voice:', hindiVoice.name, 'Language:', hindiVoice.lang);
+                console.log('✅ Ms. Sapana using Hindi voice:', hindiVoice.name);
                 return 'hi-IN';
             } else {
-                console.warn('❌ No Hindi voice found for Ms. Sapana. Available voices:', this.voices.map(v => v.name));
+                console.warn('❌ No Hindi voice found, using default');
                 return 'hi-IN';
             }
         } else {
-            // Roy Sir - ALWAYS use English voice
-            console.log('Selecting voice for Roy Sir (English voice)');
-            // Priority 1: Microsoft Ravi (if available)
+            // Simplified English voice selection
             let englishVoice = this.voices.find(voice =>
-                voice.name.toLowerCase().includes('microsoft') &&
-                voice.name.toLowerCase().includes('ravi')
+                voice.lang.includes('en-IN')
             );
             
-            // Priority 2: Google Indian English voices (more natural)
-            if (!englishVoice) {
-                englishVoice = this.voices.find(voice =>
-                    voice.name.toLowerCase().includes('google') &&
-                    voice.lang.includes('en-IN') &&
-                    !voice.name.toLowerCase().includes('female')
-                );
-            }
-            if (!englishVoice) {
-                englishVoice = this.voices.find(voice =>
-                    voice.name.toLowerCase().includes('google') &&
-                    voice.lang.includes('en-IN') &&
-                    !voice.name.toLowerCase().includes('female')
-                );
-            }
-            
-            // Priority 3: Any Indian English voice (prefer male)
-            if (!englishVoice) {
-                englishVoice = this.voices.find(voice =>
-                    voice.lang.includes('en-IN') &&
-                    !voice.name.toLowerCase().includes('female')
-                );
-            }
-            
-            // Priority 4: Any Ravi voice (male)
-            if (!englishVoice) {
-                englishVoice = this.voices.find(voice =>
-                    voice.name.toLowerCase().includes('ravi') &&
-                    !voice.name.toLowerCase().includes('female')
-                );
-            }
-            
-            // Priority 5: Any Indian English voice (any gender)
-            if (!englishVoice) {
-                englishVoice = this.voices.find(voice =>
-                    voice.lang.includes('en-IN')
-                );
-            }
-            
-            // Priority 6: Any English voice with neutral accent (prefer male)
-            if (!englishVoice) {
-                englishVoice = this.voices.find(voice =>
-                    (voice.lang.includes('en-US') || voice.lang.includes('en-GB')) &&
-                    !voice.name.toLowerCase().includes('female') &&
-                    !voice.name.toLowerCase().includes('southern') &&
-                    !voice.name.toLowerCase().includes('australian')
-                );
-            }
-            
-            // Priority 7: Any English voice (any gender)
             if (!englishVoice) {
                 englishVoice = this.voices.find(voice =>
                     voice.lang.includes('en-US') || voice.lang.includes('en-GB')
                 );
             }
+            
             if (englishVoice) {
                 this.currentVoice = englishVoice;
-                console.log('✅ Roy Sir using English voice:', englishVoice.name, 'Language:', englishVoice.lang);
+                console.log('✅ Roy Sir using English voice:', englishVoice.name);
                 return 'en-IN';
             } else {
-                console.warn('❌ No English voice found for Roy Sir. Available voices:', this.voices.map(v => v.name));
+                console.warn('❌ No English voice found, using default');
                 return 'en-IN';
             }
         }

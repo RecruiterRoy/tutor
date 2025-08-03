@@ -179,6 +179,12 @@ class SubjectManager {
             }
             this.lastSubjectChange = Date.now();
             
+            // Prevent automatic changes to English unless explicitly requested
+            if (this.currentSubject && this.currentSubject !== subjectName && subjectName === 'English') {
+                console.log('Preventing automatic change to English - user must explicitly select');
+                return;
+            }
+            
             // If switching to a different subject, ask for confirmation
             if (this.currentSubject && this.currentSubject !== subjectName) {
                 const confirmed = confirm(`Do you want to switch from ${this.currentSubject} to ${subjectName}? Your current conversation will be saved.`);
