@@ -15,15 +15,69 @@ window.closeSidebar = function() {
 };
 
 window.showSection = function(sectionName) {
-    console.log('showSection called - waiting for implementation:', sectionName);
-};
+    console.log('🔧 Showing section:', sectionName);
+    
+    // Hide all sections
+    const sections = document.querySelectorAll('[id$="Section"]');
+    console.log(`🔧 Found ${sections.length} sections to hide`);
+    sections.forEach(section => {
+        section.classList.add('hidden');
+    });
+    
+    // Remove active class from all nav items
+    const navItems = document.querySelectorAll('.nav-item');
+    console.log(`🔧 Found ${navItems.length} nav items to update`);
+    navItems.forEach(item => {
+        item.classList.remove('active', 'bg-white/10', 'text-white');
+        item.classList.add('text-gray-300');
+    });
+    
+    // Show selected section
+    const selectedSection = document.getElementById(sectionName + 'Section');
+    if (selectedSection) {
+        selectedSection.classList.remove('hidden');
+        console.log('✅ Section shown:', sectionName + 'Section');
+    } else {
+        console.log('❌ Section not found:', sectionName + 'Section');
+    }
+    
+    // Add active class to nav item based on text content
+    navItems.forEach(item => {
+        const text = item.textContent.trim();
+        if ((sectionName === 'chat' && (text.includes('Classroom') || text.includes('🏫'))) ||
+            (sectionName === 'materials' && (text.includes('Study Materials') || text.includes('📚'))) ||
+            (sectionName === 'progress' && (text.includes('Progress') || text.includes('📊'))) ||
+            (sectionName === 'settings' && (text.includes('Settings') || text.includes('⚙️')))) {
+            item.classList.add('active', 'bg-white/10', 'text-white');
+            item.classList.remove('text-gray-300');
+            console.log('✅ Active class added to nav item:', text);
+        }
+    });
+    
+    console.log('✅ Section navigation completed for:', sectionName);
+}
 
 window.saveChatMessage = function(message, response) {
     console.log('saveChatMessage called - waiting for implementation');
 };
 
 window.closeMobileSidebar = function() {
-    console.log('closeMobileSidebar called - waiting for implementation');
+    console.log('🔧 Closing mobile sidebar...');
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+        
+        // Restore body scroll
+        if (window.isMobile) {
+            document.body.style.overflow = '';
+        }
+        console.log('✅ Mobile sidebar closed');
+    } else {
+        console.log('❌ Mobile sidebar elements not found');
+    }
 };
 
 window.showSubjectManager = function() {
@@ -31,7 +85,22 @@ window.showSubjectManager = function() {
 };
 
 window.openMobileSidebar = function() {
-    console.log('openMobileSidebar called - waiting for implementation');
+    console.log('🔧 Opening mobile sidebar...');
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        
+        // Prevent body scroll on mobile
+        if (window.isMobile) {
+            document.body.style.overflow = 'hidden';
+        }
+        console.log('✅ Mobile sidebar opened');
+    } else {
+        console.log('❌ Mobile sidebar elements not found');
+    }
 };
 
 window.playTTS = function() {
@@ -984,6 +1053,11 @@ function setupEventListeners() {
             console.log('🔧 Voice button clicked, calling toggleVoiceRecording');
             toggleVoiceRecording();
         });
+        // Add onclick as fallback
+        voiceButton.onclick = () => {
+            console.log('🔧 Voice button onclick fallback');
+            toggleVoiceRecording();
+        };
         console.log('✅ Voice button listener added');
     } else {
         console.log('❌ Voice button not found');
@@ -998,6 +1072,11 @@ function setupEventListeners() {
             console.log('🔧 Send button clicked, calling sendMessage');
             sendMessage();
         });
+        // Add onclick as fallback
+        sendButton.onclick = () => {
+            console.log('🔧 Send button onclick fallback');
+            sendMessage();
+        };
         console.log('✅ Send button listener added');
     } else {
         console.log('❌ Send button not found');
@@ -1054,6 +1133,11 @@ function setupEventListeners() {
             console.log('🔧 Mobile sidebar button clicked, calling openMobileSidebar');
             openMobileSidebar();
         });
+        // Add onclick as fallback
+        mobileSidebarButton.onclick = () => {
+            console.log('🔧 Mobile sidebar button onclick fallback');
+            openMobileSidebar();
+        };
         console.log('✅ Mobile sidebar button listener added');
     } else {
         console.log('❌ Mobile sidebar button not found');
@@ -1066,6 +1150,11 @@ function setupEventListeners() {
             console.log('🔧 Close mobile sidebar button clicked, calling closeMobileSidebar');
             closeMobileSidebar();
         });
+        // Add onclick as fallback
+        closeMobileSidebarButton.onclick = () => {
+            console.log('🔧 Close mobile sidebar button onclick fallback');
+            closeMobileSidebar();
+        };
         console.log('✅ Close mobile sidebar button listener added');
     } else {
         console.log('❌ Close mobile sidebar button not found');
@@ -1587,17 +1676,18 @@ function setupVoiceSettingsListeners() {
 
 function initSpeechRecognition() {
     try {
+        console.log('🔧 Initializing speech recognition...');
         const voiceButton = document.getElementById('voiceButton');
         
         if (!voiceButton) {
-            console.log('Voice button not found');
+            console.log('❌ Voice button not found');
             return;
         }
         
         // Check for speech recognition support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            console.log('Speech recognition not supported');
+            console.log('❌ Speech recognition not supported');
             voiceButton.style.display = 'none';
             showError('Voice recognition not supported in this browser');
             return;
@@ -1605,11 +1695,12 @@ function initSpeechRecognition() {
 
         // Check if voice features are enabled in config
         if (!window.TUTOR_CONFIG?.features?.voiceInput) {
-            console.log('Voice input disabled in config');
+            console.log('❌ Voice input disabled in config');
             voiceButton.style.display = 'none';
             return;
         }
 
+        console.log('🔧 Creating speech recognition instance...');
         recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
@@ -1624,7 +1715,7 @@ function initSpeechRecognition() {
         }
 
         recognition.onstart = () => {
-            console.log('Speech recognition started');
+            console.log('✅ Speech recognition started');
             isRecording = true;
             const voiceIcon = document.getElementById('voiceIcon');
             if (voiceIcon) {
@@ -1644,7 +1735,7 @@ function initSpeechRecognition() {
         recognition.onresult = (event) => {
             clearTimeout(recognitionTimeout);
             const transcript = event.results[0][0].transcript;
-            console.log('Speech recognized:', transcript);
+            console.log('✅ Speech recognized:', transcript);
             document.getElementById('chatInput').value = transcript;
             showSuccess("Voice input received: " + transcript);
             stopRecording();
@@ -1652,7 +1743,7 @@ function initSpeechRecognition() {
 
         recognition.onerror = (event) => {
             clearTimeout(recognitionTimeout);
-            console.error('Speech recognition error:', event.error);
+            console.error('❌ Speech recognition error:', event.error);
             
             let errorMessage = 'Voice input error: ';
             switch(event.error) {
@@ -1684,10 +1775,10 @@ function initSpeechRecognition() {
             stopRecording();
         };
 
-        console.log('Speech recognition initialized successfully');
+        console.log('✅ Speech recognition initialized successfully');
 
     } catch (error) {
-        console.error('Failed to initialize speech recognition:', error);
+        console.error('❌ Failed to initialize speech recognition:', error);
         const voiceButton = document.getElementById('voiceButton');
         if (voiceButton) {
             voiceButton.style.display = 'none';
@@ -1957,16 +2048,19 @@ async function logout() {
 
 // UI Functions
 function showSection(sectionName) {
-    console.log('Showing section:', sectionName);
+    console.log('🔧 Showing section:', sectionName);
     
     // Hide all sections
     const sections = document.querySelectorAll('[id$="Section"]');
+    console.log(`🔧 Found ${sections.length} sections to hide`);
     sections.forEach(section => {
         section.classList.add('hidden');
     });
     
     // Remove active class from all nav items
-    document.querySelectorAll('.nav-item').forEach(item => {
+    const navItems = document.querySelectorAll('.nav-item');
+    console.log(`🔧 Found ${navItems.length} nav items to update`);
+    navItems.forEach(item => {
         item.classList.remove('active', 'bg-white/10', 'text-white');
         item.classList.add('text-gray-300');
     });
@@ -1975,19 +2069,25 @@ function showSection(sectionName) {
     const selectedSection = document.getElementById(sectionName + 'Section');
     if (selectedSection) {
         selectedSection.classList.remove('hidden');
-        console.log('Section shown:', sectionName + 'Section');
+        console.log('✅ Section shown:', sectionName + 'Section');
     } else {
-        console.log('Section not found:', sectionName + 'Section');
+        console.log('❌ Section not found:', sectionName + 'Section');
     }
     
-    // Add active class to nav item
-    const activeNavItems = document.querySelectorAll(`[onclick*="showSection('${sectionName}')"]`);
-    activeNavItems.forEach(activeNavItem => {
-        activeNavItem.classList.add('active', 'bg-white/10', 'text-white');
-        activeNavItem.classList.remove('text-gray-300');
+    // Add active class to nav item based on text content
+    navItems.forEach(item => {
+        const text = item.textContent.trim();
+        if ((sectionName === 'chat' && (text.includes('Classroom') || text.includes('🏫'))) ||
+            (sectionName === 'materials' && (text.includes('Study Materials') || text.includes('📚'))) ||
+            (sectionName === 'progress' && (text.includes('Progress') || text.includes('📊'))) ||
+            (sectionName === 'settings' && (text.includes('Settings') || text.includes('⚙️')))) {
+            item.classList.add('active', 'bg-white/10', 'text-white');
+            item.classList.remove('text-gray-300');
+            console.log('✅ Active class added to nav item:', text);
+        }
     });
     
-    console.log('Section navigation completed for:', sectionName);
+    console.log('✅ Section navigation completed for:', sectionName);
 }
 
 // Assign to global immediately
@@ -2044,6 +2144,7 @@ function closeSidebar() {
 window.closeSidebar = closeSidebar;
 
 function closeMobileSidebar() {
+    console.log('🔧 Closing mobile sidebar...');
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
     
@@ -2055,6 +2156,9 @@ function closeMobileSidebar() {
         if (window.isMobile) {
             document.body.style.overflow = '';
         }
+        console.log('✅ Mobile sidebar closed');
+    } else {
+        console.log('❌ Mobile sidebar elements not found');
     }
 }
 
@@ -2662,6 +2766,7 @@ function closeContactUsPopup() {
     console.log('✅ All global functions assigned successfully');
 // Assign to global immediately
 window.openMobileSidebar = function() {
+    console.log('🔧 Opening mobile sidebar...');
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
     
@@ -2673,6 +2778,9 @@ window.openMobileSidebar = function() {
         if (window.isMobile) {
             document.body.style.overflow = 'hidden';
         }
+        console.log('✅ Mobile sidebar opened');
+    } else {
+        console.log('❌ Mobile sidebar elements not found');
     }
 };
     
@@ -2895,5 +3003,11 @@ window.showSection = showSection;
 window.closeMobileSidebar = closeMobileSidebar;
 window.logout = logout;
 window.saveChatMessage = saveChatMessage;
+
+// Add a test function to verify button clicks
+window.testButtonClick = function(buttonName) {
+    console.log(`🔧 Test button click: ${buttonName}`);
+    showSuccess(`Button ${buttonName} is clickable!`);
+};
 
 console.log('✅ All functions assigned to window object');
