@@ -922,15 +922,33 @@ function openBook(bookId, bookName) {
 }
 
 function setupEventListeners() {
+    console.log('🔧 Setting up event listeners...');
+    
+    // Debug: Check if functions are available
+    console.log('🔧 Function availability check:');
+    console.log('- toggleVoiceRecording:', typeof window.toggleVoiceRecording);
+    console.log('- sendMessage:', typeof window.sendMessage);
+    console.log('- openMobileSidebar:', typeof window.openMobileSidebar);
+    console.log('- closeMobileSidebar:', typeof window.closeMobileSidebar);
+    console.log('- showSection:', typeof window.showSection);
+    console.log('- playTTS:', typeof window.playTTS);
+    console.log('- stopTTS:', typeof window.stopTTS);
+    
     // Grade and subject selectors
     const gradeSelect = document.getElementById('gradeSelect');
     if (gradeSelect) {
         gradeSelect.addEventListener('change', updateContext);
+        console.log('✅ Grade select listener added');
+    } else {
+        console.log('❌ Grade select not found');
     }
     
     const subjectSelect = document.getElementById('subjectSelect');
     if (subjectSelect) {
         subjectSelect.addEventListener('change', updateContext);
+        console.log('✅ Subject select listener added');
+    } else {
+        console.log('❌ Subject select not found');
     }
     
     // Chat input - use the correct ID
@@ -939,6 +957,7 @@ function setupEventListeners() {
         chatInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
+                console.log('🔧 Enter pressed, calling sendMessage');
                 sendMessage();
             }
         });
@@ -951,6 +970,9 @@ function setupEventListeners() {
                 sendButton.disabled = !e.target.value.trim();
             }
         });
+        console.log('✅ Chat input listeners added');
+    } else {
+        console.log('❌ Chat input not found');
     }
     
     // Voice button - remove onclick handler to avoid conflicts
@@ -958,7 +980,13 @@ function setupEventListeners() {
     if (voiceButton) {
         // Remove any existing onclick to avoid conflicts
         voiceButton.removeAttribute('onclick');
-        voiceButton.addEventListener('click', toggleVoiceRecording);
+        voiceButton.addEventListener('click', () => {
+            console.log('🔧 Voice button clicked, calling toggleVoiceRecording');
+            toggleVoiceRecording();
+        });
+        console.log('✅ Voice button listener added');
+    } else {
+        console.log('❌ Voice button not found');
     }
     
     // Send button - remove onclick handler to avoid conflicts
@@ -966,7 +994,13 @@ function setupEventListeners() {
     if (sendButton) {
         // Remove any existing onclick to avoid conflicts
         sendButton.removeAttribute('onclick');
-        sendButton.addEventListener('click', sendMessage);
+        sendButton.addEventListener('click', () => {
+            console.log('🔧 Send button clicked, calling sendMessage');
+            sendMessage();
+        });
+        console.log('✅ Send button listener added');
+    } else {
+        console.log('❌ Send button not found');
     }
     
     // Accessibility options
@@ -1013,69 +1047,119 @@ function setupEventListeners() {
         mobileSidebarOverlay.addEventListener('click', closeMobileSidebar);
     }
     
-    // Mobile sidebar button
-    const mobileSidebarButton = document.querySelector('button[onclick="openMobileSidebar()"]');
+    // Mobile sidebar button - look for the hamburger menu button
+    const mobileSidebarButton = document.querySelector('button.lg\\:hidden.text-white.text-2xl');
     if (mobileSidebarButton) {
-        // Remove onclick to avoid conflicts
-        mobileSidebarButton.removeAttribute('onclick');
-        mobileSidebarButton.addEventListener('click', openMobileSidebar);
+        mobileSidebarButton.addEventListener('click', () => {
+            console.log('🔧 Mobile sidebar button clicked, calling openMobileSidebar');
+            openMobileSidebar();
+        });
+        console.log('✅ Mobile sidebar button listener added');
+    } else {
+        console.log('❌ Mobile sidebar button not found');
     }
     
-    // Close mobile sidebar button
-    const closeMobileSidebarButton = document.querySelector('button[onclick="closeMobileSidebar()"]');
+    // Close mobile sidebar button - look for the X button
+    const closeMobileSidebarButton = document.querySelector('button.text-purple-800.text-2xl');
     if (closeMobileSidebarButton) {
-        // Remove onclick to avoid conflicts
-        closeMobileSidebarButton.removeAttribute('onclick');
-        closeMobileSidebarButton.addEventListener('click', closeMobileSidebar);
+        closeMobileSidebarButton.addEventListener('click', () => {
+            console.log('🔧 Close mobile sidebar button clicked, calling closeMobileSidebar');
+            closeMobileSidebar();
+        });
+        console.log('✅ Close mobile sidebar button listener added');
+    } else {
+        console.log('❌ Close mobile sidebar button not found');
     }
     
     // TTS buttons
     const playButton = document.getElementById('playButton');
     if (playButton) {
         playButton.removeAttribute('onclick');
-        playButton.addEventListener('click', playTTS);
+        playButton.addEventListener('click', () => {
+            console.log('🔧 Play button clicked, calling playTTS');
+            playTTS();
+        });
+        console.log('✅ Play button listener added');
+    } else {
+        console.log('❌ Play button not found');
     }
     
     const stopButton = document.getElementById('stopButton');
     if (stopButton) {
         stopButton.removeAttribute('onclick');
-        stopButton.addEventListener('click', stopTTS);
+        stopButton.addEventListener('click', () => {
+            console.log('🔧 Stop button clicked, calling stopTTS');
+            stopTTS();
+        });
+        console.log('✅ Stop button listener added');
+    } else {
+        console.log('❌ Stop button not found');
     }
     
     // Sidebar navigation items
     const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-        const onclick = item.getAttribute('onclick');
-        if (onclick) {
-            item.removeAttribute('onclick');
-            
-            // Parse the onclick content and create event listener
-            if (onclick.includes('showSection')) {
-                const sectionMatch = onclick.match(/showSection\('([^']+)'\)/);
-                if (sectionMatch) {
-                    const sectionName = sectionMatch[1];
-                    item.addEventListener('click', () => {
-                        showSection(sectionName);
-                        if (onclick.includes('closeMobileSidebar')) {
-                            closeMobileSidebar();
-                        }
-                    });
+    console.log(`🔧 Found ${navItems.length} nav items`);
+    navItems.forEach((item, index) => {
+        const text = item.textContent.trim();
+        console.log(`🔧 Nav item ${index}:`, text);
+        
+        // Determine action based on text content
+        if (text.includes('Classroom') || text.includes('🏫')) {
+            item.addEventListener('click', () => {
+                console.log(`🔧 Nav item clicked, showing chat section`);
+                showSection('chat');
+                if (window.isMobile) {
+                    closeMobileSidebar();
                 }
-            } else if (onclick.includes('logout')) {
-                item.addEventListener('click', () => {
-                    logout();
-                    if (onclick.includes('closeMobileSidebar')) {
-                        closeMobileSidebar();
-                    }
-                });
-            } else if (onclick.includes('forceShowTrialOverlay')) {
-                item.addEventListener('click', () => {
-                    forceShowTrialOverlay();
-                    if (onclick.includes('closeMobileSidebar')) {
-                        closeMobileSidebar();
-                    }
-                });
-            }
+            });
+            console.log(`✅ Nav item ${index} listener added for chat section`);
+        } else if (text.includes('Study Materials') || text.includes('📚')) {
+            item.addEventListener('click', () => {
+                console.log(`🔧 Nav item clicked, showing materials section`);
+                showSection('materials');
+                if (window.isMobile) {
+                    closeMobileSidebar();
+                }
+            });
+            console.log(`✅ Nav item ${index} listener added for materials section`);
+        } else if (text.includes('Progress') || text.includes('📊')) {
+            item.addEventListener('click', () => {
+                console.log(`🔧 Nav item clicked, showing progress section`);
+                showSection('progress');
+                if (window.isMobile) {
+                    closeMobileSidebar();
+                }
+            });
+            console.log(`✅ Nav item ${index} listener added for progress section`);
+        } else if (text.includes('Settings') || text.includes('⚙️')) {
+            item.addEventListener('click', () => {
+                console.log(`🔧 Nav item clicked, showing settings section`);
+                showSection('settings');
+                if (window.isMobile) {
+                    closeMobileSidebar();
+                }
+            });
+            console.log(`✅ Nav item ${index} listener added for settings section`);
+        } else if (text.includes('Logout') || text.includes('🚪')) {
+            item.addEventListener('click', () => {
+                console.log('🔧 Logout nav item clicked');
+                logout();
+                if (window.isMobile) {
+                    closeMobileSidebar();
+                }
+            });
+            console.log(`✅ Nav item ${index} logout listener added`);
+        } else if (text.includes('Test Trial') || text.includes('⏰')) {
+            item.addEventListener('click', () => {
+                console.log('🔧 Trial overlay nav item clicked');
+                forceShowTrialOverlay();
+                if (window.isMobile) {
+                    closeMobileSidebar();
+                }
+            });
+            console.log(`✅ Nav item ${index} trial overlay listener added`);
+        } else {
+            console.log(`⚠️ Nav item ${index} has unknown text: ${text}`);
         }
     });
     
@@ -2803,3 +2887,13 @@ window.addEventListener('load', function() {
         }
     }
 });
+
+// Assign key functions to window object for global access
+window.sendMessage = sendMessage;
+window.toggleVoiceRecording = toggleVoiceRecording;
+window.showSection = showSection;
+window.closeMobileSidebar = closeMobileSidebar;
+window.logout = logout;
+window.saveChatMessage = saveChatMessage;
+
+console.log('✅ All functions assigned to window object');
