@@ -764,8 +764,9 @@ async function loadUserData() {
   console.log('🔧 CORRECT loadUserData function called');
   
   try {
-    // Verify Supabase is ready
-    if (!window.supabase?.auth?.getUser) {
+    // Verify Supabase is ready - use the correct client
+    const supabaseClient = window.supabaseClient || window.supabase;
+    if (!supabaseClient?.auth?.getUser) {
       console.error('❌ Supabase auth not initialized');
       throw new Error('Supabase auth not initialized');
     }
@@ -774,7 +775,7 @@ async function loadUserData() {
 
     // Direct call to getUser - no request queue wrapper
     console.log('🔧 Fetching user data from Supabase auth...');
-    const { data: { user }, error } = await window.supabase.auth.getUser();
+    const { data: { user }, error } = await supabaseClient.auth.getUser();
     if (error) {
       console.error('❌ Error getting user:', error);
       throw error;
@@ -790,7 +791,7 @@ async function loadUserData() {
     
     // Direct call to profile fetch - no request queue wrapper
     console.log('🔧 Fetching profile from user_profiles table...');
-    const { data: profile, error: profileError } = await window.supabase
+    const { data: profile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('*')
       .eq('id', user.id)
