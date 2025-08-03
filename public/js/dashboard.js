@@ -3243,53 +3243,6 @@ async function addToRequestQueue(requestFunction) {
         processRequestQueue();
     });
 }
-
-// Proper request queue implementation
-const requestQueue = [];
-let activeRequests = 0;
-const MAX_CONCURRENT_REQUESTS = 3;
-
-function processRequestQueue() {
-  if (activeRequests >= MAX_CONCURRENT_REQUESTS || requestQueue.length === 0) {
-    return;
-  }
-
-  const nextRequest = requestQueue.shift();
-  if (!nextRequest || typeof nextRequest.requestFn !== 'function') {
-    console.error('Invalid request in queue:', nextRequest);
-    processRequestQueue(); // Skip invalid requests
-    return;
-  }
-
-  activeRequests++;
-  
-  nextRequest.requestFn()
-    .then(result => {
-      nextRequest.resolve(result);
-    })
-    .catch(error => {
-      nextRequest.reject(error);
-    })
-    .finally(() => {
-      activeRequests--;
-      processRequestQueue();
-    });
-}
-
-function addToRequestQueue(requestFn) {
-  return new Promise((resolve, reject) => {
-    if (typeof requestFn !== 'function') {
-      reject(new Error('requestFn must be a function'));
-      return;
-    }
-    
-    requestQueue.push({ requestFn, resolve, reject });
-    processRequestQueue();
-  });
-}
-
-// Enhanced user data loading with concurrency control
-async function loadUserData() {
     console.log('🔧 Loading user data with concurrency control...');
     
     try {
