@@ -3347,6 +3347,13 @@ function trackUserInteraction() {
     }
 }
 
+// Close subject manager when clicking outside
+function closeSubjectManagerOnOutsideClick(event) {
+    if (event.target.id === 'subjectManagerModal') {
+        window.subjectManager?.hideSubjectManager();
+    }
+}
+
 // Add event listeners for user interaction
 document.addEventListener('click', trackUserInteraction);
 document.addEventListener('keydown', trackUserInteraction);
@@ -3354,3 +3361,10 @@ document.addEventListener('touchstart', trackUserInteraction);
 
 // Initialize user interaction tracking
 window.userHasInteracted = false;
+
+// Close avatar selection when clicking outside
+function closeAvatarSelectionOnOutsideClick(event) {
+    if (event.target.id === 'avatarSelectionModal') {
+        closeAvatarSelectionModal();
+    }
+}

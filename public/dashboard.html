@@ -1469,8 +1469,8 @@
     </div>
 
     <!-- Subject Manager Modal -->
-    <div id="subjectManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-gray-800 rounded-lg p-6 w-[95vw] max-w-7xl mx-4 h-[85vh] flex flex-col">
+    <div id="subjectManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" onclick="closeSubjectManagerOnOutsideClick(event)">
+        <div class="bg-gray-800 rounded-lg p-6 w-[95vw] max-w-7xl mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
             <!-- Header -->
             <div class="flex justify-between items-center mb-4 flex-shrink-0 border-b border-gray-700 pb-4">
                 <h3 class="text-white text-xl font-semibold">📚 Manage Your Subjects</h3>
@@ -1481,23 +1481,21 @@
                 </button>
             </div>
             
-            <!-- Content with Scroll -->
-            <div class="flex-1 overflow-y-auto min-h-0">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2">
-                    <!-- Available Subjects -->
-                    <div class="bg-gray-700 rounded-lg p-4">
-                        <h4 class="text-white text-lg font-medium mb-4">Available Subjects</h4>
-                        <div id="availableSubjectsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
-                            <!-- Available subjects will be populated here -->
-                        </div>
+            <!-- Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2">
+                <!-- Available Subjects -->
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h4 class="text-white text-lg font-medium mb-4">Available Subjects</h4>
+                    <div id="availableSubjectsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <!-- Available subjects will be populated here -->
                     </div>
-                    
-                    <!-- Selected Subjects -->
-                    <div class="bg-gray-700 rounded-lg p-4">
-                        <h4 class="text-white text-lg font-medium mb-4">Your Subjects</h4>
-                        <div id="selectedSubjectsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
-                            <!-- Selected subjects will be populated here -->
-                        </div>
+                </div>
+                
+                <!-- Selected Subjects -->
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h4 class="text-white text-lg font-medium mb-4">Your Subjects</h4>
+                    <div id="selectedSubjectsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <!-- Selected subjects will be populated here -->
                     </div>
                 </div>
             </div>
@@ -1515,8 +1513,8 @@
     </div>
 
     <!-- Avatar Selection Modal -->
-    <div id="avatarSelectionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4">
+    <div id="avatarSelectionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" onclick="closeAvatarSelectionOnOutsideClick(event)">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-white text-xl font-semibold">👨‍🏫 Choose Your AI Teacher</h3>
                 <button onclick="closeAvatarSelectionModal()" class="text-gray-400 hover:text-white">
