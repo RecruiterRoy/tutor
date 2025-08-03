@@ -1138,7 +1138,7 @@ function setupEventListeners() {
         if (text.includes('Classroom') || text.includes('🏫')) {
             item.addEventListener('click', () => {
                 console.log(`🔧 Nav item clicked, showing chat section`);
-                showSection('Classroom');
+                showSection('chat');
                 if (window.isMobile) {
                     closeMobileSidebar();
                 }
@@ -1147,7 +1147,7 @@ function setupEventListeners() {
         } else if (text.includes('Study Materials') || text.includes('📚')) {
             item.addEventListener('click', () => {
                 console.log(`🔧 Nav item clicked, showing materials section`);
-                showSection('Study Materials');
+                showSection('materials');
                 if (window.isMobile) {
                     closeMobileSidebar();
                 }
@@ -1156,7 +1156,7 @@ function setupEventListeners() {
         } else if (text.includes('Progress') || text.includes('📊')) {
             item.addEventListener('click', () => {
                 console.log(`🔧 Nav item clicked, showing progress section`);
-                showSection('Progress');
+                showSection('progress');
                 if (window.isMobile) {
                     closeMobileSidebar();
                 }
@@ -1165,7 +1165,7 @@ function setupEventListeners() {
         } else if (text.includes('Settings') || text.includes('⚙️')) {
             item.addEventListener('click', () => {
                 console.log(`🔧 Nav item clicked, showing settings section`);
-                showSection('Settings');
+                showSection('settings');
                 if (window.isMobile) {
                     closeMobileSidebar();
                 }

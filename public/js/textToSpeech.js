@@ -321,7 +321,7 @@ class TextToSpeech {
         const currentAvatar = window.selectedAvatar || 'roy-sir';
         console.log('TTS Voice Selection - Current Avatar:', currentAvatar);
 
-        if (currentAvatar === 'ms-sapana') {
+        if (currentAvatar === 'miss-sapna') {
             // Simplified Hindi voice selection
             let hindiVoice = this.voices.find(voice =>
                 voice.lang.includes('hi-IN') || voice.lang.includes('hi')
@@ -335,14 +335,14 @@ class TextToSpeech {
             
             if (hindiVoice) {
                 this.currentVoice = hindiVoice;
-                console.log('✅ Ms. Sapana using Hindi voice:', hindiVoice.name);
+                console.log('✅ Miss Sapna using Hindi voice:', hindiVoice.name);
                 return 'hi-IN';
             } else {
                 console.warn('❌ No Hindi voice found, using default');
                 return 'hi-IN';
             }
         } else {
-            // Simplified English voice selection
+            // Simplified English voice selection for Roy Sir
             let englishVoice = this.voices.find(voice =>
                 voice.lang.includes('en-IN')
             );
