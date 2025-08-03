@@ -347,8 +347,8 @@ class TextToSpeech {
                 console.warn('❌ No Hindi voice found, using default');
                 return 'hi-IN';
             }
-        } else if (currentAvatar === 'assam-teacher') {
-            console.log('🎯 Assam Teacher detected, selecting Assamese voice');
+        } else if (currentAvatar === 'baruah-sir') {
+            console.log('🎯 Baruah Sir detected, selecting Assamese voice');
             // Assamese voice selection
             let assameseVoice = this.voices.find(voice =>
                 voice.lang.includes('as-IN') || voice.lang.includes('as')
@@ -363,7 +363,7 @@ class TextToSpeech {
             
             if (assameseVoice) {
                 this.currentVoice = assameseVoice;
-                console.log('✅ Assam Teacher using Assamese voice:', assameseVoice.name);
+                console.log('✅ Baruah Sir using Assamese voice:', assameseVoice.name);
                 return 'as-IN';
             } else {
                 console.warn('❌ No Assamese voice found, falling back to Hindi');
@@ -373,7 +373,7 @@ class TextToSpeech {
                 );
                 if (hindiVoice) {
                     this.currentVoice = hindiVoice;
-                    console.log('✅ Assam Teacher using Hindi fallback voice:', hindiVoice.name);
+                    console.log('✅ Baruah Sir using Hindi fallback voice:', hindiVoice.name);
                     return 'hi-IN';
                 } else {
                     console.warn('❌ No Hindi fallback found, using default');

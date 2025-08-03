@@ -221,7 +221,7 @@ function getAvatarWelcomeMessage() {
     if (avatarId === 'miss-sapna') {
         return "Hi, main aapki Miss Sapna hu. Main aapko Hindi bhasha mai padhaungi. Aap kya padhna chahti hain?";
     } else if (avatarId === 'baruah-sir') {
-        return "নমস্কাৰ, মই আপোনাৰ বৰুৱা ছাৰ। মই আপোনাক অসমীয়া ভাষাত পঢ়াম। আপুনি কি পঢ়িব বিচাৰে?";
+        return "নমস্কাৰ, মই আপোনাৰ বৰুৱা ছাৰ। মই আপোনাক অসমীয়া আৰু ইংৰাজী ভাষাত পঢ়াম। আপুনি কি পঢ়িব বিচাৰে? মই আপোনাক উত্তৰ-পূব ভাৰতৰ স্বাধীনতা সংগ্ৰামীৰ কাহিনী আৰু গল্প শুনাব পাৰোঁ।";
     } else {
         return "Hi, I am Roy Sir. I will teach you all subjects in English. Please tell me what you want to study today?";
     }
@@ -1418,7 +1418,8 @@ async function sendMessage() {
             userGender: userGender,
             avatarGender: avatarGender,
             isFirstResponseOfDay: isFirstResponseOfDay,
-            chatHistory: chatHistory
+            chatHistory: chatHistory,
+            teacherPersonality: getTeacherPersonality()
         };
         
         console.log('🔧 Sending to AI with teacher name:', requestBody.teacher);
@@ -2547,7 +2548,8 @@ async function sendChatMessage() {
                 userGender: userGender,
                 avatarGender: avatarGender,
                 isFirstResponseOfDay: isFirstResponseOfDay,
-                chatHistory: chatHistory
+                chatHistory: chatHistory,
+                teacherPersonality: getTeacherPersonality()
             })
         });
         
@@ -3297,6 +3299,9 @@ async function saveAvatarSelection() {
             window.textToSpeech.forceVoiceUpdate();
         }
         
+        // Show welcome message for new avatar
+        showAvatarWelcomeMessage();
+        
         // Update display
         updateAvatarDisplay();
         
@@ -3602,4 +3607,56 @@ function getCurrentUserGender() {
         return window.userData.gender;
     }
     return 'male'; // Default fallback
+}
+
+// Function to show avatar-specific welcome message
+function showAvatarWelcomeMessage() {
+    const welcomeMessage = getAvatarWelcomeMessage();
+    const avatarName = getCurrentAvatarName();
+    
+    console.log('🔧 Showing welcome message for:', avatarName);
+    console.log('🔧 Welcome message:', welcomeMessage);
+    
+    // Add welcome message to chat
+    addMessage('ai', welcomeMessage);
+    
+    // Speak the welcome message
+    if (window.textToSpeech) {
+        window.textToSpeech.speak(welcomeMessage, { role: 'ai' });
+    }
+}
+
+// Function to get teacher personality and teaching style
+function getTeacherPersonality() {
+    const avatarId = getCurrentAvatarId();
+    
+    if (avatarId === 'miss-sapna') {
+        return {
+            name: 'Miss Sapna',
+            language: 'Hindi + English (Hinglish)',
+            personality: 'Caring and nurturing teacher who uses Hindi with English words for better understanding',
+            teachingStyle: 'Uses Hindi as primary language with English terms for scientific names, technical terms, and better communication',
+            gender: 'female',
+            tone: 'Warm and motherly'
+        };
+    } else if (avatarId === 'baruah-sir') {
+        return {
+            name: 'Baruah Sir',
+            language: 'Assamese + English',
+            personality: 'Articulate, sweet, and loving teacher from Northeast India',
+            teachingStyle: 'Uses Assamese as primary language with English for adverbs, adjectives, scientific names, and technical terms. Tells short stories of freedom fighters and Northeast India (max 1 per hour, 3 per day). Motivates students by asking if they understood or need different explanation.',
+            specialFeatures: 'Tells stories of freedom fighters and Northeast India, very articulate speaking style, CBSE syllabus in Assamese language',
+            gender: 'male',
+            tone: 'Articulate, motivating, and caring'
+        };
+    } else {
+        return {
+            name: 'Roy Sir',
+            language: 'English',
+            personality: 'Professional and knowledgeable teacher',
+            teachingStyle: 'Uses English for all subjects and advanced topics',
+            gender: 'male',
+            tone: 'Professional and friendly'
+        };
+    }
 }
