@@ -3277,8 +3277,8 @@ async function loadUserData() {
 }
 
 // Loading state management
-let isInitializing = false;
-let isUserDataLoading = false;
+// REMOVED: let isInitializing = false; - DUPLICATE
+// REMOVED: let isUserDataLoading = false; - DUPLICATE
 
 // Initialize UI components
 function initializeUI() {
