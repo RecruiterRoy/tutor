@@ -1332,7 +1332,7 @@ async function sendMessage() {
         const userClass = userProfile.class || userProfile.class_level || 'Class 6';
         const userSubject = window.currentSubject || '';
         const userBoard = userProfile.board || 'CBSE';
-        const userGender = userProfile.gender || 'male'; // Get user gender
+        const userGender = userProfile.gender || 'male'; // Default to male if not set
         const avatarGender = getCurrentAvatarGender(); // Get avatar gender
         
         // Check if this is the first response of the day
@@ -3452,4 +3452,54 @@ async function reloadUserData() {
     } catch (error) {
         console.error('❌ Failed to reload user data:', error);
     }
+}
+
+// Function to update user gender
+async function updateUserGender(newGender) {
+    try {
+        console.log('🔧 Updating user gender to:', newGender);
+        
+        if (!window.userData || !window.userData.id) {
+            throw new Error('User data not available');
+        }
+        
+        const supabaseClient = window.supabaseClient || window.supabase;
+        
+        const { data, error } = await supabaseClient
+            .from('user_profiles')
+            .update({ 
+                gender: newGender,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', window.userData.id)
+            .select();
+        
+        if (error) {
+            console.error('❌ Error updating gender:', error);
+            throw new Error('Failed to update gender');
+        }
+        
+        // Update local user data
+        if (window.userData) {
+            window.userData.gender = newGender;
+        }
+        
+        console.log('✅ Gender updated successfully:', newGender);
+        showSuccess('Gender updated successfully!');
+        
+        // Reload user data to ensure AI gets the updated gender
+        await reloadUserData();
+        
+    } catch (error) {
+        console.error('❌ Gender update error:', error);
+        showError('Failed to update gender. Please try again.');
+    }
+}
+
+// Function to get current user gender
+function getCurrentUserGender() {
+    if (window.userData && window.userData.gender) {
+        return window.userData.gender;
+    }
+    return 'male'; // Default fallback
 }
