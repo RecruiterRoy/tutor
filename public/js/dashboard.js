@@ -6,9 +6,7 @@
 
 // Make functions globally accessible IMMEDIATELY for HTML onclick handlers
 // These will be replaced with actual implementations later
-window.toggleVoiceRecording = function() {
-    console.log('toggleVoiceRecording called - waiting for implementation');
-};
+// Note: toggleVoiceRecording is defined later in the file
 
 window.closeSidebar = function() {
     console.log('closeSidebar called - waiting for implementation');
@@ -16,6 +14,17 @@ window.closeSidebar = function() {
 
 window.showSection = function(sectionName) {
     console.log('🔧 Showing section:', sectionName);
+    
+    // Map button text to section names
+    const sectionMap = {
+        'Classroom': 'chat',
+        'Study Materials': 'materials', 
+        'Progress': 'progress',
+        'Settings': 'settings'
+    };
+    
+    // Convert sectionName if it's a button text
+    const actualSectionName = sectionMap[sectionName] || sectionName;
     
     // Hide all sections
     const sections = document.querySelectorAll('[id$="Section"]');
@@ -33,28 +42,28 @@ window.showSection = function(sectionName) {
     });
     
     // Show selected section
-    const selectedSection = document.getElementById(sectionName + 'Section');
+    const selectedSection = document.getElementById(actualSectionName + 'Section');
     if (selectedSection) {
         selectedSection.classList.remove('hidden');
-        console.log('✅ Section shown:', sectionName + 'Section');
+        console.log('✅ Section shown:', actualSectionName + 'Section');
     } else {
-        console.log('❌ Section not found:', sectionName + 'Section');
+        console.log('❌ Section not found:', actualSectionName + 'Section');
     }
     
     // Add active class to nav item based on text content
     navItems.forEach(item => {
         const text = item.textContent.trim();
-        if ((sectionName === 'chat' && (text.includes('Classroom') || text.includes('🏫'))) ||
-            (sectionName === 'materials' && (text.includes('Study Materials') || text.includes('📚'))) ||
-            (sectionName === 'progress' && (text.includes('Progress') || text.includes('📊'))) ||
-            (sectionName === 'settings' && (text.includes('Settings') || text.includes('⚙️')))) {
+        if ((actualSectionName === 'chat' && (text.includes('Classroom') || text.includes('🏫'))) ||
+            (actualSectionName === 'materials' && (text.includes('Study Materials') || text.includes('📚'))) ||
+            (actualSectionName === 'progress' && (text.includes('Progress') || text.includes('📊'))) ||
+            (actualSectionName === 'settings' && (text.includes('Settings') || text.includes('⚙️')))) {
             item.classList.add('active', 'bg-white/10', 'text-white');
             item.classList.remove('text-gray-300');
             console.log('✅ Active class added to nav item:', text);
         }
     });
     
-    console.log('✅ Section navigation completed for:', sectionName);
+    console.log('✅ Section navigation completed for:', actualSectionName);
 }
 
 window.saveChatMessage = function(message, response) {
@@ -184,13 +193,23 @@ async function initializeSupabase() {
         console.log('🔧 Creating Supabase client with URL:', supabaseUrl);
         window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
         
-        // Test the connection
-        const { data, error } = await window.supabaseClient.auth.getUser();
-        if (error) {
-            console.warn('⚠️ Auth check failed, but client created:', error);
-            // Don't throw error here, client might still work for other operations
-        } else {
-            console.log('✅ Supabase client initialized and tested successfully');
+        // Test the connection with timeout
+        const connectionPromise = window.supabaseClient.auth.getUser();
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Connection timeout')), 5000)
+        );
+        
+        try {
+            const { data, error } = await Promise.race([connectionPromise, timeoutPromise]);
+            if (error) {
+                console.warn('⚠️ Auth check failed, but client created:', error);
+                // Don't throw error here, client might still work for other operations
+            } else {
+                console.log('✅ Supabase client initialized and tested successfully');
+            }
+        } catch (timeoutError) {
+            console.warn('⚠️ Connection test timed out, but client created:', timeoutError);
+            // Continue anyway, client might work for other operations
         }
         
         return window.supabaseClient;
@@ -236,6 +255,11 @@ let preWarmedRecognition = null;
 let voicesLoaded = false;
 let lastResponseDate = null; // Track the date of last AI response
 
+// Performance optimization: Add caching
+let userDataCache = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 30000; // 30 seconds cache
+
 // Make variables globally accessible immediately
 window.currentUser = currentUser;
 window.isRecording = isRecording;
@@ -267,7 +291,7 @@ const regionalAvatars = [
     
     // East India
     { id: 'bengali-male', name: 'Bengali Male', region: 'West Bengal', gender: 'male', image: '👨‍🦱' },
-    { id: 'bengali-female', name: 'Bengali Female', region: 'West Bengal', gender: 'female', image: '👩‍🦱' },
+    { id: 'bengali-female', name: 'Bengali Female', region: 'West Bengal', gender: 'female', image: '��‍🦱' },
     { id: 'odia-male', name: 'Odia Male', region: 'Odisha', gender: 'male', image: '👨‍🦲' },
     { id: 'odia-female', name: 'Odia Female', region: 'Odisha', gender: 'female', image: '👩‍🦲' },
     
@@ -689,6 +713,15 @@ async function loadUserData() {
     try {
         clearDashboardError();
         
+        // Check cache first
+        if (userDataCache && cacheTimestamp && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
+            console.log('✅ Using cached user data');
+            updateUserDisplay(userDataCache);
+            return;
+        }
+        
+        console.log('🔄 Loading fresh user data from database...');
+        
         // Get current user from Supabase auth
         const { data: { user }, error: authError } = await window.supabaseClient.auth.getUser();
         
@@ -729,6 +762,10 @@ async function loadUserData() {
         
         if (profile) {
             console.log('✅ User profile loaded:', profile);
+            
+            // Cache the data
+            userDataCache = profile;
+            cacheTimestamp = Date.now();
             
             // Store user data globally
             window.userData = profile;
@@ -794,6 +831,10 @@ async function loadUserData() {
             
             // Store basic user data
             window.userData = { full_name: 'Student', class: 'N/A', board: 'N/A' };
+            
+            // Cache the basic data
+            userDataCache = { full_name: 'Student', class: 'N/A', board: 'N/A' };
+            cacheTimestamp = Date.now();
             
             // Populate profile modal fields with basic info
             const profileName = document.getElementById('profileName');
@@ -1196,7 +1237,7 @@ function setupEventListeners() {
         if (text.includes('Classroom') || text.includes('🏫')) {
             item.addEventListener('click', () => {
                 console.log(`🔧 Nav item clicked, showing chat section`);
-                showSection('chat');
+                showSection('Classroom');
                 if (window.isMobile) {
                     closeMobileSidebar();
                 }
@@ -1205,7 +1246,7 @@ function setupEventListeners() {
         } else if (text.includes('Study Materials') || text.includes('📚')) {
             item.addEventListener('click', () => {
                 console.log(`🔧 Nav item clicked, showing materials section`);
-                showSection('materials');
+                showSection('Study Materials');
                 if (window.isMobile) {
                     closeMobileSidebar();
                 }
@@ -1214,7 +1255,7 @@ function setupEventListeners() {
         } else if (text.includes('Progress') || text.includes('📊')) {
             item.addEventListener('click', () => {
                 console.log(`🔧 Nav item clicked, showing progress section`);
-                showSection('progress');
+                showSection('Progress');
                 if (window.isMobile) {
                     closeMobileSidebar();
                 }
@@ -1223,7 +1264,7 @@ function setupEventListeners() {
         } else if (text.includes('Settings') || text.includes('⚙️')) {
             item.addEventListener('click', () => {
                 console.log(`🔧 Nav item clicked, showing settings section`);
-                showSection('settings');
+                showSection('Settings');
                 if (window.isMobile) {
                     closeMobileSidebar();
                 }
@@ -1521,6 +1562,8 @@ async function saveStudySession(question, answer) {
 
 // Initialize voice features
 function initializeVoiceFeatures() {
+    console.log('🔧 Initializing voice features...');
+    
     // Initialize speech synthesis
     if (window.speechSynthesis) {
         // Some browsers need this event to populate voices
@@ -1532,8 +1575,8 @@ function initializeVoiceFeatures() {
         // First try to populate voices immediately
         populateVoices();
         
-        // Fallback in case voices aren't loaded yet
-        setTimeout(populateVoices, 1000);
+        // Faster fallback in case voices aren't loaded yet
+        setTimeout(populateVoices, 500);
     } else {
         console.log('Speech synthesis not supported');
         document.getElementById('voiceSelect').disabled = true;
@@ -1547,6 +1590,8 @@ function initializeVoiceFeatures() {
     
     // Setup voice control listeners
     setupVoiceSettingsListeners();
+    
+    console.log('✅ Voice features initialized');
 }
 
 function populateVoices() {
@@ -1563,13 +1608,13 @@ function populateVoices() {
                 voicesLoaded = true;
                 resolve(speechSynthesis.getVoices());
             };
-            // Fallback timeout
+            // Faster timeout - only 500ms instead of 2000ms
             setTimeout(() => {
                 if (!voicesLoaded) {
-                    console.log('Voice loading timeout');
+                    console.log('Voice loading timeout - using available voices');
                     resolve(speechSynthesis.getVoices());
                 }
-            }, 2000);
+            }, 500);
         }
     });
 }
@@ -1801,31 +1846,41 @@ function stopRecording() {
 
 async function toggleVoiceRecording() {
     try {
+        console.log('🔧 toggleVoiceRecording called');
+        
         // Check if voice features are enabled
         if (!window.TUTOR_CONFIG?.features?.voiceInput) {
+            console.log('❌ Voice input disabled in config');
             showError('Voice input is disabled');
             return;
         }
 
+        console.log('🔧 Checking recognition status:', !!recognition);
+
         if (!recognition) {
-            console.log('Speech recognition not initialized, attempting to initialize...');
+            console.log('🔧 Speech recognition not initialized, attempting to initialize...');
             initSpeechRecognition();
             
             // Wait a moment for initialization
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            console.log('🔧 After initialization, recognition status:', !!recognition);
             
             if (!recognition) {
-                showError('Voice recognition not available');
+                console.log('❌ Voice recognition still not available after initialization');
+                showError('Voice recognition not available. Please refresh the page.');
                 return;
             }
         }
 
         if (isRecording) {
+            console.log('🔧 Stopping voice recording...');
             // Stop listening
             recognition.stop();
             stopRecording();
             showSuccess('Voice recording stopped');
         } else {
+            console.log('🔧 Starting voice recording...');
             // Check microphone permission first
             try {
                 await requestMicrophonePermission();
@@ -1834,13 +1889,13 @@ async function toggleVoiceRecording() {
                 recognition.start();
                 showSuccess('Voice recording started - speak now!');
             } catch (permissionError) {
-                console.error('Microphone permission error:', permissionError);
+                console.error('❌ Microphone permission error:', permissionError);
                 showError('Microphone permission required. Please allow microphone access and try again.');
             }
         }
         
     } catch (error) {
-        console.error('Voice recording error:', error);
+        console.error('❌ Voice recording error:', error);
         showError('Could not access microphone. Please check permissions.');
     }
 }
