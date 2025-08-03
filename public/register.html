@@ -919,6 +919,26 @@
                         
                         console.log('✅ Email user created:', data.user.id);
                         
+                        // Check if user needs email confirmation
+                        if (!data.user.email_confirmed_at) {
+                            console.log('⚠️ User email not confirmed, attempting to confirm...');
+                            
+                            // Try to confirm the user's email manually
+                            try {
+                                const { error: confirmError } = await supabase.auth.updateUser({
+                                    data: { email_confirmed_at: new Date().toISOString() }
+                                });
+                                
+                                if (confirmError) {
+                                    console.warn('⚠️ Manual email confirmation failed:', confirmError);
+                                } else {
+                                    console.log('✅ Email confirmed manually');
+                                }
+                            } catch (confirmError) {
+                                console.warn('⚠️ Email confirmation error:', confirmError);
+                            }
+                        }
+                        
                         // Create profile directly using the user data from signup
                         console.log('📝 Creating user profile...');
                         
@@ -927,7 +947,7 @@
                         console.log('✅ Using user from signup:', currentUser.id);
                         
                         try {
-                            const { error: profileError } = await supabase
+                            const { data: profileData, error: profileError } = await supabase
                                 .from('user_profiles')
                                 .upsert({
                                     id: currentUser.id,
@@ -949,7 +969,10 @@
                                 }, {
                                     onConflict: 'id',
                                     ignoreDuplicates: false
-                                });
+                                })
+                                .select(); // Add select() to get the inserted data
+                            
+                            console.log('🔧 Profile creation response:', { profileData, profileError });
                             
                             if (profileError) {
                                 console.error('❌ Profile creation failed:', profileError);
@@ -960,7 +983,7 @@
                                     console.log('🔄 Profile might already exist, trying to update...');
                                     
                                     // Try to update existing profile
-                                    const { error: updateError } = await supabase
+                                    const { data: updateData, error: updateError } = await supabase
                                         .from('user_profiles')
                                         .update({
                                             full_name: fullName,
@@ -978,20 +1001,24 @@
                                             ai_avatar: 'roy-sir', // Default AI avatar
                                             updated_at: new Date().toISOString()
                                         })
-                                        .eq('id', currentUser.id);
+                                        .eq('id', currentUser.id)
+                                        .select();
                                     
                                     if (updateError) {
                                         console.error('❌ Profile update also failed:', updateError);
                                         throw new Error(`Failed to create/update user profile: ${updateError.message}`);
                                     }
                                     
-                                    console.log('✅ Profile updated successfully');
+                                    console.log('✅ Profile updated successfully:', updateData);
                                 } else {
                                     throw new Error(`Failed to create user profile: ${profileError.message}`);
                                 }
                             } else {
-                                console.log('✅ Profile created successfully');
+                                console.log('✅ Profile created successfully:', profileData);
                             }
+                            
+                            // Wait a moment for the profile to be fully saved
+                            await new Promise(resolve => setTimeout(resolve, 1000));
                             
                             // Auto-sign in the user after successful registration
                             console.log('🔐 Auto-signing in user after registration...');
@@ -1000,6 +1027,8 @@
                                     email: email,
                                     password: password
                                 });
+                                
+                                console.log('🔧 SignIn response:', { signInData, signInError });
                                 
                                 if (signInError) {
                                     console.warn('⚠️ Auto-sign in failed:', signInError);
@@ -1010,12 +1039,24 @@
                                     }, 2000);
                                 } else {
                                     console.log('✅ Auto-sign in successful:', signInData.user.id);
-                                    showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
                                     
-                                    // Redirect to dashboard immediately
-                                    setTimeout(() => {
-                                        window.location.href = 'dashboard.html';
-                                    }, 1500);
+                                    // Verify the user is actually signed in
+                                    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+                                    if (userError || !currentUser) {
+                                        console.warn('⚠️ User verification failed after sign in:', userError);
+                                        showMessage('Registration successful! Please log in with your email and password.', 'success');
+                                        setTimeout(() => {
+                                            window.location.href = 'login.html';
+                                        }, 2000);
+                                    } else {
+                                        console.log('✅ User verified as signed in:', currentUser.id);
+                                        showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
+                                        
+                                        // Redirect to dashboard immediately
+                                        setTimeout(() => {
+                                            window.location.href = 'dashboard.html';
+                                        }, 1500);
+                                    }
                                 }
                             } catch (signInError) {
                                 console.error('❌ Auto-sign in error:', signInError);
@@ -1024,7 +1065,6 @@
                                     window.location.href = 'login.html';
                                 }, 2000);
                             }
-                            
                         } catch (profileError) {
                             console.error('❌ Profile creation error:', profileError);
                             throw new Error(`Profile creation failed: ${profileError.message}`);
@@ -1073,6 +1113,26 @@
                         
                         console.log('✅ Phone user created:', data.user.id);
                         
+                        // Check if user needs phone confirmation
+                        if (!data.user.phone_confirmed_at) {
+                            console.log('⚠️ User phone not confirmed, attempting to confirm...');
+                            
+                            // Try to confirm the user's phone manually
+                            try {
+                                const { error: confirmError } = await supabase.auth.updateUser({
+                                    data: { phone_confirmed_at: new Date().toISOString() }
+                                });
+                                
+                                if (confirmError) {
+                                    console.warn('⚠️ Manual phone confirmation failed:', confirmError);
+                                } else {
+                                    console.log('✅ Phone confirmed manually');
+                                }
+                            } catch (confirmError) {
+                                console.warn('⚠️ Phone confirmation error:', confirmError);
+                            }
+                        }
+                        
                         // Create profile immediately for phone users (auto-approved)
                         console.log('📝 Creating user profile for phone user...');
                         
@@ -1081,7 +1141,7 @@
                         console.log('✅ Using user from signup:', currentUser.id);
                         
                         try {
-                            const { error: profileError } = await supabase
+                            const { data: profileData, error: profileError } = await supabase
                                 .from('user_profiles')
                                 .upsert({
                                     id: currentUser.id,
@@ -1103,7 +1163,10 @@
                                 }, {
                                     onConflict: 'id',
                                     ignoreDuplicates: false
-                                });
+                                })
+                                .select(); // Add select() to get the inserted data
+                            
+                            console.log('🔧 Phone profile creation response:', { profileData, profileError });
                             
                             if (profileError) {
                                 console.error('❌ Profile creation failed:', profileError);
@@ -1114,7 +1177,7 @@
                                     console.log('🔄 Profile might already exist, trying to update...');
                                     
                                     // Try to update existing profile
-                                    const { error: updateError } = await supabase
+                                    const { data: updateData, error: updateError } = await supabase
                                         .from('user_profiles')
                                         .update({
                                             full_name: fullName || 'Mobile User',
@@ -1132,20 +1195,24 @@
                                             ai_avatar: 'roy-sir', // Default AI avatar
                                             updated_at: new Date().toISOString()
                                         })
-                                        .eq('id', currentUser.id);
+                                        .eq('id', currentUser.id)
+                                        .select();
                                     
                                     if (updateError) {
                                         console.error('❌ Profile update also failed:', updateError);
                                         throw new Error(`Failed to create/update user profile: ${updateError.message}`);
                                     }
                                     
-                                    console.log('✅ Profile updated successfully');
+                                    console.log('✅ Profile updated successfully:', updateData);
                                 } else {
                                     throw new Error(`Failed to create user profile: ${profileError.message}`);
                                 }
                             } else {
-                                console.log('✅ Profile created successfully');
+                                console.log('✅ Profile created successfully:', profileData);
                             }
+                            
+                            // Wait a moment for the profile to be fully saved
+                            await new Promise(resolve => setTimeout(resolve, 1000));
                             
                             console.log('✅ Profile created with instant approved status');
                             
@@ -1157,6 +1224,8 @@
                                     password: password
                                 });
                                 
+                                console.log('🔧 Phone SignIn response:', { signInData, signInError });
+                                
                                 if (signInError) {
                                     console.warn('⚠️ Auto-sign in failed:', signInError);
                                     // Show success message and redirect to login page
@@ -1166,12 +1235,24 @@
                                     }, 2000);
                                 } else {
                                     console.log('✅ Auto-sign in successful:', signInData.user.id);
-                                    showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
                                     
-                                    // Redirect to dashboard immediately
-                                    setTimeout(() => {
-                                        window.location.href = 'dashboard.html';
-                                    }, 1500);
+                                    // Verify the user is actually signed in
+                                    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+                                    if (userError || !currentUser) {
+                                        console.warn('⚠️ User verification failed after sign in:', userError);
+                                        showMessage('Registration successful! Please log in with your phone number and password.', 'success');
+                                        setTimeout(() => {
+                                            window.location.href = 'login.html';
+                                        }, 2000);
+                                    } else {
+                                        console.log('✅ User verified as signed in:', currentUser.id);
+                                        showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
+                                        
+                                        // Redirect to dashboard immediately
+                                        setTimeout(() => {
+                                            window.location.href = 'dashboard.html';
+                                        }, 1500);
+                                    }
                                 }
                             } catch (signInError) {
                                 console.error('❌ Auto-sign in error:', signInError);
