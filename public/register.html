@@ -956,6 +956,7 @@
                                     phone: phone,
                                     class: userClass,
                                     board: board,
+                                    board_abbr: board, // Add this field
                                     school_name: schoolName,
                                     city: city,
                                     state: state,
@@ -977,8 +978,37 @@
                             if (profileError) {
                                 console.error('❌ Profile creation failed:', profileError);
                                 
-                                // Check if it's a foreign key constraint error
-                                if (profileError.message.includes('foreign key constraint') || 
+                                // Check if it's a RLS (Row Level Security) error
+                                if (profileError.message.includes('new row violates row-level security policy') || 
+                                    profileError.message.includes('RLS') ||
+                                    profileError.message.includes('policy')) {
+                                    console.log('🔄 RLS policy issue detected, trying alternative approach...');
+                                    
+                                    // Try using the update_user_profile function instead
+                                    try {
+                                        const { data: functionData, error: functionError } = await supabase.rpc('update_user_profile', {
+                                            user_id: currentUser.id,
+                                            user_full_name: fullName,
+                                            user_class: userClass,
+                                            user_board: board,
+                                            user_board_abbr: board,
+                                            user_phone: phone,
+                                            user_city: city,
+                                            user_state: state,
+                                            user_language: language
+                                        });
+                                        
+                                        if (functionError) {
+                                            console.error('❌ Function update failed:', functionError);
+                                            throw new Error(`Profile creation failed: ${functionError.message}`);
+                                        } else {
+                                            console.log('✅ Profile updated via function successfully');
+                                        }
+                                    } catch (functionError) {
+                                        console.error('❌ Function approach failed:', functionError);
+                                        throw new Error(`Profile creation failed: ${functionError.message}`);
+                                    }
+                                } else if (profileError.message.includes('foreign key constraint') || 
                                     profileError.message.includes('user_profiles_id_key')) {
                                     console.log('🔄 Profile might already exist, trying to update...');
                                     
@@ -991,6 +1021,7 @@
                                             phone: phone,
                                             class: userClass,
                                             board: board,
+                                            board_abbr: board, // Add this field
                                             school_name: schoolName,
                                             city: city,
                                             state: state,
@@ -1150,6 +1181,7 @@
                                     phone: phone,
                                     class: userClass,
                                     board: board,
+                                    board_abbr: board, // Add this field
                                     school_name: schoolName,
                                     city: city,
                                     state: state,
@@ -1171,8 +1203,37 @@
                             if (profileError) {
                                 console.error('❌ Profile creation failed:', profileError);
                                 
-                                // Check if it's a foreign key constraint error
-                                if (profileError.message.includes('foreign key constraint') || 
+                                // Check if it's a RLS (Row Level Security) error
+                                if (profileError.message.includes('new row violates row-level security policy') || 
+                                    profileError.message.includes('RLS') ||
+                                    profileError.message.includes('policy')) {
+                                    console.log('🔄 RLS policy issue detected, trying alternative approach...');
+                                    
+                                    // Try using the update_user_profile function instead
+                                    try {
+                                        const { data: functionData, error: functionError } = await supabase.rpc('update_user_profile', {
+                                            user_id: currentUser.id,
+                                            user_full_name: fullName || 'Mobile User',
+                                            user_class: userClass,
+                                            user_board: board,
+                                            user_board_abbr: board,
+                                            user_phone: phone,
+                                            user_city: city,
+                                            user_state: state,
+                                            user_language: language
+                                        });
+                                        
+                                        if (functionError) {
+                                            console.error('❌ Function update failed:', functionError);
+                                            throw new Error(`Profile creation failed: ${functionError.message}`);
+                                        } else {
+                                            console.log('✅ Profile updated via function successfully');
+                                        }
+                                    } catch (functionError) {
+                                        console.error('❌ Function approach failed:', functionError);
+                                        throw new Error(`Profile creation failed: ${functionError.message}`);
+                                    }
+                                } else if (profileError.message.includes('foreign key constraint') || 
                                     profileError.message.includes('user_profiles_id_key')) {
                                     console.log('🔄 Profile might already exist, trying to update...');
                                     
@@ -1185,6 +1246,7 @@
                                             phone: phone,
                                             class: userClass,
                                             board: board,
+                                            board_abbr: board, // Add this field
                                             school_name: schoolName,
                                             city: city,
                                             state: state,
