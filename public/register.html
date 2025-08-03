@@ -957,41 +957,15 @@
                         // Create profile directly (RLS is disabled)
                         console.log('📝 Creating profile with full details...');
                         
-                        // First, test if we can access the table
-                        console.log('🔍 Testing table access...');
-                        try {
-                            const { data: testData, error: testError } = await supabase
-                                .from('user_profiles')
-                                .select('id')
-                                .limit(1);
-                            console.log('🔍 Table access test:', { testData, testError });
-                        } catch (testError) {
-                            console.error('❌ Table access failed:', testError);
-                        }
-                        
-                        console.log('🔍 Profile data to insert:', {
-                            id: currentUser.id,
-                            full_name: fullName,
-                            email: email,
-                            phone: phone,
-                            class: userClass,
-                            board: board,
-                            board_abbr: board,
-                            school_name: schoolName,
-                            city: city,
-                            state: state,
-                            preferred_language: language,
-                            avatar: selectedAvatar || 'teacher-avatar1.png',
-                            economic_status: 'Premium',
-                            verification_status: 'pending',
-                            ai_avatar: 'roy-sir'
-                        });
+                        // Simple approach: Try to update first, if it fails, then insert
+                        console.log('🔄 Attempting to update existing profile...');
+                        let profileData, profileError;
                         
                         try {
-                            const { data: profileData, error: profileError } = await supabase
+                            // Try to update existing profile
+                            const { data: updateData, error: updateError } = await supabase
                                 .from('user_profiles')
-                                .upsert({
-                                    id: currentUser.id,
+                                .update({
                                     full_name: fullName,
                                     email: email,
                                     phone: phone,
@@ -1004,101 +978,115 @@
                                     preferred_language: language,
                                     avatar: selectedAvatar || 'teacher-avatar1.png',
                                     economic_status: 'Premium',
-                                    verification_status: 'pending', // Start as pending
+                                    verification_status: 'pending',
                                     ai_avatar: 'roy-sir',
-                                    created_at: new Date().toISOString(),
                                     updated_at: new Date().toISOString()
-                                }, {
-                                    onConflict: 'id',
-                                    ignoreDuplicates: false
                                 })
+                                .eq('id', currentUser.id)
                                 .select();
                             
-                            console.log('🔧 Profile creation response:', { profileData, profileError });
-                            console.log('🔧 Full response details:', {
-                                data: profileData,
-                                error: profileError,
-                                errorMessage: profileError?.message,
-                                errorCode: profileError?.code,
-                                errorDetails: profileError?.details,
-                                errorHint: profileError?.hint
+                            if (updateError) {
+                                console.log('⚠️ Update failed, trying insert...');
+                                // Update failed, try insert
+                                const { data: insertData, error: insertError } = await supabase
+                                    .from('user_profiles')
+                                    .insert({
+                                        id: currentUser.id,
+                                        full_name: fullName,
+                                        email: email,
+                                        phone: phone,
+                                        class: userClass,
+                                        board: board,
+                                        board_abbr: board,
+                                        school_name: schoolName,
+                                        city: city,
+                                        state: state,
+                                        preferred_language: language,
+                                        avatar: selectedAvatar || 'teacher-avatar1.png',
+                                        economic_status: 'Premium',
+                                        verification_status: 'pending',
+                                        ai_avatar: 'roy-sir',
+                                        created_at: new Date().toISOString(),
+                                        updated_at: new Date().toISOString()
+                                    })
+                                    .select();
+                                
+                                profileData = insertData;
+                                profileError = insertError;
+                                console.log('🆕 Insert result:', { profileData, profileError });
+                            } else {
+                                profileData = updateData;
+                                profileError = updateError;
+                                console.log('✅ Update successful:', { profileData, profileError });
+                            }
+                        } catch (error) {
+                            console.error('❌ Profile operation failed:', error);
+                            profileError = error;
+                        }
+                        
+                        if (profileError) {
+                            console.error('❌ Profile creation failed:', profileError);
+                            throw new Error(`Profile creation failed: ${profileError.message}`);
+                        } else {
+                            console.log('✅ Profile created successfully:', profileData);
+                        }
+                        
+                        // Schedule automatic approval after 3 seconds
+                        console.log('⏰ Scheduling automatic approval in 3 seconds...');
+                        setTimeout(async () => {
+                            try {
+                                console.log('🔐 Auto-approving user profile...');
+                                const { data: approvalData, error: approvalError } = await supabase
+                                    .from('user_profiles')
+                                    .update({
+                                        verification_status: 'approved',
+                                        economic_status: 'Premium',
+                                        updated_at: new Date().toISOString()
+                                    })
+                                    .eq('id', currentUser.id)
+                                    .select();
+                                
+                                if (approvalError) {
+                                    console.error('❌ Auto-approval failed:', approvalError);
+                                } else {
+                                    console.log('✅ User auto-approved successfully:', approvalData);
+                                }
+                            } catch (approvalError) {
+                                console.error('❌ Auto-approval error:', approvalError);
+                            }
+                        }, 3000); // 3 seconds delay
+                        
+                        // Auto-sign in the user after successful registration
+                        console.log('🔐 Auto-signing in user after registration...');
+                        try {
+                            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                                email: email,
+                                password: password
                             });
                             
-                            if (profileError) {
-                                console.error('❌ Profile creation failed:', profileError);
-                                console.error('❌ Error details:', {
-                                    message: profileError.message,
-                                    code: profileError.code,
-                                    details: profileError.details,
-                                    hint: profileError.hint
-                                });
-                                throw new Error(`Profile creation failed: ${profileError.message}`);
-                            } else {
-                                console.log('✅ Profile created successfully:', profileData);
-                                console.log('✅ Profile ID:', profileData?.[0]?.id);
-                            }
+                            console.log('🔧 SignIn response:', { signInData, signInError });
                             
-                            // Schedule automatic approval after 3 seconds
-                            console.log('⏰ Scheduling automatic approval in 3 seconds...');
-                            setTimeout(async () => {
-                                try {
-                                    console.log('🔐 Auto-approving user profile...');
-                                    const { data: approvalData, error: approvalError } = await supabase
-                                        .from('user_profiles')
-                                        .update({
-                                            verification_status: 'approved',
-                                            economic_status: 'Premium',
-                                            updated_at: new Date().toISOString()
-                                        })
-                                        .eq('id', currentUser.id)
-                                        .select();
-                                    
-                                    if (approvalError) {
-                                        console.error('❌ Auto-approval failed:', approvalError);
-                                    } else {
-                                        console.log('✅ User auto-approved successfully:', approvalData);
-                                    }
-                                } catch (approvalError) {
-                                    console.error('❌ Auto-approval error:', approvalError);
-                                }
-                            }, 3000); // 3 seconds delay
-                            
-                            // Auto-sign in the user after successful registration
-                            console.log('🔐 Auto-signing in user after registration...');
-                            try {
-                                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                                    email: email,
-                                    password: password
-                                });
-                                
-                                console.log('🔧 SignIn response:', { signInData, signInError });
-                                
-                                if (signInError) {
-                                    console.warn('⚠️ Auto-sign in failed:', signInError);
-                                    showMessage('Registration successful! Please log in with your email and password.', 'success');
-                                    setTimeout(() => {
-                                        window.location.href = 'login.html';
-                                    }, 2000);
-                                } else {
-                                    console.log('✅ Auto-sign in successful:', signInData.user.id);
-                                    showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
-                                    
-                                    // Redirect to dashboard immediately
-                                    setTimeout(() => {
-                                        window.location.href = 'dashboard.html';
-                                    }, 1500);
-                                }
-                            } catch (signInError) {
-                                console.error('❌ Auto-sign in error:', signInError);
+                            if (signInError) {
+                                console.warn('⚠️ Auto-sign in failed:', signInError);
                                 showMessage('Registration successful! Please log in with your email and password.', 'success');
                                 setTimeout(() => {
                                     window.location.href = 'login.html';
                                 }, 2000);
+                            } else {
+                                console.log('✅ Auto-sign in successful:', signInData.user.id);
+                                showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
+                                
+                                // Redirect to dashboard immediately
+                                setTimeout(() => {
+                                    window.location.href = 'dashboard.html';
+                                }, 1500);
                             }
-                            
-                        } catch (profileError) {
-                            console.error('❌ Profile creation error:', profileError);
-                            throw new Error(`Profile creation failed: ${profileError.message}`);
+                        } catch (signInError) {
+                            console.error('❌ Auto-sign in error:', signInError);
+                            showMessage('Registration successful! Please log in with your email and password.', 'success');
+                            setTimeout(() => {
+                                window.location.href = 'login.html';
+                            }, 2000);
                         }
                         
                     } catch (signUpError) {
