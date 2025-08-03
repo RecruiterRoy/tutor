@@ -990,7 +990,7 @@
                         try {
                             const { data: profileData, error: profileError } = await supabase
                                 .from('user_profiles')
-                                .insert({
+                                .upsert({
                                     id: currentUser.id,
                                     full_name: fullName,
                                     email: email,
@@ -1008,6 +1008,9 @@
                                     ai_avatar: 'roy-sir',
                                     created_at: new Date().toISOString(),
                                     updated_at: new Date().toISOString()
+                                }, {
+                                    onConflict: 'id',
+                                    ignoreDuplicates: false
                                 })
                                 .select();
                             
@@ -1173,7 +1176,7 @@
                         try {
                             const { data: profileData, error: profileError } = await supabase
                                 .from('user_profiles')
-                                .insert({
+                                .upsert({
                                     id: currentUser.id,
                                     full_name: fullName || 'Mobile User',
                                     email: email,
@@ -1191,6 +1194,9 @@
                                     ai_avatar: 'roy-sir',
                                     created_at: new Date().toISOString(),
                                     updated_at: new Date().toISOString()
+                                }, {
+                                    onConflict: 'id',
+                                    ignoreDuplicates: false
                                 })
                                 .select();
                             
