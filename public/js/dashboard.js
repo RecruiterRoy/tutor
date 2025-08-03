@@ -90,7 +90,14 @@ window.closeMobileSidebar = function() {
 };
 
 window.showSubjectManager = function() {
-    console.log('showSubjectManager called - waiting for implementation');
+    console.log('🔧 showSubjectManager called');
+    if (window.subjectManager && window.subjectManager.showSubjectManager) {
+        console.log('✅ Calling subjectManager.showSubjectManager()');
+        return window.subjectManager.showSubjectManager();
+    } else {
+        console.error('❌ subjectManager not available');
+        showError('Subject manager not loaded. Please refresh the page.');
+    }
 };
 
 window.openMobileSidebar = function() {
@@ -151,9 +158,25 @@ window.closeTrialOverlay = function() {
 // Make variables globally accessible immediately
 window.currentUser = null;
 window.isRecording = false;
-window.selectedAvatar = 'roy-sir';
+window.selectedAvatar = null; // Will be set from user profile
 window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 window.userDataLoaded = false; // Flag to track if user data is loaded
+
+// Function to get current avatar name dynamically
+function getCurrentAvatarName() {
+    if (window.userData && window.userData.ai_avatar) {
+        return window.userData.ai_avatar === 'miss-sapna' ? 'Miss Sapna' : 'Roy Sir';
+    }
+    return 'Roy Sir'; // Default fallback
+}
+
+// Function to get current avatar ID dynamically
+function getCurrentAvatarId() {
+    if (window.userData && window.userData.ai_avatar) {
+        return window.userData.ai_avatar;
+    }
+    return 'roy-sir'; // Default fallback
+}
 
 // Initialize Supabase when page loads
 async function initializeSupabase() {
@@ -550,6 +573,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         initializeVoiceFeatures();
         populateVoices();
         
+        // Initialize subject manager if available
+        if (window.subjectManager) {
+            console.log('🔧 Initializing subject manager...');
+            try {
+                await window.subjectManager.initialize(window.userData, window.userData?.class, window.userData?.board);
+                console.log('✅ Subject manager initialized');
+            } catch (error) {
+                console.error('❌ Subject manager initialization error:', error);
+            }
+        } else {
+            console.warn('⚠️ Subject manager not available');
+        }
+        
         // Wait for TTS to be ready before loading voice settings
         setTimeout(() => {
             loadVoiceSettings();
@@ -684,6 +720,19 @@ async function initializeDashboard() {
         populateAvatarGrid();
         initializeVoiceFeatures();
         populateVoices();
+        
+        // Initialize subject manager if available
+        if (window.subjectManager) {
+            console.log('🔧 Initializing subject manager...');
+            try {
+                await window.subjectManager.initialize(window.userData, window.userData?.class, window.userData?.board);
+                console.log('✅ Subject manager initialized');
+            } catch (error) {
+                console.error('❌ Subject manager initialization error:', error);
+            }
+        } else {
+            console.warn('⚠️ Subject manager not available');
+        }
         
         // Wait for TTS to be ready before loading voice settings
         setTimeout(() => {
@@ -2274,44 +2323,39 @@ async function saveProfileChanges() {
 
 // Update avatar display
 function updateAvatarDisplay() {
-    const aiAvatar = document.getElementById('aiAvatar');
-    const avatarCards = document.querySelectorAll('.avatar-selection-card');
+    console.log('🔧 Updating avatar display...');
     
-    // Update AI avatar icon
-    if (aiAvatar) {
-        aiAvatar.innerHTML = '';
-        const icon = document.createElement('i');
-        
-        switch (selectedAvatar) {
-            case 'professor':
-                icon.className = 'fas fa-user-tie text-white';
-                break;
-            case 'mentor':
-                icon.className = 'fas fa-chalkboard-teacher text-white';
-                break;
-            case 'friend':
-                icon.className = 'fas fa-smile text-white';
-                break;
-            case 'expert':
-                icon.className = 'fas fa-lightbulb text-white';
-                break;
-            default:
-                icon.className = 'fas fa-user-tie text-white';
-        }
-        
-        aiAvatar.appendChild(icon);
+    const avatarDisplay = document.getElementById('currentAvatarDisplay');
+    if (!avatarDisplay) return;
+    
+    const currentAvatarId = getCurrentAvatarId();
+    const avatarName = getCurrentAvatarName();
+    const avatarIcon = currentAvatarId === 'miss-sapna' ? '👩‍🏫' : '👨‍🏫';
+    
+    avatarDisplay.innerHTML = `
+        <div class="flex items-center space-x-3">
+            <div class="text-2xl">${avatarIcon}</div>
+            <div>
+                <div class="text-white font-semibold">${avatarName}</div>
+                <div class="text-gray-300 text-sm">AI Teacher</div>
+            </div>
+        </div>
+    `;
+    
+    // Also update the welcome message avatar
+    const welcomeTeacherAvatar = document.getElementById('welcomeTeacherAvatar');
+    const welcomeTeacherName = document.getElementById('welcomeTeacherName');
+    
+    if (welcomeTeacherAvatar) {
+        welcomeTeacherAvatar.src = currentAvatarId === 'miss-sapna' ? 'images/miss_sapna.jpg' : 'images/roy_sir.jpg';
+        welcomeTeacherAvatar.alt = avatarName;
     }
     
-    // Update avatar card selection
-    avatarCards.forEach(card => {
-        card.classList.remove('selected');
-        // Check if this card corresponds to the selected avatar
-        const isHindiCard = card.querySelector('img[alt="Ms. Sapana"]') && selectedAvatar === 'ms-sapana';
-        const isEnglishCard = card.querySelector('img[alt="Roy Sir"]') && selectedAvatar === 'roy-sir';
-        if (isHindiCard || isEnglishCard) {
-            card.classList.add('selected');
-        }
-    });
+    if (welcomeTeacherName) {
+        welcomeTeacherName.textContent = avatarName;
+    }
+    
+    console.log('✅ Avatar display updated:', avatarName);
 }
 
 // Setup avatar selection
@@ -2422,23 +2466,55 @@ async function sendChatMessage() {
     // Get AI response as before
     try {
         // Get the current avatar from user profile or global variable
-        const currentAvatar = window.userData?.ai_avatar || window.selectedAvatar || selectedAvatar || 'roy-sir';
+        const currentAvatar = userProfile?.ai_avatar || getCurrentAvatarId();
         
-        const response = await fetch('/api/chat', {
+        // Get recent chat history for context
+        let chatHistory = [];
+        if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
+            const subjectHistory = window.subjectManager.subjectChatHistory[window.subjectManager.getCurrentSubject()] || [];
+            chatHistory = subjectHistory.slice(-10); // Last 10 messages for context
+        }
+    
+        // Send to AI backend with complete user profile and chat history
+        const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                message, 
-                avatar: currentAvatar, 
-                userId: currentUser.id 
+            body: JSON.stringify({
+                message: text,
+                grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
+                subject: userSubject,
+                userProfile: userProfile,
+                teacher: getCurrentAvatarName(),
+                isFirstResponseOfDay: isFirstResponseOfDay,
+                chatHistory: chatHistory
             })
         });
-        if (!response.ok) throw new Error('Chat API error: ' + response.status);
+        
+        console.log('🔧 Response received:', response.status);
         const data = await response.json();
         removeTypingIndicator();
-        await addMessage('ai', data.response);
-        speakText(data.response);
-    } catch (error) {
+        
+        if (data.success && data.response) {
+            console.log('✅ AI response received');
+            await addMessage('ai', data.response);
+            
+            // Save message to subject history if subject manager is active
+            if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
+                await window.subjectManager.saveChatMessage(
+                    window.subjectManager.getCurrentSubject(),
+                    text,
+                    data.response
+                );
+            }
+            
+            // Update the last response date after successful response
+            lastResponseDate = today;
+        } else {
+            console.error('❌ AI response error:', data);
+            await addMessage('ai', 'Sorry, I could not get a response from the AI.');
+        }
+    } catch (err) {
+        console.error('❌ Send message error:', err);
         removeTypingIndicator();
         await addMessage('ai', 'Error connecting to AI server.');
     }
@@ -2950,6 +3026,20 @@ window.testButtonClick = function(buttonName) {
     showSuccess(`Button ${buttonName} is clickable!`);
 };
 
+// Add a test function to verify subject manager
+window.testSubjectManager = function() {
+    console.log('🔧 Testing subject manager...');
+    console.log('- Subject manager available:', !!window.subjectManager);
+    console.log('- Show subject manager function:', typeof window.showSubjectManager);
+    console.log('- Subject manager modal:', document.getElementById('subjectManagerModal'));
+    
+    if (window.subjectManager) {
+        console.log('- Subject manager methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(window.subjectManager)));
+    }
+    
+    showSuccess('Subject manager test completed! Check console for details.');
+};
+
 console.log('✅ All functions assigned to window object');
 
 async function addMessage(role, content) {
@@ -3030,7 +3120,7 @@ function initializeAvatarSelection() {
         selectedAvatarOption = window.userData.ai_avatar;
         console.log('✅ Current avatar loaded:', selectedAvatarOption);
     } else {
-        selectedAvatarOption = 'roy-sir'; // Default
+        selectedAvatarOption = getCurrentAvatarId(); // Use dynamic function
         console.log('✅ Default avatar set:', selectedAvatarOption);
     }
     
@@ -3108,6 +3198,9 @@ async function saveAvatarSelection() {
                 window.userData.ai_avatar = selectedAvatarOption;
             }
             
+            // Update global selected avatar
+            window.selectedAvatar = selectedAvatarOption;
+            
             console.log('✅ Avatar saved successfully:', selectedAvatarOption);
             showSuccess('Avatar updated successfully!');
             
@@ -3149,8 +3242,9 @@ function updateAvatarDisplay() {
     const avatarDisplay = document.getElementById('currentAvatarDisplay');
     if (!avatarDisplay) return;
     
-    const avatarName = selectedAvatarOption === 'miss-sapna' ? 'Miss Sapna' : 'Roy Sir';
-    const avatarIcon = selectedAvatarOption === 'miss-sapna' ? '👩‍🏫' : '👨‍🏫';
+    const currentAvatarId = getCurrentAvatarId();
+    const avatarName = getCurrentAvatarName();
+    const avatarIcon = currentAvatarId === 'miss-sapna' ? '👩‍🏫' : '👨‍🏫';
     
     avatarDisplay.innerHTML = `
         <div class="flex items-center space-x-3">
@@ -3161,6 +3255,19 @@ function updateAvatarDisplay() {
             </div>
         </div>
     `;
+    
+    // Also update the welcome message avatar
+    const welcomeTeacherAvatar = document.getElementById('welcomeTeacherAvatar');
+    const welcomeTeacherName = document.getElementById('welcomeTeacherName');
+    
+    if (welcomeTeacherAvatar) {
+        welcomeTeacherAvatar.src = currentAvatarId === 'miss-sapna' ? 'images/miss_sapna.jpg' : 'images/roy_sir.jpg';
+        welcomeTeacherAvatar.alt = avatarName;
+    }
+    
+    if (welcomeTeacherName) {
+        welcomeTeacherName.textContent = avatarName;
+    }
     
     console.log('✅ Avatar display updated:', avatarName);
 }
@@ -3241,6 +3348,12 @@ async function loadUserData() {
             window.cacheTimestamp = Date.now();
             window.userDataLoaded = true;
             
+            // Set selected avatar from user profile
+            window.selectedAvatar = profile.ai_avatar || 'roy-sir';
+            
+            // Update avatar display
+            updateAvatarDisplay();
+            
             console.log('✅ User data loaded successfully:', profile);
             return profile;
         });
@@ -3312,7 +3425,7 @@ async function sendMessage() {
             });
             
             // Get the current avatar from user profile or global variable
-            const currentAvatar = userProfile?.ai_avatar || window.selectedAvatar || selectedAvatar || 'roy-sir';
+            const currentAvatar = userProfile?.ai_avatar || getCurrentAvatarId();
             
             // Get recent chat history for context
             let chatHistory = [];
@@ -3330,7 +3443,7 @@ async function sendMessage() {
                     grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                     subject: userSubject,
                     userProfile: userProfile,
-                    teacher: currentAvatar === 'miss-sapna' ? 'Miss Sapna' : 'Roy Sir',
+                    teacher: getCurrentAvatarName(),
                     isFirstResponseOfDay: isFirstResponseOfDay,
                     chatHistory: chatHistory
                 })
