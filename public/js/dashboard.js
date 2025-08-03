@@ -671,15 +671,28 @@ async function initializeDashboard() {
     console.log('🚀 Starting dashboard initialization...');
     
     // 1. Wait for essential services
+    console.log('🔧 Waiting for Supabase...');
     await ensureSupabaseReady();
+    console.log('✅ Supabase ready');
+    
+    console.log('🔧 Waiting for TTS...');
     await ensureTTSReady();
+    console.log('✅ TTS ready');
     
     // 2. Load user data
+    console.log('🔧 About to call loadUserData...');
     const userData = await loadUserData();
-    if (!userData) throw new Error('User data not available');
+    console.log('🔧 loadUserData returned:', userData);
+    
+    if (!userData) {
+      console.error('❌ User data not available');
+      throw new Error('User data not available');
+    }
     
     // 3. Initialize components
+    console.log('🔧 Initializing UI components...');
     initializeUI();
+    console.log('🔧 Initializing event listeners...');
     initializeEventListeners();
     
     isInitialized = true;
@@ -707,29 +720,49 @@ function logSupabaseState() {
 
 // Enhanced user data loading with proper error handling
 async function loadUserData() {
+  console.log('🔧 CORRECT loadUserData function called at line 709');
+  
   try {
     // Verify Supabase is ready
     if (!window.supabase?.auth?.getUser) {
+      console.error('❌ Supabase auth not initialized');
       throw new Error('Supabase auth not initialized');
     }
 
+    console.log('✅ Supabase auth is ready, proceeding with user data fetch');
+
     // Queue the getUser request
     const userData = await addToRequestQueue(async () => {
+      console.log('🔧 Fetching user data from Supabase auth...');
       const { data: { user }, error } = await window.supabase.auth.getUser();
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error getting user:', error);
+        throw error;
+      }
+      console.log('✅ User data fetched:', user);
       return user;
     });
 
-    if (!userData) throw new Error('No user data returned');
+    if (!userData) {
+      console.error('❌ No user data returned');
+      throw new Error('No user data returned');
+    }
+    
+    console.log('✅ User authenticated, fetching profile...');
     
     // Queue the profile fetch
     const profileData = await addToRequestQueue(async () => {
+      console.log('🔧 Fetching profile from user_profiles table...');
       const { data: profile, error } = await window.supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userData.id)
         .single();
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching profile:', error);
+        throw error;
+      }
+      console.log('✅ Profile fetched:', profile);
       return profile;
     });
 
@@ -747,7 +780,7 @@ async function loadUserData() {
     return profileData;
 
   } catch (error) {
-    console.error('User data loading failed:', error);
+    console.error('❌ User data loading failed:', error);
     showError('Failed to load user data. Please refresh the page.');
     return null;
   }
