@@ -172,6 +172,25 @@ function getCurrentAvatarId() {
     return 'roy-sir'; // Default fallback
 }
 
+// Function to get avatar gender
+function getCurrentAvatarGender() {
+    if (window.userData && window.userData.ai_avatar) {
+        return window.userData.ai_avatar === 'miss-sapna' ? 'female' : 'male';
+    }
+    return 'male'; // Default fallback
+}
+
+// Function to get avatar-specific welcome message
+function getAvatarWelcomeMessage() {
+    const avatarId = getCurrentAvatarId();
+    
+    if (avatarId === 'miss-sapna') {
+        return "Hi, main aapki Miss Sapna hu. Main aapko Hindi bhasha mai padhaungi. Aap kya padhna chahti hain?";
+    } else {
+        return "Hi, I am Roy Sir. I will teach you all subjects in English. Please tell me what you want to study today?";
+    }
+}
+
 // Initialize Supabase when page loads
 async function initializeSupabase() {
     try {
@@ -822,16 +841,20 @@ async function loadUserData() {
 function showWelcomeMessage() {
     const chatBox = document.getElementById('chatBox');
     if (chatBox) {
-        const welcomeMessage = `
+        const avatarName = getCurrentAvatarName();
+        const avatarIcon = getCurrentAvatarId() === 'miss-sapna' ? '👩‍🏫' : '👨‍🏫';
+        const welcomeMessage = getAvatarWelcomeMessage();
+        
+        const welcomeMessageHTML = `
             <div class="ai-message message">
                 <div class="flex items-center space-x-3 mb-3">
-                    <div class="text-2xl">👨‍🏫</div>
+                    <div class="text-2xl">${avatarIcon}</div>
                     <div>
-                        <p class="text-white font-semibold">Welcome to TUTOR.AI!</p>
-                        <p class="text-gray-300 text-sm">Your personal AI tutor is ready to help you learn.</p>
+                        <p class="text-white font-semibold">${avatarName}</p>
+                        <p class="text-gray-300 text-sm">Your AI Teacher</p>
                     </div>
                 </div>
-                <p class="text-white">Hello! I'm your AI tutor. I can help you with your studies using NCERT books. Please select your grade and subject above, then ask me any question!</p>
+                <p class="text-white">${welcomeMessage}</p>
                 <div class="mt-3 p-3 bg-blue-500/20 rounded-lg">
                     <p class="text-blue-200 text-sm"><strong>Quick Start:</strong></p>
                     <ul class="text-blue-200 text-sm mt-1 space-y-1">
@@ -843,7 +866,7 @@ function showWelcomeMessage() {
                 </div>
             </div>
         `;
-        chatBox.innerHTML = welcomeMessage;
+        chatBox.innerHTML = welcomeMessageHTML;
     }
 }
 
@@ -1309,6 +1332,8 @@ async function sendMessage() {
         const userClass = userProfile.class || userProfile.class_level || 'Class 6';
         const userSubject = window.currentSubject || '';
         const userBoard = userProfile.board || 'CBSE';
+        const userGender = userProfile.gender || 'male'; // Get user gender
+        const avatarGender = getCurrentAvatarGender(); // Get avatar gender
         
         // Check if this is the first response of the day
         const today = new Date().toDateString();
@@ -1319,6 +1344,8 @@ async function sendMessage() {
             class: userClass,
             board: userBoard,
             subject: userSubject,
+            userGender: userGender,
+            avatarGender: avatarGender,
             isFirstResponseOfDay: isFirstResponseOfDay,
             userProfile: userProfile
         });
@@ -1343,6 +1370,8 @@ async function sendMessage() {
                 subject: userSubject,
                 userProfile: userProfile,
                 teacher: getCurrentAvatarName(),
+                userGender: userGender,
+                avatarGender: avatarGender,
                 isFirstResponseOfDay: isFirstResponseOfDay,
                 chatHistory: chatHistory
             })
@@ -2446,6 +2475,8 @@ async function sendChatMessage() {
                 subject: userSubject,
                 userProfile: userProfile,
                 teacher: getCurrentAvatarName(),
+                userGender: userGender,
+                avatarGender: avatarGender,
                 isFirstResponseOfDay: isFirstResponseOfDay,
                 chatHistory: chatHistory
             })

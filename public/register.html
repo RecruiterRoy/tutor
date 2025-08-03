@@ -196,6 +196,16 @@
                         </div>
                         
                         <div>
+                            <select id="gender" required class="input-style w-full px-4 py-3 rounded-lg">
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="others">Others</option>
+                            </select>
+                            <div class="error-message" id="genderError"></div>
+                        </div>
+                        
+                        <div>
                             <input type="email" id="email" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Email Address" onblur="validateEmailOnBlur(this)">
                             <div class="error-message" id="emailError"></div>
                                 </div>
@@ -642,6 +652,7 @@
             let isValid = true;
             
             const fullName = document.getElementById('fullName').value.trim();
+            const gender = document.getElementById('gender').value;
             const email = document.getElementById('email').value.trim();
             const phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value;
@@ -651,6 +662,13 @@
                 isValid = false;
             } else {
                 hideFieldError('fullNameError');
+            }
+
+            if (!gender) {
+                showFieldError('genderError', 'Please select your gender');
+                isValid = false;
+            } else {
+                hideFieldError('genderError');
             }
 
             if (!email) {
@@ -877,6 +895,7 @@
                 
                 // Get form data
                 const fullName = document.getElementById('fullName').value.trim();
+                const gender = document.getElementById('gender').value;
                 const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value;
                 const phone = document.getElementById('phone').value.trim();
@@ -887,7 +906,7 @@
                 const state = document.getElementById('state').value;
                 const language = document.getElementById('language').value;
                 
-                console.log('📝 Form data collected:', { fullName, email, phone, userClass, board, city, state, language });
+                console.log('📝 Form data collected:', { fullName, gender, email, phone, userClass, board, city, state, language });
                 console.log('🔧 Selected OAuth method:', selectedOAuth);
                 
                 if (selectedOAuth === 'email') {
@@ -902,6 +921,7 @@
                             options: {
                                 data: { 
                                     full_name: fullName,
+                                    gender: gender,
                                     phone: phone,
                                     class: userClass,
                                     board: board,
@@ -1543,6 +1563,7 @@
                 const profileData = {
                     id: user.id,
                     full_name: userData.full_name || 'User',
+                    gender: userData.gender || 'male',
                     email: user.email,
                     phone: userData.phone || '',
                     class: userData.class || 'Class 6',
@@ -1577,6 +1598,7 @@
                             .from('user_profiles')
                             .update({
                                 full_name: userData.full_name || 'User',
+                                gender: userData.gender || 'male',
                                 email: user.email,
                                 phone: userData.phone || '',
                                 class: userData.class || 'Class 6',
