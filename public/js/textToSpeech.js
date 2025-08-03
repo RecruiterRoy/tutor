@@ -327,7 +327,7 @@ class TextToSpeech {
 
         if (currentAvatar === 'miss-sapna') {
             console.log('🎯 Miss Sapna detected, selecting Hindi voice');
-            // Simplified Hindi voice selection
+            // Force Hindi voice for Miss Sapna
             let hindiVoice = this.voices.find(voice =>
                 voice.lang.includes('hi-IN') || voice.lang.includes('hi')
             );
@@ -335,7 +335,7 @@ class TextToSpeech {
             if (!hindiVoice) {
                 console.log('🔍 No hi-IN/hi voice found, trying IN voices');
                 hindiVoice = this.voices.find(voice =>
-                    voice.lang.includes('IN')
+                    voice.lang.includes('IN') && voice.name.toLowerCase().includes('hindi')
                 );
             }
             
@@ -349,7 +349,7 @@ class TextToSpeech {
             }
         } else if (currentAvatar === 'baruah-sir') {
             console.log('🎯 Baruah Sir detected, selecting Assamese voice');
-            // Assamese voice selection
+            // Force Assamese voice for Baruah Sir
             let assameseVoice = this.voices.find(voice =>
                 voice.lang.includes('as-IN') || voice.lang.includes('as')
             );
@@ -382,13 +382,21 @@ class TextToSpeech {
             }
         } else {
             console.log('🎯 Roy Sir detected, selecting English voice');
-            // Simplified English voice selection for Roy Sir
+            // Force English voice for Roy Sir
             let englishVoice = this.voices.find(voice =>
                 voice.lang.includes('en-IN')
             );
             
             if (!englishVoice) {
                 console.log('🔍 No en-IN voice found, trying en-US/en-GB voices');
+                englishVoice = this.voices.find(voice =>
+                    (voice.lang.includes('en-US') || voice.lang.includes('en-GB')) && 
+                    voice.name.toLowerCase().includes('male')
+                );
+            }
+            
+            if (!englishVoice) {
+                console.log('🔍 No male English voice found, trying any English voice');
                 englishVoice = this.voices.find(voice =>
                     voice.lang.includes('en-US') || voice.lang.includes('en-GB')
                 );

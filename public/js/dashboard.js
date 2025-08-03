@@ -227,6 +227,20 @@ function getAvatarWelcomeMessage() {
     }
 }
 
+// Function to get short welcome message for first interaction
+function getShortWelcomeMessage() {
+    const avatarId = getCurrentAvatarId();
+    const userName = window.userData?.full_name || 'Student';
+    
+    if (avatarId === 'miss-sapna') {
+        return `Hi ${userName}! Main Miss Sapna hu aur main aapko Hindi mai padhaungi. Aap kya padhna chahte hain?`;
+    } else if (avatarId === 'baruah-sir') {
+        return `নমস্কাৰ ${userName}! মই বৰুৱা ছাৰ আৰু মই আপোনাক অসমীয়াত পঢ়াম। আপুনি কি পঢ়িব বিচাৰে?`;
+    } else {
+        return `Hi ${userName}! I am Roy Sir and I will help you with your studies. Please tell me what would you like to learn today?`;
+    }
+}
+
 // Initialize Supabase when page loads
 async function initializeSupabase() {
     try {
@@ -1419,7 +1433,8 @@ async function sendMessage() {
             avatarGender: avatarGender,
             isFirstResponseOfDay: isFirstResponseOfDay,
             chatHistory: chatHistory,
-            teacherPersonality: getTeacherPersonality()
+            teacherPersonality: getTeacherPersonality(),
+            shortWelcomeMessage: getShortWelcomeMessage()
         };
         
         console.log('🔧 Sending to AI with teacher name:', requestBody.teacher);
@@ -1796,7 +1811,7 @@ async function toggleVoiceRecording() {
         console.log('🔧 Checking recognition status:', !!recognition);
 
         if (!recognition) {
-            console.log('🔧 Speech recognition not initialized, attempting to initialize...');
+            console.log('�� Speech recognition not initialized, attempting to initialize...');
             initSpeechRecognition();
             
             // Wait a moment for initialization
@@ -2549,7 +2564,8 @@ async function sendChatMessage() {
                 avatarGender: avatarGender,
                 isFirstResponseOfDay: isFirstResponseOfDay,
                 chatHistory: chatHistory,
-                teacherPersonality: getTeacherPersonality()
+                teacherPersonality: getTeacherPersonality(),
+                shortWelcomeMessage: getShortWelcomeMessage()
             })
         });
         
@@ -3297,6 +3313,10 @@ async function saveAvatarSelection() {
         console.log('🔧 Updating TTS voice...');
         if (window.textToSpeech) {
             window.textToSpeech.forceVoiceUpdate();
+            // Force immediate voice update
+            setTimeout(() => {
+                window.textToSpeech.forceVoiceUpdate();
+            }, 100);
         }
         
         // Show welcome message for new avatar
