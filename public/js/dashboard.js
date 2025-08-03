@@ -158,25 +158,45 @@ window.userDataLoaded = false; // Flag to track if user data is loaded
 
 // Function to get current avatar name dynamically
 function getCurrentAvatarName() {
+    console.log('🔧 getCurrentAvatarName called');
+    console.log('🔧 window.userData:', window.userData);
+    console.log('🔧 window.userData?.ai_avatar:', window.userData?.ai_avatar);
+    
     if (window.userData && window.userData.ai_avatar) {
-        return window.userData.ai_avatar === 'miss-sapna' ? 'Miss Sapna' : 'Roy Sir';
+        const avatarName = window.userData.ai_avatar === 'miss-sapna' ? 'Miss Sapna' : 'Roy Sir';
+        console.log('✅ Returning avatar name:', avatarName);
+        return avatarName;
     }
+    console.log('⚠️ Using default avatar name: Roy Sir');
     return 'Roy Sir'; // Default fallback
 }
 
 // Function to get current avatar ID dynamically
 function getCurrentAvatarId() {
+    console.log('🔧 getCurrentAvatarId called');
+    console.log('🔧 window.userData:', window.userData);
+    console.log('🔧 window.userData?.ai_avatar:', window.userData?.ai_avatar);
+    
     if (window.userData && window.userData.ai_avatar) {
+        console.log('✅ Returning avatar ID:', window.userData.ai_avatar);
         return window.userData.ai_avatar;
     }
+    console.log('⚠️ Using default avatar ID: roy-sir');
     return 'roy-sir'; // Default fallback
 }
 
 // Function to get avatar gender
 function getCurrentAvatarGender() {
+    console.log('🔧 getCurrentAvatarGender called');
+    console.log('🔧 window.userData:', window.userData);
+    console.log('🔧 window.userData?.ai_avatar:', window.userData?.ai_avatar);
+    
     if (window.userData && window.userData.ai_avatar) {
-        return window.userData.ai_avatar === 'miss-sapna' ? 'female' : 'male';
+        const gender = window.userData.ai_avatar === 'miss-sapna' ? 'female' : 'male';
+        console.log('✅ Returning avatar gender:', gender);
+        return gender;
     }
+    console.log('⚠️ Using default avatar gender: male');
     return 'male'; // Default fallback
 }
 
@@ -1358,6 +1378,13 @@ async function sendMessage() {
         // Get the current avatar from user profile or global variable
         const currentAvatar = userProfile?.ai_avatar || getCurrentAvatarId();
         
+        console.log('🔧 Avatar debugging in sendMessage:');
+        console.log('🔧 userProfile?.ai_avatar:', userProfile?.ai_avatar);
+        console.log('🔧 getCurrentAvatarId():', getCurrentAvatarId());
+        console.log('🔧 getCurrentAvatarName():', getCurrentAvatarName());
+        console.log('🔧 getCurrentAvatarGender():', getCurrentAvatarGender());
+        console.log('🔧 currentAvatar:', currentAvatar);
+        
         // Get recent chat history for context
         let chatHistory = [];
         if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
@@ -1366,20 +1393,25 @@ async function sendMessage() {
         }
 
         // Send to AI backend with complete user profile and chat history
+        const requestBody = {
+            message: text,
+            grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
+            subject: userSubject,
+            userProfile: userProfile,
+            teacher: getCurrentAvatarName(),
+            userGender: userGender,
+            avatarGender: avatarGender,
+            isFirstResponseOfDay: isFirstResponseOfDay,
+            chatHistory: chatHistory
+        };
+        
+        console.log('🔧 Sending to AI with teacher name:', requestBody.teacher);
+        console.log('🔧 Sending to AI with avatar gender:', requestBody.avatarGender);
+        
         const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: text,
-                grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
-                subject: userSubject,
-                userProfile: userProfile,
-                teacher: getCurrentAvatarName(),
-                userGender: userGender,
-                avatarGender: avatarGender,
-                isFirstResponseOfDay: isFirstResponseOfDay,
-                chatHistory: chatHistory
-            })
+            body: JSON.stringify(requestBody)
         });
         
         console.log('🔧 Response received:', response.status);
@@ -3210,19 +3242,25 @@ async function saveAvatarSelection() {
         
         // Update local user data
         if (window.userData) {
+            console.log('🔧 Updating local userData.ai_avatar from:', window.userData.ai_avatar, 'to:', selectedAvatarOption);
             window.userData.ai_avatar = selectedAvatarOption;
         }
         
         // Update global selected avatar
+        console.log('🔧 Updating window.selectedAvatar from:', window.selectedAvatar, 'to:', selectedAvatarOption);
         window.selectedAvatar = selectedAvatarOption;
         
         console.log('✅ Avatar saved successfully:', selectedAvatarOption);
+        console.log('🔧 Current window.userData.ai_avatar:', window.userData?.ai_avatar);
+        console.log('🔧 Current window.selectedAvatar:', window.selectedAvatar);
         showSuccess('Avatar updated successfully!');
         
         // Reload user data to ensure AI gets the updated avatar
+        console.log('🔧 Reloading user data...');
         await reloadUserData();
         
         // Update TTS voice to match new avatar
+        console.log('🔧 Updating TTS voice...');
         if (window.textToSpeech) {
             window.textToSpeech.forceVoiceUpdate();
         }

@@ -320,15 +320,20 @@ class TextToSpeech {
     detectLanguageAndSetVoice(text) {
         // Get current avatar from userData or fallback to window.selectedAvatar
         const currentAvatar = (window.userData && window.userData.ai_avatar) || window.selectedAvatar || 'roy-sir';
-        console.log('TTS Voice Selection - Current Avatar:', currentAvatar);
+        console.log('🔧 TTS Voice Selection - Current Avatar:', currentAvatar);
+        console.log('🔧 window.userData:', window.userData);
+        console.log('🔧 window.userData?.ai_avatar:', window.userData?.ai_avatar);
+        console.log('🔧 window.selectedAvatar:', window.selectedAvatar);
 
         if (currentAvatar === 'miss-sapna') {
+            console.log('🎯 Miss Sapna detected, selecting Hindi voice');
             // Simplified Hindi voice selection
             let hindiVoice = this.voices.find(voice =>
                 voice.lang.includes('hi-IN') || voice.lang.includes('hi')
             );
             
             if (!hindiVoice) {
+                console.log('🔍 No hi-IN/hi voice found, trying IN voices');
                 hindiVoice = this.voices.find(voice =>
                     voice.lang.includes('IN')
                 );
@@ -343,12 +348,14 @@ class TextToSpeech {
                 return 'hi-IN';
             }
         } else {
+            console.log('🎯 Roy Sir detected, selecting English voice');
             // Simplified English voice selection for Roy Sir
             let englishVoice = this.voices.find(voice =>
                 voice.lang.includes('en-IN')
             );
             
             if (!englishVoice) {
+                console.log('🔍 No en-IN voice found, trying en-US/en-GB voices');
                 englishVoice = this.voices.find(voice =>
                     voice.lang.includes('en-US') || voice.lang.includes('en-GB')
                 );
