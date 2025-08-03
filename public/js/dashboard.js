@@ -759,63 +759,69 @@ function addToRequestQueue(requestFn) {
   });
 }
 
-// Enhanced user data loading with concurrency control
+// Simplified user data loading - no request queue wrapper
 async function loadUserData() {
-    console.log('🔧 Loading user data with concurrency control...');
-    
-    try {
-        return await addToRequestQueue(async () => {
-            // Check cache first
-            if (window.userDataCache && window.cacheTimestamp) {
-                const now = Date.now();
-                if (now - window.cacheTimestamp < window.CACHE_DURATION) {
-                    console.log('✅ Using cached user data');
-                    return window.userDataCache;
-                }
-            }
-            
-            // Use the correct Supabase client
-            const supabaseClient = window.supabaseClient || window.supabase;
-            if (!supabaseClient) {
-                throw new Error('Supabase client not available');
-            }
-            
-            const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-            if (userError || !user) {
-                throw new Error('User not authenticated');
-            }
-            
-            const { data: profile, error: profileError } = await supabaseClient
-                .from('user_profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-            
-            if (profileError) {
-                console.error('❌ Profile loading error:', profileError);
-                throw new Error('Failed to load user profile');
-            }
-            
-            // Cache the data
-            window.userData = profile;
-            window.userDataCache = profile;
-            window.cacheTimestamp = Date.now();
-            window.userDataLoaded = true;
-            
-            // Set selected avatar from user profile
-            window.selectedAvatar = profile.ai_avatar || 'roy-sir';
-            
-            // Update avatar display
-            updateAvatarDisplay();
-            
-            console.log('✅ User data loaded successfully:', profile);
-            return profile;
-        });
-        
-    } catch (error) {
-        console.error('❌ User data loading error:', error);
-        throw error;
+  console.log('🔧 CORRECT loadUserData function called');
+  
+  try {
+    // Verify Supabase is ready
+    if (!window.supabase?.auth?.getUser) {
+      console.error('❌ Supabase auth not initialized');
+      throw new Error('Supabase auth not initialized');
     }
+
+    console.log('✅ Supabase auth is ready, proceeding with user data fetch');
+
+    // Direct call to getUser - no request queue wrapper
+    console.log('🔧 Fetching user data from Supabase auth...');
+    const { data: { user }, error } = await window.supabase.auth.getUser();
+    if (error) {
+      console.error('❌ Error getting user:', error);
+      throw error;
+    }
+    console.log('✅ User data fetched:', user);
+
+    if (!user) {
+      console.error('❌ No user data returned');
+      throw new Error('No user data returned');
+    }
+    
+    console.log('✅ User authenticated, fetching profile...');
+    
+    // Direct call to profile fetch - no request queue wrapper
+    console.log('🔧 Fetching profile from user_profiles table...');
+    const { data: profile, error: profileError } = await window.supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    if (profileError) {
+      console.error('❌ Error fetching profile:', profileError);
+      throw profileError;
+    }
+    console.log('✅ Profile fetched:', profile);
+
+    // Update UI with loaded data
+    window.userData = profile;
+    window.userDataCache = profile;
+    window.cacheTimestamp = Date.now();
+    window.userDataLoaded = true;
+    window.selectedAvatar = profile.ai_avatar || 'roy-sir';
+    
+    // Update avatar display
+    updateAvatarDisplay();
+    
+    // Update user display in sidebar
+    updateUserDisplay(profile);
+    
+    console.log('✅ User data loaded successfully:', profile);
+    return profile;
+
+  } catch (error) {
+    console.error('❌ User data loading failed:', error);
+    showError('Failed to load user data. Please refresh the page.');
+    return null;
+  }
 }
 
 function showWelcomeMessage() {
