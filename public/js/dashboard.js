@@ -522,9 +522,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         await initializeSupabase();
         
-        // Initialize dashboard
-        await initializeDashboard();
-        
         // Initialize avatar selection system
         initializeAvatarSelection();
         
@@ -718,75 +715,107 @@ function logSupabaseState() {
     });
 }
 
-// Enhanced user data loading with proper error handling
-async function loadUserData() {
-  console.log('🔧 CORRECT loadUserData function called at line 709');
-  
-  try {
-    // Verify Supabase is ready
-    if (!window.supabase?.auth?.getUser) {
-      console.error('❌ Supabase auth not initialized');
-      throw new Error('Supabase auth not initialized');
-    }
+// Proper request queue implementation
+const requestQueue = [];
+let activeRequests = 0;
+const MAX_CONCURRENT_REQUESTS = 3;
 
-    console.log('✅ Supabase auth is ready, proceeding with user data fetch');
-
-    // Queue the getUser request
-    const userData = await addToRequestQueue(async () => {
-      console.log('🔧 Fetching user data from Supabase auth...');
-      const { data: { user }, error } = await window.supabase.auth.getUser();
-      if (error) {
-        console.error('❌ Error getting user:', error);
-        throw error;
-      }
-      console.log('✅ User data fetched:', user);
-      return user;
-    });
-
-    if (!userData) {
-      console.error('❌ No user data returned');
-      throw new Error('No user data returned');
-    }
-    
-    console.log('✅ User authenticated, fetching profile...');
-    
-    // Queue the profile fetch
-    const profileData = await addToRequestQueue(async () => {
-      console.log('🔧 Fetching profile from user_profiles table...');
-      const { data: profile, error } = await window.supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userData.id)
-        .single();
-      if (error) {
-        console.error('❌ Error fetching profile:', error);
-        throw error;
-      }
-      console.log('✅ Profile fetched:', profile);
-      return profile;
-    });
-
-    // Update UI with loaded data
-    window.userData = profileData;
-    window.userDataCache = profileData;
-    window.cacheTimestamp = Date.now();
-    window.userDataLoaded = true;
-    window.selectedAvatar = profileData.ai_avatar || 'roy-sir';
-    
-    // Update avatar display
-    updateAvatarDisplay();
-    
-    // Update user display in sidebar
-    updateUserDisplay(profileData);
-    
-    console.log('✅ User data loaded successfully:', profileData);
-    return profileData;
-
-  } catch (error) {
-    console.error('❌ User data loading failed:', error);
-    showError('Failed to load user data. Please refresh the page.');
-    return null;
+function processRequestQueue() {
+  if (activeRequests >= MAX_CONCURRENT_REQUESTS || requestQueue.length === 0) {
+    return;
   }
+
+  const nextRequest = requestQueue.shift();
+  if (!nextRequest || typeof nextRequest.requestFn !== 'function') {
+    console.error('Invalid request in queue:', nextRequest);
+    processRequestQueue(); // Skip invalid requests
+    return;
+  }
+
+  activeRequests++;
+  
+  nextRequest.requestFn()
+    .then(result => {
+      nextRequest.resolve(result);
+    })
+    .catch(error => {
+      nextRequest.reject(error);
+    })
+    .finally(() => {
+      activeRequests--;
+      processRequestQueue();
+    });
+}
+
+function addToRequestQueue(requestFn) {
+  return new Promise((resolve, reject) => {
+    if (typeof requestFn !== 'function') {
+      reject(new Error('requestFn must be a function'));
+      return;
+    }
+    
+    requestQueue.push({ requestFn, resolve, reject });
+    processRequestQueue();
+  });
+}
+
+// Enhanced user data loading with concurrency control
+async function loadUserData() {
+    console.log('🔧 Loading user data with concurrency control...');
+    
+    try {
+        return await addToRequestQueue(async () => {
+            // Check cache first
+            if (window.userDataCache && window.cacheTimestamp) {
+                const now = Date.now();
+                if (now - window.cacheTimestamp < window.CACHE_DURATION) {
+                    console.log('✅ Using cached user data');
+                    return window.userDataCache;
+                }
+            }
+            
+            // Use the correct Supabase client
+            const supabaseClient = window.supabaseClient || window.supabase;
+            if (!supabaseClient) {
+                throw new Error('Supabase client not available');
+            }
+            
+            const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+            if (userError || !user) {
+                throw new Error('User not authenticated');
+            }
+            
+            const { data: profile, error: profileError } = await supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+            
+            if (profileError) {
+                console.error('❌ Profile loading error:', profileError);
+                throw new Error('Failed to load user profile');
+            }
+            
+            // Cache the data
+            window.userData = profile;
+            window.userDataCache = profile;
+            window.cacheTimestamp = Date.now();
+            window.userDataLoaded = true;
+            
+            // Set selected avatar from user profile
+            window.selectedAvatar = profile.ai_avatar || 'roy-sir';
+            
+            // Update avatar display
+            updateAvatarDisplay();
+            
+            console.log('✅ User data loaded successfully:', profile);
+            return profile;
+        });
+        
+    } catch (error) {
+        console.error('❌ User data loading error:', error);
+        throw error;
+    }
 }
 
 function showWelcomeMessage() {
