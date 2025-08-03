@@ -20,7 +20,7 @@ class VoiceRecognition {
         
         // Set language based on device and user preference
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const userLanguage = window.selectedAvatar === 'ms-sapana' ? 'hi-IN' : 'en-US';
+        const userLanguage = window.selectedAvatar === 'miss-sapna' ? 'hi-IN' : 'en-US';
         
         this.recognition.lang = isMobile ? userLanguage : 'en-US';
         

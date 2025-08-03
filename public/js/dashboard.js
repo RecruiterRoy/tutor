@@ -355,51 +355,9 @@ window.selectedAvatar = selectedAvatar;
 
 // Indian Regional Avatars
 const regionalAvatars = [
-    // Specific Teacher Avatars (based on language preference)
-    { id: 'ms-sapana', name: 'Ms. Sapana', region: 'Hindi/Hinglish', gender: 'female', image: '👩‍🏫', language: 'hindi' },
     { id: 'roy-sir', name: 'Roy Sir', region: 'English', gender: 'male', image: '👨‍🏫', language: 'english' },
-    
-    // North India
-    { id: 'punjabi-male', name: 'Punjabi Male', region: 'Punjab', gender: 'male', image: '👨‍🦱' },
-    { id: 'punjabi-female', name: 'Punjabi Female', region: 'Punjab', gender: 'female', image: '👩‍🦱' },
-    { id: 'haryanvi-male', name: 'Haryanvi Male', region: 'Haryana', gender: 'male', image: '👨‍🦲' },
-    { id: 'haryanvi-female', name: 'Haryanvi Female', region: 'Haryana', gender: 'female', image: '👩‍🦲' },
-    
-    // South India
-    { id: 'tamil-male', name: 'Tamil Male', region: 'Tamil Nadu', gender: 'male', image: '👨‍🦳' },
-    { id: 'tamil-female', name: 'Tamil Female', region: 'Tamil Nadu', gender: 'female', image: '👩‍🦳' },
-    { id: 'telugu-male', name: 'Telugu Male', region: 'Andhra Pradesh', gender: 'male', image: '👨‍🦱' },
-    { id: 'telugu-female', name: 'Telugu Female', region: 'Andhra Pradesh', gender: 'female', image: '👩‍🦱' },
-    { id: 'kannada-male', name: 'Kannada Male', region: 'Karnataka', gender: 'male', image: '👨‍🦲' },
-    { id: 'kannada-female', name: 'Kannada Female', region: 'Karnataka', gender: 'female', image: '👩‍🦲' },
-    { id: 'malayali-male', name: 'Malayali Male', region: 'Kerala', gender: 'male', image: '👨‍🦳' },
-    { id: 'malayali-female', name: 'Malayali Female', region: 'Kerala', gender: 'female', image: '👩‍🦳' },
-    
-    // East India
-    { id: 'bengali-male', name: 'Bengali Male', region: 'West Bengal', gender: 'male', image: '👨‍🦱' },
-    { id: 'bengali-female', name: 'Bengali Female', region: 'West Bengal', gender: 'female', image: '��‍🦱' },
-    { id: 'odia-male', name: 'Odia Male', region: 'Odisha', gender: 'male', image: '👨‍🦲' },
-    { id: 'odia-female', name: 'Odia Female', region: 'Odisha', gender: 'female', image: '👩‍🦲' },
-    
-    // West India
-    { id: 'gujarati-male', name: 'Gujarati Male', region: 'Gujarat', gender: 'male', image: '👨‍🦳' },
-    { id: 'gujarati-female', name: 'Gujarati Female', region: 'Gujarat', gender: 'female', image: '👩‍🦳' },
-    { id: 'marathi-male', name: 'Marathi Male', region: 'Maharashtra', gender: 'male', image: '👨‍🦱' },
-    { id: 'marathi-female', name: 'Marathi Female', region: 'Maharashtra', gender: 'female', image: '👩‍🦱' },
-    
-    // Central India
-    { id: 'madhyapradesh-male', name: 'Madhya Pradesh Male', region: 'Madhya Pradesh', gender: 'male', image: '👨‍🦲' },
-    { id: 'madhyapradesh-female', name: 'Madhya Pradesh Female', region: 'Madhya Pradesh', gender: 'female', image: '👩‍🦲' },
-    
-    // Northeast India
-    { id: 'assamese-male', name: 'Assamese Male', region: 'Assam', gender: 'male', image: '👨‍🦳' },
-    { id: 'assamese-female', name: 'Assamese Female', region: 'Assam', gender: 'female', image: '👩‍🦳' },
-    { id: 'manipuri-male', name: 'Manipuri Male', region: 'Manipur', gender: 'male', image: '👨‍🦱' },
-    { id: 'manipuri-female', name: 'Manipuri Female', region: 'Manipur', gender: 'female', image: '👩‍🦱' },
-    
-    // Kashmir
-    { id: 'kashmiri-male', name: 'Kashmiri Male', region: 'Kashmir', gender: 'male', image: '👨‍🦲' },
-    { id: 'kashmiri-female', name: 'Kashmiri Female', region: 'Kashmir', gender: 'female', image: '👩‍🦲' }
+    { id: 'miss-sapna', name: 'Miss Sapna', region: 'Hindi/Hinglish', gender: 'female', image: '👩‍🏫', language: 'hindi' },
+    { id: 'baruah-sir', name: 'Baruah Sir', region: 'Assamese', gender: 'male', image: '👨‍🏫', language: 'assamese' }
 ];
 
 // Mobile detection and optimization
@@ -1428,7 +1386,8 @@ async function sendMessage() {
             grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
             subject: userSubject,
             userProfile: userProfile,
-            teacher: getCurrentAvatarName(),
+            avatar: getCurrentAvatarId(), // Send avatar ID instead of teacher name
+            teacher: getCurrentAvatarName(), // Keep teacher name for compatibility
             userGender: userGender,
             avatarGender: avatarGender,
             isFirstResponseOfDay: isFirstResponseOfDay,
@@ -1706,8 +1665,8 @@ function initSpeechRecognition() {
         
         // Set language based on current avatar
         const currentAvatar = window.selectedAvatar || 'roy-sir';
-        if (currentAvatar === 'ms-sapana') {
-            recognition.lang = 'hi-IN'; // Hindi for Ms. Sapana
+        if (currentAvatar === 'miss-sapna') {
+            recognition.lang = 'hi-IN'; // Hindi for Ms. Sapna
         } else {
             recognition.lang = 'en-IN'; // English for Roy Sir
         }
@@ -2324,14 +2283,11 @@ function askQuickQuestion(question) {
 
 // Helper function to get default avatar based on language
 function getDefaultAvatarForLanguage(language) {
-    const languageLower = language.toLowerCase();
-    
-    if (languageLower.includes('hindi') || languageLower.includes('hi') || languageLower.includes('hinglish')) {
-        return regionalAvatars.find(avatar => avatar.id === 'ms-sapana');
-    } else if (languageLower.includes('english') || languageLower.includes('en')) {
-        return regionalAvatars.find(avatar => avatar.id === 'roy-sir');
+    if (language === 'hindi' || language === 'Hindi') {
+        return regionalAvatars.find(avatar => avatar.id === 'miss-sapna');
+    } else if (language === 'assamese' || language === 'Assamese') {
+        return regionalAvatars.find(avatar => avatar.id === 'baruah-sir');
     } else {
-        // Default to Roy Sir for English
         return regionalAvatars.find(avatar => avatar.id === 'roy-sir');
     }
 }
@@ -2443,9 +2399,12 @@ function setupAvatarSelection() {
             
             // Determine which avatar was selected based on the image alt text
             const img = card.querySelector('img');
-            if (img && img.alt === 'Ms. Sapana') {
-                selectedAvatar = 'ms-sapana';
-                window.selectedAvatar = 'ms-sapana';
+            if (img && img.alt === 'Miss Sapna') {
+                selectedAvatar = 'miss-sapna';
+                window.selectedAvatar = 'miss-sapna';
+            } else if (img && img.alt === 'Baruah Sir') {
+                selectedAvatar = 'baruah-sir';
+                window.selectedAvatar = 'baruah-sir';
             } else if (img && img.alt === 'Roy Sir') {
                 selectedAvatar = 'roy-sir';
                 window.selectedAvatar = 'roy-sir';
@@ -2559,7 +2518,8 @@ async function sendChatMessage() {
                 grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                 subject: userSubject,
                 userProfile: userProfile,
-                teacher: getCurrentAvatarName(),
+                avatar: getCurrentAvatarId(), // Send avatar ID instead of teacher name
+                teacher: getCurrentAvatarName(), // Keep teacher name for compatibility
                 userGender: userGender,
                 avatarGender: avatarGender,
                 isFirstResponseOfDay: isFirstResponseOfDay,
@@ -2898,10 +2858,12 @@ window.stopTTS = function() {
 window.handleAvatarSelection = function(language) {
     const englishCard = document.querySelector('[onclick="handleAvatarSelection(\'english\')"]');
     const hindiCard = document.querySelector('[onclick="handleAvatarSelection(\'hindi\')"]');
+    const assameseCard = document.querySelector('[onclick="handleAvatarSelection(\'assamese\')"]');
     
-    // Remove selected class from both
+    // Remove selected class from all
     englishCard?.classList.remove('selected');
     hindiCard?.classList.remove('selected');
+    assameseCard?.classList.remove('selected');
     
     // Add selected class to chosen language
     if (language === 'english') {
@@ -2909,7 +2871,10 @@ window.handleAvatarSelection = function(language) {
         selectedAvatar = 'roy-sir';
     } else if (language === 'hindi') {
         hindiCard?.classList.add('selected');
-        selectedAvatar = 'ms-sapana';
+        selectedAvatar = 'miss-sapna';
+    } else if (language === 'assamese') {
+        assameseCard?.classList.add('selected');
+        selectedAvatar = 'baruah-sir';
     }
     
     // Update avatar display
