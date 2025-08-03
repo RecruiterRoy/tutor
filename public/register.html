@@ -896,19 +896,12 @@
                     if (data.user) {
                         console.log('✅ Email user created:', data.user.id);
                         
-                        // Create profile directly without checking for trigger
+                        // Create profile directly using the user data from signup
                         console.log('📝 Creating user profile...');
                         
-                        // Ensure user is properly authenticated before creating profile
-                        console.log('🔐 Ensuring user authentication...');
-                        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-                        
-                        if (authError || !currentUser) {
-                            console.error('❌ User authentication failed:', authError);
-                            throw new Error('User authentication failed. Please try again.');
-                        }
-                        
-                        console.log('✅ User authenticated:', currentUser.id);
+                        // Use the user data directly from signup response
+                        const currentUser = data.user;
+                        console.log('✅ Using user from signup:', currentUser.id);
                         
                         const { error: profileError } = await supabase
                             .from('user_profiles')
@@ -1031,16 +1024,9 @@
                         // Create profile immediately for phone users (auto-approved)
                         console.log('📝 Creating user profile for phone user...');
                         
-                        // Ensure user is properly authenticated before creating profile
-                        console.log('🔐 Ensuring user authentication...');
-                        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-                        
-                        if (authError || !currentUser) {
-                            console.error('❌ User authentication failed:', authError);
-                            throw new Error('User authentication failed. Please try again.');
-                        }
-                        
-                        console.log('✅ User authenticated:', currentUser.id);
+                        // Use the user data directly from signup response
+                        const currentUser = data.user;
+                        console.log('✅ Using user from signup:', currentUser.id);
                         
                         const { error: profileError } = await supabase
                             .from('user_profiles')
@@ -1167,30 +1153,11 @@
                     
                     console.log('📋 Profile data to insert:', profileData);
                     
-                    // Ensure user is properly authenticated before creating profile
-                    console.log('🔐 Ensuring Google user authentication...');
-                    const { data: { user: currentGoogleUser }, error: googleAuthError } = await supabase.auth.getUser();
+                    // Use the user data directly from OAuth response
+                    console.log('🔐 Using Google user from OAuth response...');
+                    const currentUser = user;
                     
-                    if (googleAuthError || !currentGoogleUser) {
-                        console.error('❌ Google user authentication failed:', googleAuthError);
-                        throw new Error('Google authentication failed. Please try again.');
-                    }
-                    
-                    console.log('✅ Google user authenticated:', currentGoogleUser.id);
-                    
-                    // Update profile data with current user ID
-                    profileData.id = currentGoogleUser.id;
-                    
-                    // Ensure user is properly authenticated before creating profile
-                    console.log('🔐 Ensuring Google user authentication...');
-                    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-                    
-                    if (authError || !currentUser) {
-                        console.error('❌ Google user authentication failed:', authError);
-                        throw new Error('Google authentication failed. Please try again.');
-                    }
-                    
-                    console.log('✅ Google user authenticated:', currentUser.id);
+                    console.log('✅ Google user available:', currentUser.id);
                     
                     // Update profile data with current user ID
                     profileData.id = currentUser.id;
