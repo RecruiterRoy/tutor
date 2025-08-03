@@ -1275,17 +1275,21 @@
                         <div class="space-y-6">
                             <!-- Teacher Avatar -->
                             <div class="card-modern">
-                                <h3 class="text-white text-lg font-semibold mb-4">Teacher Avatar</h3>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="avatar-selection-card p-4 rounded-lg cursor-pointer" onclick="handleAvatarSelection('english')">
-                                        <img class="teacher-avatar mx-auto mb-2" src="images/roy_sir.jpg" alt="Roy Sir" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiM2NjdlZWEiLz4KPGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlI8L3RleHQ+Cjwvc3ZnPgo='">
-                                        <h4 class="text-white text-center text-sm">Roy Sir</h4>
-                                        <p class="text-gray-300 text-center text-xs">Indian English Voice</p>
-                                    </div>
-                                    <div class="avatar-selection-card p-4 rounded-lg cursor-pointer" onclick="handleAvatarSelection('hindi')">
-                                        <img class="teacher-avatar mx-auto mb-2" src="images/miss_sapna.jpg" alt="Ms. Sapana" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNhODU1ZjciLz4KPGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+Cjwvc3ZnPgo='">
-                                        <h4 class="text-white text-center text-sm">Ms. Sapana</h4>
-                                        <p class="text-gray-300 text-center text-xs">Google Hindi</p>
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-white text-lg font-semibold">Teacher Avatar</h3>
+                                    <button onclick="showAvatarSelectionModal()" class="btn-modern text-sm">
+                                        <span>⚙️</span>
+                                        <span>Change Avatar</span>
+                                    </button>
+                                </div>
+                                <div id="currentAvatarDisplay" class="p-4 bg-purple-600/20 rounded-lg border border-purple-500/30">
+                                    <!-- Current avatar will be displayed here -->
+                                    <div class="flex items-center space-x-3">
+                                        <div class="text-2xl">👨‍🏫</div>
+                                        <div>
+                                            <div class="text-white font-semibold">Roy Sir</div>
+                                            <div class="text-gray-300 text-sm">AI Teacher</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1460,6 +1464,92 @@
             <div class="space-y-3">
                 <button onclick="upgradeToPremium()" class="btn-modern w-full">Upgrade Now - ₹99/month</button>
                 <button onclick="closeTrialOverlay()" class="btn-modern btn-secondary w-full">Maybe Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Manager Modal -->
+    <div id="subjectManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-white text-xl font-semibold">📚 Manage Your Subjects</h3>
+                <button onclick="window.subjectManager?.hideSubjectManager()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Available Subjects -->
+                <div>
+                    <h4 class="text-white text-lg font-medium mb-4">Available Subjects</h4>
+                    <div id="availableSubjectsGrid" class="grid grid-cols-3 gap-3">
+                        <!-- Available subjects will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Selected Subjects -->
+                <div>
+                    <h4 class="text-white text-lg font-medium mb-4">Your Subjects</h4>
+                    <div id="selectedSubjectsGrid" class="grid grid-cols-3 gap-3">
+                        <!-- Selected subjects will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="window.subjectManager?.hideSubjectManager()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    Cancel
+                </button>
+                <button onclick="window.subjectManager?.saveSubjectChanges()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avatar Selection Modal -->
+    <div id="avatarSelectionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-white text-xl font-semibold">👨‍🏫 Choose Your AI Teacher</h3>
+                <button onclick="closeAvatarSelectionModal()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Roy Sir -->
+                <div class="avatar-option bg-gradient-to-br from-blue-600 to-purple-600 p-4 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105" 
+                     onclick="selectAvatarOption('roy-sir', 'Roy Sir')">
+                    <div class="text-center">
+                        <div class="text-4xl mb-2">👨‍🏫</div>
+                        <h4 class="text-white font-semibold">Roy Sir</h4>
+                        <p class="text-blue-200 text-sm">English & Advanced Topics</p>
+                    </div>
+                </div>
+                
+                <!-- Miss Sapna -->
+                <div class="avatar-option bg-gradient-to-br from-pink-600 to-red-600 p-4 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105" 
+                     onclick="selectAvatarOption('miss-sapna', 'Miss Sapna')">
+                    <div class="text-center">
+                        <div class="text-4xl mb-2">👩‍🏫</div>
+                        <h4 class="text-white font-semibold">Miss Sapna</h4>
+                        <p class="text-pink-200 text-sm">Hindi & Hinglish</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="closeAvatarSelectionModal()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    Cancel
+                </button>
+                <button onclick="saveAvatarSelection()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Save Selection
+                </button>
             </div>
         </div>
     </div>

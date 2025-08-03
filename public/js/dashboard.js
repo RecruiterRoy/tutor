@@ -502,6 +502,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Initialize dashboard
         await initializeDashboard();
         
+        // Initialize avatar selection system
+        initializeAvatarSelection();
+        
         // Initialize Mermaid
         mermaid.initialize({
             startOnLoad: false,
@@ -1378,117 +1381,7 @@ async function updateContext() {
 }
 
 async function sendMessage() {
-    console.log('🔧 sendMessage function called');
-    
-    const input = document.getElementById('chatInput');
-    if (!input) {
-        console.error('❌ Chat input not found');
-        return;
-    }
-    
-    const text = input.value.trim();
-    console.log('🔧 Input text:', text);
-    
-    if (!text) {
-        console.log('⚠️ Empty text, not sending');
-        return;
-    }
-    
-    // Check if user data is loaded
-    if (!window.userDataLoaded) {
-        console.error('❌ User data not loaded yet');
-        await addMessage('ai', 'Please wait, loading your profile...');
-        return;
-    }
-    
-    console.log('🔧 Adding user message to chat...');
-    // Add user message to chat
-    await addMessage('user', text);
-    input.value = '';
-    showTypingIndicator();
-    
-    try {
-        // Use already loaded user data instead of fetching again
-        const userProfile = window.userData;
-        
-        if (!userProfile) {
-            console.error('❌ No user profile available');
-            await addMessage('ai', 'Error: User profile not loaded. Please refresh the page.');
-            return;
-        }
-        
-        // Get user class/subject from profile
-        const userClass = userProfile.class || userProfile.class_level || 'Class 6';
-        const userSubject = window.currentSubject || '';
-        const userBoard = userProfile.board || 'CBSE';
-        
-        // Check if this is the first response of the day
-        const today = new Date().toDateString();
-        const isFirstResponseOfDay = lastResponseDate !== today;
-        
-        console.log('📤 Sending message with user data:', {
-            name: userProfile.full_name,
-            class: userClass,
-            board: userBoard,
-            subject: userSubject,
-            isFirstResponseOfDay: isFirstResponseOfDay,
-            userProfile: userProfile
-        });
-        
-        // Get the current avatar from user profile or global variable
-        const currentAvatar = userProfile?.ai_avatar || window.selectedAvatar || selectedAvatar || 'roy-sir';
-        
-        // Get recent chat history for context
-        let chatHistory = [];
-        if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
-            const subjectHistory = window.subjectManager.subjectChatHistory[window.subjectManager.getCurrentSubject()] || [];
-            chatHistory = subjectHistory.slice(-10); // Last 10 messages for context
-        }
-
-        console.log('🔧 Sending to AI backend...');
-        // Send to AI backend with complete user profile and chat history
-        const response = await fetch('/api/enhanced-chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: text,
-                grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
-                subject: userSubject,
-                userProfile: userProfile,
-                teacher: currentAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
-                isFirstResponseOfDay: isFirstResponseOfDay,
-                chatHistory: chatHistory
-            })
-        });
-        
-        console.log('🔧 Response received:', response.status);
-        const data = await response.json();
-        removeTypingIndicator();
-        
-        if (data.success && data.response) {
-            console.log('✅ AI response received');
-            await addMessage('ai', data.response);
-            
-            // Save message to subject history if subject manager is active
-            if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
-                await window.subjectManager.saveChatMessage(
-                    window.subjectManager.getCurrentSubject(),
-                    text,
-                    data.response
-                );
-            }
-            
-            // Update the last response date after successful response
-            lastResponseDate = today;
-        } else {
-            console.error('❌ AI response error:', data);
-            await addMessage('ai', 'Sorry, I could not get a response from the AI.');
-        }
-    } catch (err) {
-        console.error('❌ Send message error:', err);
-        removeTypingIndicator();
-        await addMessage('ai', 'Error connecting to AI server.');
-    }
+    console.log('🔧 sendMessage function called - waiting for implementation');
 }
 
 function showTypingIndicator() {
@@ -2956,6 +2849,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize the dashboard
         await initializeDashboard();
         
+        // Initialize avatar selection system
+        initializeAvatarSelection();
+        
         // Test voice recognition initialization
         console.log('🔧 Testing voice recognition:');
         const voiceButton = document.getElementById('voiceButton');
@@ -3113,4 +3009,361 @@ function showTypingIndicator() {
     typingDiv.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
     chatMessages.appendChild(typingDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Global variables for concurrency control
+let isProcessingRequest = false;
+let requestQueue = [];
+let lastRequestTime = 0;
+const REQUEST_COOLDOWN = 1000; // 1 second between requests
+
+// Avatar selection variables
+let selectedAvatarOption = null;
+let avatarSelectionModal = null;
+
+// Initialize avatar selection system
+function initializeAvatarSelection() {
+    console.log('🔧 Initializing avatar selection system...');
+    
+    // Get current avatar from user profile
+    if (window.userData && window.userData.ai_avatar) {
+        selectedAvatarOption = window.userData.ai_avatar;
+        console.log('✅ Current avatar loaded:', selectedAvatarOption);
+    } else {
+        selectedAvatarOption = 'roy-sir'; // Default
+        console.log('✅ Default avatar set:', selectedAvatarOption);
+    }
+    
+    // Update avatar display
+    updateAvatarDisplay();
+}
+
+// Show avatar selection modal
+function showAvatarSelectionModal() {
+    console.log('🔧 Showing avatar selection modal...');
+    const modal = document.getElementById('avatarSelectionModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        highlightCurrentAvatar();
+    } else {
+        console.error('❌ Avatar selection modal not found');
+    }
+}
+
+// Close avatar selection modal
+function closeAvatarSelectionModal() {
+    console.log('🔧 Closing avatar selection modal...');
+    const modal = document.getElementById('avatarSelectionModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        selectedAvatarOption = null; // Reset selection
+    }
+}
+
+// Select avatar option
+function selectAvatarOption(avatarId, avatarName) {
+    console.log('🔧 Selecting avatar:', avatarId, avatarName);
+    
+    // Remove previous selection
+    document.querySelectorAll('.avatar-option').forEach(option => {
+        option.classList.remove('ring-4', 'ring-yellow-400');
+    });
+    
+    // Highlight selected option
+    const selectedOption = event.currentTarget;
+    selectedOption.classList.add('ring-4', 'ring-yellow-400');
+    
+    selectedAvatarOption = avatarId;
+    console.log('✅ Avatar selected:', selectedAvatarOption);
+}
+
+// Save avatar selection
+async function saveAvatarSelection() {
+    if (!selectedAvatarOption) {
+        showError('Please select an avatar first');
+        return;
+    }
+    
+    console.log('🔧 Saving avatar selection:', selectedAvatarOption);
+    
+    try {
+        // Add to request queue for concurrency control
+        await addToRequestQueue(async () => {
+            const { data, error } = await window.supabase
+                .from('user_profiles')
+                .update({ 
+                    ai_avatar: selectedAvatarOption,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', window.userData.id)
+                .select();
+            
+            if (error) {
+                console.error('❌ Error saving avatar:', error);
+                throw new Error('Failed to save avatar selection');
+            }
+            
+            // Update local user data
+            if (window.userData) {
+                window.userData.ai_avatar = selectedAvatarOption;
+            }
+            
+            console.log('✅ Avatar saved successfully:', selectedAvatarOption);
+            showSuccess('Avatar updated successfully!');
+            
+            // Update display
+            updateAvatarDisplay();
+            
+            // Close modal
+            closeAvatarSelectionModal();
+        });
+        
+    } catch (error) {
+        console.error('❌ Avatar selection error:', error);
+        showError('Failed to save avatar selection. Please try again.');
+    }
+}
+
+// Highlight current avatar in modal
+function highlightCurrentAvatar() {
+    console.log('🔧 Highlighting current avatar:', selectedAvatarOption);
+    
+    // Remove all highlights
+    document.querySelectorAll('.avatar-option').forEach(option => {
+        option.classList.remove('ring-4', 'ring-yellow-400');
+    });
+    
+    // Highlight current avatar
+    if (selectedAvatarOption) {
+        const currentOption = document.querySelector(`[onclick*="${selectedAvatarOption}"]`);
+        if (currentOption) {
+            currentOption.classList.add('ring-4', 'ring-yellow-400');
+        }
+    }
+}
+
+// Update avatar display
+function updateAvatarDisplay() {
+    console.log('🔧 Updating avatar display...');
+    
+    const avatarDisplay = document.getElementById('currentAvatarDisplay');
+    if (!avatarDisplay) return;
+    
+    const avatarName = selectedAvatarOption === 'miss-sapna' ? 'Miss Sapna' : 'Roy Sir';
+    const avatarIcon = selectedAvatarOption === 'miss-sapna' ? '👩‍🏫' : '👨‍🏫';
+    
+    avatarDisplay.innerHTML = `
+        <div class="flex items-center space-x-3">
+            <div class="text-2xl">${avatarIcon}</div>
+            <div>
+                <div class="text-white font-semibold">${avatarName}</div>
+                <div class="text-gray-300 text-sm">AI Teacher</div>
+            </div>
+        </div>
+    `;
+    
+    console.log('✅ Avatar display updated:', avatarName);
+}
+
+// Concurrency control functions
+async function addToRequestQueue(requestFunction) {
+    return new Promise((resolve, reject) => {
+        requestQueue.push({ requestFunction, resolve, reject });
+        processRequestQueue();
+    });
+}
+
+async function processRequestQueue() {
+    if (isProcessingRequest || requestQueue.length === 0) {
+        return;
+    }
+    
+    const now = Date.now();
+    if (now - lastRequestTime < REQUEST_COOLDOWN) {
+        setTimeout(processRequestQueue, REQUEST_COOLDOWN - (now - lastRequestTime));
+        return;
+    }
+    
+    isProcessingRequest = true;
+    lastRequestTime = now;
+    
+    try {
+        const { requestFunction, resolve, reject } = requestQueue.shift();
+        const result = await requestFunction();
+        resolve(result);
+    } catch (error) {
+        const { reject } = requestQueue.shift();
+        reject(error);
+    } finally {
+        isProcessingRequest = false;
+        
+        // Process next request if any
+        if (requestQueue.length > 0) {
+            setTimeout(processRequestQueue, REQUEST_COOLDOWN);
+        }
+    }
+}
+
+// Enhanced user data loading with concurrency control
+async function loadUserData() {
+    console.log('🔧 Loading user data with concurrency control...');
+    
+    try {
+        return await addToRequestQueue(async () => {
+            // Check cache first
+            if (window.userDataCache && window.cacheTimestamp) {
+                const now = Date.now();
+                if (now - window.cacheTimestamp < window.CACHE_DURATION) {
+                    console.log('✅ Using cached user data');
+                    return window.userDataCache;
+                }
+            }
+            
+            const { data: { user }, error: userError } = await window.supabase.auth.getUser();
+            if (userError || !user) {
+                throw new Error('User not authenticated');
+            }
+            
+            const { data: profile, error: profileError } = await window.supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+            
+            if (profileError) {
+                console.error('❌ Profile loading error:', profileError);
+                throw new Error('Failed to load user profile');
+            }
+            
+            // Cache the data
+            window.userData = profile;
+            window.userDataCache = profile;
+            window.cacheTimestamp = Date.now();
+            window.userDataLoaded = true;
+            
+            console.log('✅ User data loaded successfully:', profile);
+            return profile;
+        });
+        
+    } catch (error) {
+        console.error('❌ User data loading error:', error);
+        throw error;
+    }
+}
+
+// Enhanced message sending with concurrency control
+async function sendMessage() {
+    console.log('🔧 sendMessage function called with concurrency control');
+    
+    const input = document.getElementById('chatInput');
+    if (!input) {
+        console.error('❌ Chat input not found');
+        return;
+    }
+    
+    const text = input.value.trim();
+    console.log('🔧 Input text:', text);
+    
+    if (!text) {
+        console.log('⚠️ Empty text, not sending');
+        return;
+    }
+    
+    // Check if user data is loaded
+    if (!window.userDataLoaded) {
+        console.error('❌ User data not loaded yet');
+        await addMessage('ai', 'Please wait, loading your profile...');
+        return;
+    }
+    
+    console.log('🔧 Adding user message to chat...');
+    // Add user message to chat
+    await addMessage('user', text);
+    input.value = '';
+    showTypingIndicator();
+    
+    try {
+        return await addToRequestQueue(async () => {
+            // Use already loaded user data instead of fetching again
+            const userProfile = window.userData;
+            
+            if (!userProfile) {
+                console.error('❌ No user profile available');
+                await addMessage('ai', 'Error: User profile not loaded. Please refresh the page.');
+                return;
+            }
+            
+            // Get user class/subject from profile
+            const userClass = userProfile.class || userProfile.class_level || 'Class 6';
+            const userSubject = window.currentSubject || '';
+            const userBoard = userProfile.board || 'CBSE';
+            
+            // Check if this is the first response of the day
+            const today = new Date().toDateString();
+            const isFirstResponseOfDay = lastResponseDate !== today;
+            
+            console.log('📤 Sending message with user data:', {
+                name: userProfile.full_name,
+                class: userClass,
+                board: userBoard,
+                subject: userSubject,
+                isFirstResponseOfDay: isFirstResponseOfDay,
+                userProfile: userProfile
+            });
+            
+            // Get the current avatar from user profile or global variable
+            const currentAvatar = userProfile?.ai_avatar || window.selectedAvatar || selectedAvatar || 'roy-sir';
+            
+            // Get recent chat history for context
+            let chatHistory = [];
+            if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
+                const subjectHistory = window.subjectManager.subjectChatHistory[window.subjectManager.getCurrentSubject()] || [];
+                chatHistory = subjectHistory.slice(-10); // Last 10 messages for context
+            }
+    
+            // Send to AI backend with complete user profile and chat history
+            const response = await fetch('/api/enhanced-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: text,
+                    grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
+                    subject: userSubject,
+                    userProfile: userProfile,
+                    teacher: currentAvatar === 'miss-sapna' ? 'Miss Sapna' : 'Roy Sir',
+                    isFirstResponseOfDay: isFirstResponseOfDay,
+                    chatHistory: chatHistory
+                })
+            });
+            
+            console.log('🔧 Response received:', response.status);
+            const data = await response.json();
+            removeTypingIndicator();
+            
+            if (data.success && data.response) {
+                console.log('✅ AI response received');
+                await addMessage('ai', data.response);
+                
+                // Save message to subject history if subject manager is active
+                if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
+                    await window.subjectManager.saveChatMessage(
+                        window.subjectManager.getCurrentSubject(),
+                        text,
+                        data.response
+                    );
+                }
+                
+                // Update the last response date after successful response
+                lastResponseDate = today;
+            } else {
+                console.error('❌ AI response error:', data);
+                await addMessage('ai', 'Sorry, I could not get a response from the AI.');
+            }
+        });
+        
+    } catch (err) {
+        console.error('❌ Send message error:', err);
+        removeTypingIndicator();
+        await addMessage('ai', 'Error connecting to AI server.');
+    }
 }
