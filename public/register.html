@@ -334,6 +334,7 @@
                                 <option value="English">English</option>
                                 <option value="Hindi">Hindi</option>
                                 <option value="Hinglish">Hinglish (Hindi + English)</option>
+                                <option value="Assamese">অসমীয়া (Assamese)</option>
                             </select>
                         </div>
                     </div>
@@ -1764,12 +1765,19 @@
         // Avatar selection based on language
         function updateAvatarBasedOnLanguage() {
             const language = document.getElementById('language').value;
+            
             if (language === 'Hindi' || language === 'Hinglish') {
-                selectedAvatar = 'miss_sapna.jpg'; // Miss Sapna for Hindi/Hinglish
+                selectedAvatar = 'miss-sapna';
+                avatarName = 'Miss Sapna';
+            } else if (language === 'Assamese') {
+                selectedAvatar = 'baruah-sir';
+                avatarName = 'Baruah Sir';
             } else {
-                selectedAvatar = 'roy_sir.jpg'; // Roy Sir for English
+                selectedAvatar = 'roy-sir';
+                avatarName = 'Roy Sir';
             }
-            console.log('Avatar updated to:', selectedAvatar);
+            
+            updateAvatarDisplay();
         }
 
         // Check and create profile if missing (for users who confirmed email but profile wasn't created)

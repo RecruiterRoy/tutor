@@ -163,7 +163,14 @@ function getCurrentAvatarName() {
     console.log('🔧 window.userData?.ai_avatar:', window.userData?.ai_avatar);
     
     if (window.userData && window.userData.ai_avatar) {
-        const avatarName = window.userData.ai_avatar === 'miss-sapna' ? 'Miss Sapna' : 'Roy Sir';
+        let avatarName;
+        if (window.userData.ai_avatar === 'miss-sapna') {
+            avatarName = 'Miss Sapna';
+        } else if (window.userData.ai_avatar === 'baruah-sir') {
+            avatarName = 'Baruah Sir';
+        } else {
+            avatarName = 'Roy Sir';
+        }
         console.log('✅ Returning avatar name:', avatarName);
         return avatarName;
     }
@@ -192,7 +199,14 @@ function getCurrentAvatarGender() {
     console.log('🔧 window.userData?.ai_avatar:', window.userData?.ai_avatar);
     
     if (window.userData && window.userData.ai_avatar) {
-        const gender = window.userData.ai_avatar === 'miss-sapna' ? 'female' : 'male';
+        let gender;
+        if (window.userData.ai_avatar === 'miss-sapna') {
+            gender = 'female';
+        } else if (window.userData.ai_avatar === 'baruah-sir') {
+            gender = 'male';
+        } else {
+            gender = 'male';
+        }
         console.log('✅ Returning avatar gender:', gender);
         return gender;
     }
@@ -206,6 +220,8 @@ function getAvatarWelcomeMessage() {
     
     if (avatarId === 'miss-sapna') {
         return "Hi, main aapki Miss Sapna hu. Main aapko Hindi bhasha mai padhaungi. Aap kya padhna chahti hain?";
+    } else if (avatarId === 'baruah-sir') {
+        return "নমস্কাৰ, মই আপোনাৰ বৰুৱা ছাৰ। মই আপোনাক অসমীয়া ভাষাত পঢ়াম। আপুনি কি পঢ়িব বিচাৰে?";
     } else {
         return "Hi, I am Roy Sir. I will teach you all subjects in English. Please tell me what you want to study today?";
     }
@@ -2357,7 +2373,15 @@ function updateAvatarDisplay() {
     
     const currentAvatarId = getCurrentAvatarId();
     const avatarName = getCurrentAvatarName();
-    const avatarIcon = currentAvatarId === 'miss-sapna' ? '👩‍🏫' : '👨‍🏫';
+    let avatarIcon;
+    
+    if (currentAvatarId === 'miss-sapna') {
+        avatarIcon = '👩‍🏫';
+    } else if (currentAvatarId === 'baruah-sir') {
+        avatarIcon = '👨‍🏫';
+    } else {
+        avatarIcon = '👨‍🏫';
+    }
     
     avatarDisplay.innerHTML = `
         <div class="flex items-center space-x-3">
@@ -2374,7 +2398,15 @@ function updateAvatarDisplay() {
     const welcomeTeacherName = document.getElementById('welcomeTeacherName');
     
     if (welcomeTeacherAvatar) {
-        welcomeTeacherAvatar.src = currentAvatarId === 'miss-sapna' ? 'images/miss_sapna.jpg' : 'images/roy_sir.jpg';
+        let avatarSrc;
+        if (currentAvatarId === 'miss-sapna') {
+            avatarSrc = 'images/miss_sapna.jpg';
+        } else if (currentAvatarId === 'baruah-sir') {
+            avatarSrc = 'images/baruah_sir.jpg';
+        } else {
+            avatarSrc = 'images/roy_sir.jpg';
+        }
+        welcomeTeacherAvatar.src = avatarSrc;
         welcomeTeacherAvatar.alt = avatarName;
     }
     
@@ -3304,7 +3336,15 @@ function updateAvatarDisplay() {
     
     const currentAvatarId = getCurrentAvatarId();
     const avatarName = getCurrentAvatarName();
-    const avatarIcon = currentAvatarId === 'miss-sapna' ? '👩‍🏫' : '👨‍🏫';
+    let avatarIcon;
+    
+    if (currentAvatarId === 'miss-sapna') {
+        avatarIcon = '👩‍🏫';
+    } else if (currentAvatarId === 'baruah-sir') {
+        avatarIcon = '👨‍🏫';
+    } else {
+        avatarIcon = '👨‍🏫';
+    }
     
     avatarDisplay.innerHTML = `
         <div class="flex items-center space-x-3">
@@ -3321,7 +3361,15 @@ function updateAvatarDisplay() {
     const welcomeTeacherName = document.getElementById('welcomeTeacherName');
     
     if (welcomeTeacherAvatar) {
-        welcomeTeacherAvatar.src = currentAvatarId === 'miss-sapna' ? 'images/miss_sapna.jpg' : 'images/roy_sir.jpg';
+        let avatarSrc;
+        if (currentAvatarId === 'miss-sapna') {
+            avatarSrc = 'images/miss_sapna.jpg';
+        } else if (currentAvatarId === 'baruah-sir') {
+            avatarSrc = 'images/baruah_sir.jpg';
+        } else {
+            avatarSrc = 'images/roy_sir.jpg';
+        }
+        welcomeTeacherAvatar.src = avatarSrc;
         welcomeTeacherAvatar.alt = avatarName;
     }
     

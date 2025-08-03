@@ -347,6 +347,39 @@ class TextToSpeech {
                 console.warn('❌ No Hindi voice found, using default');
                 return 'hi-IN';
             }
+        } else if (currentAvatar === 'assam-teacher') {
+            console.log('🎯 Assam Teacher detected, selecting Assamese voice');
+            // Assamese voice selection
+            let assameseVoice = this.voices.find(voice =>
+                voice.lang.includes('as-IN') || voice.lang.includes('as')
+            );
+            
+            if (!assameseVoice) {
+                console.log('🔍 No as-IN/as voice found, trying IN voices');
+                assameseVoice = this.voices.find(voice =>
+                    voice.lang.includes('IN') && voice.name.toLowerCase().includes('assamese')
+                );
+            }
+            
+            if (assameseVoice) {
+                this.currentVoice = assameseVoice;
+                console.log('✅ Assam Teacher using Assamese voice:', assameseVoice.name);
+                return 'as-IN';
+            } else {
+                console.warn('❌ No Assamese voice found, falling back to Hindi');
+                // Fallback to Hindi if Assamese not available
+                let hindiVoice = this.voices.find(voice =>
+                    voice.lang.includes('hi-IN') || voice.lang.includes('hi')
+                );
+                if (hindiVoice) {
+                    this.currentVoice = hindiVoice;
+                    console.log('✅ Assam Teacher using Hindi fallback voice:', hindiVoice.name);
+                    return 'hi-IN';
+                } else {
+                    console.warn('❌ No Hindi fallback found, using default');
+                    return 'as-IN';
+                }
+            }
         } else {
             console.log('🎯 Roy Sir detected, selecting English voice');
             // Simplified English voice selection for Roy Sir
@@ -431,6 +464,9 @@ class TextToSpeech {
         const englishVoices = this.voices.filter(voice => 
             voice.lang.includes('en-IN') || voice.lang.includes('en-US')
         );
+        const assameseVoices = this.voices.filter(voice => 
+            voice.lang.includes('as') || voice.name.toLowerCase().includes('assamese')
+        );
 
         // Add Hindi voices
         if (hindiVoices.length > 0) {
@@ -463,6 +499,22 @@ class TextToSpeech {
             });
             voiceSelector.appendChild(englishGroup);
         }
+
+        // Add Assamese voices
+        if (assameseVoices.length > 0) {
+            const assameseGroup = document.createElement('optgroup');
+            assameseGroup.label = 'অসমীয়া (Assamese)';
+            assameseVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                if (voice.name === this.currentVoice?.name) {
+                    option.selected = true;
+                }
+                assameseGroup.appendChild(option);
+            });
+            voiceSelector.appendChild(assameseGroup);
+        }
     }
 
     getVoicesInfo() {
@@ -470,6 +522,7 @@ class TextToSpeech {
             total: this.voices.length,
             hindi: this.voices.filter(v => v.lang.includes('hi')).length,
             english: this.voices.filter(v => v.lang.includes('en')).length,
+            assamese: this.voices.filter(v => v.lang.includes('as')).length,
             current: this.currentVoice?.name || 'None'
         };
     }
