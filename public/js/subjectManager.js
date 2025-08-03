@@ -371,7 +371,7 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
                     grade: this.userClass,
                     subject: subjectName,
                     userProfile: window.userData,
-                    teacher: window.selectedAvatar === 'ms-sapana' ? 'Ms. Sapana' : 'Roy Sir',
+                    teacher: this.getTeacherNameFromAvatar(window.userData?.ai_avatar || window.selectedAvatar),
                     action: 'subject_recall',
                     chatHistory: recentMessages
                 })
@@ -796,6 +796,19 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
     // Get user subjects
     getUserSubjects() {
         return this.userSubjects;
+    }
+
+    // Helper to get teacher name from avatar
+    getTeacherNameFromAvatar(avatarId) {
+        switch (avatarId) {
+            case 'miss-sapna':
+                return 'Miss Sapna';
+            case 'baruah-sir':
+                return 'Baruah Sir';
+            case 'roy-sir':
+            default:
+                return 'Roy Sir';
+        }
     }
 }
 

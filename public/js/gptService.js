@@ -30,12 +30,17 @@ class GPTService {
                 throw new Error('Invalid message format');
             }
             
+            // Get current avatar from user data
+            const currentAvatar = userProfile?.ai_avatar || window.userData?.ai_avatar || 'roy-sir';
+            const teacherName = this.getTeacherNameFromAvatar(currentAvatar);
+            
             // Format request for the enhanced chat API
             const requestBody = {
                 message: userMessage,
                 grade: this.currentGrade || '6',
                 subject: this.currentSubject || 'General',
-                teacher: this.currentTeacher || 'Roy Sir',
+                teacher: teacherName,
+                avatar: currentAvatar,
                 userProfile: userProfile || {
                     full_name: 'Student',
                     class: this.currentGrade || '6',
@@ -117,6 +122,18 @@ class GPTService {
             'English': 'https://learnenglish.britishcouncil.org/',
             'General': 'https://www.education.com/resources/'
         }[subject];
+    }
+
+    getTeacherNameFromAvatar(avatarId) {
+        switch(avatarId) {
+            case 'miss-sapna':
+                return 'Miss Sapna';
+            case 'baruah-sir':
+                return 'Baruah Sir';
+            case 'roy-sir':
+            default:
+                return 'Roy Sir';
+        }
     }
 }
 
