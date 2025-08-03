@@ -3243,63 +3243,6 @@ async function addToRequestQueue(requestFunction) {
         processRequestQueue();
     });
 }
-    console.log('🔧 Loading user data with concurrency control...');
-    
-    try {
-        return await addToRequestQueue(async () => {
-            // Check cache first
-            if (window.userDataCache && window.cacheTimestamp) {
-                const now = Date.now();
-                if (now - window.cacheTimestamp < window.CACHE_DURATION) {
-                    console.log('✅ Using cached user data');
-                    return window.userDataCache;
-                }
-            }
-            
-            // Use the correct Supabase client
-            const supabaseClient = window.supabaseClient || window.supabase;
-            if (!supabaseClient) {
-                throw new Error('Supabase client not available');
-            }
-            
-            const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-            if (userError || !user) {
-                throw new Error('User not authenticated');
-            }
-            
-            const { data: profile, error: profileError } = await supabaseClient
-                .from('user_profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-            
-            if (profileError) {
-                console.error('❌ Profile loading error:', profileError);
-                throw new Error('Failed to load user profile');
-            }
-            
-            // Cache the data
-            window.userData = profile;
-            window.userDataCache = profile;
-            window.cacheTimestamp = Date.now();
-            window.userDataLoaded = true;
-            
-            // Set selected avatar from user profile
-            window.selectedAvatar = profile.ai_avatar || 'roy-sir';
-            
-            // Update avatar display
-            updateAvatarDisplay();
-            
-            console.log('✅ User data loaded successfully:', profile);
-            return profile;
-        });
-        
-    } catch (error) {
-        console.error('❌ User data loading error:', error);
-        throw error;
-    }
-}
-
 // Loading state management
 // REMOVED: let isInitializing = false; - DUPLICATE
 // REMOVED: let isUserDataLoading = false; - DUPLICATE
