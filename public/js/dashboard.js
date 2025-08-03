@@ -2634,12 +2634,14 @@ function showProfilePopup() {
         // Populate popup fields with current user data
         const nameField = document.getElementById('popupProfileName');
         const classField = document.getElementById('popupProfileClass');
+        const genderField = document.getElementById('popupProfileGender');
         const boardField = document.getElementById('popupProfileBoard');
         const emailField = document.getElementById('popupProfileEmail');
         const mobileField = document.getElementById('popupProfileMobile');
         
         if (nameField) nameField.value = window.userData?.full_name || '';
         if (classField) classField.value = window.userData?.class || '';
+        if (genderField) genderField.value = window.userData?.gender || 'male';
         if (boardField) boardField.value = window.userData?.board || '';
         if (emailField) emailField.value = (currentUser && currentUser.email) || '';
         if (mobileField) mobileField.value = window.userData?.mobile || 'Not set';
@@ -2672,6 +2674,7 @@ async function saveProfileFromPopup() {
     try {
         const name = document.getElementById('popupProfileName')?.value || '';
         const classValue = document.getElementById('popupProfileClass')?.value || '';
+        const gender = document.getElementById('popupProfileGender')?.value || 'male';
         const board = document.getElementById('popupProfileBoard')?.value || '';
         
         if (!window.currentUser) {
@@ -2686,6 +2689,7 @@ async function saveProfileFromPopup() {
                 id: window.currentUser.id,
                 full_name: name,
                 class: classValue,
+                gender: gender,
                 board: board,
                 updated_at: new Date().toISOString()
             });
@@ -2697,7 +2701,7 @@ async function saveProfileFromPopup() {
         }
         
         // Update local userData
-        window.userData = { ...window.userData, full_name: name, class: classValue, board: board };
+        window.userData = { ...window.userData, full_name: name, class: classValue, gender: gender, board: board };
         
         // Update display
         updateUserDisplay(window.userData);
