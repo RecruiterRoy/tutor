@@ -764,9 +764,8 @@ async function loadUserData() {
   console.log('🔧 CORRECT loadUserData function called');
   
   try {
-    // Verify Supabase is ready - use the correct client
-    const supabaseClient = window.supabaseClient || window.supabase;
-    if (!supabaseClient?.auth?.getUser) {
+    // Verify Supabase is ready
+    if (!window.supabase?.auth?.getUser) {
       console.error('❌ Supabase auth not initialized');
       throw new Error('Supabase auth not initialized');
     }
@@ -775,7 +774,7 @@ async function loadUserData() {
 
     // Direct call to getUser - no request queue wrapper
     console.log('🔧 Fetching user data from Supabase auth...');
-    const { data: { user }, error } = await supabaseClient.auth.getUser();
+    const { data: { user }, error } = await window.supabase.auth.getUser();
     if (error) {
       console.error('❌ Error getting user:', error);
       throw error;
@@ -791,7 +790,7 @@ async function loadUserData() {
     
     // Direct call to profile fetch - no request queue wrapper
     console.log('🔧 Fetching profile from user_profiles table...');
-    const { data: profile, error: profileError } = await supabaseClient
+    const { data: profile, error: profileError } = await window.supabase
       .from('user_profiles')
       .select('*')
       .eq('id', user.id)
@@ -1793,12 +1792,6 @@ async function speakText(text) {
         return;
     }
 
-    // Check if user has interacted with the page (required for autoplay)
-    if (!window.userHasInteracted) {
-        console.log('[TTS] User has not interacted yet, skipping autoplay speech');
-        return;
-    }
-
     try {
         // Cancel any ongoing speech
         speechSynthesis.cancel();
@@ -1844,11 +1837,7 @@ async function speakText(text) {
         utterance.onend = () => console.log('[TTS] Speech finished.');
         utterance.onerror = (event) => {
             console.error('[TTS] Speech synthesis error:', event);
-            if (event.error === 'not-allowed') {
-                console.log('[TTS] User interaction required for speech synthesis');
-            } else {
-                showError(`TTS Error: ${event.error}`);
-            }
+            showError(`TTS Error: ${event.error}`);
         };
 
         speechSynthesis.speak(utterance);
@@ -3152,39 +3141,39 @@ async function saveAvatarSelection() {
     console.log('🔧 Saving avatar selection:', selectedAvatarOption);
     
     try {
-        // Use the correct Supabase client
-        const supabaseClient = window.supabaseClient || window.supabase;
-        
-        const { data, error } = await supabaseClient
-            .from('user_profiles')
-            .update({ 
-                ai_avatar: selectedAvatarOption,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', window.userData.id)
-            .select();
-        
-        if (error) {
-            console.error('❌ Error saving avatar:', error);
-            throw new Error('Failed to save avatar selection');
-        }
-        
-        // Update local user data
-        if (window.userData) {
-            window.userData.ai_avatar = selectedAvatarOption;
-        }
-        
-        // Update global selected avatar
-        window.selectedAvatar = selectedAvatarOption;
-        
-        console.log('✅ Avatar saved successfully:', selectedAvatarOption);
-        showSuccess('Avatar updated successfully!');
-        
-        // Update display
-        updateAvatarDisplay();
-        
-        // Close modal
-        closeAvatarSelectionModal();
+        // Use the new request queue system
+        await enqueueRequest(async () => {
+            const { data, error } = await window.supabase
+                .from('user_profiles')
+                .update({ 
+                    ai_avatar: selectedAvatarOption,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', window.userData.id)
+                .select();
+            
+            if (error) {
+                console.error('❌ Error saving avatar:', error);
+                throw new Error('Failed to save avatar selection');
+            }
+            
+            // Update local user data
+            if (window.userData) {
+                window.userData.ai_avatar = selectedAvatarOption;
+            }
+            
+            // Update global selected avatar
+            window.selectedAvatar = selectedAvatarOption;
+            
+            console.log('✅ Avatar saved successfully:', selectedAvatarOption);
+            showSuccess('Avatar updated successfully!');
+            
+            // Update display
+            updateAvatarDisplay();
+            
+            // Close modal
+            closeAvatarSelectionModal();
+        });
         
     } catch (error) {
         console.error('❌ Avatar selection error:', error);
@@ -3254,6 +3243,110 @@ async function addToRequestQueue(requestFunction) {
         processRequestQueue();
     });
 }
+
+// Proper request queue implementation
+const requestQueue = [];
+let activeRequests = 0;
+const MAX_CONCURRENT_REQUESTS = 3;
+
+function processRequestQueue() {
+  if (activeRequests >= MAX_CONCURRENT_REQUESTS || requestQueue.length === 0) {
+    return;
+  }
+
+  const nextRequest = requestQueue.shift();
+  if (!nextRequest || typeof nextRequest.requestFn !== 'function') {
+    console.error('Invalid request in queue:', nextRequest);
+    processRequestQueue(); // Skip invalid requests
+    return;
+  }
+
+  activeRequests++;
+  
+  nextRequest.requestFn()
+    .then(result => {
+      nextRequest.resolve(result);
+    })
+    .catch(error => {
+      nextRequest.reject(error);
+    })
+    .finally(() => {
+      activeRequests--;
+      processRequestQueue();
+    });
+}
+
+function addToRequestQueue(requestFn) {
+  return new Promise((resolve, reject) => {
+    if (typeof requestFn !== 'function') {
+      reject(new Error('requestFn must be a function'));
+      return;
+    }
+    
+    requestQueue.push({ requestFn, resolve, reject });
+    processRequestQueue();
+  });
+}
+
+// Enhanced user data loading with concurrency control
+async function loadUserData() {
+    console.log('🔧 Loading user data with concurrency control...');
+    
+    try {
+        return await addToRequestQueue(async () => {
+            // Check cache first
+            if (window.userDataCache && window.cacheTimestamp) {
+                const now = Date.now();
+                if (now - window.cacheTimestamp < window.CACHE_DURATION) {
+                    console.log('✅ Using cached user data');
+                    return window.userDataCache;
+                }
+            }
+            
+            // Use the correct Supabase client
+            const supabaseClient = window.supabaseClient || window.supabase;
+            if (!supabaseClient) {
+                throw new Error('Supabase client not available');
+            }
+            
+            const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+            if (userError || !user) {
+                throw new Error('User not authenticated');
+            }
+            
+            const { data: profile, error: profileError } = await supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+            
+            if (profileError) {
+                console.error('❌ Profile loading error:', profileError);
+                throw new Error('Failed to load user profile');
+            }
+            
+            // Cache the data
+            window.userData = profile;
+            window.userDataCache = profile;
+            window.cacheTimestamp = Date.now();
+            window.userDataLoaded = true;
+            
+            // Set selected avatar from user profile
+            window.selectedAvatar = profile.ai_avatar || 'roy-sir';
+            
+            // Update avatar display
+            updateAvatarDisplay();
+            
+            console.log('✅ User data loaded successfully:', profile);
+            return profile;
+        });
+        
+    } catch (error) {
+        console.error('❌ User data loading error:', error);
+        throw error;
+    }
+}
+
 // Loading state management
 // REMOVED: let isInitializing = false; - DUPLICATE
 // REMOVED: let isUserDataLoading = false; - DUPLICATE
@@ -3338,19 +3431,3 @@ function initializeEventListeners() {
   
   console.log('✅ Event listeners initialized');
 }
-
-// Track user interaction for TTS
-function trackUserInteraction() {
-    if (!window.userHasInteracted) {
-        window.userHasInteracted = true;
-        console.log('[TTS] User interaction detected, TTS now enabled');
-    }
-}
-
-// Add event listeners for user interaction
-document.addEventListener('click', trackUserInteraction);
-document.addEventListener('keydown', trackUserInteraction);
-document.addEventListener('touchstart', trackUserInteraction);
-
-// Initialize user interaction tracking
-window.userHasInteracted = false;
