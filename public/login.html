@@ -137,9 +137,14 @@
                     <input x-model="isMagicLink" type="checkbox" class="mr-2">
                     Use Magic Link (No Password)
                 </label>
-                <button @click="resetPassword" class="text-sm text-purple-300 hover:text-purple-100">
-                    Forgot Password?
-                </button>
+                <div class="flex space-x-2">
+                    <button @click="resendConfirmation" class="text-sm text-blue-300 hover:text-blue-100">
+                        Resend Confirmation
+                    </button>
+                    <button @click="resetPassword" class="text-sm text-purple-300 hover:text-purple-100">
+                        Forgot Password?
+                    </button>
+                </div>
             </div>
 
             <button @click="signInWithEmail" 
@@ -343,6 +348,34 @@
                     } finally {
                         this.loading = false;
                     }
+                },
+                
+                resendConfirmation() {
+                    if (!this.email) {
+                        this.showMessage('Please enter your email first', 'error');
+                        return;
+                    }
+                    this.loading = true;
+                    this.message = '';
+                    
+                    // Use the correct Supabase resend method
+                    window.supabaseClient.auth.resend({
+                        type: 'signup',
+                        email: this.email
+                    })
+                    .then(response => {
+                        if (response.error) {
+                            this.showMessage(response.error.message, 'error');
+                        } else {
+                            this.showMessage('Confirmation email resent! Please check your inbox and spam folder.', 'success');
+                        }
+                    })
+                    .catch(error => {
+                        this.showMessage(error.message || 'Failed to resend confirmation email', 'error');
+                    })
+                    .finally(() => {
+                        this.loading = false;
+                    });
                 },
                 
                 resendOTP() {
