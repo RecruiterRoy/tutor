@@ -825,6 +825,11 @@ async function loadUserData() {
     // Update avatar display
     updateAvatarDisplay();
     
+    // Update TTS voice to match current avatar
+    if (window.textToSpeech) {
+        window.textToSpeech.forceVoiceUpdate();
+    }
+    
     // Update user display in sidebar
     updateUserDisplay(profile);
     
@@ -3216,6 +3221,11 @@ async function saveAvatarSelection() {
         
         // Reload user data to ensure AI gets the updated avatar
         await reloadUserData();
+        
+        // Update TTS voice to match new avatar
+        if (window.textToSpeech) {
+            window.textToSpeech.forceVoiceUpdate();
+        }
         
         // Update display
         updateAvatarDisplay();

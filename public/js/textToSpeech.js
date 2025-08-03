@@ -318,7 +318,8 @@ class TextToSpeech {
     }
 
     detectLanguageAndSetVoice(text) {
-        const currentAvatar = window.selectedAvatar || 'roy-sir';
+        // Get current avatar from userData or fallback to window.selectedAvatar
+        const currentAvatar = (window.userData && window.userData.ai_avatar) || window.selectedAvatar || 'roy-sir';
         console.log('TTS Voice Selection - Current Avatar:', currentAvatar);
 
         if (currentAvatar === 'miss-sapna') {
@@ -404,7 +405,8 @@ class TextToSpeech {
 
     forceVoiceUpdate() {
         // Force update voice selection based on current avatar
-        console.log('Forcing voice update for current avatar:', window.selectedAvatar);
+        const currentAvatar = (window.userData && window.userData.ai_avatar) || window.selectedAvatar || 'roy-sir';
+        console.log('Forcing voice update for current avatar:', currentAvatar);
         this.detectLanguageAndSetVoice('');
         console.log('Voice updated to:', this.currentVoice?.name || 'No voice selected');
     }
