@@ -946,17 +946,36 @@
                         const currentUser = data.user;
                         console.log('✅ Using user from signup:', currentUser.id);
                         
+                        // First, try to sign in the user to ensure they're authenticated
+                        console.log('🔐 Signing in user before profile creation...');
+                        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                            email: email,
+                            password: password
+                        });
+                        
+                        if (signInError) {
+                            console.warn('⚠️ Sign in failed:', signInError);
+                            // Continue anyway, the trigger might still work
+                        } else {
+                            console.log('✅ User signed in successfully:', signInData.user.id);
+                        }
+                        
+                        // Wait a moment for the trigger to create the basic profile
+                        console.log('⏳ Waiting for database trigger to create basic profile...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        
+                        // Now try to update the profile with full details
+                        console.log('📝 Updating profile with full details...');
                         try {
                             const { data: profileData, error: profileError } = await supabase
                                 .from('user_profiles')
-                                .upsert({
-                                    id: currentUser.id,
+                                .update({
                                     full_name: fullName,
                                     email: email,
                                     phone: phone,
                                     class: userClass,
                                     board: board,
-                                    board_abbr: board, // Add this field
+                                    board_abbr: board,
                                     school_name: schoolName,
                                     city: city,
                                     state: state,
@@ -964,88 +983,55 @@
                                     avatar: selectedAvatar || 'teacher-avatar1.png',
                                     economic_status: 'Premium',
                                     verification_status: 'pending', // Start as pending
-                                    ai_avatar: 'roy-sir', // Default AI avatar
-                                    created_at: new Date().toISOString(),
+                                    ai_avatar: 'roy-sir',
                                     updated_at: new Date().toISOString()
-                                }, {
-                                    onConflict: 'id',
-                                    ignoreDuplicates: false
                                 })
-                                .select(); // Add select() to get the inserted data
+                                .eq('id', currentUser.id)
+                                .select();
                             
-                            console.log('🔧 Profile creation response:', { profileData, profileError });
+                            console.log('🔧 Profile update response:', { profileData, profileError });
                             
                             if (profileError) {
-                                console.error('❌ Profile creation failed:', profileError);
+                                console.error('❌ Profile update failed:', profileError);
                                 
-                                // Check if it's a RLS (Row Level Security) error
-                                if (profileError.message.includes('new row violates row-level security policy') || 
-                                    profileError.message.includes('RLS') ||
-                                    profileError.message.includes('policy')) {
-                                    console.log('🔄 RLS policy issue detected, trying alternative approach...');
-                                    
-                                    // Try using the update_user_profile function instead
-                                    try {
-                                        const { data: functionData, error: functionError } = await supabase.rpc('update_user_profile', {
-                                            user_id: currentUser.id,
-                                            user_full_name: fullName,
-                                            user_class: userClass,
-                                            user_board: board,
-                                            user_board_abbr: board,
-                                            user_phone: phone,
-                                            user_city: city,
-                                            user_state: state,
-                                            user_language: language
-                                        });
-                                        
-                                        if (functionError) {
-                                            console.error('❌ Function update failed:', functionError);
-                                            throw new Error(`Profile creation failed: ${functionError.message}`);
-                                        } else {
-                                            console.log('✅ Profile updated via function successfully');
-                                        }
-                                    } catch (functionError) {
-                                        console.error('❌ Function approach failed:', functionError);
-                                        throw new Error(`Profile creation failed: ${functionError.message}`);
-                                    }
-                                } else if (profileError.message.includes('foreign key constraint') || 
-                                    profileError.message.includes('user_profiles_id_key')) {
-                                    console.log('🔄 Profile might already exist, trying to update...');
-                                    
-                                    // Try to update existing profile
-                                    const { data: updateData, error: updateError } = await supabase
+                                // If update fails, try to insert (in case trigger didn't work)
+                                console.log('🔄 Trying to insert profile instead...');
+                                try {
+                                    const { data: insertData, error: insertError } = await supabase
                                         .from('user_profiles')
-                                        .update({
+                                        .insert({
+                                            id: currentUser.id,
                                             full_name: fullName,
                                             email: email,
                                             phone: phone,
                                             class: userClass,
                                             board: board,
-                                            board_abbr: board, // Add this field
+                                            board_abbr: board,
                                             school_name: schoolName,
                                             city: city,
                                             state: state,
                                             preferred_language: language,
                                             avatar: selectedAvatar || 'teacher-avatar1.png',
                                             economic_status: 'Premium',
-                                            verification_status: 'pending', // Keep as pending
-                                            ai_avatar: 'roy-sir', // Default AI avatar
+                                            verification_status: 'pending',
+                                            ai_avatar: 'roy-sir',
+                                            created_at: new Date().toISOString(),
                                             updated_at: new Date().toISOString()
                                         })
-                                        .eq('id', currentUser.id)
                                         .select();
                                     
-                                    if (updateError) {
-                                        console.error('❌ Profile update also failed:', updateError);
-                                        throw new Error(`Failed to create/update user profile: ${updateError.message}`);
+                                    if (insertError) {
+                                        console.error('❌ Profile insert also failed:', insertError);
+                                        throw new Error(`Profile creation failed: ${insertError.message}`);
+                                    } else {
+                                        console.log('✅ Profile inserted successfully:', insertData);
                                     }
-                                    
-                                    console.log('✅ Profile updated successfully:', updateData);
-                                } else {
-                                    throw new Error(`Failed to create user profile: ${profileError.message}`);
+                                } catch (insertError) {
+                                    console.error('❌ Profile insert error:', insertError);
+                                    throw new Error(`Profile creation failed: ${insertError.message}`);
                                 }
                             } else {
-                                console.log('✅ Profile created successfully:', profileData);
+                                console.log('✅ Profile updated successfully:', profileData);
                             }
                             
                             // Schedule automatic approval after 3 seconds
@@ -1073,54 +1059,15 @@
                                 }
                             }, 3000); // 3 seconds delay
                             
-                            // Wait a moment for the profile to be fully saved
-                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            // Show success message and redirect
+                            console.log('✅ Registration completed successfully');
+                            showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
                             
-                            // Auto-sign in the user after successful registration
-                            console.log('🔐 Auto-signing in user after registration...');
-                            try {
-                                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                                    email: email,
-                                    password: password
-                                });
-                                
-                                console.log('🔧 SignIn response:', { signInData, signInError });
-                                
-                                if (signInError) {
-                                    console.warn('⚠️ Auto-sign in failed:', signInError);
-                                    // Show success message and redirect to login page
-                                    showMessage('Registration successful! Please log in with your email and password.', 'success');
-                                    setTimeout(() => {
-                                        window.location.href = 'login.html';
-                                    }, 2000);
-                                } else {
-                                    console.log('✅ Auto-sign in successful:', signInData.user.id);
-                                    
-                                    // Verify the user is actually signed in
-                                    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-                                    if (userError || !currentUser) {
-                                        console.warn('⚠️ User verification failed after sign in:', userError);
-                                        showMessage('Registration successful! Please log in with your email and password.', 'success');
-                                        setTimeout(() => {
-                                            window.location.href = 'login.html';
-                                        }, 2000);
-                                    } else {
-                                        console.log('✅ User verified as signed in:', currentUser.id);
-                                        showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
-                                        
-                                        // Redirect to dashboard immediately
-                                        setTimeout(() => {
-                                            window.location.href = 'dashboard.html';
-                                        }, 1500);
-                                    }
-                                }
-                            } catch (signInError) {
-                                console.error('❌ Auto-sign in error:', signInError);
-                                showMessage('Registration successful! Please log in with your email and password.', 'success');
-                                setTimeout(() => {
-                                    window.location.href = 'login.html';
-                                }, 2000);
-                            }
+                            // Redirect to dashboard immediately
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 1500);
+                            
                         } catch (profileError) {
                             console.error('❌ Profile creation error:', profileError);
                             throw new Error(`Profile creation failed: ${profileError.message}`);
@@ -1196,17 +1143,36 @@
                         const currentUser = data.user;
                         console.log('✅ Using user from signup:', currentUser.id);
                         
+                        // First, try to sign in the user to ensure they're authenticated
+                        console.log('🔐 Signing in phone user before profile creation...');
+                        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                            phone: `+91${phone}`,
+                            password: password
+                        });
+                        
+                        if (signInError) {
+                            console.warn('⚠️ Phone sign in failed:', signInError);
+                            // Continue anyway, the trigger might still work
+                        } else {
+                            console.log('✅ Phone user signed in successfully:', signInData.user.id);
+                        }
+                        
+                        // Wait a moment for the trigger to create the basic profile
+                        console.log('⏳ Waiting for database trigger to create basic profile...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        
+                        // Now try to update the profile with full details
+                        console.log('📝 Updating phone profile with full details...');
                         try {
                             const { data: profileData, error: profileError } = await supabase
                                 .from('user_profiles')
-                                .upsert({
-                                    id: currentUser.id,
+                                .update({
                                     full_name: fullName || 'Mobile User',
                                     email: email,
                                     phone: phone,
                                     class: userClass,
                                     board: board,
-                                    board_abbr: board, // Add this field
+                                    board_abbr: board,
                                     school_name: schoolName,
                                     city: city,
                                     state: state,
@@ -1214,95 +1180,62 @@
                                     avatar: selectedAvatar || 'teacher-avatar1.png',
                                     economic_status: 'Premium',
                                     verification_status: 'pending', // Start as pending
-                                    ai_avatar: 'roy-sir', // Default AI avatar
-                                    created_at: new Date().toISOString(),
+                                    ai_avatar: 'roy-sir',
                                     updated_at: new Date().toISOString()
-                                }, {
-                                    onConflict: 'id',
-                                    ignoreDuplicates: false
                                 })
-                                .select(); // Add select() to get the inserted data
+                                .eq('id', currentUser.id)
+                                .select();
                             
-                            console.log('🔧 Phone profile creation response:', { profileData, profileError });
+                            console.log('🔧 Phone profile update response:', { profileData, profileError });
                             
                             if (profileError) {
-                                console.error('❌ Profile creation failed:', profileError);
+                                console.error('❌ Phone profile update failed:', profileError);
                                 
-                                // Check if it's a RLS (Row Level Security) error
-                                if (profileError.message.includes('new row violates row-level security policy') || 
-                                    profileError.message.includes('RLS') ||
-                                    profileError.message.includes('policy')) {
-                                    console.log('🔄 RLS policy issue detected, trying alternative approach...');
-                                    
-                                    // Try using the update_user_profile function instead
-                                    try {
-                                        const { data: functionData, error: functionError } = await supabase.rpc('update_user_profile', {
-                                            user_id: currentUser.id,
-                                            user_full_name: fullName || 'Mobile User',
-                                            user_class: userClass,
-                                            user_board: board,
-                                            user_board_abbr: board,
-                                            user_phone: phone,
-                                            user_city: city,
-                                            user_state: state,
-                                            user_language: language
-                                        });
-                                        
-                                        if (functionError) {
-                                            console.error('❌ Function update failed:', functionError);
-                                            throw new Error(`Profile creation failed: ${functionError.message}`);
-                                        } else {
-                                            console.log('✅ Profile updated via function successfully');
-                                        }
-                                    } catch (functionError) {
-                                        console.error('❌ Function approach failed:', functionError);
-                                        throw new Error(`Profile creation failed: ${functionError.message}`);
-                                    }
-                                } else if (profileError.message.includes('foreign key constraint') || 
-                                    profileError.message.includes('user_profiles_id_key')) {
-                                    console.log('🔄 Profile might already exist, trying to update...');
-                                    
-                                    // Try to update existing profile
-                                    const { data: updateData, error: updateError } = await supabase
+                                // If update fails, try to insert (in case trigger didn't work)
+                                console.log('🔄 Trying to insert phone profile instead...');
+                                try {
+                                    const { data: insertData, error: insertError } = await supabase
                                         .from('user_profiles')
-                                        .update({
+                                        .insert({
+                                            id: currentUser.id,
                                             full_name: fullName || 'Mobile User',
                                             email: email,
                                             phone: phone,
                                             class: userClass,
                                             board: board,
-                                            board_abbr: board, // Add this field
+                                            board_abbr: board,
                                             school_name: schoolName,
                                             city: city,
                                             state: state,
                                             preferred_language: language,
                                             avatar: selectedAvatar || 'teacher-avatar1.png',
                                             economic_status: 'Premium',
-                                            verification_status: 'pending', // Keep as pending
-                                            ai_avatar: 'roy-sir', // Default AI avatar
+                                            verification_status: 'pending',
+                                            ai_avatar: 'roy-sir',
+                                            created_at: new Date().toISOString(),
                                             updated_at: new Date().toISOString()
                                         })
-                                        .eq('id', currentUser.id)
                                         .select();
                                     
-                                    if (updateError) {
-                                        console.error('❌ Profile update also failed:', updateError);
-                                        throw new Error(`Failed to create/update user profile: ${updateError.message}`);
+                                    if (insertError) {
+                                        console.error('❌ Phone profile insert also failed:', insertError);
+                                        throw new Error(`Phone profile creation failed: ${insertError.message}`);
+                                    } else {
+                                        console.log('✅ Phone profile inserted successfully:', insertData);
                                     }
-                                    
-                                    console.log('✅ Profile updated successfully:', updateData);
-                                } else {
-                                    throw new Error(`Failed to create user profile: ${profileError.message}`);
+                                } catch (insertError) {
+                                    console.error('❌ Phone profile insert error:', insertError);
+                                    throw new Error(`Phone profile creation failed: ${insertError.message}`);
                                 }
                             } else {
-                                console.log('✅ Profile created successfully:', profileData);
+                                console.log('✅ Phone profile updated successfully:', profileData);
                             }
                             
                             // Schedule automatic approval after 3 seconds
                             console.log('⏰ Scheduling automatic approval in 3 seconds...');
                             setTimeout(async () => {
                                 try {
-                                    console.log('🔐 Auto-approving user profile...');
+                                    console.log('🔐 Auto-approving phone user profile...');
                                     const { data: approvalData, error: approvalError } = await supabase
                                         .from('user_profiles')
                                         .update({
@@ -1314,69 +1247,27 @@
                                         .select();
                                     
                                     if (approvalError) {
-                                        console.error('❌ Auto-approval failed:', approvalError);
+                                        console.error('❌ Phone auto-approval failed:', approvalError);
                                     } else {
-                                        console.log('✅ User auto-approved successfully:', approvalData);
+                                        console.log('✅ Phone user auto-approved successfully:', approvalData);
                                     }
                                 } catch (approvalError) {
-                                    console.error('❌ Auto-approval error:', approvalError);
+                                    console.error('❌ Phone auto-approval error:', approvalError);
                                 }
                             }, 3000); // 3 seconds delay
                             
-                            // Wait a moment for the profile to be fully saved
-                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            // Show success message and redirect
+                            console.log('✅ Phone registration completed successfully');
+                            showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
                             
-                            console.log('✅ Profile created with instant approved status');
-                            
-                            // Auto-sign in the user after successful registration
-                            console.log('🔐 Auto-signing in phone user after registration...');
-                            try {
-                                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                                    phone: `+91${phone}`,
-                                    password: password
-                                });
-                                
-                                console.log('🔧 Phone SignIn response:', { signInData, signInError });
-                                
-                                if (signInError) {
-                                    console.warn('⚠️ Auto-sign in failed:', signInError);
-                                    // Show success message and redirect to login page
-                                    showMessage('Registration successful! Please log in with your phone number and password.', 'success');
-                                    setTimeout(() => {
-                                        window.location.href = 'login.html';
-                                    }, 2000);
-                                } else {
-                                    console.log('✅ Auto-sign in successful:', signInData.user.id);
-                                    
-                                    // Verify the user is actually signed in
-                                    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-                                    if (userError || !currentUser) {
-                                        console.warn('⚠️ User verification failed after sign in:', userError);
-                                        showMessage('Registration successful! Please log in with your phone number and password.', 'success');
-                                        setTimeout(() => {
-                                            window.location.href = 'login.html';
-                                        }, 2000);
-                                    } else {
-                                        console.log('✅ User verified as signed in:', currentUser.id);
-                                        showMessage('Registration successful! You are now logged in. Redirecting to dashboard...', 'success');
-                                        
-                                        // Redirect to dashboard immediately
-                                        setTimeout(() => {
-                                            window.location.href = 'dashboard.html';
-                                        }, 1500);
-                                    }
-                                }
-                            } catch (signInError) {
-                                console.error('❌ Auto-sign in error:', signInError);
-                                showMessage('Registration successful! Please log in with your phone number and password.', 'success');
-                                setTimeout(() => {
-                                    window.location.href = 'login.html';
-                                }, 2000);
-                            }
+                            // Redirect to dashboard immediately
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 1500);
                             
                         } catch (profileError) {
-                            console.error('❌ Profile creation error:', profileError);
-                            throw new Error(`Profile creation failed: ${profileError.message}`);
+                            console.error('❌ Phone profile creation error:', profileError);
+                            throw new Error(`Phone profile creation failed: ${profileError.message}`);
                         }
                         
                     } catch (signUpError) {
