@@ -738,6 +738,11 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
             this.renderSubjectButtons();
             this.updateCurrentSubjectDisplay();
             
+            // Update subject progress section
+            if (window.updateSubjectProgress) {
+                window.updateSubjectProgress();
+            }
+            
             // Hide modal
             this.hideSubjectManager();
             

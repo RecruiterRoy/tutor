@@ -15,17 +15,6 @@ window.closeSidebar = function() {
 window.showSection = function(sectionName) {
     console.log('🔧 Showing section:', sectionName);
     
-    // Map button text to section names
-    const sectionMap = {
-        'Classroom': 'chat',
-        'Study Materials': 'materials', 
-        'Progress': 'progress',
-        'Settings': 'settings'
-    };
-    
-    // Convert sectionName if it's a button text
-    const actualSectionName = sectionMap[sectionName] || sectionName;
-    
     // Hide all sections
     const sections = document.querySelectorAll('[id$="Section"]');
     console.log(`🔧 Found ${sections.length} sections to hide`);
@@ -42,28 +31,33 @@ window.showSection = function(sectionName) {
     });
     
     // Show selected section
-    const selectedSection = document.getElementById(actualSectionName + 'Section');
+    const selectedSection = document.getElementById(sectionName + 'Section');
     if (selectedSection) {
         selectedSection.classList.remove('hidden');
-        console.log('✅ Section shown:', actualSectionName + 'Section');
+        console.log('✅ Section shown:', sectionName + 'Section');
+        
+        // Update subject progress when progress section is shown
+        if (sectionName === 'progress') {
+            updateSubjectProgress();
+        }
     } else {
-        console.log('❌ Section not found:', actualSectionName + 'Section');
+        console.log('❌ Section not found:', sectionName + 'Section');
     }
     
     // Add active class to nav item based on text content
     navItems.forEach(item => {
         const text = item.textContent.trim();
-        if ((actualSectionName === 'chat' && (text.includes('Classroom') || text.includes('🏫'))) ||
-            (actualSectionName === 'materials' && (text.includes('Study Materials') || text.includes('📚'))) ||
-            (actualSectionName === 'progress' && (text.includes('Progress') || text.includes('📊'))) ||
-            (actualSectionName === 'settings' && (text.includes('Settings') || text.includes('⚙️')))) {
+        if ((sectionName === 'chat' && (text.includes('Classroom') || text.includes('🏫'))) ||
+            (sectionName === 'materials' && (text.includes('Study Materials') || text.includes('📚'))) ||
+            (sectionName === 'progress' && (text.includes('Progress') || text.includes('📊'))) ||
+            (sectionName === 'settings' && (text.includes('Settings') || text.includes('⚙️')))) {
             item.classList.add('active', 'bg-white/10', 'text-white');
             item.classList.remove('text-gray-300');
             console.log('✅ Active class added to nav item:', text);
         }
     });
     
-    console.log('✅ Section navigation completed for:', actualSectionName);
+    console.log('✅ Section navigation completed for:', sectionName);
 }
 
 window.saveChatMessage = function(message, response) {
@@ -2018,6 +2012,11 @@ function showSection(sectionName) {
     if (selectedSection) {
         selectedSection.classList.remove('hidden');
         console.log('✅ Section shown:', sectionName + 'Section');
+        
+        // Update subject progress when progress section is shown
+        if (sectionName === 'progress') {
+            updateSubjectProgress();
+        }
     } else {
         console.log('❌ Section not found:', sectionName + 'Section');
     }
@@ -3180,6 +3179,9 @@ async function saveAvatarSelection() {
         console.log('✅ Avatar saved successfully:', selectedAvatarOption);
         showSuccess('Avatar updated successfully!');
         
+        // Reload user data to ensure AI gets the updated avatar
+        await reloadUserData();
+        
         // Update display
         updateAvatarDisplay();
         
@@ -3366,5 +3368,57 @@ window.userHasInteracted = false;
 function closeAvatarSelectionOnOutsideClick(event) {
     if (event.target.id === 'avatarSelectionModal') {
         closeAvatarSelectionModal();
+    }
+}
+
+// Update subject progress section with user's subjects
+function updateSubjectProgress() {
+    console.log('🔧 Updating subject progress...');
+    
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    if (!subjectsContainer) {
+        console.error('❌ Subjects container not found');
+        return;
+    }
+    
+    // Get user's subjects from subject manager
+    let userSubjects = ['English']; // Default subject
+    
+    if (window.subjectManager && window.subjectManager.userSubjects) {
+        userSubjects = window.subjectManager.userSubjects;
+    }
+    
+    console.log('📚 User subjects:', userSubjects);
+    
+    // Clear existing subjects
+    subjectsContainer.innerHTML = '';
+    
+    // Add each subject with progress bar
+    userSubjects.forEach(subject => {
+        const subjectItem = document.createElement('div');
+        subjectItem.className = 'subject-item';
+        subjectItem.innerHTML = `
+            <div class="flex justify-between text-white text-sm mb-2">
+                <span>${subject}</span>
+                <span id="${subject.toLowerCase().replace(/\s+/g, '')}Progress">0%</span>
+            </div>
+            <div class="progress-modern">
+                <div class="progress-fill" id="${subject.toLowerCase().replace(/\s+/g, '')}ProgressBar" style="width: 0%"></div>
+            </div>
+        `;
+        subjectsContainer.appendChild(subjectItem);
+    });
+    
+    console.log('✅ Subject progress updated with', userSubjects.length, 'subjects');
+}
+
+// Force reload user data to get latest avatar
+async function reloadUserData() {
+    console.log('🔄 Reloading user data...');
+    try {
+        await loadUserData();
+        console.log('✅ User data reloaded successfully');
+    } catch (error) {
+        console.error('❌ Failed to reload user data:', error);
     }
 }
