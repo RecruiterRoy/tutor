@@ -631,134 +631,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Dashboard initialization state management
+let isInitializing = false;
+let isInitialized = false;
+
+// Helper function to wait for Supabase
+function ensureSupabaseReady() {
+  return new Promise((resolve) => {
+    const check = () => {
+      if (window.supabase?.auth) {
+        resolve();
+      } else {
+        setTimeout(check, 100);
+      }
+    };
+    check();
+  });
+}
+
+// Helper function to wait for TTS
+function ensureTTSReady() {
+  return new Promise((resolve) => {
+    const check = () => {
+      if (window.speechSynthesis) {
+        resolve();
+      } else {
+        setTimeout(check, 100);
+      }
+    };
+    check();
+  });
+}
+
 async function initializeDashboard() {
-    try {
-        console.log('🚀 Initializing dashboard...');
-        
-        // Get current user from Supabase auth
-        const { data: { user }, error: authError } = await window.supabaseClient.auth.getUser();
-        
-        if (authError) {
-            console.error('❌ Auth error:', authError);
-            // Don't redirect immediately, show error instead
-            showError('Authentication error. Please log in again.');
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 3000);
-            return;
-        }
-        
-        if (!user) {
-            console.error('❌ No authenticated user found');
-            showError('No user found. Please log in again.');
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 3000);
-            return;
-        }
-        
-        // Set current user globally
-        window.currentUser = user;
-        currentUser = user; // Set local variable too
-        console.log('✅ User authenticated:', user.id);
-        
-        // Check user verification status - be more lenient for all users
-        const { data: profile, error } = await window.supabaseClient
-            .from('user_profiles')
-            .select('verification_status, full_name, email, class, board, ai_avatar')
-            .eq('id', user.id)
-            .single();
-        
-        if (error) {
-            console.error('❌ Error fetching user profile:', error);
-            console.log('🔄 User profile not found, but continuing with basic features...');
-            // Don't redirect, just continue with basic functionality
-        } else {
-            console.log('✅ User profile found:', profile);
-            
-            // Auto-approve all users regardless of verification status
-            if (profile && profile.verification_status !== 'approved') {
-                console.log('🔄 Auto-approving user...');
-                try {
-                    // Update profile to approved status
-                    const { error: updateError } = await window.supabaseClient
-                        .from('user_profiles')
-                        .update({
-                            verification_status: 'approved',
-                            economic_status: 'Premium',
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', user.id);
-                    
-                    if (updateError) {
-                        console.warn('⚠️ Auto-approval update failed:', updateError);
-                    } else {
-                        console.log('✅ User auto-approved successfully');
-                        profile.verification_status = 'approved';
-                    }
-                } catch (approvalError) {
-                    console.warn('⚠️ Auto-approval failed:', approvalError);
-                    // Continue anyway since user is authenticated
-                }
-            }
-            
-            // Set selected avatar from profile
-            if (profile.ai_avatar) {
-                selectedAvatar = profile.ai_avatar;
-                window.selectedAvatar = profile.ai_avatar;
-            }
-        }
-        
-        console.log('✅ User verified and ready for dashboard');
-        
-        // Continue with dashboard initialization
-        console.log('🔄 Loading user data...');
-        await loadUserData();
-        console.log('✅ User data loaded, loading books...');
-        await loadBooks();
-        setupEventListeners();
-        populateAvatarGrid();
-        initializeVoiceFeatures();
-        populateVoices();
-        
-        // Initialize subject manager if available
-        if (window.subjectManager) {
-            console.log('🔧 Initializing subject manager...');
-            try {
-                await window.subjectManager.initialize(window.userData, window.userData?.class, window.userData?.board);
-                console.log('✅ Subject manager initialized');
-            } catch (error) {
-                console.error('❌ Subject manager initialization error:', error);
-            }
-        } else {
-            console.warn('⚠️ Subject manager not available');
-        }
-        
-        // Wait for TTS to be ready before loading voice settings
-        setTimeout(() => {
-            loadVoiceSettings();
-            setupVoiceSettingsListeners();
-        }, 1000);
-        
-        initSpeechRecognition();
-        showWelcomeMessage();
-        
-        // Initialize additional features
-        if (window.learningProgress) {
-            window.learningProgress.loadProgress();
-        }
-        
-        if (window.groupLearning) {
-            window.groupLearning.initializeRealtime();
-        }
-        
-        console.log('✅ Dashboard initialized successfully');
-        
-    } catch (error) {
-        console.error('❌ Dashboard initialization failed:', error);
-        showError('Failed to initialize dashboard. Please refresh the page.');
-        // Don't redirect immediately, let user see the error
-    }
+  if (isInitializing || isInitialized) return;
+  isInitializing = true;
+
+  try {
+    console.log('🚀 Starting dashboard initialization...');
+    
+    // 1. Wait for essential services
+    await ensureSupabaseReady();
+    await ensureTTSReady();
+    
+    // 2. Load user data
+    const userData = await loadUserData();
+    if (!userData) throw new Error('User data not available');
+    
+    // 3. Initialize components
+    initializeUI();
+    initializeEventListeners();
+    
+    isInitialized = true;
+    console.log('✅ Dashboard initialized successfully');
+    
+  } catch (error) {
+    console.error('❌ Dashboard initialization failed:', error);
+    showError('Initialization failed. Please refresh the page.');
+  } finally {
+    isInitializing = false;
+  }
 }
 
 // Debugging helpers
@@ -775,78 +707,50 @@ function logSupabaseState() {
 
 // Enhanced user data loading with proper error handling
 async function loadUserData() {
-    console.log('🔧 Loading user data...');
-    
-    // Add debugging
-    logSupabaseState();
-    
-    if (isUserDataLoading) {
-        console.log('⚠️ User data already loading, skipping...');
-        return;
+  try {
+    // Verify Supabase is ready
+    if (!window.supabase?.auth?.getUser) {
+      throw new Error('Supabase auth not initialized');
     }
+
+    // Queue the getUser request
+    const userData = await addToRequestQueue(async () => {
+      const { data: { user }, error } = await window.supabase.auth.getUser();
+      if (error) throw error;
+      return user;
+    });
+
+    if (!userData) throw new Error('No user data returned');
     
-    isUserDataLoading = true;
+    // Queue the profile fetch
+    const profileData = await addToRequestQueue(async () => {
+      const { data: profile, error } = await window.supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userData.id)
+        .single();
+      if (error) throw error;
+      return profile;
+    });
+
+    // Update UI with loaded data
+    window.userData = profileData;
+    window.userDataCache = profileData;
+    window.cacheTimestamp = Date.now();
+    window.userDataLoaded = true;
+    window.selectedAvatar = profileData.ai_avatar || 'roy-sir';
     
-    try {
-        return await enqueueRequest(async () => {
-            // Check cache first
-            if (window.userDataCache && window.cacheTimestamp) {
-                const now = Date.now();
-                if (now - window.cacheTimestamp < window.CACHE_DURATION) {
-                    console.log('✅ Using cached user data');
-                    return window.userDataCache;
-                }
-            }
-            
-            // Use the correct Supabase client with proper checks
-            const supabaseClient = window.supabaseClient || window.supabase;
-            if (!supabaseClient) {
-                throw new Error('Supabase client not available');
-            }
-            
-            if (!supabaseClient.auth || !supabaseClient.auth.getUser) {
-                throw new Error('Supabase auth not properly initialized');
-            }
-            
-            const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-            if (userError || !user) {
-                throw new Error('User not authenticated');
-            }
-            
-            const { data: profile, error: profileError } = await supabaseClient
-                .from('user_profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-            
-            if (profileError) {
-                console.error('❌ Profile loading error:', profileError);
-                throw new Error('Failed to load user profile');
-            }
-            
-            // Cache the data
-            window.userData = profile;
-            window.userDataCache = profile;
-            window.cacheTimestamp = Date.now();
-            window.userDataLoaded = true;
-            
-            // Set selected avatar from user profile
-            window.selectedAvatar = profile.ai_avatar || 'roy-sir';
-            
-            // Update avatar display
-            updateAvatarDisplay();
-            
-            console.log('✅ User data loaded successfully:', profile);
-            return profile;
-        });
-        
-    } catch (error) {
-        console.error('❌ User data loading error:', error);
-        showError('Failed to load profile data. Please refresh the page.');
-        throw error;
-    } finally {
-        isUserDataLoading = false;
-    }
+    // Update avatar display
+    updateAvatarDisplay();
+    
+    console.log('✅ User data loaded successfully:', profileData);
+    return profileData;
+
+  } catch (error) {
+    console.error('User data loading failed:', error);
+    showError('Failed to load user data. Please refresh the page.');
+    return null;
+  }
 }
 
 function showWelcomeMessage() {
@@ -3274,33 +3178,43 @@ const requestQueue = [];
 let activeRequests = 0;
 const MAX_CONCURRENT_REQUESTS = 3;
 
-async function processRequestQueue() {
-    if (activeRequests >= MAX_CONCURRENT_REQUESTS || requestQueue.length === 0) {
-        return;
-    }
+function processRequestQueue() {
+  if (activeRequests >= MAX_CONCURRENT_REQUESTS || requestQueue.length === 0) {
+    return;
+  }
 
-    const request = requestQueue.shift();
-    if (!request) return;
-    
-    const { requestFn, resolve, reject } = request;
-    activeRequests++;
+  const nextRequest = requestQueue.shift();
+  if (!nextRequest || typeof nextRequest.requestFn !== 'function') {
+    console.error('Invalid request in queue:', nextRequest);
+    processRequestQueue(); // Skip invalid requests
+    return;
+  }
 
-    try {
-        const result = await requestFn();
-        resolve(result);
-    } catch (error) {
-        reject(error);
-    } finally {
-        activeRequests--;
-        processRequestQueue();
-    }
+  activeRequests++;
+  
+  nextRequest.requestFn()
+    .then(result => {
+      nextRequest.resolve(result);
+    })
+    .catch(error => {
+      nextRequest.reject(error);
+    })
+    .finally(() => {
+      activeRequests--;
+      processRequestQueue();
+    });
 }
 
-function enqueueRequest(requestFn) {
-    return new Promise((resolve, reject) => {
-        requestQueue.push({ requestFn, resolve, reject });
-        processRequestQueue();
-    });
+function addToRequestQueue(requestFn) {
+  return new Promise((resolve, reject) => {
+    if (typeof requestFn !== 'function') {
+      reject(new Error('requestFn must be a function'));
+      return;
+    }
+    
+    requestQueue.push({ requestFn, resolve, reject });
+    processRequestQueue();
+  });
 }
 
 // Enhanced user data loading with concurrency control
@@ -3365,3 +3279,84 @@ async function loadUserData() {
 // Loading state management
 let isInitializing = false;
 let isUserDataLoading = false;
+
+// Initialize UI components
+function initializeUI() {
+  console.log('🔧 Initializing UI components...');
+  
+  // Load books
+  loadBooks();
+  
+  // Populate avatar grid
+  populateAvatarGrid();
+  
+  // Initialize voice features
+  initializeVoiceFeatures();
+  populateVoices();
+  
+  // Initialize subject manager if available
+  if (window.subjectManager) {
+    console.log('🔧 Initializing subject manager...');
+    try {
+      window.subjectManager.initialize(window.userData, window.userData?.class, window.userData?.board);
+      console.log('✅ Subject manager initialized');
+    } catch (error) {
+      console.error('❌ Subject manager initialization error:', error);
+    }
+  }
+  
+  // Load voice settings
+  setTimeout(() => {
+    loadVoiceSettings();
+    setupVoiceSettingsListeners();
+  }, 1000);
+  
+  // Initialize speech recognition
+  initSpeechRecognition();
+  
+  // Show welcome message
+  showWelcomeMessage();
+  
+  // Initialize additional features
+  if (window.learningProgress) {
+    window.learningProgress.loadProgress();
+  }
+  
+  if (window.groupLearning) {
+    window.groupLearning.initializeRealtime();
+  }
+  
+  console.log('✅ UI components initialized');
+}
+
+// Initialize event listeners
+function initializeEventListeners() {
+  console.log('🔧 Initializing event listeners...');
+  
+  // Remove existing listeners first to prevent duplicates
+  const sendButton = document.getElementById('sendButton');
+  const voiceButton = document.getElementById('voiceButton');
+  
+  if (sendButton) {
+    sendButton.removeEventListener('click', sendMessage);
+    sendButton.addEventListener('click', sendMessage);
+  }
+  
+  if (voiceButton) {
+    voiceButton.removeEventListener('click', toggleVoiceRecording);
+    voiceButton.addEventListener('click', toggleVoiceRecording);
+  }
+  
+  // Setup other event listeners
+  setupEventListeners();
+  
+  // Sidebar navigation
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const section = item.textContent.trim().toLowerCase();
+      showSection(section);
+    });
+  });
+  
+  console.log('✅ Event listeners initialized');
+}
