@@ -344,110 +344,97 @@ class TextToSpeech {
 
         if (currentAvatar === 'miss-sapna') {
             console.log('🎯 Miss Sapna detected, selecting Hindi voice');
-            // Force Hindi voice for Miss Sapna
-            let hindiVoice = this.voices.find(voice =>
-                voice.lang.includes('hi-IN') || voice.lang.includes('hi')
-            );
+            // Try to find the best available voice for Miss Sapna
+            let bestVoice = this.findBestVoiceForLanguage('hindi', 'female');
             
-            if (!hindiVoice) {
-                console.log('🔍 No hi-IN/hi voice found, trying IN voices');
-                hindiVoice = this.voices.find(voice =>
-                    voice.lang.includes('IN') && voice.name.toLowerCase().includes('hindi')
-                );
-            }
-            
-            if (!hindiVoice) {
-                console.log('🔍 No Hindi voice found, trying any Indian voice');
-                hindiVoice = this.voices.find(voice =>
-                    voice.lang.includes('IN')
-                );
-            }
-            
-            if (hindiVoice) {
-                this.currentVoice = hindiVoice;
-                console.log('✅ Miss Sapna using Hindi voice:', hindiVoice.name);
-                return 'hi-IN';
+            if (bestVoice) {
+                this.currentVoice = bestVoice;
+                console.log('✅ Miss Sapna using voice:', bestVoice.name);
+                return bestVoice.lang;
             } else {
-                console.warn('❌ No Hindi voice found, using fallback');
+                console.warn('❌ No suitable voice found for Miss Sapna, using fallback');
                 this.currentVoice = fallbackVoice;
                 return fallbackVoice?.lang || 'en-US';
             }
         } else if (currentAvatar === 'baruah-sir') {
             console.log('🎯 Baruah Sir detected, selecting Assamese voice');
-            // Force Assamese voice for Baruah Sir
-            let assameseVoice = this.voices.find(voice =>
-                voice.lang.includes('as-IN') || voice.lang.includes('as')
-            );
+            // Try to find the best available voice for Baruah Sir
+            let bestVoice = this.findBestVoiceForLanguage('assamese', 'male');
             
-            if (!assameseVoice) {
-                console.log('🔍 No as-IN/as voice found, trying IN voices');
-                assameseVoice = this.voices.find(voice =>
-                    voice.lang.includes('IN') && voice.name.toLowerCase().includes('assamese')
-                );
-            }
-            
-            if (!assameseVoice) {
-                console.log('🔍 No Assamese voice found, trying Hindi as fallback');
-                assameseVoice = this.voices.find(voice =>
-                    voice.lang.includes('hi-IN') || voice.lang.includes('hi')
-                );
-            }
-            
-            if (!assameseVoice) {
-                console.log('🔍 No Hindi fallback found, trying any Indian voice');
-                assameseVoice = this.voices.find(voice =>
-                    voice.lang.includes('IN')
-                );
-            }
-            
-            if (assameseVoice) {
-                this.currentVoice = assameseVoice;
-                console.log('✅ Baruah Sir using voice:', assameseVoice.name);
-                return assameseVoice.lang;
+            if (bestVoice) {
+                this.currentVoice = bestVoice;
+                console.log('✅ Baruah Sir using voice:', bestVoice.name);
+                return bestVoice.lang;
             } else {
-                console.warn('❌ No suitable voice found, using fallback');
+                console.warn('❌ No suitable voice found for Baruah Sir, using fallback');
                 this.currentVoice = fallbackVoice;
                 return fallbackVoice?.lang || 'en-US';
             }
         } else {
             console.log('🎯 Roy Sir detected, selecting English voice');
-            // Force English voice for Roy Sir
-            let englishVoice = this.voices.find(voice =>
-                voice.lang.includes('en-IN')
-            );
+            // Try to find the best available voice for Roy Sir
+            let bestVoice = this.findBestVoiceForLanguage('english', 'male');
             
-            if (!englishVoice) {
-                console.log('🔍 No en-IN voice found, trying en-US/en-GB voices');
-                englishVoice = this.voices.find(voice =>
-                    (voice.lang.includes('en-US') || voice.lang.includes('en-GB')) && 
-                    voice.name.toLowerCase().includes('male')
-                );
-            }
-            
-            if (!englishVoice) {
-                console.log('🔍 No male English voice found, trying any English voice');
-                englishVoice = this.voices.find(voice =>
-                    voice.lang.includes('en-US') || voice.lang.includes('en-GB')
-                );
-            }
-            
-            if (!englishVoice) {
-                console.log('🔍 No English voice found, using any available voice');
-                englishVoice = this.voices.find(voice =>
-                    voice.lang.includes('en')
-                );
-            }
-            
-            if (englishVoice) {
-                this.currentVoice = englishVoice;
-                console.log('✅ Roy Sir using English voice:', englishVoice.name);
-                return englishVoice.lang;
+            if (bestVoice) {
+                this.currentVoice = bestVoice;
+                console.log('✅ Roy Sir using voice:', bestVoice.name);
+                return bestVoice.lang;
             } else {
-                console.warn('❌ No English voice found, using fallback');
+                console.warn('❌ No suitable voice found for Roy Sir, using fallback');
                 this.currentVoice = fallbackVoice;
                 return fallbackVoice?.lang || 'en-US';
             }
         }
+    }
+
+    findBestVoiceForLanguage(language, gender) {
+        console.log(`🔍 Finding best voice for ${language} (${gender})`);
+        
+        // Priority order for voice selection
+        const priorities = {
+            'hindi': [
+                { lang: 'hi-IN', gender: 'female' },
+                { lang: 'hi', gender: 'female' },
+                { lang: 'IN', gender: 'female' },
+                { lang: 'IN', gender: 'any' }
+            ],
+            'assamese': [
+                { lang: 'as-IN', gender: 'male' },
+                { lang: 'as', gender: 'male' },
+                { lang: 'hi-IN', gender: 'male' }, // Hindi as fallback
+                { lang: 'bn-IN', gender: 'male' }, // Bengali as fallback
+                { lang: 'IN', gender: 'male' },
+                { lang: 'IN', gender: 'any' }
+            ],
+            'english': [
+                { lang: 'en-IN', gender: 'male' },
+                { lang: 'en-US', gender: 'male' },
+                { lang: 'en-GB', gender: 'male' },
+                { lang: 'en', gender: 'male' },
+                { lang: 'en', gender: 'any' }
+            ]
+        };
+
+        const languagePriorities = priorities[language] || [];
+        
+        for (const priority of languagePriorities) {
+            const matchingVoices = this.voices.filter(voice => {
+                const langMatch = voice.lang.includes(priority.lang);
+                const genderMatch = priority.gender === 'any' || 
+                    (priority.gender === 'male' && voice.name.toLowerCase().includes('male')) ||
+                    (priority.gender === 'female' && voice.name.toLowerCase().includes('female'));
+                
+                return langMatch && genderMatch;
+            });
+            
+            if (matchingVoices.length > 0) {
+                console.log(`✅ Found ${matchingVoices.length} voices for ${language} (${priority.lang}, ${priority.gender})`);
+                return matchingVoices[0]; // Return the first matching voice
+            }
+        }
+        
+        console.log(`❌ No suitable voice found for ${language}`);
+        return null;
     }
 
     setVoice(voiceName) {
@@ -622,6 +609,22 @@ class TextToSpeech {
         
         return voiceInfo;
     }
+
+    // New method to get voice recommendations
+    getVoiceRecommendations() {
+        const recommendations = {
+            missSapna: this.findBestVoiceForLanguage('hindi', 'female'),
+            baruahSir: this.findBestVoiceForLanguage('assamese', 'male'),
+            roySir: this.findBestVoiceForLanguage('english', 'male')
+        };
+        
+        console.log('🔧 Voice recommendations:');
+        console.log('   - Miss Sapna:', recommendations.missSapna?.name || 'Using fallback');
+        console.log('   - Baruah Sir:', recommendations.baruahSir?.name || 'Using fallback');
+        console.log('   - Roy Sir:', recommendations.roySir?.name || 'Using fallback');
+        
+        return recommendations;
+    }
 }
 
 // Initialize TTS
@@ -639,6 +642,7 @@ console.log('✅ Text-to-Speech initialized successfully');
 setTimeout(() => {
     if (window.textToSpeech) {
         window.textToSpeech.checkAndSuggestLanguagePacks();
+        window.textToSpeech.getVoiceRecommendations();
     }
 }, 1000);
 
