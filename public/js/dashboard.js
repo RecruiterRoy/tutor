@@ -776,6 +776,9 @@ async function loadUserData() {
     // Update avatar display
     updateAvatarDisplay();
     
+    // Update user display in sidebar
+    updateUserDisplay(profileData);
+    
     console.log('✅ User data loaded successfully:', profileData);
     return profileData;
 

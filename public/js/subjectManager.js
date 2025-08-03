@@ -650,6 +650,11 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
         if (!this.userSubjects.includes(subjectName)) {
             this.userSubjects.push(subjectName);
             this.populateSubjectManager();
+            
+            // Show immediate feedback
+            if (window.showSuccess) {
+                window.showSuccess(`${subjectName} added!`);
+            }
         }
     }
 
@@ -659,44 +664,41 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
         if (index > -1) {
             this.userSubjects.splice(index, 1);
             this.populateSubjectManager();
+            
+            // Show immediate feedback
+            if (window.showSuccess) {
+                window.showSuccess(`${subjectName} removed!`);
+            }
         }
     }
 
-    // Save subject changes
+    // Save subject changes with improved workflow
     async saveSubjectChanges() {
         try {
-            console.log('saveSubjectChanges method called');
+            console.log('🔄 Starting subject save process...');
             
-            // Try to get current user from multiple sources
+            // Show loading state
+            const saveButton = document.querySelector('#subjectManagerModal button[onclick*="saveSubjectChanges"]');
+            if (saveButton) {
+                saveButton.textContent = 'Saving...';
+                saveButton.disabled = true;
+            }
+            
+            // Get current user
             if (!this.currentUser) {
-                // Try to get from window.currentUser
                 if (window.currentUser) {
                     this.currentUser = window.currentUser;
                 } else {
-                    // Try to get from Supabase auth
-                    try {
-                        const { data: { user }, error } = await window.supabaseClient.auth.getUser();
-                        if (user && !error) {
-                            this.currentUser = user;
-                        } else {
-                            console.error('No current user found in any source');
-                            if (window.showError) {
-                                window.showError('User session expired. Please log in again.');
-                            }
-                            return;
-                        }
-                    } catch (authError) {
-                        console.error('Failed to get current user:', authError);
-                        if (window.showError) {
-                            window.showError('Authentication error. Please log in again.');
-                        }
-                        return;
+                    const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                    if (user && !error) {
+                        this.currentUser = user;
+                    } else {
+                        throw new Error('User session expired. Please log in again.');
                     }
                 }
             }
 
-            console.log('Saving subjects:', this.userSubjects);
-            console.log('Current user:', this.currentUser.id);
+            console.log('✅ User verified, saving subjects:', this.userSubjects);
 
             // Remove old subjects
             const { error: deleteError } = await window.supabaseClient
@@ -705,14 +707,10 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
                 .eq('user_id', this.currentUser.id);
 
             if (deleteError) {
-                console.error('Error deleting old subjects:', deleteError);
-                if (window.showError) {
-                    window.showError('Failed to delete old subjects: ' + deleteError.message);
-                }
-                return;
+                throw new Error('Failed to delete old subjects: ' + deleteError.message);
             }
 
-            console.log('Old subjects deleted successfully');
+            console.log('✅ Old subjects deleted');
 
             // Add new subjects
             const subjectsToInsert = this.userSubjects.map(subject => ({
@@ -723,44 +721,42 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
                 created_at: new Date().toISOString()
             }));
 
-            console.log('Subjects to insert:', subjectsToInsert);
-
             const { error: insertError } = await window.supabaseClient
                 .from('user_subjects')
                 .insert(subjectsToInsert);
 
             if (insertError) {
-                console.error('Error inserting new subjects:', insertError);
-                if (window.showError) {
-                    window.showError('Failed to insert new subjects: ' + insertError.message);
-                }
-                return;
+                throw new Error('Failed to insert new subjects: ' + insertError.message);
             }
 
-            console.log('Subjects saved successfully');
+            console.log('✅ New subjects inserted');
             
-            // Reload subjects from database to ensure consistency
+            // Reload subjects from database
             await this.loadUserSubjects();
-            console.log('Subjects reloaded from database');
             
-            // Update all UI elements
+            // Update UI
             this.renderSubjectButtons();
             this.updateCurrentSubjectDisplay();
-            console.log('UI updated');
             
             // Hide modal
             this.hideSubjectManager();
-            console.log('Modal hidden');
             
             // Show success message
             if (window.showSuccess) {
-                window.showSuccess('Subjects saved successfully!');
+                window.showSuccess(`Successfully saved ${this.userSubjects.length} subjects!`);
             }
 
         } catch (error) {
-            console.error('Error in saveSubjectChanges:', error);
+            console.error('❌ Error in saveSubjectChanges:', error);
             if (window.showError) {
-                window.showError('Failed to save subjects. Please try again.');
+                window.showError(error.message);
+            }
+        } finally {
+            // Reset button state
+            const saveButton = document.querySelector('#subjectManagerModal button[onclick*="saveSubjectChanges"]');
+            if (saveButton) {
+                saveButton.textContent = 'Save Changes';
+                saveButton.disabled = false;
             }
         }
     }

@@ -1470,8 +1470,9 @@
 
     <!-- Subject Manager Modal -->
     <div id="subjectManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
+        <div class="bg-gray-800 rounded-lg p-6 w-[90vw] max-w-6xl mx-4 h-[80vh] flex flex-col">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
                 <h3 class="text-white text-xl font-semibold">📚 Manage Your Subjects</h3>
                 <button onclick="window.subjectManager?.hideSubjectManager()" class="text-gray-400 hover:text-white">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1480,25 +1481,29 @@
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Available Subjects -->
-                <div>
-                    <h4 class="text-white text-lg font-medium mb-4">Available Subjects</h4>
-                    <div id="availableSubjectsGrid" class="grid grid-cols-3 gap-3">
-                        <!-- Available subjects will be populated here -->
+            <!-- Content with Scroll -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Available Subjects -->
+                    <div>
+                        <h4 class="text-white text-lg font-medium mb-4">Available Subjects</h4>
+                        <div id="availableSubjectsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <!-- Available subjects will be populated here -->
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Selected Subjects -->
-                <div>
-                    <h4 class="text-white text-lg font-medium mb-4">Your Subjects</h4>
-                    <div id="selectedSubjectsGrid" class="grid grid-cols-3 gap-3">
-                        <!-- Selected subjects will be populated here -->
+                    
+                    <!-- Selected Subjects -->
+                    <div>
+                        <h4 class="text-white text-lg font-medium mb-4">Your Subjects</h4>
+                        <div id="selectedSubjectsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <!-- Selected subjects will be populated here -->
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="flex justify-end space-x-3 mt-6">
+            <!-- Footer -->
+            <div class="flex justify-end space-x-3 mt-4 flex-shrink-0">
                 <button onclick="window.subjectManager?.hideSubjectManager()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                     Cancel
                 </button>
