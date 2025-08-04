@@ -3228,11 +3228,20 @@ async function saveAvatarSelection() {
         // Update TTS voice to match new avatar
         console.log('🔧 Updating TTS voice...');
         if (window.textToSpeech) {
-            window.textToSpeech.forceVoiceUpdate();
             // Force immediate voice update
+            window.textToSpeech.forceVoiceUpdate();
+            
+            // Force voice change for next speech
             setTimeout(() => {
                 window.textToSpeech.forceVoiceUpdate();
+                console.log('🔧 Voice updated for new avatar:', selectedAvatarOption);
             }, 100);
+            
+            // Force voice change again after a longer delay
+            setTimeout(() => {
+                window.textToSpeech.forceVoiceUpdate();
+                console.log('🔧 Final voice update for avatar:', selectedAvatarOption);
+            }, 500);
         }
         
         // Show welcome message for new avatar
