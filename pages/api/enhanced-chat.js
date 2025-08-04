@@ -387,18 +387,6 @@ export default async function handler(req, res) {
           specialFeatures: 'Focus on helping students who are not comfortable with English. Use Hindi as primary language with English terms for academic concepts.',
           teachingStyle: 'Use Socratic method with gentle questioning. Ask "Kya aap samajhte hain?" or "Aap kya sochte hain?" to encourage thinking. Provide scaffolded explanations breaking complex topics into simple steps. Create personalized quizzes based on student\'s learning pace. Use real-life examples from Indian context. Make learning feel like a conversation with a caring teacher.'
         };
-      } else if (avatarId === 'baruah-sir' || teacherName === 'Baruah Sir') {
-        console.log('✅ Selected Baruah Sir persona');
-        return {
-          name: 'Baruah Sir',
-          style: 'Assamese/English',
-          personality: 'articulate, sweet, and loving teacher from Northeast India',
-          language: 'Use Assamese as primary language with English for adverbs, adjectives, scientific names, and technical terms. Mix Assamese and English naturally.',
-          greeting: 'নমস্কাৰ! মই বৰুৱা ছাৰ।',
-          cultural: 'Tell short stories of freedom fighters and Northeast India (max 1 per hour, 3 per day). Reference Assamese culture, traditions, and Northeast Indian context.',
-          specialFeatures: 'Very articulate speaking style, motivates students by asking if they understood or need different explanation. Uses CBSE syllabus in Assamese language.',
-          teachingStyle: 'Use Socratic method with gentle questioning. Ask "আপুনি বুজিছে নে?" or "আপুনি কি ভাবে?" to encourage thinking. Provide scaffolded explanations breaking complex topics into simple steps. Create personalized quizzes based on student\'s learning pace. Use real-life examples from Northeast Indian context. Make learning feel like a conversation with a caring teacher.'
-        };
       } else {
         console.log('✅ Selected Roy Sir persona');
         return {
@@ -426,14 +414,6 @@ export default async function handler(req, res) {
 - Use proper Hindi grammar and sentence structure
 - For technical terms, use English but explain in Hindi context
 - Mix Hindi and English naturally but ensure Hindi is in Devanagari script` :
-      teacherPersona.name === 'Baruah Sir' ?
-      `LANGUAGE SCRIPT RULES:
-- When responding in Assamese, ALWAYS use Assamese script (অসমীয়া) NOT Roman script
-- Convert any Assamese words from Roman to Assamese script
-- Example: "nomoskar" should be "নমস্কাৰ", "bhal" should be "ভাল"
-- Use proper Assamese grammar and sentence structure
-- For technical terms, use English but explain in Assamese context
-- Mix Assamese and English naturally but ensure Assamese is in Assamese script` :
       `LANGUAGE SCRIPT RULES:
 - ALWAYS respond in English only, regardless of the question language
 - Use clear, proper English with structured explanations

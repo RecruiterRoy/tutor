@@ -166,8 +166,6 @@ function getCurrentAvatarName() {
         let avatarName;
         if (window.userData.ai_avatar === 'miss-sapna') {
             avatarName = 'Miss Sapna';
-        } else if (window.userData.ai_avatar === 'baruah-sir') {
-            avatarName = 'Baruah Sir';
         } else {
             avatarName = 'Roy Sir';
         }
@@ -202,8 +200,6 @@ function getCurrentAvatarGender() {
         let gender;
         if (window.userData.ai_avatar === 'miss-sapna') {
             gender = 'female';
-        } else if (window.userData.ai_avatar === 'baruah-sir') {
-            gender = 'male';
         } else {
             gender = 'male';
         }
@@ -220,8 +216,6 @@ function getAvatarWelcomeMessage() {
     
     if (avatarId === 'miss-sapna') {
         return "Hi, main aapki Miss Sapna hu. Main aapko Hindi bhasha mai padhaungi. Aap kya padhna chahti hain?";
-    } else if (avatarId === 'baruah-sir') {
-        return "নমস্কাৰ, মই আপোনাৰ বৰুৱা ছাৰ। মই আপোনাক অসমীয়া আৰু ইংৰাজী ভাষাত পঢ়াম। আপুনি কি পঢ়িব বিচাৰে? মই আপোনাক উত্তৰ-পূব ভাৰতৰ স্বাধীনতা সংগ্ৰামীৰ কাহিনী আৰু গল্প শুনাব পাৰোঁ।";
     } else {
         return "Hi, I am Roy Sir. I will teach you all subjects in English. Please tell me what you want to study today?";
     }
@@ -234,8 +228,6 @@ function getShortWelcomeMessage() {
     
     if (avatarId === 'miss-sapna') {
         return `Hi ${userName}! Main Miss Sapna hu aur main aapko Hindi mai padhaungi. Aap kya padhna chahte hain?`;
-    } else if (avatarId === 'baruah-sir') {
-        return `নমস্কাৰ ${userName}! মই বৰুৱা ছাৰ আৰু মই আপোনাক অসমীয়াত পঢ়াম। আপুনি কি পঢ়িব বিচাৰে?`;
     } else {
         return `Hi ${userName}! I am Roy Sir and I will help you with your studies. Please tell me what would you like to learn today?`;
     }
@@ -2341,22 +2333,20 @@ async function saveProfileChanges() {
 // Update avatar display
 function updateAvatarDisplay() {
     console.log('🔧 Updating avatar display...');
-    
+
     const avatarDisplay = document.getElementById('currentAvatarDisplay');
     if (!avatarDisplay) return;
-    
+
     const currentAvatarId = getCurrentAvatarId();
     const avatarName = getCurrentAvatarName();
     let avatarIcon;
-    
+
     if (currentAvatarId === 'miss-sapna') {
         avatarIcon = '👩‍🏫';
-    } else if (currentAvatarId === 'baruah-sir') {
-        avatarIcon = '👨‍🏫';
     } else {
         avatarIcon = '👨‍🏫';
     }
-    
+
     avatarDisplay.innerHTML = `
         <div class="flex items-center space-x-3">
             <div class="text-2xl">${avatarIcon}</div>
@@ -2366,28 +2356,26 @@ function updateAvatarDisplay() {
             </div>
         </div>
     `;
-    
+
     // Also update the welcome message avatar
     const welcomeTeacherAvatar = document.getElementById('welcomeTeacherAvatar');
     const welcomeTeacherName = document.getElementById('welcomeTeacherName');
-    
+
     if (welcomeTeacherAvatar) {
         let avatarSrc;
         if (currentAvatarId === 'miss-sapna') {
             avatarSrc = 'images/miss_sapna.jpg';
-        } else if (currentAvatarId === 'baruah-sir') {
-            avatarSrc = 'images/baruah_sir.jpg';
         } else {
             avatarSrc = 'images/roy_sir.jpg';
         }
         welcomeTeacherAvatar.src = avatarSrc;
         welcomeTeacherAvatar.alt = avatarName;
     }
-    
+
     if (welcomeTeacherName) {
         welcomeTeacherName.textContent = avatarName;
     }
-    
+
     console.log('✅ Avatar display updated:', avatarName);
 }
 
@@ -3322,22 +3310,20 @@ function highlightCurrentAvatar() {
 // Update avatar display
 function updateAvatarDisplay() {
     console.log('🔧 Updating avatar display...');
-    
+
     const avatarDisplay = document.getElementById('currentAvatarDisplay');
     if (!avatarDisplay) return;
-    
+
     const currentAvatarId = getCurrentAvatarId();
     const avatarName = getCurrentAvatarName();
     let avatarIcon;
-    
+
     if (currentAvatarId === 'miss-sapna') {
         avatarIcon = '👩‍🏫';
-    } else if (currentAvatarId === 'baruah-sir') {
-        avatarIcon = '👨‍🏫';
     } else {
         avatarIcon = '👨‍🏫';
     }
-    
+
     avatarDisplay.innerHTML = `
         <div class="flex items-center space-x-3">
             <div class="text-2xl">${avatarIcon}</div>
@@ -3347,28 +3333,26 @@ function updateAvatarDisplay() {
             </div>
         </div>
     `;
-    
+
     // Also update the welcome message avatar
     const welcomeTeacherAvatar = document.getElementById('welcomeTeacherAvatar');
     const welcomeTeacherName = document.getElementById('welcomeTeacherName');
-    
+
     if (welcomeTeacherAvatar) {
         let avatarSrc;
         if (currentAvatarId === 'miss-sapna') {
             avatarSrc = 'images/miss_sapna.jpg';
-        } else if (currentAvatarId === 'baruah-sir') {
-            avatarSrc = 'images/baruah_sir.jpg';
         } else {
             avatarSrc = 'images/roy_sir.jpg';
         }
         welcomeTeacherAvatar.src = avatarSrc;
         welcomeTeacherAvatar.alt = avatarName;
     }
-    
+
     if (welcomeTeacherName) {
         welcomeTeacherName.textContent = avatarName;
     }
-    
+
     console.log('✅ Avatar display updated:', avatarName);
 }
 
@@ -3622,7 +3606,7 @@ function showAvatarWelcomeMessage() {
 // Function to get teacher personality and teaching style
 function getTeacherPersonality() {
     const avatarId = getCurrentAvatarId();
-    
+
     if (avatarId === 'miss-sapna') {
         return {
             name: 'Miss Sapna',
@@ -3631,16 +3615,6 @@ function getTeacherPersonality() {
             teachingStyle: 'Uses Hindi as primary language with English terms for scientific names, technical terms, and better communication',
             gender: 'female',
             tone: 'Warm and motherly'
-        };
-    } else if (avatarId === 'baruah-sir') {
-        return {
-            name: 'Baruah Sir',
-            language: 'Assamese + English',
-            personality: 'Articulate, sweet, and loving teacher from Northeast India',
-            teachingStyle: 'Uses Assamese as primary language with English for adverbs, adjectives, scientific names, and technical terms. Tells short stories of freedom fighters and Northeast India (max 1 per hour, 3 per day). Motivates students by asking if they understood or need different explanation.',
-            specialFeatures: 'Tells stories of freedom fighters and Northeast India, very articulate speaking style, CBSE syllabus in Assamese language',
-            gender: 'male',
-            tone: 'Articulate, motivating, and caring'
         };
     } else {
         return {

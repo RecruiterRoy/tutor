@@ -28,13 +28,24 @@ class TextToSpeech {
         // Voices might load asynchronously
         if (this.synth.onvoiceschanged !== undefined) {
             this.synth.onvoiceschanged = () => {
+                console.log('🔧 TTS: Voices changed, reloading...');
                 this.loadVoices();
             };
         }
+        
+        // Force load voices after a delay
+        setTimeout(() => {
+            if (this.voices.length === 0) {
+                console.log('🔧 TTS: Forcing voice reload...');
+                this.loadVoices();
+            }
+        }, 1000);
     }
 
     loadVoices() {
         this.voices = this.synth.getVoices();
+        console.log('🔧 TTS: Loaded voices:', this.voices.length);
+        console.log('🔧 TTS: Available voices:', this.voices.map(v => `${v.name} (${v.lang})`));
         
         // Set voice based on current avatar
         if (this.voices.length > 0) {
@@ -344,41 +355,61 @@ class TextToSpeech {
 
         if (currentAvatar === 'miss-sapna') {
             console.log('🎯 Miss Sapna detected, selecting Hindi voice');
-            // Try to find the best available voice for Miss Sapna
-            let bestVoice = this.findBestVoiceForLanguage('hindi', 'female');
+            // Try to find Google Hindi voice first
+            let hindiVoice = this.voices.find(voice =>
+                voice.name.toLowerCase().includes('google') && 
+                (voice.lang.includes('hi') || voice.lang.includes('IN'))
+            );
             
-            if (bestVoice) {
-                this.currentVoice = bestVoice;
-                console.log('✅ Miss Sapna using voice:', bestVoice.name);
-                return bestVoice.lang;
+            if (!hindiVoice) {
+                console.log('🔍 No Google Hindi voice found, trying any Hindi voice');
+                hindiVoice = this.voices.find(voice =>
+                    voice.lang.includes('hi-IN') || voice.lang.includes('hi')
+                );
+            }
+            
+            if (!hindiVoice) {
+                console.log('🔍 No Hindi voice found, trying Indian voices');
+                hindiVoice = this.voices.find(voice =>
+                    voice.lang.includes('IN')
+                );
+            }
+            
+            if (hindiVoice) {
+                this.currentVoice = hindiVoice;
+                console.log('✅ Miss Sapna using Hindi voice:', hindiVoice.name);
+                return 'hi-IN';
             } else {
                 console.warn('❌ No suitable voice found for Miss Sapna, using fallback');
                 this.currentVoice = fallbackVoice;
                 return fallbackVoice?.lang || 'en-US';
             }
-        } else if (currentAvatar === 'baruah-sir') {
-            console.log('🎯 Baruah Sir detected, selecting Assamese voice');
-            // Try to find the best available voice for Baruah Sir
-            let bestVoice = this.findBestVoiceForLanguage('assamese', 'male');
-            
-            if (bestVoice) {
-                this.currentVoice = bestVoice;
-                console.log('✅ Baruah Sir using voice:', bestVoice.name);
-                return bestVoice.lang;
-            } else {
-                console.warn('❌ No suitable voice found for Baruah Sir, using fallback');
-                this.currentVoice = fallbackVoice;
-                return fallbackVoice?.lang || 'en-US';
-            }
         } else {
             console.log('🎯 Roy Sir detected, selecting English voice');
-            // Try to find the best available voice for Roy Sir
-            let bestVoice = this.findBestVoiceForLanguage('english', 'male');
+            // Try to find Microsoft Ravi voice first
+            let englishVoice = this.voices.find(voice =>
+                voice.name.toLowerCase().includes('ravi') && 
+                voice.lang.includes('en')
+            );
             
-            if (bestVoice) {
-                this.currentVoice = bestVoice;
-                console.log('✅ Roy Sir using voice:', bestVoice.name);
-                return bestVoice.lang;
+            if (!englishVoice) {
+                console.log('🔍 No Microsoft Ravi found, trying Indian English voices');
+                englishVoice = this.voices.find(voice =>
+                    voice.lang.includes('en-IN')
+                );
+            }
+            
+            if (!englishVoice) {
+                console.log('🔍 No Indian English voice found, trying any English voice');
+                englishVoice = this.voices.find(voice =>
+                    voice.lang.includes('en-US') || voice.lang.includes('en-GB')
+                );
+            }
+            
+            if (englishVoice) {
+                this.currentVoice = englishVoice;
+                console.log('✅ Roy Sir using English voice:', englishVoice.name);
+                return englishVoice.lang;
             } else {
                 console.warn('❌ No suitable voice found for Roy Sir, using fallback');
                 this.currentVoice = fallbackVoice;
