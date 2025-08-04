@@ -394,84 +394,64 @@ class TextToSpeech {
         console.log('🔧 Fallback voice:', fallbackVoice?.name || 'None');
 
         if (currentAvatar === 'miss-sapna') {
-            console.log('🎯 Miss Sapna detected, selecting FEMALE Hindi voice');
-            // STRICT: Only female voices for Miss Sapna
+            console.log('🎯 Miss Sapna detected, selecting Google Hindi voice');
+            // STRICT: Only Google Hindi voices for Miss Sapna
             let hindiVoice = this.voices.find(voice =>
                 voice.name.toLowerCase().includes('google') && 
-                (voice.lang.includes('hi') || voice.lang.includes('IN')) &&
-                voice.name.toLowerCase().includes('female')
+                voice.lang.includes('hi-IN')
             );
             
             if (!hindiVoice) {
-                console.log('🔍 No Google Hindi female voice found, trying any Hindi female voice');
+                console.log('🔍 No Google Hindi voice found, trying any Hindi voice');
                 hindiVoice = this.voices.find(voice =>
-                    (voice.lang.includes('hi-IN') || voice.lang.includes('hi')) &&
-                    voice.name.toLowerCase().includes('female')
+                    voice.lang.includes('hi-IN') || voice.lang.includes('hi')
                 );
             }
             
             if (!hindiVoice) {
-                console.log('🔍 No Hindi female voice found, trying any Indian female voice');
+                console.log('🔍 No Hindi voice found, trying any Indian voice');
                 hindiVoice = this.voices.find(voice =>
-                    voice.lang.includes('IN') &&
-                    voice.name.toLowerCase().includes('female')
-                );
-            }
-            
-            if (!hindiVoice) {
-                console.log('🔍 No Indian female voice found, trying any female voice');
-                hindiVoice = this.voices.find(voice =>
-                    voice.name.toLowerCase().includes('female')
+                    voice.lang.includes('IN')
                 );
             }
             
             if (hindiVoice) {
                 this.currentVoice = hindiVoice;
-                console.log('✅ Miss Sapna using FEMALE voice:', hindiVoice.name);
+                console.log('✅ Miss Sapna using Hindi voice:', hindiVoice.name);
                 return 'hi-IN';
             } else {
-                console.warn('❌ No suitable FEMALE voice found for Miss Sapna, using fallback');
+                console.warn('❌ No suitable Hindi voice found for Miss Sapna, using fallback');
                 this.currentVoice = fallbackVoice;
                 return fallbackVoice?.lang || 'en-US';
             }
         } else {
-            console.log('🎯 Roy Sir detected, selecting MALE English voice');
-            // STRICT: Only male voices for Roy Sir
+            console.log('🎯 Roy Sir detected, selecting Microsoft Ravi India English voice');
+            // STRICT: Only Microsoft Ravi India English for Roy Sir
             let englishVoice = this.voices.find(voice =>
                 voice.name.toLowerCase().includes('ravi') && 
-                voice.lang.includes('en') &&
-                voice.name.toLowerCase().includes('male')
+                voice.lang.includes('en-IN')
             );
             
             if (!englishVoice) {
-                console.log('🔍 No Microsoft Ravi male voice found, trying any Indian English male voice');
+                console.log('🔍 No Microsoft Ravi India English voice found, trying any Indian English voice');
                 englishVoice = this.voices.find(voice =>
-                    voice.lang.includes('en-IN') &&
-                    voice.name.toLowerCase().includes('male')
+                    voice.lang.includes('en-IN')
                 );
             }
             
             if (!englishVoice) {
-                console.log('🔍 No Indian English male voice found, trying any English male voice');
+                console.log('🔍 No Indian English voice found, trying any English voice');
                 englishVoice = this.voices.find(voice =>
-                    (voice.lang.includes('en-US') || voice.lang.includes('en-GB')) &&
-                    voice.name.toLowerCase().includes('male')
-                );
-            }
-            
-            if (!englishVoice) {
-                console.log('🔍 No English male voice found, trying any male voice');
-                englishVoice = this.voices.find(voice =>
-                    voice.name.toLowerCase().includes('male')
+                    voice.lang.includes('en-US') || voice.lang.includes('en-GB')
                 );
             }
             
             if (englishVoice) {
                 this.currentVoice = englishVoice;
-                console.log('✅ Roy Sir using MALE voice:', englishVoice.name);
+                console.log('✅ Roy Sir using English voice:', englishVoice.name);
                 return englishVoice.lang;
             } else {
-                console.warn('❌ No suitable MALE voice found for Roy Sir, using fallback');
+                console.warn('❌ No suitable English voice found for Roy Sir, using fallback');
                 this.currentVoice = fallbackVoice;
                 return fallbackVoice?.lang || 'en-US';
             }

@@ -155,13 +155,16 @@ class VoiceRecognition {
 
     async startListening(groupMode = false) {
         try {
-            // Check if already listening
-            if (this.isListening) {
-                console.log('Voice recognition already active, stopping first...');
-                this.stop();
-                // Reduced wait time for faster response
-                await new Promise(resolve => setTimeout(resolve, 50));
-            }
+            // Force stop any existing recognition first
+            console.log('Starting voice recognition...');
+            this.stop();
+            
+            // Wait a bit longer to ensure recognition is fully stopped
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // Reset the recognition instance to ensure clean state
+            this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            this.setupRecognition();
 
             // Check microphone permissions with enhanced error handling
             try {
@@ -408,6 +411,23 @@ class VoiceRecognition {
                 return;
             }
             
+            // Detect language and recommend avatar switch if needed
+            const detectedLanguage = this.detectLanguage(cleanTranscript);
+            const currentAvatar = (window.userData && window.userData.ai_avatar) || window.selectedAvatar || 'roy-sir';
+            
+            // Language-based avatar recommendations
+            if (detectedLanguage === 'hi-IN' && currentAvatar === 'roy-sir') {
+                console.log('🔍 Hindi detected but Roy Sir is active - recommending Miss Sapna');
+                if (window.showSuccess) {
+                    window.showSuccess('I detected Hindi. For better Hindi support, consider switching to Miss Sapna in settings. I\'ll continue in English for now.');
+                }
+            } else if (detectedLanguage === 'en-US' && currentAvatar === 'miss-sapna') {
+                console.log('🔍 English detected but Miss Sapna is active - recommending Roy Sir');
+                if (window.showSuccess) {
+                    window.showSuccess('I detected English. For better English support, consider switching to Roy Sir in settings. I\'ll continue in Hindi for now.');
+                }
+            }
+            
             // Update chat input with transcript
             const chatInput = document.getElementById('chatInput');
             if (chatInput) {
@@ -562,9 +582,20 @@ class VoiceRecognition {
 
     stop() {
         try {
-            if (this.recognition && this.isListening) {
-                this.recognition.stop();
+            // Force stop recognition regardless of state
+            if (this.recognition) {
+                try {
+                    this.recognition.stop();
+                } catch (stopError) {
+                    console.log('Recognition stop error (expected):', stopError);
+                }
+                try {
+                    this.recognition.abort();
+                } catch (abortError) {
+                    console.log('Recognition abort error (expected):', abortError);
+                }
             }
+            
             if (this.synthesis) {
                 this.synthesis.cancel();
             }
@@ -583,9 +614,12 @@ class VoiceRecognition {
         } catch (error) {
             console.log('Error stopping voice recognition:', error);
         }
+        
+        // Always reset state
         this.isListening = false;
         this.groupMode = false;
         this.updateUI('idle');
+        console.log('Voice recognition stopped and reset');
     }
 }
 
