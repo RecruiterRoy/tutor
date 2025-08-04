@@ -584,12 +584,20 @@
                         profile = result.data;
                         profileError = result.error;
                         
-                        // Handle any database errors by treating as no profile
+                        // Handle database errors - now that RLS is disabled
                         if (profileError) {
                             console.error('❌ Error fetching profile:', profileError);
-                            console.log('⚠️ Database error detected, treating as no profile...');
-                            profile = null;
-                            profileError = null;
+                            
+                            // If no profile exists, that's fine
+                            if (profileError.code === 'PGRST116') {
+                                console.log('📝 No profile found, user needs to complete registration...');
+                                profile = null;
+                                profileError = null;
+                            } else {
+                                // Other database error - sign out
+                                await window.supabaseClient.auth.signOut();
+                                return;
+                            }
                         }
                         
                         // Only redirect if user is verified and has complete profile
@@ -635,12 +643,18 @@
                 existingProfile = result.data;
                 profileError = result.error;
                 
-                // Handle any database errors by treating as no profile found
+                // Handle database errors - now that RLS is disabled, this should work
                 if (profileError) {
                     console.error('❌ Could not check user profile:', profileError);
-                    console.log('⚠️ Database error detected, treating as no profile...');
-                    existingProfile = null;
-                    profileError = { code: 'PGRST116' }; // Treat as no rows found
+                    
+                    // If no profile exists, that's fine - we'll create one
+                    if (profileError.code === 'PGRST116') {
+                        console.log('📝 No profile found, will create new one...');
+                        existingProfile = null;
+                    } else {
+                        // Other database error - throw it
+                        throw new Error('Database error: ' + profileError.message);
+                    }
                 }
                 
                 if (existingProfile) {
@@ -684,15 +698,10 @@
                     createError = error;
                 }
                 
-                // If creation fails, create a mock profile
+                // If creation fails, throw error since RLS is disabled
                 if (createError) {
-                    console.log('⚠️ Database error during profile creation, creating mock profile...');
-                    createdProfile = {
-                        ...profileData,
-                        id: user.id,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    };
+                    console.error('❌ Failed to create profile:', createError);
+                    throw new Error('Failed to create user profile: ' + createError.message);
                 }
                 
                 console.log('✅ User profile created successfully:', createdProfile);

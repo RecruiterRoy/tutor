@@ -885,7 +885,7 @@ async function loadUserData() {
       .eq('id', user.id)
       .single();
     
-    // Handle database errors gracefully
+    // Handle database errors - now that RLS is disabled
     if (profileError) {
       console.error('❌ Error fetching profile:', profileError);
       
@@ -920,7 +920,7 @@ async function loadUserData() {
         console.log('✅ New profile created:', createdProfile);
         return createdProfile;
       } else {
-        // Other database error
+        // Other database error - throw it
         throw profileError;
       }
     }
