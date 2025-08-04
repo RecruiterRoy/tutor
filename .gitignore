@@ -1,9 +1,23 @@
-﻿books/
-processed_books.json
-extracted_images/
-*.pdf
-*.epub
-*.mobi
+﻿# APK files (too large for git)
+*.apk
+public/*.apk
+
+# Node modules
 node_modules/
+
+# Environment variables
 .env
-.vercel
+.env.local
+.env.production
+
+# Build outputs
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

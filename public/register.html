@@ -916,20 +916,20 @@
                     try {
                         // Email registration with proper email confirmation
                         console.log('🔐 Attempting Supabase signUp with email confirmation...');
-                        const { data, error } = await supabase.auth.signUp({
-                            email,
-                            password,
-                            options: {
+                    const { data, error } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: {
                                 data: { 
-                                    full_name: fullName,
+                                full_name: fullName,
                                     gender: gender,
-                                    phone: phone,
-                                    class: userClass,
-                                    board: board,
-                                    school_name: schoolName,
-                                    city: city,
-                                    state: state,
-                                    preferred_language: language,
+                                phone: phone,
+                                class: userClass,
+                                board: board,
+                                school_name: schoolName,
+                                city: city,
+                                state: state,
+                                preferred_language: language,
                                     avatar: selectedAvatar || 'teacher-avatar1.png'
                                 },
                                 emailConfirm: true // Require email confirmation
@@ -937,8 +937,8 @@
                         });
                         
                         console.log('🔧 SignUp response:', { data, error });
-                        
-                        if (error) {
+                    
+                    if (error) {
                             console.error('❌ Email registration failed:', error);
                             throw new Error(`Registration failed: ${error.message}`);
                         }

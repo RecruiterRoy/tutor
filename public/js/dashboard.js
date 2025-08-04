@@ -282,7 +282,7 @@ async function initializeSupabase() {
             if (error) {
                 console.warn('⚠️ Auth check failed, but client created:', error);
                 // Don't throw error here, client might still work for other operations
-            } else {
+        } else {
                 console.log('✅ Supabase client initialized and tested successfully');
             }
         } catch (timeoutError) {
@@ -696,7 +696,7 @@ async function initializeDashboard() {
     // Initialize voice services
     if ('speechSynthesis' in window) {
         await initVoiceSelection();
-    } else {
+                    } else {
         const voiceSelect = document.getElementById('voiceSelect');
         if(voiceSelect) voiceSelect.disabled = true;
         console.log('Text-to-speech not supported');
@@ -725,11 +725,11 @@ async function initializeDashboard() {
     console.log('✅ User authenticated:', user.id);
     
     // currentUser is already set from authentication
-    await loadUserData();
-    setupEventListeners();
-    populateAvatarGrid();
-    initializeVoiceFeatures();
-    populateVoices();
+        await loadUserData();
+        setupEventListeners();
+        populateAvatarGrid();
+        initializeVoiceFeatures();
+        populateVoices();
     
     // Initialize subject manager if available
     if (window.subjectManager) {
@@ -743,17 +743,17 @@ async function initializeDashboard() {
     } else {
         console.warn('⚠️ Subject manager not available');
     }
-    
-    // Wait for TTS to be ready before loading voice settings
-    setTimeout(() => {
-        loadVoiceSettings();
-        setupVoiceSettingsListeners();
+        
+        // Wait for TTS to be ready before loading voice settings
+        setTimeout(() => {
+            loadVoiceSettings();
+            setupVoiceSettingsListeners();
         setupSmallTTSControls();
-    }, 1000);
-    
-    initSpeechRecognition();
-    showWelcomeMessage();
-    
+        }, 1000);
+        
+        initSpeechRecognition();
+        showWelcomeMessage();
+        
     // Show welcome message
     showWelcomeMessage();
     // --- End of existing logic ---
@@ -782,9 +782,9 @@ async function initializeDashboard() {
             console.warn('⚠️ Session check failed:', sessionError);
         }
     }, 300000); // Check every 5 minutes
-
-  } catch (error) {
-    console.error('❌ Dashboard initialization failed:', error);
+        
+    } catch (error) {
+        console.error('❌ Dashboard initialization failed:', error);
     showError('Initialization failed. Please refresh the page.');
   } finally {
     isInitializing = false;
@@ -810,16 +810,16 @@ const MAX_CONCURRENT_REQUESTS = 3;
 
 function processRequestQueue() {
   if (activeRequests >= MAX_CONCURRENT_REQUESTS || requestQueue.length === 0) {
-    return;
-  }
-
+            return;
+        }
+        
   const nextRequest = requestQueue.shift();
   if (!nextRequest || typeof nextRequest.requestFn !== 'function') {
     console.error('Invalid request in queue:', nextRequest);
     processRequestQueue(); // Skip invalid requests
-    return;
-  }
-
+            return;
+        }
+        
   activeRequests++;
   
   nextRequest.requestFn()
@@ -839,9 +839,9 @@ function addToRequestQueue(requestFn) {
   return new Promise((resolve, reject) => {
     if (typeof requestFn !== 'function') {
       reject(new Error('requestFn must be a function'));
-      return;
-    }
-    
+            return;
+        }
+        
     requestQueue.push({ requestFn, resolve, reject });
     processRequestQueue();
   });
@@ -898,8 +898,8 @@ async function loadUserData() {
     window.selectedAvatar = profile.ai_avatar || 'roy-sir';
     
     // Update avatar display
-    updateAvatarDisplay();
-    
+            updateAvatarDisplay();
+            
     // Update TTS voice to match current avatar
     if (window.textToSpeech) {
         window.textToSpeech.forceVoiceUpdate();
@@ -923,11 +923,11 @@ async function loadUserData() {
     
     return profile;
 
-  } catch (error) {
+    } catch (error) {
     console.error('❌ User data loading failed:', error);
     showError('Failed to load user data. Please refresh the page.');
     return null;
-  }
+    }
 }
 
 function showWelcomeMessage() {
@@ -1400,7 +1400,7 @@ async function sendMessage() {
         } catch (error) {
             console.error('❌ Failed to load user data:', error);
             await addMessage('ai', 'Sorry, I cannot process your message right now. Please refresh the page and try again.');
-            return;
+        return;
         }
     }
     
@@ -1461,15 +1461,15 @@ async function sendMessage() {
 
         // Send to AI backend with complete user profile and chat history
         const requestBody = {
-            message: text,
-            grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
-            subject: userSubject,
-            userProfile: userProfile,
+                message: text,
+                grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
+                subject: userSubject,
+                userProfile: userProfile,
             avatar: getCurrentAvatarId(), // Send avatar ID instead of teacher name
             teacher: getCurrentAvatarName(), // Keep teacher name for compatibility
             userGender: userGender,
             avatarGender: avatarGender,
-            isFirstResponseOfDay: isFirstResponseOfDay,
+                isFirstResponseOfDay: isFirstResponseOfDay,
             chatHistory: chatHistory,
             teacherPersonality: getTeacherPersonality(),
             shortWelcomeMessage: getShortWelcomeMessage()
@@ -1840,14 +1840,14 @@ function stopRecording() {
 async function toggleVoiceRecording() {
     if (!window.voiceRecognition) {
         console.log('Voice recognition not initialized');
-        return;
-    }
+            return;
+        }
 
     if (window.voiceRecognition.isListening) {
         // Stop recording
         window.voiceRecognition.stop();
         updateVoiceButton();
-    } else {
+        } else {
         // Start recording
         try {
             await window.voiceRecognition.startListening();
@@ -1869,9 +1869,9 @@ async function toggleVoiceRecording() {
                     updateVoiceButton();
                 }
             };
-            
-        } catch (error) {
-            console.error('Voice recording error:', error);
+        
+    } catch (error) {
+        console.error('Voice recording error:', error);
             showError('Voice recording failed. Please try again.');
         }
     }
@@ -2526,7 +2526,7 @@ async function sendChatMessage() {
         const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+            body: JSON.stringify({ 
                 message: text,
                 grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
                 subject: userSubject,
@@ -2548,7 +2548,7 @@ async function sendChatMessage() {
         
         if (data.success && data.response) {
             console.log('✅ AI response received');
-            await addMessage('ai', data.response);
+        await addMessage('ai', data.response);
             
             // Save message to subject history if subject manager is active
             if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
