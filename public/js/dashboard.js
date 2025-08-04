@@ -9,7 +9,8 @@
 // Note: toggleVoiceRecording is defined later in the file
 
 window.closeSidebar = function() {
-    console.log('closeSidebar called - waiting for implementation');
+    // This is for desktop sidebar - redirect to mobile sidebar for now
+    closeMobileSidebar();
 };
 
 window.showSection = function(sectionName) {
@@ -2164,6 +2165,8 @@ function closeSidebar() {
 window.closeSidebar = closeSidebar;
 
 function closeMobileSidebar() {
+    console.log('🔧 Closing mobile sidebar...');
+    
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
     
@@ -2185,31 +2188,40 @@ function closeMobileSidebar() {
         if (overlay) {
             overlay.classList.add('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
         }
+        console.log('✅ Mobile sidebar closed');
     }, 300);
 }
 
 function toggleMobileSidebar() {
+    console.log('🔧 Toggle mobile sidebar called');
+    
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
     
-    if (sidebar && overlay) {
-        const isOpen = sidebar.classList.contains('translate-x-0');
+    if (!sidebar || !overlay) {
+        console.log('❌ Mobile sidebar elements not found');
+        return;
+    }
+    
+    const isOpen = sidebar.classList.contains('translate-x-0');
+    
+    if (isOpen) {
+        console.log('🔧 Sidebar is open, closing...');
+        closeMobileSidebar();
+    } else {
+        console.log('🔧 Sidebar is closed, opening...');
+        // Show sidebar elements first
+        sidebar.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
+        overlay.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
         
-        if (isOpen) {
-            closeMobileSidebar();
-        } else {
-            // Show sidebar elements first
-            sidebar.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
-            overlay.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
-            
-            // Then animate them
-            setTimeout(() => {
-                sidebar.classList.remove('-translate-x-full');
-                sidebar.classList.add('translate-x-0');
-                overlay.classList.remove('opacity-0', 'pointer-events-none');
-                overlay.classList.add('opacity-100', 'pointer-events-auto');
-            }, 10);
-        }
+        // Then animate them
+        setTimeout(() => {
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            overlay.classList.add('opacity-100', 'pointer-events-auto');
+            console.log('✅ Mobile sidebar opened');
+        }, 10);
     }
 }
 
@@ -2217,7 +2229,7 @@ function toggleMobileSidebar() {
 document.addEventListener('DOMContentLoaded', function() {
     const overlay = document.getElementById('mobileSidebarOverlay');
     if (overlay) {
-        overlay.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', closeMobileSidebar);
     }
 });
 
