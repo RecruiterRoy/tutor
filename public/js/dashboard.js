@@ -674,40 +674,115 @@ function ensureTTSReady() {
 }
 
 async function initializeDashboard() {
-  if (isInitializing || isInitialized) return;
-  isInitializing = true;
-
+  console.log('🔧 Initializing dashboard...');
+  
   try {
-    console.log('🚀 Starting dashboard initialization...');
+    // Initialize mobile sidebar first
+    initializeMobileSidebar();
     
-    // 1. Wait for essential services
-    console.log('🔧 Waiting for Supabase...');
-    await ensureSupabaseReady();
-    console.log('✅ Supabase ready');
+    // Initialize Supabase
+    await initializeSupabase();
     
-    console.log('🔧 Waiting for TTS...');
-    await ensureTTSReady();
-    console.log('✅ TTS ready');
+    // Initialize avatar selection system
+    initializeAvatarSelection();
     
-    // 2. Load user data
-    console.log('🔧 About to call loadUserData...');
-    const userData = await loadUserData();
-    console.log('🔧 loadUserData returned:', userData);
+    // Initialize Mermaid
+    mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        securityLevel: 'loose'
+    });
+
+    // Initialize voice services
+    if ('speechSynthesis' in window) {
+        await initVoiceSelection();
+    } else {
+        const voiceSelect = document.getElementById('voiceSelect');
+        if(voiceSelect) voiceSelect.disabled = true;
+        console.log('Text-to-speech not supported');
+    }
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        initSpeechRecognition();
+    } else {
+        const voiceButton = document.getElementById('voiceButton');
+        if(voiceButton) voiceButton.style.display = 'none';
+        console.log('Speech recognition not supported');
+    }
+
+    // --- Keep existing initialization logic ---
+    const { data: { user }, error } = await window.supabaseClient.auth.getUser();
     
-    if (!userData) {
-      console.error('❌ User data not available');
-      throw new Error('User data not available');
+    if (error || !user) {
+        console.log('No authenticated user, redirecting to login');
+        window.location.href = '/login';
+        return;
     }
     
-    // 3. Initialize components
-    console.log('🔧 Initializing UI components...');
-    initializeUI();
-    console.log('🔧 Initializing event listeners...');
-    initializeEventListeners();
+    // Set current user globally
+    window.currentUser = user;
+    currentUser = user; // Set local variable too
+    console.log('✅ User authenticated:', user.id);
     
-    isInitialized = true;
-    console.log('✅ Dashboard initialized successfully');
+    // currentUser is already set from authentication
+    await loadUserData();
+    setupEventListeners();
+    populateAvatarGrid();
+    initializeVoiceFeatures();
+    populateVoices();
     
+    // Initialize subject manager if available
+    if (window.subjectManager) {
+        console.log('🔧 Initializing subject manager...');
+        try {
+            await window.subjectManager.initialize(window.userData, window.userData?.class, window.userData?.board);
+            console.log('✅ Subject manager initialized');
+        } catch (error) {
+            console.error('❌ Subject manager initialization error:', error);
+        }
+    } else {
+        console.warn('⚠️ Subject manager not available');
+    }
+    
+    // Wait for TTS to be ready before loading voice settings
+    setTimeout(() => {
+        loadVoiceSettings();
+        setupVoiceSettingsListeners();
+        setupSmallTTSControls();
+    }, 1000);
+    
+    initSpeechRecognition();
+    showWelcomeMessage();
+    
+    // Show welcome message
+    showWelcomeMessage();
+    // --- End of existing logic ---
+
+    // Test voice services
+    setTimeout(() => {
+        if (speechSynthesis && speechSynthesis.getVoices().length > 0) {
+            speakText("Welcome to Tution App. Voice services are ready.");
+        } else {
+             console.log("Skipping welcome message as voices are not ready yet.");
+        }
+    }, 1500);
+    
+    // Set up periodic user session refresh for multiple users
+    setInterval(async () => {
+        try {
+            const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+            if (error || !user) {
+                console.warn('⚠️ User session expired, redirecting to login...');
+                window.location.href = '/login.html';
+            } else {
+                currentUser = user; // Update current user
+                console.log('✅ User session refreshed:', user.id);
+            }
+        } catch (sessionError) {
+            console.warn('⚠️ Session check failed:', sessionError);
+        }
+    }, 300000); // Check every 5 minutes
+
   } catch (error) {
     console.error('❌ Dashboard initialization failed:', error);
     showError('Initialization failed. Please refresh the page.');
