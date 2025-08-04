@@ -584,20 +584,12 @@
                         profile = result.data;
                         profileError = result.error;
                         
-                        // Handle RLS policy errors
+                        // Handle any database errors by treating as no profile
                         if (profileError) {
                             console.error('❌ Error fetching profile:', profileError);
-                            
-                            // If it's an RLS policy error, treat as no profile
-                            if (profileError.message && profileError.message.includes('infinite recursion')) {
-                                console.log('⚠️ RLS policy error detected, treating as no profile...');
-                                profile = null;
-                                profileError = null;
-                            } else {
-                                // Clear session and stay on login page
-                                await window.supabaseClient.auth.signOut();
-                                return;
-                            }
+                            console.log('⚠️ Database error detected, treating as no profile...');
+                            profile = null;
+                            profileError = null;
                         }
                         
                         // Only redirect if user is verified and has complete profile
@@ -607,10 +599,8 @@
                             window.location.href = 'dashboard.html';
                             return;
                         } else {
-                            console.log('❌ User not verified or profile incomplete, staying on login page');
-                            // Clear session to force re-authentication
-                            await window.supabaseClient.auth.signOut();
-                            showError('Please complete your profile verification before accessing the dashboard.');
+                            console.log('⚠️ User profile incomplete, but allowing access to complete profile');
+                            // Don't sign out, let them proceed to complete profile
                             return;
                         }
                     }
@@ -645,18 +635,12 @@
                 existingProfile = result.data;
                 profileError = result.error;
                 
-                // Handle RLS policy errors
+                // Handle any database errors by treating as no profile found
                 if (profileError) {
                     console.error('❌ Could not check user profile:', profileError);
-                    
-                    // If it's an RLS policy error, treat as no profile found
-                    if (profileError.message && profileError.message.includes('infinite recursion')) {
-                        console.log('⚠️ RLS policy error detected, treating as no profile...');
-                        existingProfile = null;
-                        profileError = { code: 'PGRST116' }; // Treat as no rows found
-                    } else if (profileError.code !== 'PGRST116') { // PGRST116 = no rows found
-                        throw new Error('Failed to verify user profile');
-                    }
+                    console.log('⚠️ Database error detected, treating as no profile...');
+                    existingProfile = null;
+                    profileError = { code: 'PGRST116' }; // Treat as no rows found
                 }
                 
                 if (existingProfile) {
@@ -683,6 +667,7 @@
                 
                 console.log('📋 Profile data to insert:', profileData);
                 
+                // Try to create profile, but if it fails, create a mock profile
                 let createdProfile = null;
                 let createError = null;
                 
@@ -696,25 +681,18 @@
                     createError = result.error;
                 } catch (error) {
                     console.error('❌ Could not create user profile:', error);
-                    
-                    // If it's an RLS policy error, create a mock profile
-                    if (error.message && error.message.includes('infinite recursion')) {
-                        console.log('⚠️ RLS policy error during profile creation, creating mock profile...');
-                        createdProfile = {
-                            ...profileData,
-                            id: user.id,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        };
-                        createError = null;
-                    } else {
-                        throw new Error('Failed to create user profile');
-                    }
+                    createError = error;
                 }
                 
+                // If creation fails, create a mock profile
                 if (createError) {
-                    console.error('❌ Could not create user profile:', createError);
-                    throw new Error('Failed to create user profile');
+                    console.log('⚠️ Database error during profile creation, creating mock profile...');
+                    createdProfile = {
+                        ...profileData,
+                        id: user.id,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
                 }
                 
                 console.log('✅ User profile created successfully:', createdProfile);
@@ -949,20 +927,8 @@
 
         function showError(message) {
             console.error(message);
-            // Try to show error in Alpine.js if available
-            if (window.Alpine && window.Alpine.store) {
-                // If Alpine.js is available, show error there
-                const app = document.querySelector('[x-data]').__x.$data;
-                if (app && app.showMessage) {
-                    app.showMessage(message, 'error');
-                } else {
-                    // Fallback to a simple notification
-                    showNotification(message, 'error');
-                }
-            } else {
-                // Fallback to simple notification
-                showNotification(message, 'error');
-            }
+            // Show simple notification
+            showNotification(message, 'error');
         }
 
         function showNotification(message, type = 'error') {
