@@ -39,7 +39,10 @@ class VoiceRecognition {
             
             // Pause TTS when voice recognition starts to prevent feedback
             if (window.textToSpeech && window.textToSpeech.isSpeaking) {
-                window.textToSpeech.pause();
+                // Don't pause welcome messages - let them finish
+                if (!window.textToSpeech.currentText || !window.textToSpeech.currentText.includes('Welcome to Tution App')) {
+                    window.textToSpeech.pause();
+                }
             }
             
             console.log('Voice recognition started - listening for speech...');
@@ -163,6 +166,14 @@ class VoiceRecognition {
         
         this.isStarting = true;
         
+        // Add a timeout to reset the flag in case it gets stuck
+        setTimeout(() => {
+            if (this.isStarting && !this.isListening) {
+                console.log('🔧 Resetting stuck isStarting flag');
+                this.isStarting = false;
+            }
+        }, 5000); // 5 second timeout
+        
         try {
             // Force stop any existing recognition first
             console.log('Starting voice recognition...');
@@ -180,6 +191,11 @@ class VoiceRecognition {
                 console.log('Still listening, forcing stop again...');
                 await this.stop();
                 await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
+            // Reset the starting flag if we're not actually starting
+            if (!this.isListening) {
+                this.isStarting = false;
             }
 
             // Check microphone permissions with enhanced error handling
@@ -222,6 +238,7 @@ class VoiceRecognition {
                     // Double-check that we're not already listening
                     if (this.isListening) {
                         console.log('Already listening, skipping start attempt');
+                        this.isStarting = false; // Reset flag if already listening
                         return;
                     }
                     
@@ -245,6 +262,7 @@ class VoiceRecognition {
                     } else {
                         console.error('Failed to start voice recognition after ' + maxRetries + ' attempts');
                         this.isListening = false;
+                        this.isStarting = false; // Reset flag on failure
                         this.updateUI('error');
                     }
                 }
@@ -567,32 +585,42 @@ class VoiceRecognition {
         const voiceButton = document.getElementById('voiceButton');
         const voiceIcon = document.getElementById('voiceIcon');
         
+        console.log('🔧 updateUI called with state:', state);
+        console.log('🔧 voiceButton found:', !!voiceButton);
+        console.log('🔧 voiceIcon found:', !!voiceIcon);
+        
         if (voiceButton && voiceIcon) {
             if (state === 'listening') {
                 // Red background when listening
+                voiceButton.classList.remove('bg-gray-700/50', 'text-gray-400', 'bg-yellow-500');
                 voiceButton.classList.add('bg-red-500', 'text-white');
-                voiceButton.classList.remove('bg-gray-700/50', 'text-gray-400');
                 voiceIcon.textContent = '🔴'; // Red circle to show listening
                 voiceButton.title = 'Listening... Click to stop';
+                console.log('🔧 Mic button set to listening (red)');
             } else if (state === 'processing') {
                 // Yellow background when processing
-                voiceButton.classList.add('bg-yellow-500', 'text-white');
                 voiceButton.classList.remove('bg-gray-700/50', 'text-gray-400', 'bg-red-500');
+                voiceButton.classList.add('bg-yellow-500', 'text-white');
                 voiceIcon.textContent = '⏳'; // Hourglass to show processing
                 voiceButton.title = 'Processing voice input...';
+                console.log('🔧 Mic button set to processing (yellow)');
             } else if (state === 'error') {
                 // Red background for error
+                voiceButton.classList.remove('bg-gray-700/50', 'text-gray-400', 'bg-yellow-500');
                 voiceButton.classList.add('bg-red-500', 'text-white');
-                voiceButton.classList.remove('bg-gray-700/50', 'text-gray-400');
                 voiceIcon.textContent = '❌'; // X mark for error
                 voiceButton.title = 'Voice recognition error. Click to try again.';
+                console.log('🔧 Mic button set to error (red)');
             } else {
                 // Default state (idle)
                 voiceButton.classList.remove('bg-red-500', 'bg-yellow-500', 'text-white');
                 voiceButton.classList.add('bg-gray-700/50', 'text-gray-400');
                 voiceIcon.textContent = '🎤'; // Default mic icon
                 voiceButton.title = 'Click to start voice input';
+                console.log('🔧 Mic button set to idle (gray)');
             }
+        } else {
+            console.log('❌ Voice button elements not found');
         }
 
         // Update status indicator if it exists
