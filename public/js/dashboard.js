@@ -3666,6 +3666,81 @@ function resetWelcomeMessage() {
     console.log('🔧 Welcome message flag reset');
 }
 
+// Check subscription expiry and show reminder
+function checkSubscriptionExpiry(expiryDate) {
+    if (!expiryDate) return;
+    
+    const expiry = new Date(expiryDate);
+    const now = new Date();
+    const daysUntilExpiry = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry <= 7 && daysUntilExpiry > 0) {
+        // Show expiry reminder
+        const reminderHtml = `
+            <div class="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="text-2xl">⚠️</div>
+                        <div>
+                            <div class="text-yellow-200 font-semibold">Premium Subscription Expiring Soon</div>
+                            <div class="text-yellow-300 text-sm">Your premium access expires in ${daysUntilExpiry} day${daysUntilExpiry > 1 ? 's' : ''}</div>
+                        </div>
+                    </div>
+                    <button onclick="window.location.href='payment.html'" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm">
+                        Renew Now
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add reminder to the top of the chat section
+        const chatSection = document.getElementById('chatSection');
+        if (chatSection) {
+            const existingReminder = chatSection.querySelector('.subscription-reminder');
+            if (existingReminder) {
+                existingReminder.remove();
+            }
+            
+            const reminderDiv = document.createElement('div');
+            reminderDiv.className = 'subscription-reminder';
+            reminderDiv.innerHTML = reminderHtml;
+            chatSection.insertBefore(reminderDiv, chatSection.firstChild);
+        }
+    } else if (daysUntilExpiry <= 0) {
+        // Show expired message
+        const expiredHtml = `
+            <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="text-2xl">❌</div>
+                        <div>
+                            <div class="text-red-200 font-semibold">Premium Subscription Expired</div>
+                            <div class="text-red-300 text-sm">Your premium access has expired. Renew to continue enjoying premium features.</div>
+                        </div>
+                    </div>
+                    <button onclick="window.location.href='payment.html'" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                        Renew Now
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add expired message to the top of the chat section
+        const chatSection = document.getElementById('chatSection');
+        if (chatSection) {
+            const existingReminder = chatSection.querySelector('.subscription-reminder');
+            if (existingReminder) {
+                existingReminder.remove();
+            }
+            
+            const reminderDiv = document.createElement('div');
+            reminderDiv.className = 'subscription-reminder';
+            reminderDiv.innerHTML = expiredHtml;
+            chatSection.insertBefore(reminderDiv, chatSection.firstChild);
+        }
+    }
+}
+
 // Function to force refresh images
 function forceRefreshImages() {
     console.log('🔧 Force refreshing images...');

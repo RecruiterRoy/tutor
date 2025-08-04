@@ -56,8 +56,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </a>
-                <img src="images/tution.app_logo.jpg" alt="tution.app Logo" style="height: 40px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
-                <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" style="height: 45px; width: auto; margin-left: 0.5rem; cursor: pointer;" onclick="window.location.href='index.html'">
+                <img src="images/tution.app_logo.jpg" alt="tution.app Logo" style="height: 50px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
                 <h1 class="text-2xl font-bold text-white">TUTOR.AI Premium</h1>
             </div>
             <div class="flex items-center space-x-4">
@@ -241,16 +240,218 @@
 
         // Payment initiation function
         async function initiatePayment() {
+            showUPIPaymentPopup();
+        }
+
+        // UPI Payment Popup Functions
+        function showUPIPaymentPopup() {
+            document.getElementById('upiPaymentModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideUPIPaymentPopup() {
+            document.getElementById('upiPaymentModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        async function submitUPIPayment() {
+            const upiNumber = document.getElementById('upiNumber').value.trim();
+            const transactionId = document.getElementById('transactionId').value.trim();
+            
+            if (!upiNumber || !transactionId) {
+                alert('Please fill in both UPI number and Transaction ID');
+                return;
+            }
+
             try {
-                if (window.paymentSystem) {
-                    await window.paymentSystem.initiateUPIPayment('monthly');
-                } else {
-                    console.error('Payment system not initialized');
+                // Show loading state
+                const submitBtn = document.getElementById('submitPaymentBtn');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="animate-spin">⏳</span> Processing...';
+                submitBtn.disabled = true;
+
+                // Get current user
+                const supabase = window.supabase.createClient(
+                    'https://vfqdjpiyaabufpaofysz.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo'
+                );
+                
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.user) {
+                    throw new Error('User not authenticated');
                 }
+
+                // Calculate expiry date (30 days from now)
+                const expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + 30);
+
+                // Update user profile with premium subscription
+                const { error: profileError } = await supabase
+                    .from('user_profiles')
+                    .update({
+                        subscription_status: 'premium',
+                        subscription_expiry: expiryDate.toISOString(),
+                        trial_status: 'expired',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', session.user.id);
+
+                if (profileError) throw profileError;
+
+                // Save payment record
+                const { error: paymentError } = await supabase
+                    .from('payments')
+                    .insert({
+                        user_id: session.user.id,
+                        amount: 99,
+                        currency: 'INR',
+                        payment_method: 'UPI',
+                        upi_number: upiNumber,
+                        transaction_id: transactionId,
+                        status: 'pending_verification',
+                        created_at: new Date().toISOString()
+                    });
+
+                if (paymentError) throw paymentError;
+
+                // Success message
+                alert('Payment submitted successfully! Your premium access will be activated after verification.');
+                hideUPIPaymentPopup();
+                
+                // Refresh page to show updated status
+                window.location.reload();
+
             } catch (error) {
-                console.error('Payment initiation failed:', error);
+                console.error('Payment submission failed:', error);
+                alert('Payment submission failed. Please try again.');
+            } finally {
+                // Reset button
+                const submitBtn = document.getElementById('submitPaymentBtn');
+                submitBtn.innerHTML = 'Submit Payment';
+                submitBtn.disabled = false;
             }
         }
+
+        // Copy UPI ID function
+        function copyUPIID() {
+            navigator.clipboard.writeText('8434004033@ptsbi').then(function() {
+                const confirmation = document.getElementById('copyConfirmation');
+                confirmation.classList.remove('hidden');
+                setTimeout(function() {
+                    confirmation.classList.add('hidden');
+                }, 3000);
+            }).catch(function(err) {
+                console.error('Failed to copy UPI ID:', err);
+                alert('Failed to copy UPI ID. Please copy manually: 8434004033@ptsbi');
+            });
+        }
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('upiPaymentModal');
+            if (event.target === modal) {
+                hideUPIPaymentPopup();
+            }
+        });
     </script>
+
+    <!-- UPI Payment Modal -->
+    <div id="upiPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4 overflow-y-auto">
+        <div class="bg-gray-800 rounded-2xl w-full max-w-md mx-4 my-4 flex flex-col max-h-[calc(100vh-2rem)]" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-6 flex-shrink-0 border-b border-gray-700">
+                <h3 class="text-xl font-bold text-white">💳 UPI Payment</h3>
+                <button onclick="hideUPIPaymentPopup()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-6" style="max-height: calc(100vh - 200px);">
+                <!-- Payment Info -->
+                <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-4 mb-6">
+                    <div class="text-center text-white">
+                        <div class="text-2xl mb-2">₹99</div>
+                        <div class="text-sm opacity-90">Premium Subscription (30 Days)</div>
+                    </div>
+                </div>
+
+                <!-- UPI ID Display -->
+                <div class="bg-gray-700 rounded-lg p-4 mb-6">
+                    <div class="text-center">
+                        <div class="text-sm text-gray-300 mb-2">Send payment to this UPI ID:</div>
+                        <div class="bg-gray-600 rounded-lg p-3 mb-3">
+                            <div class="text-lg font-mono text-white font-bold">8434004033@ptsbi</div>
+                        </div>
+                        <button onclick="copyUPIID()" class="text-blue-400 hover:text-blue-300 text-sm">
+                            📋 Copy UPI ID
+                        </button>
+                        <div id="copyConfirmation" class="text-green-400 text-xs mt-2 hidden">UPI ID copied!</div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-6">
+                    <div class="text-blue-200 text-sm">
+                        <div class="font-semibold mb-2">📱 How to pay:</div>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Open any UPI app (Google Pay, PhonePe, Paytm)</li>
+                            <li>Send ₹99 to <span class="font-mono">8434004033@ptsbi</span></li>
+                            <li>Note down the Transaction ID</li>
+                            <li>Fill the form below and submit</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Payment Form -->
+                <form onsubmit="event.preventDefault(); submitUPIPayment();" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Your UPI Number *</label>
+                        <input type="text" id="upiNumber" required 
+                               placeholder="Enter your UPI number"
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none">
+                        <div class="text-xs text-gray-400 mt-1">
+                            * The mobile number you used for this payment
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Transaction ID *</label>
+                        <input type="text" id="transactionId" required 
+                               placeholder="Enter transaction ID from UPI app"
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none">
+                        <div class="text-xs text-gray-400 mt-1">
+                            * Transaction ID can be found in your UPI app after payment is completed
+                        </div>
+                    </div>
+
+                    <!-- Security Notice -->
+                    <div class="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3">
+                        <div class="text-yellow-200 text-xs">
+                            <div class="font-semibold mb-1">🔒 Security Notice:</div>
+                            <div>• Payments are manually verified for security</div>
+                            <div>• False payment information will result in account suspension</div>
+                            <div>• Transaction ID helps us verify your payment quickly</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex space-x-3 p-6 flex-shrink-0 border-t border-gray-700">
+                <button onclick="hideUPIPaymentPopup()" 
+                        class="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="submitUPIPayment()" id="submitPaymentBtn"
+                        class="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium">
+                    Submit Payment
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
+</html> 
 </html> 
