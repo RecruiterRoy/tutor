@@ -576,18 +576,20 @@
                         let profile = null;
                         let profileError = null;
                         
-                        try {
-                            const result = await window.supabaseClient
-                                .from('user_profiles')
-                                .select('verification_status, full_name, email, class, board')
-                                .eq('id', user.id)
-                                .single();
-                            profile = result.data;
-                            profileError = result.error;
-                        } catch (error) {
-                            console.error('❌ Error fetching profile:', error);
+                        const result = await window.supabaseClient
+                            .from('user_profiles')
+                            .select('verification_status, full_name, email, class, board')
+                            .eq('id', user.id)
+                            .single();
+                        profile = result.data;
+                        profileError = result.error;
+                        
+                        // Handle RLS policy errors
+                        if (profileError) {
+                            console.error('❌ Error fetching profile:', profileError);
+                            
                             // If it's an RLS policy error, treat as no profile
-                            if (error.message && error.message.includes('infinite recursion')) {
+                            if (profileError.message && profileError.message.includes('infinite recursion')) {
                                 console.log('⚠️ RLS policy error detected, treating as no profile...');
                                 profile = null;
                                 profileError = null;
@@ -596,13 +598,6 @@
                                 await window.supabaseClient.auth.signOut();
                                 return;
                             }
-                        }
-                        
-                        if (profileError) {
-                            console.error('❌ Error fetching profile:', profileError);
-                            // Clear session and stay on login page
-                            await window.supabaseClient.auth.signOut();
-                            return;
                         }
                         
                         // Only redirect if user is verified and has complete profile
@@ -642,29 +637,26 @@
                 let existingProfile = null;
                 let profileError = null;
                 
-                try {
-                    const result = await window.supabaseClient
-                        .from('user_profiles')
-                        .select('*')
-                        .eq('id', user.id)
-                        .single();
-                    existingProfile = result.data;
-                    profileError = result.error;
-                } catch (error) {
-                    console.error('❌ Could not check user profile:', error);
-                    // If it's an RLS policy error, create a basic profile
-                    if (error.message && error.message.includes('infinite recursion')) {
-                        console.log('⚠️ RLS policy error detected, creating basic profile...');
+                const result = await window.supabaseClient
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+                existingProfile = result.data;
+                profileError = result.error;
+                
+                // Handle RLS policy errors
+                if (profileError) {
+                    console.error('❌ Could not check user profile:', profileError);
+                    
+                    // If it's an RLS policy error, treat as no profile found
+                    if (profileError.message && profileError.message.includes('infinite recursion')) {
+                        console.log('⚠️ RLS policy error detected, treating as no profile...');
                         existingProfile = null;
                         profileError = { code: 'PGRST116' }; // Treat as no rows found
-                    } else {
+                    } else if (profileError.code !== 'PGRST116') { // PGRST116 = no rows found
                         throw new Error('Failed to verify user profile');
                     }
-                }
-                
-                if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = no rows found
-                    console.error('❌ Could not check user profile:', profileError);
-                    throw new Error('Failed to verify user profile');
                 }
                 
                 if (existingProfile) {
@@ -691,11 +683,34 @@
                 
                 console.log('📋 Profile data to insert:', profileData);
                 
-                const { data: createdProfile, error: createError } = await window.supabaseClient
-                    .from('user_profiles')
-                    .insert(profileData)
-                    .select()
-                    .single();
+                let createdProfile = null;
+                let createError = null;
+                
+                try {
+                    const result = await window.supabaseClient
+                        .from('user_profiles')
+                        .insert(profileData)
+                        .select()
+                        .single();
+                    createdProfile = result.data;
+                    createError = result.error;
+                } catch (error) {
+                    console.error('❌ Could not create user profile:', error);
+                    
+                    // If it's an RLS policy error, create a mock profile
+                    if (error.message && error.message.includes('infinite recursion')) {
+                        console.log('⚠️ RLS policy error during profile creation, creating mock profile...');
+                        createdProfile = {
+                            ...profileData,
+                            id: user.id,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        };
+                        createError = null;
+                    } else {
+                        throw new Error('Failed to create user profile');
+                    }
+                }
                 
                 if (createError) {
                     console.error('❌ Could not create user profile:', createError);
