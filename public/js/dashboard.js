@@ -613,7 +613,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Test voice services
         setTimeout(() => {
             if (speechSynthesis && speechSynthesis.getVoices().length > 0) {
-                speakText("Welcome to Tutor AI. Voice services are ready.");
+                speakText("Welcome to Tution App. Voice services are ready.");
             } else {
                  console.log("Skipping welcome message as voices are not ready yet.");
             }
@@ -834,6 +834,18 @@ async function loadUserData() {
     updateUserDisplay(profile);
     
     console.log('✅ User data loaded successfully:', profile);
+    
+    // Update UI with user data
+    updateUserDisplay(userData);
+    
+    // Read welcome message at login
+    setTimeout(() => {
+        readWelcomeMessageAtLogin();
+    }, 1000);
+    
+    // Set user data as loaded
+    window.userDataLoaded = true;
+    
     return profile;
 
   } catch (error) {
@@ -1832,73 +1844,22 @@ async function toggleVoiceRecording() {
 window.toggleVoiceRecording = toggleVoiceRecording;
 
 async function speakText(text) {
-    console.log('[TTS] Attempting to speak:', text);
-    if (!speechSynthesis) {
-        console.error('[TTS] Speech synthesis not supported.');
+    if (!window.textToSpeech) {
+        console.log('[TTS] Text-to-Speech not initialized');
         return;
     }
 
-    // Check if user has interacted with the page (required for autoplay)
+    // Check if user has interacted with the page
     if (!window.userHasInteracted) {
         console.log('[TTS] User has not interacted yet, skipping autoplay speech');
         return;
     }
 
     try {
-        // Cancel any ongoing speech
-        speechSynthesis.cancel();
-        console.log('[TTS] Cancelled previous speech.');
-
-        // Wait for voices to load
-        console.log('[TTS] Loading voices...');
-        const voices = await populateVoices();
-        console.log(`[TTS] ${voices.length} voices loaded.`);
-        
-        const voiceSelect = document.getElementById('voiceSelect');
-        const voiceRate = document.getElementById('voiceRate');
-        const voicePitch = document.getElementById('voicePitch');
-        
-        const selectedVoiceName = voiceSelect ? voiceSelect.value : '';
-        console.log(`[TTS] Selected voice from dropdown: ${selectedVoiceName}`);
-        
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = voiceRate ? parseFloat(voiceRate.value) || 1 : 1;
-        utterance.pitch = voicePitch ? parseFloat(voicePitch.value) || 1 : 1;
-
-        // Select voice if available
-        if (selectedVoiceName && voices.length > 0) {
-            const selectedVoice = voices.find(v => v.name === selectedVoiceName);
-            if (selectedVoice) {
-                utterance.voice = selectedVoice;
-                utterance.lang = selectedVoice.lang;
-                console.log(`[TTS] Assigned voice: ${selectedVoice.name} (${selectedVoice.lang})`);
-            } else {
-                console.log(`[TTS] Selected voice '${selectedVoiceName}' not found. Using fallback.`);
-                // Fallback to first English voice
-                const englishVoice = voices.find(v => v.lang.startsWith('en-'));
-                if (englishVoice) {
-                    utterance.voice = englishVoice;
-                    console.log(`[TTS] Fallback voice: ${englishVoice.name}`);
-                }
-            }
-        } else {
-            console.log('[TTS] No voice selected or no voices available. Using system default.');
-        }
-
-        utterance.onstart = () => console.log('[TTS] Speech started.');
-        utterance.onend = () => console.log('[TTS] Speech finished.');
-        utterance.onerror = (event) => {
-            console.error('[TTS] Speech synthesis error:', event);
-            if (event.error === 'not-allowed') {
-                console.log('[TTS] User interaction required for speech synthesis');
-            } else {
-                showError(`TTS Error: ${event.error}`);
-            }
-        };
-
-        speechSynthesis.speak(utterance);
+        console.log('[TTS] Attempting to speak:', text);
+        window.textToSpeech.speak(text, { role: 'ai' });
     } catch (error) {
-        console.error('[TTS] Error in speakText function:', error);
+        console.error('[TTS] Error speaking text:', error);
     }
 }
 
@@ -3597,9 +3558,11 @@ function showAvatarWelcomeMessage() {
         addMessage('ai', welcomeMessage);
     }
 
-    // Speak the welcome message only once
+    // Speak the welcome message only if TTS is not already speaking
     if (window.textToSpeech && !window.textToSpeech.isSpeaking) {
         window.textToSpeech.speak(welcomeMessage, { role: 'ai' });
+    } else {
+        console.log('🔧 Skipping TTS for welcome message - already speaking or TTS not ready');
     }
 }
 
@@ -3625,5 +3588,28 @@ function getTeacherPersonality() {
             gender: 'male',
             tone: 'Professional and friendly'
         };
+    }
+}
+
+// Function to read welcome message at login
+function readWelcomeMessageAtLogin() {
+    const welcomeText = "Welcome to Tution App, your study buddy. What would you like to learn today? Roy Sir and Miss Sapna are here to help you. You may change your teachers in the settings.";
+    
+    console.log('🔧 Reading welcome message at login');
+    
+    // Add to chat if not already present
+    const chatMessages = document.querySelectorAll('.message.ai');
+    const lastMessage = chatMessages[chatMessages.length - 1];
+    const lastMessageText = lastMessage?.textContent || '';
+    
+    if (!lastMessageText.includes(welcomeText.substring(0, 50))) {
+        addMessage('ai', welcomeText);
+    }
+    
+    // Speak the welcome message
+    if (window.textToSpeech && !window.textToSpeech.isSpeaking) {
+        window.textToSpeech.speak(welcomeText, { role: 'ai' });
+    } else {
+        console.log('🔧 Skipping TTS for login welcome - already speaking or TTS not ready');
     }
 }
