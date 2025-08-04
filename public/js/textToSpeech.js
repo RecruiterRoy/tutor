@@ -22,7 +22,9 @@ class TextToSpeech {
     }
 
     initializeVoices() {
-        // Load voices
+        console.log('🔧 TTS: Initializing voices...');
+        
+        // Load voices immediately
         this.loadVoices();
         
         // Voices might load asynchronously
@@ -33,27 +35,57 @@ class TextToSpeech {
             };
         }
         
-        // Force load voices after a delay
+        // Force load voices multiple times to ensure they load
         setTimeout(() => {
             if (this.voices.length === 0) {
-                console.log('🔧 TTS: Forcing voice reload...');
+                console.log('🔧 TTS: First retry - forcing voice reload...');
+                this.loadVoices();
+            }
+        }, 500);
+        
+        setTimeout(() => {
+            if (this.voices.length === 0) {
+                console.log('🔧 TTS: Second retry - forcing voice reload...');
                 this.loadVoices();
             }
         }, 1000);
+        
+        setTimeout(() => {
+            if (this.voices.length === 0) {
+                console.log('🔧 TTS: Third retry - forcing voice reload...');
+                this.loadVoices();
+            }
+        }, 2000);
     }
 
     loadVoices() {
-        this.voices = this.synth.getVoices();
-        console.log('🔧 TTS: Loaded voices:', this.voices.length);
-        console.log('🔧 TTS: Available voices:', this.voices.map(v => `${v.name} (${v.lang})`));
-        
-        // Set voice based on current avatar
-        if (this.voices.length > 0) {
-            this.detectLanguageAndSetVoice('');
-        }
+        try {
+            this.voices = this.synth.getVoices();
+            console.log('🔧 TTS: Loaded voices:', this.voices.length);
+            console.log('🔧 TTS: Available voices:', this.voices.map(v => `${v.name} (${v.lang})`));
+            
+            // If no voices available, try alternative method
+            if (this.voices.length === 0) {
+                console.log('🔧 TTS: No voices found, trying alternative method...');
+                // Try to get voices using a different approach
+                if (typeof speechSynthesis !== 'undefined' && speechSynthesis.getVoices) {
+                    this.voices = speechSynthesis.getVoices();
+                    console.log('🔧 TTS: Alternative method found voices:', this.voices.length);
+                }
+            }
+            
+            // Set voice based on current avatar
+            if (this.voices.length > 0) {
+                this.detectLanguageAndSetVoice('');
+            } else {
+                console.warn('🔧 TTS: Still no voices available after all attempts');
+            }
 
-        // Update voice selector UI
-        this.updateVoiceSelector();
+            // Update voice selector UI
+            this.updateVoiceSelector();
+        } catch (error) {
+            console.error('🔧 TTS: Error loading voices:', error);
+        }
     }
 
     setupControls() {
