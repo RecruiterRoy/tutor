@@ -908,54 +908,54 @@
 </head>
 <body class="min-h-screen overflow-x-hidden">
     <!-- Mobile Sidebar -->
-    <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-purple-100/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
+    <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
         <div class="flex flex-col h-full">
             <!-- Sidebar Header -->
-            <div class="flex items-center justify-between p-6 border-b border-purple-300/50">
+            <div class="flex items-center justify-between p-6 border-b border-gray-700">
                 <div class="flex items-center space-x-3">
                     <img src="images/tution_logo.png" alt="tution.app Logo" class="h-8 cursor-pointer" onclick="window.location.href='index.html'">
                 </div>
-                <button class="text-purple-800 text-2xl">×</button>
+                <button onclick="closeMobileSidebar()" class="text-gray-300 hover:text-white text-2xl transition-colors">×</button>
             </div>
             
             <!-- Sidebar Navigation -->
             <nav class="flex-1 p-6 space-y-4">
-                <div class="nav-item active">
+                <div class="nav-item active bg-gray-800 hover:bg-gray-700 text-white" onclick="showSection('chat'); closeMobileSidebar();">
                     <span class="text-xl">🏫</span>
                     <span>Classroom</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item bg-gray-800 hover:bg-gray-700 text-white" onclick="showSection('materials'); closeMobileSidebar();">
                     <span class="text-xl">📚</span>
                     <span>Study Materials</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item bg-gray-800 hover:bg-gray-700 text-white" onclick="showSection('progress'); closeMobileSidebar();">
                     <span class="text-xl">📊</span>
                     <span>Progress</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item bg-gray-800 hover:bg-gray-700 text-white" onclick="showSection('settings'); closeMobileSidebar();">
                     <span class="text-xl">⚙️</span>
                     <span>Settings</span>
                 </div>
             </nav>
             
             <!-- User Info -->
-            <div class="p-6 border-t border-purple-300/50">
+            <div class="p-6 border-t border-gray-700">
                 <!-- User Display Info -->
-                <div class="user-info-section mb-4 p-3 bg-purple-200/50 rounded-lg">
+                <div class="user-info-section mb-4 p-3 bg-gray-800 rounded-lg">
                     <div class="flex items-center space-x-3 mb-2">
                         <div id="userAvatar" class="text-2xl">👤</div>
                         <div>
-                            <div id="userName" class="text-purple-800 font-medium">Student</div>
-                            <div id="userClass" class="text-purple-600 text-sm">Class 10</div>
+                            <div id="userName" class="text-white font-medium">Student</div>
+                            <div id="userClass" class="text-gray-300 text-sm">Class 10</div>
                         </div>
                     </div>
                 </div>
                 
-                <button class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                <button onclick="logout()" class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10 bg-gray-800">
                     <span class="text-xl">🚪</span>
                     <span>Logout</span>
                 </button>
-                <button class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
+                <button onclick="showTrialInfo()" class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 bg-gray-800">
                     <span class="text-xl">⏰</span>
                     <span>Test Trial</span>
                 </button>
@@ -964,7 +964,7 @@
     </div>
     
     <!-- Mobile Sidebar Overlay -->
-    <div id="mobileSidebarOverlay" class="fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out lg:hidden"></div>
+    <div id="mobileSidebarOverlay" class="fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out lg:hidden" onclick="closeMobileSidebar()"></div>
     
     <!-- Main Layout -->
     <div class="flex h-screen">
@@ -1027,7 +1027,7 @@
             <header class="nav-modern p-4">
                 <div class="flex items-center justify-between">
                     <!-- Mobile Menu Button -->
-                    <button class="lg:hidden text-white text-2xl hover:text-blue-300 transition-colors">☰</button>
+                    <button onclick="toggleMobileSidebar()" class="lg:hidden text-white text-2xl hover:text-blue-300 transition-colors">☰</button>
                     
                     <!-- Logo (Mobile) -->
                     <div class="lg:hidden flex items-center">

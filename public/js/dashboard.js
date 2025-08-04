@@ -1763,80 +1763,42 @@ function stopRecording() {
 }
 
 async function toggleVoiceRecording() {
-    try {
-        console.log('🔧 toggleVoiceRecording called');
-        
-        // Check if voice features are enabled
-        if (!window.TUTOR_CONFIG?.features?.voiceInput) {
-            console.log('❌ Voice input disabled in config');
-            showError('Voice input is disabled');
-            return;
-        }
+    if (!window.voiceRecognition) {
+        console.log('Voice recognition not initialized');
+        return;
+    }
 
-        console.log('🔧 Checking recognition status:', !!recognition);
-
-        if (!recognition) {
-            console.log('�� Speech recognition not initialized, attempting to initialize...');
-            initSpeechRecognition();
+    if (window.voiceRecognition.isListening) {
+        // Stop recording
+        window.voiceRecognition.stop();
+        updateVoiceButton();
+    } else {
+        // Start recording
+        try {
+            await window.voiceRecognition.startListening();
+            updateVoiceButton();
             
-            // Wait a moment for initialization
-            await new Promise(resolve => setTimeout(resolve, 200));
-            
-            console.log('🔧 After initialization, recognition status:', !!recognition);
-            
-            if (!recognition) {
-                console.log('❌ Voice recognition still not available after initialization');
-                showError('Voice recognition not available. Please refresh the page.');
-                return;
-            }
-        }
-
-        if (isRecording) {
-            console.log('🔧 Stopping voice recording...');
-            // Stop listening
-            recognition.stop();
-            stopRecording();
-            showSuccess('Voice recording stopped');
-        } else {
-            console.log('🔧 Starting voice recording...');
-            // Check microphone permission first
-            try {
-                console.log('🔧 Checking microphone permission...');
-                
-                // Try to get microphone access
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                console.log('✅ Microphone permission granted');
-                
-                // Stop the stream immediately after getting permission
-                stream.getTracks().forEach(track => track.stop());
-                
-                // Start listening
-                recognition.start();
-                showSuccess('Voice recording started - speak now!');
-                
-            } catch (permissionError) {
-                console.error('❌ Microphone permission error:', permissionError);
-                
-                // Check if it's actually a permission error or just a browser quirk
-                if (permissionError.name === 'NotAllowedError') {
-                    showError('Microphone permission required. Please allow microphone access and try again.');
-                } else {
-                    // For other errors, try to start recognition anyway
-                    console.log('⚠️ Permission error, but trying to start recognition anyway...');
-                    try {
-                        recognition.start();
-                        showSuccess('Voice recording started - speak now!');
-                    } catch (startError) {
-                        console.error('❌ Failed to start recognition:', startError);
-                        showError('Could not start voice recording. Please try again.');
+            // Auto-send after voice recognition completes
+            window.voiceRecognition.onResult = async (transcript) => {
+                if (transcript && transcript.trim()) {
+                    // Set the transcript in the input field
+                    const chatInput = document.getElementById('chatInput');
+                    if (chatInput) {
+                        chatInput.value = transcript;
                     }
+                    
+                    // Auto-send the message
+                    await sendMessage();
+                    
+                    // Update voice button
+                    updateVoiceButton();
                 }
-            }
+            };
+            
+        } catch (error) {
+            console.error('Voice recording error:', error);
+            showError('Voice recording failed. Please try again.');
         }
-        
-    } catch (error) {
-        console.error('❌ Voice recording error:', error);
-        showError('Could not access microphone. Please check permissions.');
     }
 }
 
@@ -2103,29 +2065,37 @@ function closeSidebar() {
 window.closeSidebar = closeSidebar;
 
 function closeMobileSidebar() {
-    console.log('🔧 Closing mobile sidebar...');
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    
+    if (sidebar) {
+        sidebar.classList.remove('translate-x-0');
+        sidebar.classList.add('-translate-x-full');
+    }
+    
+    if (overlay) {
+        overlay.classList.remove('opacity-100', 'pointer-events-auto');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+    }
+}
+
+function toggleMobileSidebar() {
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
     
     if (sidebar && overlay) {
-        sidebar.classList.add('-translate-x-full');
-        overlay.classList.add('opacity-0', 'pointer-events-none');
+        const isOpen = sidebar.classList.contains('translate-x-0');
         
-        // Restore body scroll
-        if (window.isMobile) {
-            document.body.style.overflow = '';
+        if (isOpen) {
+            closeMobileSidebar();
+        } else {
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            overlay.classList.add('opacity-100', 'pointer-events-auto');
         }
-        console.log('✅ Mobile sidebar closed');
-    } else {
-        console.log('❌ Mobile sidebar elements not found');
     }
 }
-
-// Assign to global immediately
-window.closeMobileSidebar = closeMobileSidebar;
-
-// Assign to global immediately
-window.toggleSidebar = toggleSidebar;
 
 // Close sidebar when clicking overlay
 document.addEventListener('DOMContentLoaded', function() {
