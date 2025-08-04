@@ -884,10 +884,47 @@ async function loadUserData() {
       .select('*')
       .eq('id', user.id)
       .single();
+    
+    // Handle database errors gracefully
     if (profileError) {
       console.error('❌ Error fetching profile:', profileError);
-      throw profileError;
+      
+      // If no profile exists, create a real profile in the database
+      if (profileError.code === 'PGRST116') { // No rows found
+        console.log('📝 No profile found, creating new profile...');
+        
+        const newProfile = {
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || 'User',
+          verification_status: 'approved',
+          ai_avatar: 'roy-sir',
+          class: '10',
+          board: 'CBSE',
+          gender: 'male',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        const { data: createdProfile, error: createError } = await supabaseClient
+          .from('user_profiles')
+          .insert(newProfile)
+          .select()
+          .single();
+          
+        if (createError) {
+          console.error('❌ Failed to create profile:', createError);
+          throw createError;
+        }
+        
+        console.log('✅ New profile created:', createdProfile);
+        return createdProfile;
+      } else {
+        // Other database error
+        throw profileError;
+      }
     }
+    
     console.log('✅ Profile fetched:', profile);
 
     // Update UI with loaded data
@@ -896,6 +933,11 @@ async function loadUserData() {
     window.cacheTimestamp = Date.now();
     window.userDataLoaded = true;
     window.selectedAvatar = profile.ai_avatar || 'roy-sir';
+    
+    // Ensure userData is set for other functions
+    if (!window.userData) {
+        window.userData = profile;
+    }
     
     // Update avatar display
             updateAvatarDisplay();
@@ -911,7 +953,7 @@ async function loadUserData() {
     console.log('✅ User data loaded successfully:', profile);
     
     // Update UI with user data
-    updateUserDisplay(userData);
+    updateUserDisplay(profile);
     
     // Read welcome message at login
     setTimeout(() => {
