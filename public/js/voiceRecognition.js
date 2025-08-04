@@ -164,6 +164,13 @@ class VoiceRecognition {
             return;
         }
         
+        // Reset the flag if we're already listening
+        if (this.isListening) {
+            console.log('Already listening, resetting flags...');
+            this.isStarting = false;
+            return;
+        }
+        
         this.isStarting = true;
         
         // Add a timeout to reset the flag in case it gets stuck
@@ -242,7 +249,7 @@ class VoiceRecognition {
                         return;
                     }
                     
-                    // Check if recognition instance exists
+                    // Reset the flag if we're not actually starting
                     if (!this.recognition) {
                         console.log('No recognition instance, creating new one');
                         this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -252,6 +259,7 @@ class VoiceRecognition {
                     this.recognition.start();
                     this.updateUI('listening');
                     console.log('Voice recognition started successfully');
+                    this.isStarting = false; // Reset flag on successful start
                 } catch (startError) {
                     console.error('Error starting recognition (attempt ' + (retryCount + 1) + '):', startError);
                     retryCount++;

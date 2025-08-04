@@ -981,39 +981,10 @@ function showWelcomeMessage() {
         return;
     }
     
-    const chatBox = document.getElementById('chatBox');
-    if (chatBox) {
-        const avatarName = getCurrentAvatarName();
-        const avatarIcon = getCurrentAvatarId() === 'miss-sapna' ? '👩‍🏫' : '👨‍🏫';
-        const welcomeMessage = getAvatarWelcomeMessage();
-        
-        const welcomeMessageHTML = `
-            <div class="ai-message message">
-                <div class="flex items-center space-x-3 mb-3">
-                    <div class="text-2xl">${avatarIcon}</div>
-                    <div>
-                        <p class="text-white font-semibold">${avatarName}</p>
-                        <p class="text-gray-300 text-sm">Your AI Teacher</p>
-                    </div>
-                </div>
-                <p class="text-white">${welcomeMessage}</p>
-                <div class="mt-3 p-3 bg-blue-500/20 rounded-lg">
-                    <p class="text-blue-200 text-sm"><strong>Quick Start:</strong></p>
-                    <ul class="text-blue-200 text-sm mt-1 space-y-1">
-                        <li>• "Explain photosynthesis"</li>
-                        <li>• "Help me with algebra"</li>
-                        <li>• "What is democracy?"</li>
-                        <li>• "Tell me about Indian history"</li>
-                    </ul>
-                </div>
-            </div>
-        `;
-        chatBox.innerHTML = welcomeMessageHTML;
-        
-        // Mark as shown immediately after displaying
-        window.welcomeMessageShown = true;
-        console.log('✅ Welcome message displayed and marked as shown');
-    }
+    // Don't show the welcome message in chat - let AI handle it
+    // Just mark it as shown to prevent duplication
+    window.welcomeMessageShown = true;
+    console.log('✅ Welcome message flag set - AI will handle the message');
 }
 
 async function loadBooks() {
