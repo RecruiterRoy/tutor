@@ -2077,6 +2077,16 @@ function closeMobileSidebar() {
         overlay.classList.remove('opacity-100', 'pointer-events-auto');
         overlay.classList.add('opacity-0', 'pointer-events-none');
     }
+    
+    // Hide elements after animation completes
+    setTimeout(() => {
+        if (sidebar) {
+            sidebar.classList.add('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
+        }
+        if (overlay) {
+            overlay.classList.add('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
+        }
+    }, 300);
 }
 
 function toggleMobileSidebar() {
@@ -2089,10 +2099,17 @@ function toggleMobileSidebar() {
         if (isOpen) {
             closeMobileSidebar();
         } else {
-            sidebar.classList.remove('-translate-x-full');
-            sidebar.classList.add('translate-x-0');
-            overlay.classList.remove('opacity-0', 'pointer-events-none');
-            overlay.classList.add('opacity-100', 'pointer-events-auto');
+            // Show sidebar elements first
+            sidebar.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
+            overlay.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
+            
+            // Then animate them
+            setTimeout(() => {
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                overlay.classList.add('opacity-100', 'pointer-events-auto');
+            }, 10);
         }
     }
 }
@@ -3590,5 +3607,25 @@ function readWelcomeMessageAtLogin() {
         window.textToSpeech.speak(welcomeText, { role: 'ai' });
     } else {
         console.log('🔧 Skipping TTS for login welcome - already speaking or TTS not ready');
+    }
+}
+
+// Initialize mobile sidebar
+function initializeMobileSidebar() {
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    
+    if (sidebar && overlay) {
+        // Ensure sidebar is hidden by default on all screen sizes
+        sidebar.classList.add('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
+        overlay.classList.add('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
+        
+        // Ensure sidebar is in closed position
+        sidebar.classList.remove('translate-x-0');
+        sidebar.classList.add('-translate-x-full');
+        
+        // Ensure overlay is hidden
+        overlay.classList.remove('opacity-100', 'pointer-events-auto');
+        overlay.classList.add('opacity-0', 'pointer-events-none');
     }
 }
