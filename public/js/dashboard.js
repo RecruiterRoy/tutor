@@ -1132,39 +1132,35 @@ function setupEventListeners() {
         console.log('❌ Chat input not found');
     }
     
-    // Voice button - remove onclick handler to avoid conflicts
+    // Voice button - use only one event listener to avoid duplicates
     const voiceButton = document.getElementById('voiceButton');
     if (voiceButton) {
-        // Remove any existing onclick to avoid conflicts
+        // Remove any existing listeners to avoid conflicts
         voiceButton.removeAttribute('onclick');
+        voiceButton.removeEventListener('click', toggleVoiceRecording);
+        
+        // Add only one event listener
         voiceButton.addEventListener('click', () => {
             console.log('🔧 Voice button clicked, calling toggleVoiceRecording');
             toggleVoiceRecording();
         });
-        // Add onclick as fallback
-        voiceButton.onclick = () => {
-            console.log('🔧 Voice button onclick fallback');
-            toggleVoiceRecording();
-        };
         console.log('✅ Voice button listener added');
     } else {
         console.log('❌ Voice button not found');
     }
     
-    // Send button - remove onclick handler to avoid conflicts
+    // Send button - use only one event listener to avoid duplicates
     const sendButton = document.getElementById('sendButton');
     if (sendButton) {
-        // Remove any existing onclick to avoid conflicts
+        // Remove any existing listeners to avoid conflicts
         sendButton.removeAttribute('onclick');
+        sendButton.removeEventListener('click', sendMessage);
+        
+        // Add only one event listener
         sendButton.addEventListener('click', () => {
             console.log('🔧 Send button clicked, calling sendMessage');
             sendMessage();
         });
-        // Add onclick as fallback
-        sendButton.onclick = () => {
-            console.log('🔧 Send button onclick fallback');
-            sendMessage();
-        };
         console.log('✅ Send button listener added');
     } else {
         console.log('❌ Send button not found');
@@ -3532,8 +3528,8 @@ function initializeEventListeners() {
     voiceButton.addEventListener('click', toggleVoiceRecording);
   }
   
-  // Setup other event listeners
-  setupEventListeners();
+  // Don't call setupEventListeners() here as it's already called elsewhere
+  // setupEventListeners();
   
   // Sidebar navigation
   document.querySelectorAll('.nav-item').forEach(item => {

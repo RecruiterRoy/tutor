@@ -3,6 +3,7 @@ class VoiceRecognition {
         this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         this.synthesis = window.speechSynthesis;
         this.isListening = false;
+        this.isStarting = false; // Flag to prevent multiple simultaneous start attempts
         this.currentSpeaker = null;
         this.groupMode = false;
         this.speakerProfiles = new Map();
@@ -154,17 +155,32 @@ class VoiceRecognition {
     }
 
     async startListening(groupMode = false) {
+        // Prevent multiple simultaneous calls
+        if (this.isStarting) {
+            console.log('Already starting recognition, skipping...');
+            return;
+        }
+        
+        this.isStarting = true;
+        
         try {
             // Force stop any existing recognition first
             console.log('Starting voice recognition...');
-            this.stop();
+            await this.stop();
             
-            // Wait a bit longer to ensure recognition is fully stopped
-            await new Promise(resolve => setTimeout(resolve, 200));
+            // Wait longer to ensure recognition is fully stopped and cleaned up
+            await new Promise(resolve => setTimeout(resolve, 500));
             
             // Reset the recognition instance to ensure clean state
             this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             this.setupRecognition();
+            
+            // Double-check that we're not already listening
+            if (this.isListening) {
+                console.log('Still listening, forcing stop again...');
+                await this.stop();
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
 
             // Check microphone permissions with enhanced error handling
             try {
@@ -203,6 +219,19 @@ class VoiceRecognition {
             
             const attemptStart = async () => {
                 try {
+                    // Double-check that we're not already listening
+                    if (this.isListening) {
+                        console.log('Already listening, skipping start attempt');
+                        return;
+                    }
+                    
+                    // Check if recognition instance exists
+                    if (!this.recognition) {
+                        console.log('No recognition instance, creating new one');
+                        this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                        this.setupRecognition();
+                    }
+                    
                     this.recognition.start();
                     this.updateUI('listening');
                     console.log('Voice recognition started successfully');
@@ -230,6 +259,9 @@ class VoiceRecognition {
             
             // Don't show error message to user - just log it
             console.log('Voice recognition error:', error.message);
+        } finally {
+            // Always reset the starting flag
+            this.isStarting = false;
         }
     }
 
@@ -446,11 +478,15 @@ class VoiceRecognition {
             
             // Auto-send the message after a shorter delay for better responsiveness
             setTimeout(() => {
-                const sendButton = document.getElementById('sendButton');
-                if (sendButton) {
-                    sendButton.click();
-                } else if (typeof window.sendMessage === 'function') {
+                // Use the sendMessage function directly instead of clicking button
+                if (typeof window.sendMessage === 'function') {
                     window.sendMessage();
+                } else {
+                    // Fallback to button click only if sendMessage function not available
+                    const sendButton = document.getElementById('sendButton');
+                    if (sendButton) {
+                        sendButton.click();
+                    }
                 }
             }, 800); // Reduced from 1500ms to 800ms
             
@@ -527,24 +563,55 @@ class VoiceRecognition {
     }
 
     updateUI(state = 'idle', data = null) {
+        // Update mic button visual state
+        const voiceButton = document.getElementById('voiceButton');
+        const voiceIcon = document.getElementById('voiceIcon');
+        
+        if (voiceButton && voiceIcon) {
+            if (state === 'listening') {
+                // Red background when listening
+                voiceButton.classList.add('bg-red-500', 'text-white');
+                voiceButton.classList.remove('bg-gray-700/50', 'text-gray-400');
+                voiceIcon.textContent = '🔴'; // Red circle to show listening
+                voiceButton.title = 'Listening... Click to stop';
+            } else if (state === 'processing') {
+                // Yellow background when processing
+                voiceButton.classList.add('bg-yellow-500', 'text-white');
+                voiceButton.classList.remove('bg-gray-700/50', 'text-gray-400', 'bg-red-500');
+                voiceIcon.textContent = '⏳'; // Hourglass to show processing
+                voiceButton.title = 'Processing voice input...';
+            } else if (state === 'error') {
+                // Red background for error
+                voiceButton.classList.add('bg-red-500', 'text-white');
+                voiceButton.classList.remove('bg-gray-700/50', 'text-gray-400');
+                voiceIcon.textContent = '❌'; // X mark for error
+                voiceButton.title = 'Voice recognition error. Click to try again.';
+            } else {
+                // Default state (idle)
+                voiceButton.classList.remove('bg-red-500', 'bg-yellow-500', 'text-white');
+                voiceButton.classList.add('bg-gray-700/50', 'text-gray-400');
+                voiceIcon.textContent = '🎤'; // Default mic icon
+                voiceButton.title = 'Click to start voice input';
+            }
+        }
+
+        // Update status indicator if it exists
         const statusIndicator = document.getElementById('voice-status');
-        if (!statusIndicator) return;
+        if (statusIndicator) {
+            statusIndicator.className = `w-3 h-3 rounded-full ${
+                state === 'listening' ? 'bg-green-500 animate-pulse' :
+                state === 'processing' ? 'bg-yellow-500 animate-pulse' :
+                state === 'error' ? 'bg-red-500' :
+                'bg-gray-500'
+            }`;
 
-        // Update status indicator
-        statusIndicator.className = `w-3 h-3 rounded-full ${
-            state === 'listening' ? 'bg-green-500 animate-pulse' :
-            state === 'processing' ? 'bg-yellow-500 animate-pulse' :
-            state === 'error' ? 'bg-red-500' :
-            'bg-gray-500'
-        }`;
-
-        // Update status text for screen readers
-        statusIndicator.setAttribute('aria-label', 
-            state === 'listening' ? 'Voice recognition active' :
-            state === 'processing' ? 'Processing voice input' :
-            state === 'error' ? 'Voice recognition error' :
-            'Voice recognition inactive'
-        );
+            statusIndicator.setAttribute('aria-label', 
+                state === 'listening' ? 'Voice recognition active' :
+                state === 'processing' ? 'Processing voice input' :
+                state === 'error' ? 'Voice recognition error' :
+                'Voice recognition inactive'
+            );
+        }
 
         // Update group discussion UI if needed
         if (this.groupMode && data) {
@@ -580,20 +647,28 @@ class VoiceRecognition {
         discussionContainer.scrollTop = discussionContainer.scrollHeight;
     }
 
-    stop() {
+    async stop() {
+        console.log('Stopping voice recognition...');
+        
         try {
             // Force stop recognition regardless of state
             if (this.recognition) {
                 try {
                     this.recognition.stop();
+                    console.log('Recognition stop() called');
                 } catch (stopError) {
                     console.log('Recognition stop error (expected):', stopError);
                 }
+                
                 try {
                     this.recognition.abort();
+                    console.log('Recognition abort() called');
                 } catch (abortError) {
                     console.log('Recognition abort error (expected):', abortError);
                 }
+                
+                // Nullify the recognition instance to force cleanup
+                this.recognition = null;
             }
             
             if (this.synthesis) {
