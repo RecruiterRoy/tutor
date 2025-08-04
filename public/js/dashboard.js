@@ -604,10 +604,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 1000);
         
         initSpeechRecognition();
-        showWelcomeMessage();
         
-        // Show welcome message
-        showWelcomeMessage();
+        // Show welcome message only once
+        if (!window.welcomeMessageShown) {
+            showWelcomeMessage();
+        }
         // --- End of existing logic ---
 
         // Test voice services
@@ -752,10 +753,11 @@ async function initializeDashboard() {
         }, 1000);
         
         initSpeechRecognition();
-        showWelcomeMessage();
         
-    // Show welcome message
-    showWelcomeMessage();
+    // Show welcome message only once
+    if (!window.welcomeMessageShown) {
+        showWelcomeMessage();
+    }
     // --- End of existing logic ---
 
     // Test voice services
@@ -973,6 +975,12 @@ async function loadUserData() {
 }
 
 function showWelcomeMessage() {
+    // Strict check to prevent multiple welcome messages
+    if (window.welcomeMessageShown) {
+        console.log('🔧 Welcome message already shown, skipping...');
+        return;
+    }
+    
     const chatBox = document.getElementById('chatBox');
     if (chatBox) {
         const avatarName = getCurrentAvatarName();
@@ -1001,6 +1009,10 @@ function showWelcomeMessage() {
             </div>
         `;
         chatBox.innerHTML = welcomeMessageHTML;
+        
+        // Mark as shown immediately after displaying
+        window.welcomeMessageShown = true;
+        console.log('✅ Welcome message displayed and marked as shown');
     }
 }
 
@@ -3082,8 +3094,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Set up basic event listeners
             setupEventListeners();
             
-            // Show basic welcome message
-            showWelcomeMessage();
+            // Show basic welcome message only once
+            if (!window.welcomeMessageShown) {
+                showWelcomeMessage();
+            }
             
             // Initialize voice features
             try {
@@ -3478,8 +3492,10 @@ function initializeUI() {
   // Initialize speech recognition
   initSpeechRecognition();
   
-  // Show welcome message
-  showWelcomeMessage();
+  // Show welcome message only once
+  if (!window.welcomeMessageShown) {
+    showWelcomeMessage();
+  }
   
   // Force refresh images to ensure they display properly
   setTimeout(() => {
@@ -3664,6 +3680,12 @@ function getCurrentUserGender() {
 
 // Global flag to prevent repeated welcome messages
 window.welcomeMessageShown = false;
+
+// Function to reset welcome message flag (for testing or fresh start)
+function resetWelcomeMessage() {
+    window.welcomeMessageShown = false;
+    console.log('🔧 Welcome message flag reset');
+}
 
 // Function to force refresh images
 function forceRefreshImages() {

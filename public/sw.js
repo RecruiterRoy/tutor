@@ -18,7 +18,7 @@ const ESSENTIAL_ASSETS = [
   '/public/js/subjectManager.js',
   '/public/js/supabaseClient.js',
   '/public/images/favicon.ico',
-  '/public/images/tution_logo.png',
+          '/public/images/tution.app_logo.jpg',
   '/public/images/roy_sir.jpg',
   '/public/images/miss_sapana.jpg'
 ];
