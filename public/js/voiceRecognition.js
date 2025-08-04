@@ -35,7 +35,8 @@ class VoiceRecognition {
         // Enhanced error handling and recovery
         this.recognition.onstart = () => {
             this.isListening = true;
-            this.updateUI();
+            this.isStarting = false; // Reset starting flag when actually started
+            this.updateUI('listening');
             
             // Pause TTS when voice recognition starts to prevent feedback
             if (window.textToSpeech && window.textToSpeech.isSpeaking) {
@@ -45,15 +46,16 @@ class VoiceRecognition {
                 }
             }
             
-            console.log('Voice recognition started - listening for speech...');
+            console.log('✅ Voice recognition started - listening for speech...');
         };
 
         this.recognition.onend = () => {
             this.isListening = false;
+            this.isStarting = false; // Reset starting flag when ended
             if (this.groupMode) {
                 this.recognition.start(); // Keep listening in group mode
             }
-            this.updateUI();
+            this.updateUI('idle');
             
             // Resume TTS after voice recognition ends
             if (window.textToSpeech && window.textToSpeech.isPaused) {
@@ -88,6 +90,8 @@ class VoiceRecognition {
 
         this.recognition.onerror = (event) => {
             console.error('Speech recognition error:', event.error);
+            this.isListening = false;
+            this.isStarting = false; // Reset flags on error
             this.updateUI('error');
             
             // Enhanced error handling with automatic recovery
@@ -101,7 +105,7 @@ class VoiceRecognition {
                     // Don't show error for no-speech, just restart quietly
                     console.log('No speech detected, restarting recognition...');
                     setTimeout(() => {
-                        if (!this.isListening) {
+                        if (!this.isListening && !this.isStarting) {
                             this.startListening();
                         }
                     }, 1000);
@@ -125,7 +129,7 @@ class VoiceRecognition {
                     // For other errors, try to restart automatically
                     console.log('Recovering from error:', event.error);
                     setTimeout(() => {
-                        if (!this.isListening) {
+                        if (!this.isListening && !this.isStarting) {
                             this.startListening();
                         }
                     }, 2000);
@@ -158,136 +162,71 @@ class VoiceRecognition {
     }
 
     async startListening(groupMode = false) {
+        console.log('🔧 startListening called');
+        
         // Prevent multiple simultaneous calls
         if (this.isStarting) {
             console.log('Already starting recognition, skipping...');
             return;
         }
         
-        // Reset the flag if we're already listening
+        // If already listening, just return
         if (this.isListening) {
-            console.log('Already listening, resetting flags...');
-            this.isStarting = false;
+            console.log('Already listening, skipping...');
             return;
         }
         
         this.isStarting = true;
-        
-        // Add a timeout to reset the flag in case it gets stuck
-        setTimeout(() => {
-            if (this.isStarting && !this.isListening) {
-                console.log('🔧 Resetting stuck isStarting flag');
-                this.isStarting = false;
-            }
-        }, 5000); // 5 second timeout
+        console.log('🔧 Set isStarting to true');
         
         try {
             // Force stop any existing recognition first
-            console.log('Starting voice recognition...');
+            console.log('Stopping any existing recognition...');
             await this.stop();
             
-            // Wait longer to ensure recognition is fully stopped and cleaned up
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Wait a bit to ensure cleanup
+            await new Promise(resolve => setTimeout(resolve, 300));
             
-            // Reset the recognition instance to ensure clean state
+            // Create new recognition instance
             this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             this.setupRecognition();
             
-            // Double-check that we're not already listening
-            if (this.isListening) {
-                console.log('Still listening, forcing stop again...');
-                await this.stop();
-                await new Promise(resolve => setTimeout(resolve, 300));
-            }
-            
-            // Reset the starting flag if we're not actually starting
-            if (!this.isListening) {
-                this.isStarting = false;
-            }
-
-            // Check microphone permissions with enhanced error handling
+            // Check microphone permissions
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: {
                         echoCancellation: true,
                         noiseSuppression: true,
-                        autoGainControl: true,
-                        sampleRate: 44100
+                        autoGainControl: true
                     } 
                 });
-                
-                // Store stream for cleanup
                 this.audioStream = stream;
             } catch (permissionError) {
                 console.error('Microphone permission denied:', permissionError);
+                this.isStarting = false;
                 if (window.showError) {
                     window.showError('Microphone access denied. Please allow microphone permissions.');
                 }
                 return;
             }
 
-            // Ensure recognition is properly initialized
-            if (!this.recognition) {
-                this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                this.setupRecognition();
-            }
-
-            // Set listening state before starting
+            // Set listening state and start
             this.isListening = true;
             this.groupMode = groupMode;
             
-            // Start recognition with retry logic
-            let retryCount = 0;
-            const maxRetries = 3;
-            
-            const attemptStart = async () => {
-                try {
-                    // Double-check that we're not already listening
-                    if (this.isListening) {
-                        console.log('Already listening, skipping start attempt');
-                        this.isStarting = false; // Reset flag if already listening
-                        return;
-                    }
-                    
-                    // Reset the flag if we're not actually starting
-                    if (!this.recognition) {
-                        console.log('No recognition instance, creating new one');
-                        this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                        this.setupRecognition();
-                    }
-                    
-                    this.recognition.start();
-                    this.updateUI('listening');
-                    console.log('Voice recognition started successfully');
-                    this.isStarting = false; // Reset flag on successful start
-                } catch (startError) {
-                    console.error('Error starting recognition (attempt ' + (retryCount + 1) + '):', startError);
-                    retryCount++;
-                    
-                    if (retryCount < maxRetries) {
-                        console.log('Retrying in 500ms...');
-                        setTimeout(attemptStart, 500);
-                    } else {
-                        console.error('Failed to start voice recognition after ' + maxRetries + ' attempts');
-                        this.isListening = false;
-                        this.isStarting = false; // Reset flag on failure
-                        this.updateUI('error');
-                    }
-                }
-            };
-            
-            attemptStart();
+            console.log('🔧 Starting recognition...');
+            this.recognition.start();
+            this.updateUI('listening');
+            console.log('✅ Voice recognition started successfully');
             
         } catch (error) {
             console.error('Error starting voice recognition:', error);
             this.isListening = false;
             this.updateUI('error');
-            
-            // Don't show error message to user - just log it
-            console.log('Voice recognition error:', error.message);
         } finally {
             // Always reset the starting flag
             this.isStarting = false;
+            console.log('🔧 Reset isStarting to false');
         }
     }
 
@@ -684,7 +623,7 @@ class VoiceRecognition {
     }
 
     async stop() {
-        console.log('Stopping voice recognition...');
+        console.log('🔧 Stopping voice recognition...');
         
         try {
             // Force stop recognition regardless of state
@@ -728,9 +667,10 @@ class VoiceRecognition {
         
         // Always reset state
         this.isListening = false;
+        this.isStarting = false; // Also reset the starting flag
         this.groupMode = false;
         this.updateUI('idle');
-        console.log('Voice recognition stopped and reset');
+        console.log('✅ Voice recognition stopped and reset');
     }
 }
 
