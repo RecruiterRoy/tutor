@@ -40,6 +40,11 @@ jobs:
         cp capacitor.config.json dist/
         echo "Web assets copied successfully"
         
+    - name: Add Android platform
+      run: |
+        npx cap add android
+        echo "Android platform added successfully"
+        
     - name: Build APK
       run: |
         npx cap copy android
