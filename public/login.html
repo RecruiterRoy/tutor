@@ -573,11 +573,30 @@
                     // Get user profile to check verification status
                     const { data: { user } } = await window.supabaseClient.auth.getUser();
                     if (user) {
-                        const { data: profile, error: profileError } = await window.supabaseClient
-                            .from('user_profiles')
-                            .select('verification_status, full_name, email, class, board')
-                            .eq('id', user.id)
-                            .single();
+                        let profile = null;
+                        let profileError = null;
+                        
+                        try {
+                            const result = await window.supabaseClient
+                                .from('user_profiles')
+                                .select('verification_status, full_name, email, class, board')
+                                .eq('id', user.id)
+                                .single();
+                            profile = result.data;
+                            profileError = result.error;
+                        } catch (error) {
+                            console.error('❌ Error fetching profile:', error);
+                            // If it's an RLS policy error, treat as no profile
+                            if (error.message && error.message.includes('infinite recursion')) {
+                                console.log('⚠️ RLS policy error detected, treating as no profile...');
+                                profile = null;
+                                profileError = null;
+                            } else {
+                                // Clear session and stay on login page
+                                await window.supabaseClient.auth.signOut();
+                                return;
+                            }
+                        }
                         
                         if (profileError) {
                             console.error('❌ Error fetching profile:', profileError);
@@ -620,11 +639,28 @@
                 console.log('🔍 User provider:', user.app_metadata?.provider);
                 
                 // Check if profile already exists
-                const { data: existingProfile, error: profileError } = await window.supabaseClient
-                    .from('user_profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
+                let existingProfile = null;
+                let profileError = null;
+                
+                try {
+                    const result = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single();
+                    existingProfile = result.data;
+                    profileError = result.error;
+                } catch (error) {
+                    console.error('❌ Could not check user profile:', error);
+                    // If it's an RLS policy error, create a basic profile
+                    if (error.message && error.message.includes('infinite recursion')) {
+                        console.log('⚠️ RLS policy error detected, creating basic profile...');
+                        existingProfile = null;
+                        profileError = { code: 'PGRST116' }; // Treat as no rows found
+                    } else {
+                        throw new Error('Failed to verify user profile');
+                    }
+                }
                 
                 if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = no rows found
                     console.error('❌ Could not check user profile:', profileError);

@@ -32,26 +32,36 @@ jobs:
     - name: Copy web assets
       run: |
         mkdir -p dist
-        cp -r public dist/
+        cp -r public/* dist/
         cp -r pages dist/
         cp server.js dist/
         cp package.json dist/
         cp vercel.json dist/
         cp capacitor.config.json dist/
         echo "Web assets copied successfully"
+        ls -la dist/
         
     - name: Add Android platform
       run: |
         npx cap add android
         echo "Android platform added successfully"
+        ls -la android/
+        
+    - name: Copy to Android
+      run: |
+        npx cap copy android
+        echo "Web assets copied to Android"
+        
+    - name: Sync Android
+      run: |
+        npx cap sync android
+        echo "Android synced successfully"
         
     - name: Build APK
       run: |
-        npx cap copy android
-        npx cap sync android
         cd android
         chmod +x ./gradlew
-        chmod +x ./gradlew && ./gradlew assembleDebug
+        ./gradlew assembleDebug
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
