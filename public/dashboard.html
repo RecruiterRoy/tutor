@@ -98,6 +98,28 @@
             -webkit-overflow-scrolling: touch;
         }
         
+        /* Ensure images display properly */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .object-cover {
+            object-fit: cover;
+            object-position: center;
+        }
+        
+        /* Force image refresh */
+        .force-refresh {
+            animation: refresh 0.1s ease-in-out;
+        }
+        
+        @keyframes refresh {
+            0% { opacity: 0.8; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
         body {
             overscroll-behavior-y: contain;
             touch-action: manipulation;
@@ -1067,7 +1089,7 @@
                     <div class="chat-header p-2 border-b border-gray-700 bg-gray-800/50">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2">
-                                <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full">
+                                <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
                                 <span id="welcomeTeacherName" class="text-white font-semibold text-sm">Loading...</span>
                             </div>
                             <div class="flex items-center space-x-1">
@@ -1087,7 +1109,7 @@
                         <div class="message message-ai">
                             <div class="message-bubble">
                                 <div class="flex items-center space-x-3 mb-3">
-                                    <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full">
+                                    <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
                                     <span id="welcomeTeacherName" class="text-sm font-medium text-blue-200">Tution App</span>
                                 </div>
                                 <p>Welcome to Tution App, your study buddy. What would you like to learn today? Roy Sir and Miss Sapna are here to help you. You may change your teachers in the settings.</p>

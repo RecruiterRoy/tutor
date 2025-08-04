@@ -2072,6 +2072,9 @@ async function logout() {
         const { error } = await window.supabaseClient.auth.signOut();
         if (error) throw error;
         
+        // Reset welcome message flag for next login
+        window.welcomeMessageShown = false;
+        
         window.location.href = '/';
     } catch (error) {
         console.error('Error logging out:', error);
@@ -3348,8 +3351,8 @@ async function saveAvatarSelection() {
             }, 500);
         }
         
-        // Show welcome message for new avatar
-        showAvatarWelcomeMessage();
+        // Don't show welcome message when changing avatar - it's annoying
+        // showAvatarWelcomeMessage();
         
         // Update display
         updateAvatarDisplay();
@@ -3477,6 +3480,11 @@ function initializeUI() {
   
   // Show welcome message
   showWelcomeMessage();
+  
+  // Force refresh images to ensure they display properly
+  setTimeout(() => {
+    forceRefreshImages();
+  }, 1000);
   
   // Initialize additional features
   if (window.learningProgress) {
@@ -3654,8 +3662,35 @@ function getCurrentUserGender() {
     return 'male'; // Default fallback
 }
 
+// Global flag to prevent repeated welcome messages
+window.welcomeMessageShown = false;
+
+// Function to force refresh images
+function forceRefreshImages() {
+    console.log('🔧 Force refreshing images...');
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        if (img.src && img.src.includes('images/')) {
+            const originalSrc = img.src;
+            img.classList.add('force-refresh');
+            img.src = '';
+            setTimeout(() => {
+                img.src = originalSrc + '?v=' + Date.now();
+                img.classList.remove('force-refresh');
+            }, 50);
+        }
+    });
+    console.log('✅ Images refreshed');
+}
+
 // Function to show avatar-specific welcome message
 function showAvatarWelcomeMessage() {
+    // Prevent repeated welcome messages
+    if (window.welcomeMessageShown) {
+        console.log('🔧 Welcome message already shown, skipping...');
+        return;
+    }
+    
     const welcomeMessage = getAvatarWelcomeMessage();
     const avatarName = getCurrentAvatarName();
 
@@ -3674,6 +3709,7 @@ function showAvatarWelcomeMessage() {
     // Speak the welcome message only if TTS is not already speaking
     if (window.textToSpeech && !window.textToSpeech.isSpeaking) {
         window.textToSpeech.speak(welcomeMessage, { role: 'ai' });
+        window.welcomeMessageShown = true; // Mark as shown
     } else {
         console.log('🔧 Skipping TTS for welcome message - already speaking or TTS not ready');
     }
@@ -3706,6 +3742,12 @@ function getTeacherPersonality() {
 
 // Function to read welcome message at login
 function readWelcomeMessageAtLogin() {
+    // Prevent repeated welcome messages
+    if (window.welcomeMessageShown) {
+        console.log('🔧 Welcome message already shown at login, skipping...');
+        return;
+    }
+    
     const welcomeText = "Welcome to Tution App, your study buddy. What would you like to learn today? Roy Sir and Miss Sapna are here to help you. You may change your teachers in the settings.";
     
     console.log('🔧 Reading welcome message at login');
@@ -3722,6 +3764,7 @@ function readWelcomeMessageAtLogin() {
     // Speak the welcome message
     if (window.textToSpeech && !window.textToSpeech.isSpeaking) {
         window.textToSpeech.speak(welcomeText, { role: 'ai' });
+        window.welcomeMessageShown = true; // Mark as shown
     } else {
         console.log('🔧 Skipping TTS for login welcome - already speaking or TTS not ready');
     }
