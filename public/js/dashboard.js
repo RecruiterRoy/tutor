@@ -3760,8 +3760,98 @@ window.handleAvatarSelection = function(language) {
     
 // Assign to global immediately
 window.downloadApp = function() {
-    // For now, just show a message
-    showSuccess('APK download will be available soon!');
+    console.log('📱 Download App called');
+    
+    // Show download modal with progress
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(5px);
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        ">
+            <h3 style="color: white; font-size: 1.5rem; margin-bottom: 1rem;">📱 Downloading tution.app</h3>
+            <p style="color: rgba(255, 255, 255, 0.9); margin-bottom: 1.5rem;">
+                Your download will start automatically...
+            </p>
+            <div style="
+                width: 100%;
+                height: 6px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 3px;
+                overflow: hidden;
+                margin-bottom: 1rem;
+            ">
+                <div id="progress-bar" style="
+                    width: 0%;
+                    height: 100%;
+                    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                    transition: width 0.3s ease;
+                "></div>
+            </div>
+            <p id="download-status" style="color: #4ecdc4; font-size: 0.9rem;">Preparing download...</p>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Simulate download progress
+    let progress = 0;
+    const progressBar = document.getElementById('progress-bar');
+    const status = document.getElementById('download-status');
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 100) progress = 100;
+        
+        progressBar.style.width = progress + '%';
+        
+        if (progress < 30) {
+            status.textContent = 'Preparing download...';
+        } else if (progress < 60) {
+            status.textContent = 'Downloading APK file...';
+        } else if (progress < 90) {
+            status.textContent = 'Almost done...';
+        } else {
+            status.textContent = 'Download complete!';
+            clearInterval(interval);
+            
+            // Trigger actual download after 1 second
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = '/tution.app.v1.1.apk';
+                link.download = 'tution.app.v1.1.apk';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Close modal after download
+                setTimeout(() => {
+                    modal.remove();
+                }, 2000);
+            }, 1000);
+        }
+    }, 200);
 };
 
 // Assign to global immediately
