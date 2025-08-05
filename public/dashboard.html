@@ -89,6 +89,7 @@
     <script src="js/enhancedAIService.js?v=1.0.1" defer></script>
     <script src="js/claudeChat.js?v=1.0.1" defer></script>
     <script src="js/aiHealthCheck.js?v=1.0.1" defer></script>
+    <script src="js/syllabusSearch.js?v=1.0.1" defer></script>
     
     <!-- Load Razorpay for payments -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -163,8 +164,9 @@
             
             /* Mobile chat improvements */
             .chat-container {
-                height: calc(100vh - 280px); /* Even more space for chat on mobile */
+                height: calc(100vh - 280px); /* Fixed height for chat on mobile */
                 padding: 15px;
+                overflow-y: auto;
             }
             
             /* Mobile chat header improvements - keep items in horizontal line */
@@ -279,6 +281,7 @@
                 margin: 0;
                 border-top: 1px solid rgba(255, 255, 255, 0.2);
                 z-index: 10;
+                flex-shrink: 0;
             }
             
             /* Mobile voice button improvements */
@@ -324,10 +327,11 @@
         
         /* Modern Chat Interface */
         .chat-container {
-            height: calc(100vh - 200px); /* Increased height for longer chat window */
+            height: calc(100vh - 200px); /* Fixed height for chat window */
             overflow-y: auto;
             scroll-behavior: smooth;
             padding: 20px;
+            flex: 1;
         }
         
         /* Scroll to top button */
@@ -943,7 +947,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen overflow-x-hidden overflow-y-auto">
+<body class="min-h-screen overflow-x-hidden">
             <!-- Mobile Sidebar -->
         <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
         <div class="flex flex-col h-full">
@@ -1095,9 +1099,9 @@
             </header>
             
             <!-- Content Area -->
-            <main class="flex-1 overflow-hidden">
+            <main class="flex-1">
                 <!-- Chat Section -->
-                <div id="chatSection" class="h-full flex flex-col">
+                <div id="chatSection" class="h-full flex flex-col overflow-hidden">
 
                     
                     <!-- Chat Header - Compact -->
@@ -1135,6 +1139,14 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                                 </svg>
+                            </button>
+                            <button id="cameraButton" onclick="startCameraScan()" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50">
+                                <span>📸</span>
+                                <span>Camera</span>
+                            </button>
+                            <button id="voiceButton" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50">
+                                <span id="voiceIcon">🎤</span>
+                                <span>Voice</span>
                             </button>
                         </div>
                         

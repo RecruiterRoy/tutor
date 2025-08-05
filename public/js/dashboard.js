@@ -2522,13 +2522,26 @@ async function updateContext() {
 async function sendMessage() {
     console.log('🔧 sendMessage function called');
     
+    // Get both desktop and mobile inputs
     const input = document.getElementById('chatInput');
-    if (!input) {
+    const inputMobile = document.getElementById('chatInputMobile');
+    
+    // Use whichever input has text, or desktop input as fallback
+    let activeInput = input;
+    let text = '';
+    
+    if (inputMobile && inputMobile.value.trim()) {
+        activeInput = inputMobile;
+        text = inputMobile.value.trim();
+    } else if (input && input.value.trim()) {
+        text = input.value.trim();
+    }
+    
+    if (!activeInput) {
         console.error('❌ Chat input not found');
         return;
     }
     
-    const text = input.value.trim();
     console.log('🔧 Input text:', text);
     
     if (!text) {
@@ -2560,7 +2573,10 @@ async function sendMessage() {
     console.log('🔧 Adding user message to chat...');
     // Add user message to chat
     await addMessage('user', text);
-    input.value = '';
+    
+    // Clear both inputs
+    if (input) input.value = '';
+    if (inputMobile) inputMobile.value = '';
     
     // Check if subscription is expired
     const userProfile = window.userData;
@@ -2629,6 +2645,45 @@ async function sendMessage() {
             subjectHistory = subjectChatHistory.slice(-5); // Last 5 messages for context
         }
 
+                            // Search syllabus for relevant content if syllabusSearch is available
+                    let syllabusContext = '';
+                    let lessonPlanData = null;
+                    
+                    if (window.syllabusSearch && userSubject) {
+                        try {
+                            console.log('🔍 Searching syllabus for:', { text, userClass, userSubject });
+                            const syllabusResult = await window.syllabusSearch.searchSyllabus(text, userClass, userSubject);
+                            
+                            if (syllabusResult.found) {
+                                syllabusContext = window.syllabusSearch.generateSyllabusContext(userClass, userSubject, text);
+                                console.log('✅ Syllabus context found:', syllabusResult.message);
+                            } else {
+                                console.log('⚠️ No specific syllabus content found');
+                            }
+                            
+                            // Check if user is asking for lesson plan or exam preparation
+                            const lessonPlanKeywords = ['lesson plan', 'study plan', 'exam preparation', 'exam prep', 'study schedule', 'monthly plan', 'exam months', 'months remaining'];
+                            const isLessonPlanRequest = lessonPlanKeywords.some(keyword => 
+                                text.toLowerCase().includes(keyword)
+                            );
+                            
+                            if (isLessonPlanRequest) {
+                                console.log('📚 Creating lesson plan for exam preparation');
+                                lessonPlanData = window.syllabusSearch.createExamPreparationPlan(userClass, userSubject);
+                                
+                                if (lessonPlanData.success) {
+                                    syllabusContext += `\n\n**EXAM PREPARATION PLAN:**\n`;
+                                    syllabusContext += `- Months remaining: ${lessonPlanData.monthsRemaining}\n`;
+                                    syllabusContext += `- Total topics: ${lessonPlanData.totalTopics}\n`;
+                                    syllabusContext += `- Study hours per day: ${window.syllabusSearch.calculateStudyHours(lessonPlanData.monthsRemaining, lessonPlanData.totalTopics)}\n`;
+                                    syllabusContext += `- Recommendations: ${lessonPlanData.recommendations.join(', ')}\n`;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('❌ Error searching syllabus:', error);
+                        }
+                    }
+
         // Send to AI backend with complete user profile and chat history
         const requestBody = {
                 message: text,
@@ -2642,6 +2697,7 @@ async function sendMessage() {
                 isFirstResponseOfDay: isFirstResponseOfDay,
                 conversationContext: conversationContext, // Add conversation context
                 subjectHistory: subjectHistory, // Add subject history
+                syllabusContext: syllabusContext, // Add syllabus context
             teacherPersonality: getTeacherPersonality(),
             shortWelcomeMessage: getShortWelcomeMessage()
         };
@@ -2974,7 +3030,14 @@ function initSpeechRecognition() {
             clearTimeout(recognitionTimeout);
             const transcript = event.results[0][0].transcript;
             console.log('✅ Speech recognized:', transcript);
-            document.getElementById('chatInput').value = transcript;
+            
+            // Set value in both desktop and mobile inputs
+            const chatInput = document.getElementById('chatInput');
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            
+            if (chatInput) chatInput.value = transcript;
+            if (chatInputMobile) chatInputMobile.value = transcript;
+            
             showSuccess("Voice input received: " + transcript);
             stopRecording();
         };
