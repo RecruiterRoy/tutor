@@ -236,16 +236,16 @@
             
             <div class="form-group">
                 <label class="form-label text-sm font-medium text-gray-200">Password</label>
-                <div class="flex items-center">
+                <div class="relative">
                     <input x-model="password" 
                            x-ref="passwordField"
                            type="password" 
                            placeholder="Enter your password"
-                           class="login-input flex-1">
+                           class="login-input w-full pr-12">
                     <button type="button" 
                             @click="togglePassword()"
-                            class="ml-2 text-gray-400 hover:text-white transition-colors bg-transparent border-none p-2">
-                        <span x-text="showPassword ? '🙈' : '👁️'" class="text-lg"></span>
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors bg-transparent border-none p-1">
+                        <span x-text="showPassword ? '🙈' : '👁️'" class="text-sm"></span>
                     </button>
                 </div>
             </div>
