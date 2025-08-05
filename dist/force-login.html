@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Login - tution.app</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: rgba(76, 175, 80, 0.3); border: 1px solid #4CAF50; }
+        .error { background: rgba(244, 67, 54, 0.3); border: 1px solid #F44336; }
+        .warning { background: rgba(255, 152, 0, 0.3); border: 1px solid #FF9800; }
+        .info { background: rgba(33, 150, 243, 0.3); border: 1px solid #2196F3; }
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="images/tution.app_logo.jpg" alt="tution.app Logo" style="height: 50px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
+            <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" style="height: 55px; width: auto; margin-left: 0.5rem; cursor: pointer;" onclick="window.location.href='index.html'">
+        </div>
+        <h1>🔓 Force Login</h1>
+        
+        <div class="status warning">
+            This page bypasses email confirmation for manually verified users.
+        </div>
+
+        <div>
+            <label for="email">Email Address:</label>
+            <input type="email" id="email" placeholder="Enter your email">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter your password">
+            <button onclick="forceLogin()">Force Login</button>
+        </div>
+
+        <div id="results"></div>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://vfqdjpiyaabufpaofysz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function showResult(message, type) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        async function forceLogin() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showResult('Please enter both email and password', 'error');
+                return;
+            }
+
+            log(`🔓 Attempting force login for: ${email}`);
+
+            try {
+                // Step 1: Try to get user by email first
+                log('🔍 Checking user profile...');
+                const { data: users, error: userError } = await supabase
+                    .from('user_profiles')
+                    .select('id, verification_status, economic_status')
+                    .eq('email', email);
+
+                if (userError || !users || users.length === 0) {
+                    log(`❌ User not found in profiles: ${userError?.message}`, 'error');
+                    showResult('User not found. Please check your email address.', 'error');
+                    return;
+                }
+
+                const userProfile = users[0];
+                log(`✅ User profile found: ${userProfile.id}`, 'success');
+                log(`📋 Verification status: ${userProfile.verification_status}`, 'info');
+                log(`💰 Economic status: ${userProfile.economic_status}`, 'info');
+
+                // Step 2: Check if user is verified
+                if (userProfile.verification_status !== 'verified' && userProfile.verification_status !== 'approved') {
+                    log(`❌ User not verified. Status: ${userProfile.verification_status}`, 'error');
+                    showResult('User is not verified. Please contact support.', 'error');
+                    return;
+                }
+
+                // Step 3: Try to sign in with password
+                log('🔐 Attempting authentication...');
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) {
+                    log(`❌ Authentication failed: ${error.message}`, 'error');
+                    
+                    // If email not confirmed but user is verified, try to force confirm
+                    if (error.message.includes('Email not confirmed')) {
+                        log('🔄 Email not confirmed but user is verified. Attempting to force confirm...', 'warning');
+                        
+                        // Try to get the user from auth system
+                        const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+                        
+                        if (getUserError) {
+                            log(`❌ Could not get user: ${getUserError.message}`, 'error');
+                            showResult('Authentication failed. Please try again.', 'error');
+                            return;
+                        }
+
+                        if (user) {
+                            log(`✅ User found in auth system: ${user.email}`, 'success');
+                            
+                            // Update verification status to approved
+                            const { error: updateError } = await supabase
+                                .from('user_profiles')
+                                .update({ 
+                                    verification_status: 'approved',
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('id', user.id);
+
+                            if (updateError) {
+                                log(`❌ Failed to update verification status: ${updateError.message}`, 'error');
+                            } else {
+                                log('✅ Verification status updated to approved', 'success');
+                            }
+
+                            // Try to redirect to dashboard
+                            log('🚀 Redirecting to dashboard...', 'success');
+                            showResult('✅ Login successful! Redirecting to dashboard...', 'success');
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 2000);
+                            return;
+                        }
+                    }
+                    
+                    showResult(`Authentication failed: ${error.message}`, 'error');
+                    return;
+                }
+
+                if (data.user) {
+                    log(`✅ Authentication successful for: ${data.user.email}`, 'success');
+                    
+                    // Update verification status if needed
+                    if (userProfile.verification_status === 'pending') {
+                        log('🔄 Updating verification status...', 'info');
+                        const { error: updateError } = await supabase
+                            .from('user_profiles')
+                            .update({ 
+                                verification_status: 'approved',
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', data.user.id);
+
+                        if (updateError) {
+                            log(`❌ Failed to update verification status: ${updateError.message}`, 'error');
+                        } else {
+                            log('✅ Verification status updated to approved', 'success');
+                        }
+                    }
+
+                    // Check economic status
+                    if (userProfile.economic_status !== 'Premium' && userProfile.economic_status !== 'approved') {
+                        log(`⚠️ Economic status issue: ${userProfile.economic_status}`, 'warning');
+                        showResult('Your account is not active. Please contact support.', 'error');
+                        return;
+                    }
+
+                    log('🚀 All checks passed, redirecting to dashboard...', 'success');
+                    showResult('✅ Login successful! Redirecting to dashboard...', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                }
+
+            } catch (error) {
+                log(`❌ Force login error: ${error.message}`, 'error');
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-fill email from URL parameter
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+            if (email) {
+                document.getElementById('email').value = email;
+            }
+        });
+    </script>
+</body>
+</html> 

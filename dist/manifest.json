@@ -1,0 +1,103 @@
+{
+  "name": "tution.app - Your Personal AI Teacher",
+  "short_name": "tution.app",
+  "description": "AI-powered tutoring for Indian students. NCERT books, homework help, career guidance in Hindi, English & regional languages.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "images/tution.app_emblem.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/tution.app_emblem.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/tution.app_emblem.jpg",
+      "sizes": "72x72",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "images/tution.app_emblem.jpg",
+      "sizes": "96x96",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "images/tution.app_emblem.jpg",
+      "sizes": "128x128",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "images/tution.app_emblem.jpg",
+      "sizes": "144x144",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "images/tution.app_emblem.jpg",
+      "sizes": "152x152",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "images/tution.app_emblem.jpg",
+      "sizes": "384x384",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "productivity", "utilities"],
+  "lang": "en-IN",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Access your learning dashboard",
+      "url": "/dashboard.html",
+      "icons": [
+        {
+          "src": "images/tution.app_emblem.jpg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Homework Help",
+      "short_name": "Homework",
+      "description": "Get help with your homework",
+      "url": "/dashboard.html#homework",
+      "icons": [
+        {
+          "src": "images/tution.app_emblem.jpg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "NCERT Books",
+      "short_name": "Books",
+      "description": "Browse NCERT textbooks",
+      "url": "/dashboard.html#books",
+      "icons": [
+        {
+          "src": "images/tution.app_emblem.jpg",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+} 
