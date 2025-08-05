@@ -203,11 +203,8 @@ class TextToSpeech {
             return; // Don't auto-speak user messages
         }
 
-        // Stop any ongoing speech
+        // Stop any ongoing speech immediately
         this.stop();
-
-        // Force voice update before speaking to ensure correct avatar voice
-        this.forceVoiceUpdate();
 
         // Update current AI response tracking
         if (options.role === 'ai') {
@@ -218,51 +215,40 @@ class TextToSpeech {
         this.pausedAt = 0;
         this.isPaused = false;
 
-        // Set voice based on avatar BEFORE creating utterance
-        const language = this.detectLanguageAndSetVoice(text);
-        
-        // Create utterance
+        // Create utterance immediately
         this.currentUtterance = new SpeechSynthesisUtterance(text);
         
-        // Set properties
+        // Set voice based on avatar (optimized)
+        const language = this.detectLanguageAndSetVoice(text);
         this.currentUtterance.voice = this.currentVoice;
         this.currentUtterance.rate = this.rate;
         this.currentUtterance.pitch = this.pitch;
         this.currentUtterance.volume = this.volume;
         this.currentUtterance.lang = language;
 
-        // Log voice selection for debugging
-        console.log('🔧 Speaking with voice:', this.currentVoice?.name || 'Default');
-        console.log('🔧 Voice language:', language);
-        console.log('🔧 Current avatar:', (window.userData && window.userData.ai_avatar) || window.selectedAvatar);
-
-        // Event handlers
+        // Event handlers (minimal)
         this.currentUtterance.onstart = () => {
             this.isSpeaking = true;
             this.isPaused = false;
             this.updateControls();
-            console.log('TTS started speaking');
         };
 
         this.currentUtterance.onend = () => {
             this.isSpeaking = false;
             this.isPaused = false;
             this.currentUtterance = null;
-            this.lastSpokenResponse = this.currentAIResponse; // Mark this response as spoken
+            this.lastSpokenResponse = this.currentAIResponse;
             this.updateControls();
-            console.log('TTS finished speaking');
         };
 
         this.currentUtterance.onpause = () => {
             this.isPaused = true;
             this.updateControls();
-            console.log('TTS paused');
         };
 
         this.currentUtterance.onresume = () => {
             this.isPaused = false;
             this.updateControls();
-            console.log('TTS resumed');
         };
 
         this.currentUtterance.onerror = (event) => {
@@ -272,10 +258,9 @@ class TextToSpeech {
             this.updateControls();
         };
 
-        // Start speaking
+        // Start speaking immediately
         this.synth.speak(this.currentUtterance);
         this.showControls();
-        this.updateControls();
     }
 
     play() {
@@ -371,19 +356,11 @@ class TextToSpeech {
     detectLanguageAndSetVoice(text) {
         // Get current avatar from userData or fallback to window.selectedAvatar
         const currentAvatar = (window.userData && window.userData.ai_avatar) || window.selectedAvatar || 'roy-sir';
-        console.log('🔧 TTS Voice Selection - Current Avatar:', currentAvatar);
-        console.log('🔧 window.userData:', window.userData);
-        console.log('🔧 window.userData?.ai_avatar:', window.userData?.ai_avatar);
-        console.log('🔧 window.selectedAvatar:', window.selectedAvatar);
-        console.log('🔧 Available voices:', this.voices.length);
-        console.log('🔧 Voice languages:', this.voices.map(v => `${v.name} (${v.lang})`));
 
         // If no voices available, try to load them
         if (this.voices.length === 0) {
-            console.log('⚠️ No voices available, trying to load voices...');
             this.loadVoices();
             if (this.voices.length === 0) {
-                console.error('❌ Still no voices available after reload');
                 this.currentVoice = null;
                 return 'en-US';
             }
@@ -391,67 +368,40 @@ class TextToSpeech {
 
         // Use any available voice as fallback
         const fallbackVoice = this.voices[0];
-        console.log('🔧 Fallback voice:', fallbackVoice?.name || 'None');
 
         if (currentAvatar === 'miss-sapna') {
-            console.log('🎯 Miss Sapna detected, selecting Google Hindi voice');
-            // STRICT: Only Google Hindi voices for Miss Sapna
+            // Fast Hindi voice selection for Miss Sapna
             let hindiVoice = this.voices.find(voice =>
                 voice.name.toLowerCase().includes('google') && 
                 voice.lang.includes('hi-IN')
+            ) || this.voices.find(voice =>
+                voice.lang.includes('hi-IN') || voice.lang.includes('hi')
+            ) || this.voices.find(voice =>
+                voice.lang.includes('IN')
             );
-            
-            if (!hindiVoice) {
-                console.log('🔍 No Google Hindi voice found, trying any Hindi voice');
-                hindiVoice = this.voices.find(voice =>
-                    voice.lang.includes('hi-IN') || voice.lang.includes('hi')
-                );
-            }
-            
-            if (!hindiVoice) {
-                console.log('🔍 No Hindi voice found, trying any Indian voice');
-                hindiVoice = this.voices.find(voice =>
-                    voice.lang.includes('IN')
-                );
-            }
             
             if (hindiVoice) {
                 this.currentVoice = hindiVoice;
-                console.log('✅ Miss Sapna using Hindi voice:', hindiVoice.name);
                 return 'hi-IN';
             } else {
-                console.warn('❌ No suitable Hindi voice found for Miss Sapna, using fallback');
                 this.currentVoice = fallbackVoice;
                 return fallbackVoice?.lang || 'en-US';
             }
         } else {
-            console.log('🎯 Roy Sir detected, selecting Microsoft Ravi India English voice');
-            // STRICT: Only Microsoft Ravi India English for Roy Sir
+            // Fast English voice selection for Roy Sir
             let englishVoice = this.voices.find(voice =>
                 voice.name.toLowerCase().includes('ravi') && 
                 voice.lang.includes('en-IN')
+            ) || this.voices.find(voice =>
+                voice.lang.includes('en-IN')
+            ) || this.voices.find(voice =>
+                voice.lang.includes('en-US') || voice.lang.includes('en-GB')
             );
-            
-            if (!englishVoice) {
-                console.log('🔍 No Microsoft Ravi India English voice found, trying any Indian English voice');
-                englishVoice = this.voices.find(voice =>
-                    voice.lang.includes('en-IN')
-                );
-            }
-            
-            if (!englishVoice) {
-                console.log('🔍 No Indian English voice found, trying any English voice');
-                englishVoice = this.voices.find(voice =>
-                    voice.lang.includes('en-US') || voice.lang.includes('en-GB')
-                );
-            }
             
             if (englishVoice) {
                 this.currentVoice = englishVoice;
-                console.log('✅ Roy Sir using English voice:', englishVoice.name);
                 return englishVoice.lang;
             } else {
-                console.warn('❌ No suitable English voice found for Roy Sir, using fallback');
                 this.currentVoice = fallbackVoice;
                 return fallbackVoice?.lang || 'en-US';
             }

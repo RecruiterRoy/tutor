@@ -654,9 +654,9 @@
                         console.log('📝 No profile found, will create new one...');
                         existingProfile = null;
                     } else {
-                        // Other database error - create a basic profile anyway
-                        console.log('⚠️ Database error, creating basic profile...');
-                        existingProfile = null;
+                        // Other database error - throw the error
+                        console.error('❌ Database error:', profileError);
+                        throw new Error(`Database error: ${profileError.message}`);
                     }
                 }
                 
@@ -684,33 +684,16 @@
                 
                 console.log('📋 Profile data to insert:', profileData);
                 
-                // Try to create profile, but if it fails, create a mock profile
-                let createdProfile = null;
-                let createError = null;
+                // Create profile - if it fails, throw error
+                const { data: createdProfile, error: createError } = await window.supabaseClient
+                    .from('user_profiles')
+                    .insert(profileData)
+                    .select()
+                    .single();
                 
-                try {
-                    const result = await window.supabaseClient
-                        .from('user_profiles')
-                        .insert(profileData)
-                        .select()
-                        .single();
-                    createdProfile = result.data;
-                    createError = result.error;
-                } catch (error) {
-                    console.error('❌ Could not create user profile:', error);
-                    createError = error;
-                }
-                
-                // If creation fails, create a basic profile object
                 if (createError) {
-                    console.error('❌ Failed to create profile:', createError);
-                    console.log('⚠️ Creating basic profile object...');
-                    createdProfile = {
-                        ...profileData,
-                        id: user.id,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    };
+                    console.error('❌ Failed to create user profile:', createError);
+                    throw new Error(`Failed to create user profile: ${createError.message}`);
                 }
                 
                 console.log('✅ User profile created successfully:', createdProfile);
@@ -718,15 +701,7 @@
                 
             } catch (error) {
                 console.error('❌ Error ensuring user profile:', error);
-                // Return a basic profile instead of throwing
-                return {
-                    id: user.id,
-                    email: user.email,
-                    full_name: user.user_metadata?.full_name || 'User',
-                    verification_status: 'approved',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                };
+                throw error; // Re-throw the error instead of creating a fallback profile
             }
         }
         

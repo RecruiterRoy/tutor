@@ -95,11 +95,39 @@
             content: "🎓";
             font-size: 2rem;
         }
+        
+        .logo-fallback {
+            display: none;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .logo-fallback.show {
+            display: block;
+        }
 
         .logo img {
             height: 40px;
             width: auto;
-            filter: brightness(0) invert(1); /* Makes the logo white */
+            display: block;
+            object-fit: contain;
+        }
+        
+        .logo-img {
+            height: 40px;
+            width: auto;
+            display: block;
+            object-fit: contain;
+        }
+        
+        .emblem {
+            height: 45px;
+            width: auto;
+            display: block;
+            object-fit: contain;
+            margin-left: 10px;
+        }
         }
 
         .emblem {
@@ -1011,8 +1039,9 @@
     <header>
         <div class="header-content">
             <a href="index.html" class="logo">
-                <img src="images/tution.app_logo.jpg" alt="tution.app Logo" class="logo-img cursor-pointer" onclick="window.location.href='index.html'">
-                <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="emblem">
+                <img src="images/tution.app_logo.jpg" alt="tution.app Logo" class="logo-img cursor-pointer" onclick="window.location.href='index.html'" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="emblem" onerror="this.style.display='none';">
+                <span class="logo-fallback" id="logoFallback">tution.app</span>
             </a>
             <nav>
                 <ul class="nav-links">
@@ -1423,8 +1452,8 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                        <img src="images/tution.app_logo.jpg" alt="tution.app Logo" style="height: 30px; width: auto; cursor: pointer;" onclick="window.location.href='index.html'">
-                        <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" style="height: 35px; width: auto;">
+                        <img src="images/tution.app_logo.jpg" alt="tution.app Logo" style="height: 30px; width: auto; cursor: pointer; object-fit: contain;" onclick="window.location.href='index.html'" onerror="this.style.display='none';">
+                        <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" style="height: 35px; width: auto; object-fit: contain;" onerror="this.style.display='none';">
                         <h3>tution.app</h3>
                     </div>
                     <p>Making quality education accessible to every Indian student. Learn from AI teachers, get homework help, and build your future.</p>
@@ -1618,15 +1647,15 @@
                     status.textContent = 'Download complete!';
                     clearInterval(interval);
                     
-                    // Trigger actual download after 1 second
-                    setTimeout(() => {
-                        const link = document.createElement('a');
-                        link.href = '/tution.app.v1.2.apk'; // Updated APK file path
-                        link.download = 'tution.app.v1.2.apk';
-                        link.style.display = 'none';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
+                                            // Trigger actual download after 1 second
+                        setTimeout(() => {
+                            const link = document.createElement('a');
+                            link.href = '/tution.app.v1.1.apk'; // Updated APK file path
+                            link.download = 'tution.app.v1.1.apk';
+                            link.style.display = 'none';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
                         
                         // Close modal after download
                         setTimeout(() => {
@@ -1852,6 +1881,23 @@
             const feedbackForm = document.getElementById('feedbackForm');
             if (feedbackForm) {
                 feedbackForm.addEventListener('submit', handleFeedbackSubmit);
+            }
+            
+            // Handle logo image loading
+            const logoImg = document.querySelector('.logo-img');
+            const emblemImg = document.querySelector('.emblem');
+            const logoFallback = document.getElementById('logoFallback');
+            
+            // Check if images loaded successfully
+            if (logoImg && emblemImg) {
+                logoImg.addEventListener('error', function() {
+                    console.log('Logo image failed to load, showing fallback');
+                    logoFallback.classList.add('show');
+                });
+                
+                emblemImg.addEventListener('error', function() {
+                    console.log('Emblem image failed to load');
+                });
             }
         });
 

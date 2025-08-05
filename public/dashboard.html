@@ -942,8 +942,8 @@
     </style>
 </head>
 <body class="min-h-screen overflow-x-hidden">
-    <!-- Mobile Sidebar -->
-    <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out hidden md:hidden lg:hidden xl:hidden">
+            <!-- Mobile Sidebar -->
+        <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
         <div class="flex flex-col h-full">
             <!-- Sidebar Header -->
             <div class="flex items-center justify-between p-6 border-b border-gray-700">
@@ -999,8 +999,8 @@
         </div>
     </div>
     
-    <!-- Mobile Sidebar Overlay -->
-    <div id="mobileSidebarOverlay" class="fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out hidden md:hidden lg:hidden xl:hidden" onclick="closeMobileSidebar()"></div>
+            <!-- Mobile Sidebar Overlay -->
+        <div id="mobileSidebarOverlay" class="fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out lg:hidden" onclick="closeMobileSidebar()"></div>
     
     <!-- Main Layout -->
     <div class="flex h-screen">
@@ -1136,6 +1136,9 @@
                     <!-- Input Area -->
                     <div class="input-area mt-20">
                         <div class="flex items-center space-x-3">
+                            <button id="cameraButton" onclick="startCameraScan()" class="text-gray-400 hover:text-white transition-colors p-2 rounded-lg bg-gray-700/50">
+                                <span class="text-xl">📸</span>
+                            </button>
                             <div class="relative flex-1">
                                 <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." class="chat-input">
                             </div>
@@ -1270,10 +1273,6 @@
                             <div class="card-modern">
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-white text-lg font-semibold">Subject Progress</h3>
-                                    <button onclick="addNewSubject()" class="btn-modern text-sm">
-                                        <span>➕</span>
-                                        <span>Add Subject</span>
-                                    </button>
                                 </div>
                                 <div id="subjectsContainer" class="space-y-4">
                                     <div class="subject-item">
@@ -1450,6 +1449,77 @@
         </div>
     </div>
 
+    <!-- Camera Scan Modal -->
+    <div id="cameraScanModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full p-6 relative">
+            <button onclick="closeCameraModal()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 transition-colors">×</button>
+            <h3 class="text-white text-xl font-bold mb-4">📸 Scan Your Problem</h3>
+            
+            <!-- Camera View -->
+            <div id="cameraContainer" class="mb-4">
+                <video id="cameraView" autoplay playsinline class="w-full rounded-lg bg-black"></video>
+                <canvas id="photoCanvas" style="display:none;"></canvas>
+            </div>
+            
+            <!-- Controls -->
+            <div class="flex space-x-3 mb-4">
+                <button onclick="capturePhoto()" id="captureBtn" class="btn-modern flex-1">
+                    <span>📷</span>
+                    <span>Capture</span>
+                </button>
+                <button onclick="retakePhoto()" id="retakeBtn" class="btn-modern btn-secondary flex-1 hidden">
+                    <span>🔄</span>
+                    <span>Retake</span>
+                </button>
+            </div>
+            
+            <!-- Processing Status -->
+            <div id="processingStatus" class="hidden">
+                <div class="text-center text-white">
+                    <div class="animate-spin text-2xl mb-2">⏳</div>
+                    <p id="statusText">Processing image...</p>
+                </div>
+            </div>
+            
+                                    <!-- Results -->
+                        <div id="scanResults" class="hidden">
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="text-white font-semibold">📝 Extracted Text:</h4>
+                                        <button onclick="editExtractedText()" class="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors">
+                                            ✏️ Edit
+                                        </button>
+                                    </div>
+                                    <div id="extractedText" class="bg-gray-700 p-3 rounded-lg text-white text-sm"></div>
+                                    <div id="editTextArea" class="hidden">
+                                        <textarea id="textEditor" class="w-full bg-gray-700 p-3 rounded-lg text-white text-sm border border-gray-600 focus:border-blue-500 focus:outline-none resize-none" rows="4" placeholder="Edit the extracted text here..."></textarea>
+                                        <div class="flex space-x-2 mt-2">
+                                            <button onclick="saveEditedText()" class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+                                                ✅ Save
+                                            </button>
+                                            <button onclick="cancelEdit()" class="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors">
+                                                ❌ Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex space-x-3">
+                                    <button onclick="sendToChat()" class="btn-modern flex-1">
+                                        <span>💬</span>
+                                        <span>Ask AI About This</span>
+                                    </button>
+                                    <button onclick="closeCameraModal()" class="btn-modern btn-secondary flex-1">
+                                        <span>✅</span>
+                                        <span>Done</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+        </div>
+    </div>
+
     <!-- Contact Us Popup Overlay -->
     <div id="contactUsPopupOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card max-w-lg w-full p-6 relative">
@@ -1518,7 +1588,7 @@
 
     <!-- Subject Manager Modal -->
     <div id="subjectManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4" onclick="closeSubjectManagerOnOutsideClick(event)">
-        <div class="bg-gray-800 rounded-lg w-full max-w-6xl max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
+        <div class="bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
             <!-- Header -->
             <div class="flex justify-between items-center p-4 flex-shrink-0 border-b border-gray-700">
                 <h3 class="text-white text-lg font-semibold">📚 Manage Your Subjects</h3>
@@ -1530,20 +1600,20 @@
             </div>
             
             <!-- Scrollable Content -->
-            <div class="flex-1 overflow-y-auto p-4">
+            <div class="flex-1 overflow-y-auto p-4" style="max-height: 60vh;">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <!-- Available Subjects -->
                     <div class="bg-gray-700 rounded-lg p-3">
-                        <h4 class="text-white text-base font-medium mb-3">Available Subjects</h4>
-                        <div id="availableSubjectsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <h4 class="text-white text-sm font-medium mb-2">Available Subjects</h4>
+                        <div id="availableSubjectsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2">
                             <!-- Available subjects will be populated here -->
                         </div>
                     </div>
                     
                     <!-- Selected Subjects -->
                     <div class="bg-gray-700 rounded-lg p-3">
-                        <h4 class="text-white text-base font-medium mb-3">Your Subjects</h4>
-                        <div id="selectedSubjectsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <h4 class="text-white text-sm font-medium mb-2">Your Subjects</h4>
+                        <div id="selectedSubjectsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2">
                             <!-- Selected subjects will be populated here -->
                         </div>
                     </div>

@@ -122,16 +122,818 @@ window.stopTTS = function() {
     console.log('stopTTS called - waiting for implementation');
 };
 
-window.addNewSubject = function() {
-    console.log('addNewSubject called - waiting for implementation');
-};
+
 
 window.handleAvatarSelection = function(language) {
     console.log('handleAvatarSelection called - waiting for implementation:', language);
 };
 
+// Camera Scan Functions
+window.startCameraScan = function() {
+    console.log('📸 Starting camera scan');
+    
+    // Check if user has opted to not show tips
+    const hideCameraTips = localStorage.getItem('hideCameraTips');
+    
+    if (!hideCameraTips) {
+        showCameraTips();
+    } else {
+        openCameraModal();
+    }
+};
+
+function showCameraTips() {
+    const tipsModal = document.createElement('div');
+    tipsModal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10001;
+        backdrop-filter: blur(5px);
+    `;
+    
+    tipsModal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        ">
+            <h3 style="color: white; font-size: 1.5rem; margin-bottom: 1rem;">📸 Camera Tips for Better Results</h3>
+            <div style="text-align: left; color: rgba(255, 255, 255, 0.9); margin-bottom: 1.5rem; line-height: 1.6;">
+                <div style="margin-bottom: 0.5rem;"><strong>💡 Good lighting</strong> - Well-lit photos work much better</div>
+                <div style="margin-bottom: 0.5rem;"><strong>📷 Clear focus</strong> - Sharp, non-blurry images</div>
+                <div style="margin-bottom: 0.5rem;"><strong>🎯 Simple backgrounds</strong> - Avoid cluttered surfaces</div>
+                <div style="margin-bottom: 0.5rem;"><strong>✍️ Neat handwriting</strong> - Encourage block letters</div>
+            </div>
+            <div style="margin-bottom: 1.5rem; text-align: left;">
+                <label style="color: white; display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="dontShowAgain" style="margin-right: 0.5rem;">
+                    Don't show this warning again
+                </label>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button onclick="closeTipsAndOpenCamera()" style="
+                    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                    color: white;
+                    padding: 0.8rem 1.5rem;
+                    border: none;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                ">Start Camera</button>
+                <button onclick="closeTipsModal()" style="
+                    background: rgba(255, 255, 255, 0.2);
+                    color: white;
+                    padding: 0.8rem 1.5rem;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                ">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(tipsModal);
+}
+
+function closeTipsAndOpenCamera() {
+    const dontShowAgain = document.getElementById('dontShowAgain').checked;
+    if (dontShowAgain) {
+        localStorage.setItem('hideCameraTips', 'true');
+    }
+    
+    // Remove tips modal
+    const tipsModal = document.querySelector('div[style*="z-index: 10001"]');
+    if (tipsModal) {
+        tipsModal.remove();
+    }
+    
+    // Open camera modal
+    openCameraModal();
+}
+
+function closeTipsModal() {
+    const tipsModal = document.querySelector('div[style*="z-index: 10001"]');
+    if (tipsModal) {
+        tipsModal.remove();
+    }
+}
+
+function openCameraModal() {
+    const modal = document.getElementById('cameraScanModal');
+    modal.classList.remove('hidden');
+    
+    // Hide re-analyze button for new scan
+    const reAnalyzeBtn = document.getElementById('reAnalyzeBtn');
+    if (reAnalyzeBtn) {
+        reAnalyzeBtn.classList.add('hidden');
+    }
+    
+    // Start camera
+    startCamera();
+}
+
+window.closeCameraModal = function() {
+    console.log('📸 Closing camera modal');
+    const modal = document.getElementById('cameraScanModal');
+    modal.classList.add('hidden');
+    
+    // Stop camera stream
+    stopCamera();
+    
+    // Reset UI
+    resetCameraUI();
+};
+
+window.capturePhoto = function() {
+    console.log('📷 Capturing photo');
+    const canvas = document.getElementById('photoCanvas');
+    const video = document.getElementById('cameraView');
+    
+    // Set canvas size
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw video frame to canvas
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    // Show retake button, hide capture
+    document.getElementById('captureBtn').classList.add('hidden');
+    document.getElementById('retakeBtn').classList.remove('hidden');
+    
+    // Process the image
+    processCapturedImage();
+};
+
+window.retakePhoto = function() {
+    console.log('🔄 Retaking photo');
+    resetCameraUI();
+    startCamera();
+};
+
+window.sendToChat = function() {
+    // Use edited text if available, otherwise use the displayed text
+    const textToSend = window.editedExtractedText || document.getElementById('extractedText').textContent;
+    
+    // Add the scanned question to chat input and send it through existing chat system
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.value = textToSend;
+        // Trigger the existing send message function
+        sendMessage();
+    }
+    
+    // Close modal
+    closeCameraModal();
+};
+
+// Camera helper functions
+let cameraStream = null;
+
+async function startCamera() {
+    try {
+        // Check if camera permission is already granted
+        const permissions = await navigator.permissions.query({ name: 'camera' });
+        
+        if (permissions.state === 'denied') {
+            showPermissionModal('camera', 'Camera access is required to scan problems. Please enable camera permissions in your browser settings.');
+            return;
+        }
+        
+        cameraStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: 'environment', // Use back camera on mobile
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            } 
+        });
+        
+        const video = document.getElementById('cameraView');
+        video.srcObject = cameraStream;
+        
+        console.log('✅ Camera started');
+    } catch (err) {
+        console.error('❌ Camera error:', err);
+        if (err.name === 'NotAllowedError') {
+            showPermissionModal('camera', 'Camera access denied. Please allow camera permissions to scan problems.');
+        } else {
+            alert('Camera error: ' + err.message);
+        }
+    }
+}
+
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+}
+
+function resetCameraUI() {
+    document.getElementById('captureBtn').classList.remove('hidden');
+    document.getElementById('retakeBtn').classList.add('hidden');
+    document.getElementById('processingStatus').classList.add('hidden');
+    document.getElementById('scanResults').classList.add('hidden');
+    document.getElementById('cameraContainer').classList.remove('hidden');
+    
+    // Clear edited text and image data
+    window.editedExtractedText = null;
+    window.originalExtractedText = null;
+    window.capturedImageData = null;
+    
+    // Hide re-analyze button
+    const reAnalyzeBtn = document.getElementById('reAnalyzeBtn');
+    if (reAnalyzeBtn) {
+        reAnalyzeBtn.classList.add('hidden');
+    }
+}
+
+async function processCapturedImage() {
+    const canvas = document.getElementById('photoCanvas');
+    const imageData = canvas.toDataURL('image/jpeg', 0.8); // Compress to 80% quality
+    
+    // Show processing status
+    document.getElementById('processingStatus').classList.remove('hidden');
+    document.getElementById('cameraContainer').classList.add('hidden');
+    
+    try {
+        // Extract text using Tesseract.js
+        updateStatus('Extracting text from image...');
+        const extractedText = await extractTextFromImage(imageData);
+        
+        // Store original extracted text for comparison
+        window.originalExtractedText = extractedText;
+        window.editedExtractedText = null; // Clear any previous edits
+        
+        // Show results
+        updateStatus('Processing complete!');
+        document.getElementById('extractedText').textContent = extractedText;
+        
+        document.getElementById('processingStatus').classList.add('hidden');
+        document.getElementById('scanResults').classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('❌ Processing error:', error);
+        updateStatus('Error processing image. Please try again.');
+        setTimeout(() => {
+            resetCameraUI();
+        }, 2000);
+    }
+}
+
+function updateStatus(message) {
+    document.getElementById('statusText').textContent = message;
+}
+
+// OCR using Tesseract.js (client-side, free)
+async function extractTextFromImage(imageData) {
+    // Load Tesseract.js dynamically
+    if (!window.Tesseract) {
+        await loadTesseract();
+    }
+    
+    const result = await Tesseract.recognize(
+        imageData,
+        'eng+equ', // English + math equations
+        { 
+            logger: m => console.log('OCR:', m),
+            errorHandler: err => console.error('OCR Error:', err)
+        }
+    );
+    
+    return result.data.text.trim();
+}
+
+// Load Tesseract.js from CDN
+async function loadTesseract() {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/tesseract.js@4/dist/tesseract.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+// AI Analysis using Anthropic Claude (cost: ~$0.01-0.03 per image)
+async function analyzeWithAI(imageData, extractedText) {
+    try {
+        // Use edited text if available, otherwise use original
+        const textToAnalyze = window.editedExtractedText || extractedText;
+        
+        // Get conversation context (last 5 messages)
+        const conversationContext = getConversationContext();
+        
+        // Call Supabase Edge Function to protect API key
+        const { data, error } = await supabase.functions.invoke('analyze-question', {
+            body: {
+                imageData: imageData,
+                extractedText: textToAnalyze,
+                userId: window.userData?.id || null,
+                conversationContext: conversationContext
+            }
+        });
+        
+        if (error) throw error;
+        
+        // Check if AI needs more context (literature questions)
+        if (data.needsMoreContext) {
+            return handleLiteratureContextRequest(data.solution, textToAnalyze);
+        }
+        
+        return data.solution;
+        
+    } catch (error) {
+        console.error('AI analysis error:', error);
+        return 'Sorry, I could not analyze this problem. Please try typing it instead.';
+    }
+}
+
+// Get conversation context (last 5 messages)
+function getConversationContext() {
+    const chatMessages = document.querySelectorAll('#chatBox .message');
+    const context = [];
+    
+    // Get last 5 messages
+    for (let i = Math.max(0, chatMessages.length - 5); i < chatMessages.length; i++) {
+        const message = chatMessages[i];
+        const role = message.classList.contains('user-message') ? 'user' : 'assistant';
+        const content = message.querySelector('.message-content')?.textContent || '';
+        if (content.trim()) {
+            context.push({ role, content: content.trim() });
+        }
+    }
+    
+    return context;
+}
+
+// Handle literature context requests
+function handleLiteratureContextRequest(aiResponse, extractedText) {
+    // Show modal asking for more context
+    const contextModal = document.createElement('div');
+    contextModal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10002;
+        backdrop-filter: blur(5px);
+    `;
+    
+    contextModal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        ">
+            <h3 style="color: white; font-size: 1.5rem; margin-bottom: 1rem;">📚 Literature Question Detected</h3>
+            <div style="text-align: left; color: rgba(255, 255, 255, 0.9); margin-bottom: 1.5rem; line-height: 1.6;">
+                <p><strong>Question:</strong> ${extractedText}</p>
+                <p style="margin-top: 1rem;"><strong>AI Response:</strong> ${aiResponse}</p>
+                <p style="margin-top: 1rem; color: #ffd700;">📸 Please take additional photos of the story context to provide a better answer.</p>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button onclick="continueWithLiteratureContext()" style="
+                    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                    color: white;
+                    padding: 0.8rem 1.5rem;
+                    border: none;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                ">📸 Add More Photos</button>
+                <button onclick="closeContextModal()" style="
+                    background: rgba(255, 255, 255, 0.2);
+                    color: white;
+                    padding: 0.8rem 1.5rem;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                ">Use Current Answer</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(contextModal);
+    
+    // Store context for later use
+    window.literatureContext = {
+        question: extractedText,
+        initialResponse: aiResponse,
+        additionalImages: []
+    };
+}
+
+window.continueWithLiteratureContext = function() {
+    // Close context modal
+    const contextModal = document.querySelector('div[style*="z-index: 10002"]');
+    if (contextModal) {
+        contextModal.remove();
+    }
+    
+    // Show camera again for additional photos
+    document.getElementById('cameraContainer').classList.remove('hidden');
+    document.getElementById('scanResults').classList.add('hidden');
+    document.getElementById('processingStatus').classList.add('hidden');
+    
+    // Update capture button to add to context
+    const captureBtn = document.getElementById('captureBtn');
+    captureBtn.innerHTML = '<span>📸</span><span>Add to Context</span>';
+    captureBtn.onclick = addToLiteratureContext;
+    
+    // Show instruction
+    const instruction = document.createElement('div');
+    instruction.id = 'contextInstruction';
+    instruction.style.cssText = `
+        background: rgba(255, 215, 0, 0.2);
+        border: 1px solid #ffd700;
+        color: #ffd700;
+        padding: 0.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        text-align: center;
+    `;
+    instruction.textContent = '📚 Take photos of the story context (characters, plot, setting)';
+    
+    const cameraContainer = document.getElementById('cameraContainer');
+    cameraContainer.insertBefore(instruction, cameraContainer.firstChild);
+};
+
+window.addToLiteratureContext = function() {
+    const canvas = document.getElementById('photoCanvas');
+    const video = document.getElementById('cameraView');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Add to context
+    if (!window.literatureContext.additionalImages) {
+        window.literatureContext.additionalImages = [];
+    }
+    window.literatureContext.additionalImages.push(imageData);
+    
+    // Show success message
+    const instruction = document.getElementById('contextInstruction');
+    instruction.style.background = 'rgba(76, 175, 80, 0.2)';
+    instruction.style.borderColor = '#4caf50';
+    instruction.style.color = '#4caf50';
+    instruction.textContent = `✅ Context photo ${window.literatureContext.additionalImages.length} added! Take more or analyze.`;
+    
+    // Show analyze button
+    const analyzeBtn = document.createElement('button');
+    analyzeBtn.id = 'analyzeWithContextBtn';
+    analyzeBtn.className = 'btn-modern w-full mt-3';
+    analyzeBtn.innerHTML = '<span>🤖</span><span>Analyze with Context</span>';
+    analyzeBtn.onclick = analyzeWithLiteratureContext;
+    
+    const controls = document.querySelector('#cameraScanModal .flex.space-x-3');
+    controls.appendChild(analyzeBtn);
+};
+
+async function analyzeWithLiteratureContext() {
+    try {
+        updateStatus('Analyzing with literature context...');
+        
+        const { data, error } = await supabase.functions.invoke('analyze-question', {
+            body: {
+                imageData: window.literatureContext.additionalImages[0], // Use first context image
+                extractedText: window.literatureContext.question,
+                additionalImages: window.literatureContext.additionalImages,
+                userId: window.userData?.id || null,
+                isLiteratureContext: true
+            }
+        });
+        
+        if (error) throw error;
+        
+        // Show enhanced result
+        document.getElementById('extractedText').textContent = window.literatureContext.question;
+        document.getElementById('aiSolution').textContent = data.solution;
+        
+        document.getElementById('processingStatus').classList.add('hidden');
+        document.getElementById('scanResults').classList.remove('hidden');
+        
+        // Reset camera UI
+        resetCameraUI();
+        
+    } catch (error) {
+        console.error('Literature analysis error:', error);
+        updateStatus('Error analyzing with context. Please try again.');
+    }
+}
+
+window.closeContextModal = function() {
+    const contextModal = document.querySelector('div[style*="z-index: 10002"]');
+    if (contextModal) {
+        contextModal.remove();
+    }
+    
+    // Use the initial response
+    document.getElementById('extractedText').textContent = window.literatureContext.question;
+    document.getElementById('aiSolution').textContent = window.literatureContext.initialResponse;
+    
+    document.getElementById('processingStatus').classList.add('hidden');
+    document.getElementById('scanResults').classList.remove('hidden');
+    
+    // Reset camera UI
+    resetCameraUI();
+};
+
+// Text editing functions for camera scan
+window.editExtractedText = function() {
+    const extractedTextDiv = document.getElementById('extractedText');
+    const editTextArea = document.getElementById('editTextArea');
+    const textEditor = document.getElementById('textEditor');
+    
+    // Get current text and populate editor
+    const currentText = extractedTextDiv.textContent;
+    textEditor.value = currentText;
+    
+    // Show editor, hide display
+    extractedTextDiv.classList.add('hidden');
+    editTextArea.classList.remove('hidden');
+    
+    // Focus on textarea
+    textEditor.focus();
+    textEditor.setSelectionRange(0, textEditor.value.length);
+};
+
+window.saveEditedText = function() {
+    const extractedTextDiv = document.getElementById('extractedText');
+    const editTextArea = document.getElementById('editTextArea');
+    const textEditor = document.getElementById('textEditor');
+    
+    // Update the displayed text
+    extractedTextDiv.textContent = textEditor.value;
+    
+    // Store the edited text for AI analysis
+    window.editedExtractedText = textEditor.value;
+    
+    // Hide editor, show display
+    extractedTextDiv.classList.remove('hidden');
+    editTextArea.classList.add('hidden');
+    
+    // Show re-analyze button if text was changed
+    if (textEditor.value !== window.originalExtractedText) {
+        showReAnalyzeButton();
+    }
+    
+    // Show success message
+    if (window.showSuccess) {
+        window.showSuccess('Text updated successfully!');
+    }
+};
+
+window.cancelEdit = function() {
+    const extractedTextDiv = document.getElementById('extractedText');
+    const editTextArea = document.getElementById('editTextArea');
+    
+    // Hide editor, show display (text remains unchanged)
+    extractedTextDiv.classList.remove('hidden');
+    editTextArea.classList.add('hidden');
+};
+
+// Show re-analyze button when text is edited
+function showReAnalyzeButton() {
+    const reAnalyzeBtn = document.getElementById('reAnalyzeBtn');
+    if (reAnalyzeBtn) {
+        reAnalyzeBtn.classList.remove('hidden');
+    }
+}
+
+// Re-analyze with edited text
+window.reAnalyzeWithEditedText = async function() {
+    try {
+        const reAnalyzeBtn = document.getElementById('reAnalyzeBtn');
+        const aiSolution = document.getElementById('aiSolution');
+        
+        // Show loading state
+        reAnalyzeBtn.textContent = '🔄 Analyzing...';
+        reAnalyzeBtn.disabled = true;
+        aiSolution.textContent = 'Analyzing with updated text...';
+        
+        // Re-analyze with edited text
+        const newSolution = await analyzeWithAI(window.capturedImageData, window.editedExtractedText);
+        
+        // Update AI solution
+        aiSolution.textContent = newSolution;
+        
+        // Reset button
+        reAnalyzeBtn.textContent = '🔄 Re-analyze';
+        reAnalyzeBtn.disabled = false;
+        
+        // Show success message
+        if (window.showSuccess) {
+            window.showSuccess('Re-analyzed with updated text!');
+        }
+        
+    } catch (error) {
+        console.error('Error re-analyzing:', error);
+        const aiSolution = document.getElementById('aiSolution');
+        aiSolution.textContent = 'Error re-analyzing. Please try again.';
+        
+        // Reset button
+        const reAnalyzeBtn = document.getElementById('reAnalyzeBtn');
+        if (reAnalyzeBtn) {
+            reAnalyzeBtn.textContent = '🔄 Re-analyze';
+            reAnalyzeBtn.disabled = false;
+        }
+    }
+};
+
+// Permission modal function
+function showPermissionModal(permissionType, message) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10003;
+        backdrop-filter: blur(5px);
+    `;
+    
+    const icon = permissionType === 'camera' ? '📸' : '🎤';
+    const title = permissionType === 'camera' ? 'Camera Permission Required' : 'Microphone Permission Required';
+    
+    modal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        ">
+            <h3 style="color: white; font-size: 1.5rem; margin-bottom: 1rem;">${icon} ${title}</h3>
+            <p style="color: rgba(255, 255, 255, 0.9); margin-bottom: 1.5rem; line-height: 1.6;">
+                ${message}
+            </p>
+            <div style="text-align: left; color: rgba(255, 255, 255, 0.8); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                <div style="margin-bottom: 0.5rem;"><strong>To enable permissions:</strong></div>
+                <div style="margin-bottom: 0.5rem;">1. Click the lock/info icon in your browser's address bar</div>
+                <div style="margin-bottom: 0.5rem;">2. Find "${permissionType === 'camera' ? 'Camera' : 'Microphone'}" in the permissions list</div>
+                <div style="margin-bottom: 0.5rem;">3. Change it from "Block" to "Allow"</div>
+                <div style="margin-bottom: 0.5rem;">4. Refresh the page and try again</div>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button onclick="closePermissionModal()" style="
+                    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                    color: white;
+                    padding: 0.8rem 1.5rem;
+                    border: none;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                ">Got it</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+window.closePermissionModal = function() {
+    const modal = document.querySelector('div[style*="z-index: 10003"]');
+    if (modal) {
+        modal.remove();
+    }
+};
+
 window.downloadApp = function() {
-    console.log('downloadApp called - waiting for implementation');
+    console.log('📱 Download App called');
+    
+    // Show download modal with progress
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(5px);
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        ">
+            <h3 style="color: white; font-size: 1.5rem; margin-bottom: 1rem;">📱 Downloading tution.app</h3>
+            <p style="color: rgba(255, 255, 255, 0.9); margin-bottom: 1.5rem;">
+                Your download will start automatically...
+            </p>
+            <div style="
+                width: 100%;
+                height: 6px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 3px;
+                overflow: hidden;
+                margin-bottom: 1rem;
+            ">
+                <div id="progress-bar" style="
+                    width: 0%;
+                    height: 100%;
+                    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                    transition: width 0.3s ease;
+                "></div>
+            </div>
+            <p id="download-status" style="color: #4ecdc4; font-size: 0.9rem;">Preparing download...</p>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Simulate download progress
+    let progress = 0;
+    const progressBar = document.getElementById('progress-bar');
+    const status = document.getElementById('download-status');
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 100) progress = 100;
+        
+        progressBar.style.width = progress + '%';
+        
+        if (progress < 30) {
+            status.textContent = 'Preparing download...';
+        } else if (progress < 60) {
+            status.textContent = 'Downloading APK file...';
+        } else if (progress < 90) {
+            status.textContent = 'Almost done...';
+        } else {
+            status.textContent = 'Download complete!';
+            clearInterval(interval);
+            
+            // Trigger actual download after 1 second
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = '/tution.app.v1.1.apk';
+                link.download = 'tution.app.v1.1.apk';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Close modal after download
+                setTimeout(() => {
+                    modal.remove();
+                }, 2000);
+            }, 1000);
+        }
+    }, 200);
 };
 
 window.scrollToTop = function() {
@@ -360,6 +1162,14 @@ window.isMobile = isMobile; // Make it globally accessible
         // Request microphone permission
         async function requestMicrophonePermission() {
             try {
+                // Check if microphone permission is already granted
+                const permissions = await navigator.permissions.query({ name: 'microphone' });
+                
+                if (permissions.state === 'denied') {
+                    showPermissionModal('microphone', 'Microphone access is required for voice features. Please enable microphone permissions in your browser settings.');
+                    return false;
+                }
+                
                 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     console.log('✅ Microphone permission granted');
@@ -372,6 +1182,7 @@ window.isMobile = isMobile; // Make it globally accessible
                         voiceButton.classList.remove('text-red-400');
                         voiceButton.classList.add('text-green-400');
                     }
+                    return true;
                 }
             } catch (error) {
                 console.warn('⚠️ Microphone permission denied or not available:', error);
@@ -386,8 +1197,9 @@ window.isMobile = isMobile; // Make it globally accessible
                 
                 // Show permission request on first voice button click
                 if (error.name === 'NotAllowedError') {
-                    showError('Microphone permission is required for voice input. Please allow microphone access in your browser settings.');
+                    showPermissionModal('microphone', 'Microphone access denied. Please allow microphone permissions for voice features.');
                 }
+                return false;
             }
         }
         
@@ -1474,11 +2286,14 @@ async function sendMessage() {
         console.log('🔧 getCurrentAvatarGender():', getCurrentAvatarGender());
         console.log('🔧 currentAvatar:', currentAvatar);
         
-        // Get recent chat history for context
-        let chatHistory = [];
+        // Get recent chat history for context (last 5 messages)
+        const conversationContext = getConversationContext();
+        
+        // Get subject-specific history if available
+        let subjectHistory = [];
         if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
-            const subjectHistory = window.subjectManager.subjectChatHistory[window.subjectManager.getCurrentSubject()] || [];
-            chatHistory = subjectHistory.slice(-10); // Last 10 messages for context
+            const subjectChatHistory = window.subjectManager.subjectChatHistory[window.subjectManager.getCurrentSubject()] || [];
+            subjectHistory = subjectChatHistory.slice(-5); // Last 5 messages for context
         }
 
         // Send to AI backend with complete user profile and chat history
@@ -1492,10 +2307,17 @@ async function sendMessage() {
             userGender: userGender,
             avatarGender: avatarGender,
                 isFirstResponseOfDay: isFirstResponseOfDay,
-            chatHistory: chatHistory,
+                conversationContext: conversationContext, // Add conversation context
+                subjectHistory: subjectHistory, // Add subject history
             teacherPersonality: getTeacherPersonality(),
             shortWelcomeMessage: getShortWelcomeMessage()
         };
+
+        console.log('📤 Sending request with context:', {
+            message: text,
+            contextLength: conversationContext.length,
+            subjectHistoryLength: subjectHistory.length
+        });
         
         console.log('�� Sending to AI with avatar ID:', requestBody.avatar);
         console.log('🔧 Sending to AI with teacher name:', requestBody.teacher);
@@ -2180,16 +3002,7 @@ function closeMobileSidebar() {
         overlay.classList.add('opacity-0', 'pointer-events-none');
     }
     
-    // Hide elements after animation completes
-    setTimeout(() => {
-        if (sidebar) {
-            sidebar.classList.add('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
-        }
-        if (overlay) {
-            overlay.classList.add('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
-        }
-        console.log('✅ Mobile sidebar closed');
-    }, 300);
+    console.log('✅ Mobile sidebar closed');
 }
 
 function toggleMobileSidebar() {
@@ -2200,21 +3013,33 @@ function toggleMobileSidebar() {
     
     if (!sidebar || !overlay) {
         console.log('❌ Mobile sidebar elements not found');
+        console.log('🔍 Available elements:', {
+            sidebar: !!sidebar,
+            overlay: !!overlay
+        });
         return;
     }
     
     const isOpen = sidebar.classList.contains('translate-x-0');
+    console.log('🔧 Current state - isOpen:', isOpen);
+    console.log('🔧 Sidebar classes:', sidebar.className);
     
     if (isOpen) {
         console.log('🔧 Sidebar is open, closing...');
         closeMobileSidebar();
     } else {
         console.log('🔧 Sidebar is closed, opening...');
-        // Show sidebar elements first
-        sidebar.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
-        overlay.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
         
-        // Then animate them
+        // Force show elements first and ensure they're visible
+        sidebar.style.display = 'block';
+        sidebar.style.visibility = 'visible';
+        sidebar.style.zIndex = '50';
+        
+        overlay.style.display = 'block';
+        overlay.style.visibility = 'visible';
+        overlay.style.zIndex = '40';
+        
+        // Then animate
         setTimeout(() => {
             sidebar.classList.remove('-translate-x-full');
             sidebar.classList.add('translate-x-0');
@@ -3852,9 +4677,11 @@ function initializeMobileSidebar() {
     const overlay = document.getElementById('mobileSidebarOverlay');
     
     if (sidebar && overlay) {
-        // Ensure sidebar is hidden by default on all screen sizes
-        sidebar.classList.add('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
-        overlay.classList.add('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
+        console.log('🔧 Initializing mobile sidebar...');
+        
+        // Remove any hidden classes that might prevent display
+        sidebar.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
+        overlay.classList.remove('hidden', 'md:hidden', 'lg:hidden', 'xl:hidden');
         
         // Ensure sidebar is in closed position
         sidebar.classList.remove('translate-x-0');
@@ -3863,5 +4690,43 @@ function initializeMobileSidebar() {
         // Ensure overlay is hidden
         overlay.classList.remove('opacity-100', 'pointer-events-auto');
         overlay.classList.add('opacity-0', 'pointer-events-none');
+        
+        // Force display properties
+        sidebar.style.display = 'block';
+        overlay.style.display = 'block';
+        
+        console.log('✅ Mobile sidebar initialized');
+    } else {
+        console.error('❌ Mobile sidebar elements not found during initialization');
     }
 }
+
+// Make mobile sidebar functions globally available
+window.toggleMobileSidebar = toggleMobileSidebar;
+window.closeMobileSidebar = closeMobileSidebar;
+
+// Test function for debugging mobile sidebar
+window.testMobileSidebar = function() {
+    console.log('🧪 Testing mobile sidebar...');
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    const button = document.querySelector('button[onclick="toggleMobileSidebar()"]');
+    
+    console.log('🔍 Elements found:', {
+        sidebar: !!sidebar,
+        overlay: !!overlay,
+        button: !!button
+    });
+    
+    if (sidebar) {
+        console.log('🔍 Sidebar classes:', sidebar.className);
+        console.log('🔍 Sidebar style:', sidebar.style.cssText);
+    }
+    
+    if (button) {
+        console.log('🔍 Button found, testing click...');
+        button.click();
+    } else {
+        console.log('❌ Button not found');
+    }
+};

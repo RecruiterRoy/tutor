@@ -73,6 +73,9 @@ class VoiceRecognition {
                 const transcript = result[0].transcript.trim();
                 if (transcript.length > 0) {
                     console.log('Final transcript:', transcript);
+                    // Immediately update UI to show processing
+                    this.updateUI('processing', { transcript: transcript });
+                    
                     if (this.groupMode) {
                         this.handleGroupDiscussion(transcript);
                     } else {
@@ -165,14 +168,8 @@ class VoiceRecognition {
         console.log('🔧 startListening called');
         
         // Prevent multiple simultaneous calls
-        if (this.isStarting) {
-            console.log('Already starting recognition, skipping...');
-            return;
-        }
-        
-        // If already listening, just return
-        if (this.isListening) {
-            console.log('Already listening, skipping...');
+        if (this.isStarting || this.isListening) {
+            console.log('Already starting or listening, skipping...');
             return;
         }
         
@@ -181,36 +178,44 @@ class VoiceRecognition {
         
         try {
             // Force stop any existing recognition first
-            console.log('Stopping any existing recognition...');
-            await this.stop();
+            if (this.recognition) {
+                try {
+                    this.recognition.stop();
+                    this.recognition.abort();
+                } catch (e) {
+                    // Ignore errors when stopping
+                }
+            }
             
-            // Wait a bit to ensure cleanup
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // Reduced cleanup delay for faster startup
+            await new Promise(resolve => setTimeout(resolve, 50));
             
             // Create new recognition instance
             this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             this.setupRecognition();
             
-            // Check microphone permissions
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    } 
-                });
-                this.audioStream = stream;
-            } catch (permissionError) {
-                console.error('Microphone permission denied:', permissionError);
-                this.isStarting = false;
-                if (window.showError) {
-                    window.showError('Microphone access denied. Please allow microphone permissions.');
+            // Check microphone permissions (optimized)
+            if (!this.audioStream) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        } 
+                    });
+                    this.audioStream = stream;
+                } catch (permissionError) {
+                    console.error('Microphone permission denied:', permissionError);
+                    this.isStarting = false;
+                    if (window.showError) {
+                        window.showError('Microphone access denied. Please allow microphone permissions.');
+                    }
+                    return;
                 }
-                return;
             }
 
-            // Set listening state and start
+            // Set listening state and start immediately
             this.isListening = true;
             this.groupMode = groupMode;
             
@@ -222,11 +227,8 @@ class VoiceRecognition {
         } catch (error) {
             console.error('Error starting voice recognition:', error);
             this.isListening = false;
-            this.updateUI('error');
-        } finally {
-            // Always reset the starting flag
             this.isStarting = false;
-            console.log('🔧 Reset isStarting to false');
+            this.updateUI('error');
         }
     }
 

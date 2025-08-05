@@ -211,15 +211,15 @@
                         </div>
                         
                         <div>
-                            <input type="email" id="email" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Email Address" onblur="validateEmailOnBlur(this)">
+                            <input type="email" id="email" required class="input-style w-full px-4 py-3 rounded-lg" placeholder="Email Address" onblur="validateEmailOnBlur(this)" onchange="clearEmailValidation()">
                             <div class="error-message" id="emailError"></div>
-                                </div>
+                        </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-200 mb-2">Phone Number</label>
                             <div class="flex">
                                 <span class="px-3 py-3 bg-gray-700 text-white rounded-l-lg border border-gray-600 flex items-center">+91</span>
-                                <input type="tel" id="phone" required class="input-style flex-1 px-4 py-3 rounded-r-lg" placeholder="10-digit mobile number" maxlength="10" pattern="[6-9][0-9]{9}" oninput="validatePhoneInput(this)" onblur="validatePhoneOnBlur(this)">
+                                <input type="tel" id="phone" required class="input-style flex-1 px-4 py-3 rounded-r-lg" placeholder="10-digit mobile number" maxlength="10" pattern="[6-9][0-9]{9}" oninput="validatePhoneInput(this)" onblur="validatePhoneOnBlur(this)" onchange="clearPhoneValidation()">
                             </div>
                             <div class="error-message" id="phoneError"></div>
                         </div>
@@ -588,16 +588,16 @@
             if (validateCurrentStep()) {
                 if (currentStep < totalSteps) {
                     document.getElementById(`step${currentStep}`).classList.add('hidden');
-                        currentStep++;
+                    currentStep++;
                     document.getElementById(`step${currentStep}`).classList.remove('hidden');
-                        updateStepIndicator();
+                    updateStepIndicator();
                     
                     // Password field is always visible for all registration types
-                        
-                        if (currentStep === 5) {
-                            showConfirmation();
-                        }
+                    
+                    if (currentStep === 5) {
+                        showConfirmation();
                     }
+                }
             }
         }
 
@@ -684,7 +684,11 @@
                 showFieldError('emailError', 'Please enter a valid email address');
                 isValid = false;
             } else {
-                hideFieldError('emailError');
+                // Don't hide email error if it's a duplicate warning
+                const emailErrorDiv = document.getElementById('emailError');
+                if (emailErrorDiv && !emailErrorDiv.textContent.includes('already registered')) {
+                    hideFieldError('emailError');
+                }
             }
 
             if (!phone) {
@@ -694,7 +698,11 @@
                 showFieldError('phoneError', 'Please enter a valid 10-digit mobile number (starting with 6-9)');
                 isValid = false;
             } else {
-                hideFieldError('phoneError');
+                // Don't hide phone error if it's a duplicate warning
+                const phoneErrorDiv = document.getElementById('phoneError');
+                if (phoneErrorDiv && !phoneErrorDiv.textContent.includes('already registered')) {
+                    hideFieldError('phoneError');
+                }
             }
 
             // Password validation for all registration types
@@ -706,6 +714,29 @@
                 isValid = false;
             } else {
                 hideFieldError('passwordError');
+            }
+
+            // Check if there are any existing duplicate warnings - BLOCK NEXT BUTTON
+            const emailErrorDiv = document.getElementById('emailError');
+            const phoneErrorDiv = document.getElementById('phoneError');
+            
+            if (emailErrorDiv && emailErrorDiv.textContent.includes('already registered')) {
+                console.log('❌ Email duplicate warning found - blocking Next button');
+                isValid = false;
+                showMessage('Please fix the email duplicate issue before proceeding.', 'error');
+            }
+            
+            if (phoneErrorDiv && phoneErrorDiv.textContent.includes('already registered')) {
+                console.log('❌ Phone duplicate warning found - blocking Next button');
+                isValid = false;
+                showMessage('Please fix the phone duplicate issue before proceeding.', 'error');
+            }
+            
+            // Also check the global flags
+            if (window.emailDuplicateFound || window.phoneDuplicateFound) {
+                console.log('❌ Duplicate flags found - blocking Next button');
+                isValid = false;
+                showMessage('Please fix duplicate issues before proceeding.', 'error');
             }
 
             return isValid;
@@ -914,6 +945,23 @@
                 
                 console.log('📝 Form data collected:', { fullName, gender, email, phone, userClass, board, city, state, language });
                 console.log('🔧 Selected OAuth method:', selectedOAuth);
+                
+                // Validate all form fields first
+                console.log('🔍 Validating all form fields...');
+                if (!validateAllFields()) {
+                    setLoading(false);
+                    registrationInProgress = false;
+                    return;
+                }
+                
+                // Check for duplicate email and phone before registration
+                console.log('🔍 Checking for duplicate email and phone...');
+                const duplicateCheckResult = await checkForDuplicates(email, phone);
+                if (duplicateCheckResult.hasDuplicates) {
+                    setLoading(false);
+                    registrationInProgress = false;
+                    return;
+                }
                 
                 if (selectedOAuth === 'email') {
                     console.log('📧 Processing email registration...');
@@ -1219,52 +1267,107 @@
         // Real-time validation functions
         async function validateEmailOnBlur(input) {
             const email = input.value.trim();
-            if (!email) return;
+            if (!email) {
+                hideFieldError('emailError');
+                input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                return;
+            }
+            
+            // Basic email format validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showFieldError('emailError', 'Please enter a valid email address.');
+                input.style.borderColor = '#ef4444';
+                return;
+            }
+            
+            // Show loading state
+            showFieldError('emailError', 'Checking email availability...');
+            input.style.borderColor = '#f59e0b'; // Orange for loading
             
             try {
-                // Check if email exists in user_profiles (verified users)
-                const { data: existingUsers, error } = await supabase
-                    .from('user_profiles')
-                    .select('id')
-                    .limit(1);
-                
-                if (error && error.code !== 'PGRST116') {
-                    console.warn('Could not check email:', error);
-                    return; // Skip check if table doesn't exist
-                }
-                
                 // Check if email exists in user_profiles
                 const { data: registeredUsers, error: regError } = await supabase
                     .from('user_profiles')
-                    .select('id, verification_status')
+                    .select('id, verification_status, email')
                     .eq('email', email)
                     .limit(1);
                 
                 if (regError && regError.code !== 'PGRST116') {
                     console.warn('Could not check registered emails:', regError);
+                    hideFieldError('emailError');
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
                     return;
                 }
                 
                 if (registeredUsers && registeredUsers.length > 0) {
                     const user = registeredUsers[0];
+                    
                     if (user.verification_status === 'pending') {
-                        showFieldError('emailError', 'Email already registered but not verified. Check your email for verification link.');
+                        showFieldError('emailError', '⚠️ Email already registered but not verified. Check your email for verification link.');
+                        
+                        // Add resend verification button
+                        const resendButton = document.createElement('button');
+                        resendButton.type = 'button';
+                        resendButton.className = 'mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors';
+                        resendButton.textContent = '📧 Resend Verification Email';
+                        resendButton.onclick = () => resendVerificationEmail(email);
+                        
+                        const errorDiv = document.getElementById('emailError');
+                        if (errorDiv && !errorDiv.querySelector('button')) {
+                            errorDiv.appendChild(resendButton);
+                        }
+                        
+                        // Show global message with resend option
+                        showMessage('Email already registered but not verified. Click "Resend Verification Email" below to receive a new verification link.', 'error');
                     } else {
-                        showFieldError('emailError', 'Email already registered. Try logging in instead.');
+                        showFieldError('emailError', '⚠️ Email already registered. Try logging in instead.');
+                        
+                        // Show global warning message
+                        showMessage('This email is already registered. Please use a different email or try logging in.', 'error');
                     }
                     input.style.borderColor = '#ef4444';
+                    
+                    // Set a flag to prevent any success messages
+                    window.emailDuplicateFound = true;
                 } else {
                     hideFieldError('emailError');
-                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)'; // Normal border
+                    
+                    // Clear the duplicate flag
+                    window.emailDuplicateFound = false;
                 }
             } catch (error) {
                 console.warn('Email validation error:', error);
+                hideFieldError('emailError');
+                input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
             }
         }
         
         async function validatePhoneOnBlur(input) {
             const phone = input.value.trim();
-            if (!phone || phone.length !== 10) return;
+            if (!phone) {
+                hideFieldError('phoneError');
+                input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                return;
+            }
+            
+            if (phone.length !== 10) {
+                showFieldError('phoneError', 'Phone number must be exactly 10 digits.');
+                input.style.borderColor = '#ef4444';
+                return;
+            }
+            
+            // Check if phone starts with valid digits (6, 7, 8, 9)
+            if (!/^[6-9]/.test(phone)) {
+                showFieldError('phoneError', 'Phone number must start with 6, 7, 8, or 9.');
+                input.style.borderColor = '#ef4444';
+                return;
+            }
+            
+            // Show loading state
+            showFieldError('phoneError', 'Checking phone availability...');
+            input.style.borderColor = '#f59e0b'; // Orange for loading
             
             try {
                 // Check if phone exists in user_profiles
@@ -1276,19 +1379,223 @@
                 
                 if (error && error.code !== 'PGRST116') {
                     console.warn('Could not check phone:', error);
+                    hideFieldError('phoneError');
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
                     return;
                 }
                 
                 if (existingUsers && existingUsers.length > 0) {
-                    showFieldError('phoneError', 'Phone number already registered. Try logging in instead.');
+                    showFieldError('phoneError', '⚠️ Phone number already registered. Try logging in instead.');
                     input.style.borderColor = '#ef4444';
+                    
+                    // Show global warning message
+                    showMessage('This phone number is already registered. Please use a different number or try logging in.', 'error');
+                    
+                    // Set a flag to prevent any success messages
+                    window.phoneDuplicateFound = true;
                 } else {
                     hideFieldError('phoneError');
-                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.3)'; // Normal border
+                    
+                    // Clear the duplicate flag
+                    window.phoneDuplicateFound = false;
                 }
             } catch (error) {
                 console.warn('Phone validation error:', error);
+                hideFieldError('phoneError');
+                input.style.borderColor = 'rgba(255, 255, 255, 0.3)';
             }
+        }
+        
+        // Clear email validation when user starts typing
+        function clearEmailValidation() {
+            const emailInput = document.getElementById('email');
+            const errorDiv = document.getElementById('emailError');
+            
+            // NEVER clear duplicate warnings - they stay until user changes the email
+            if (errorDiv && errorDiv.textContent.includes('already registered')) {
+                return; // Don't clear duplicate warnings
+            }
+            
+            // Only clear format errors (not duplicate errors)
+            if (emailInput) {
+                emailInput.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            }
+            
+            if (errorDiv && !errorDiv.textContent.includes('already registered')) {
+                errorDiv.innerHTML = '';
+                errorDiv.style.display = 'none';
+            }
+        }
+        
+        // Clear phone validation when user changes the phone number
+        function clearPhoneValidation() {
+            const phoneInput = document.getElementById('phone');
+            const errorDiv = document.getElementById('phoneError');
+            
+            // NEVER clear duplicate warnings - they stay until user changes the phone
+            if (errorDiv && errorDiv.textContent.includes('already registered')) {
+                return; // Don't clear duplicate warnings
+            }
+            
+            // Only clear format errors (not duplicate errors)
+            if (phoneInput) {
+                phoneInput.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            }
+            
+            if (errorDiv && !errorDiv.textContent.includes('already registered')) {
+                errorDiv.innerHTML = '';
+                errorDiv.style.display = 'none';
+            }
+        }
+        
+        // Resend verification email function
+        async function resendVerificationEmail(email) {
+            try {
+                console.log('📧 Resending verification email to:', email);
+                
+                // Show loading state
+                const resendButton = document.querySelector('button[onclick*="resendVerificationEmail"]');
+                if (resendButton) {
+                    resendButton.textContent = '📧 Sending...';
+                    resendButton.disabled = true;
+                    resendButton.className = 'mt-2 px-3 py-1 bg-gray-600 text-white text-xs rounded cursor-not-allowed';
+                }
+                
+                // Use Supabase auth to resend verification email
+                const { data, error } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: email
+                });
+                
+                if (error) {
+                    console.error('❌ Error resending verification email:', error);
+                    showMessage(`Failed to resend verification email: ${error.message}`, 'error');
+                    
+                    // Reset button
+                    if (resendButton) {
+                        resendButton.textContent = '📧 Resend Verification Email';
+                        resendButton.disabled = false;
+                        resendButton.className = 'mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors';
+                        resendButton.onclick = () => resendVerificationEmail(email);
+                    }
+                } else {
+                    console.log('✅ Verification email resent successfully');
+                    showMessage('✅ Verification email sent! Please check your inbox and click the verification link.', 'success');
+                    
+                    // Update button to show success
+                    if (resendButton) {
+                        resendButton.textContent = '✅ Email Sent!';
+                        resendButton.className = 'mt-2 px-3 py-1 bg-green-600 text-white text-xs rounded cursor-not-allowed';
+                        
+                        // Reset button after 5 seconds
+                        setTimeout(() => {
+                            resendButton.textContent = '📧 Resend Verification Email';
+                            resendButton.disabled = false;
+                            resendButton.className = 'mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors';
+                            resendButton.onclick = () => resendVerificationEmail(email);
+                        }, 5000);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Unexpected error resending verification email:', error);
+                showMessage('An unexpected error occurred. Please try again.', 'error');
+                
+                // Reset button
+                const resendButton = document.querySelector('button[onclick*="resendVerificationEmail"]');
+                if (resendButton) {
+                    resendButton.textContent = '📧 Resend Verification Email';
+                    resendButton.disabled = false;
+                    resendButton.className = 'mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors';
+                    resendButton.onclick = () => resendVerificationEmail(email);
+                }
+            }
+        }
+        
+        // Comprehensive duplicate check function for registration
+        async function checkForDuplicates(email, phone) {
+            console.log('🔍 Checking for duplicates:', { email, phone });
+            
+            let hasDuplicates = false;
+            let errorMessages = [];
+            
+            try {
+                // Show checking message
+                showMessage('Checking for existing accounts...', 'info');
+                
+                // Check for duplicate email
+                if (email) {
+                    const { data: emailUsers, error: emailError } = await supabase
+                        .from('user_profiles')
+                        .select('id, verification_status')
+                        .eq('email', email)
+                        .limit(1);
+                    
+                    if (emailError && emailError.code !== 'PGRST116') {
+                        console.warn('Could not check email duplicates:', emailError);
+                    } else if (emailUsers && emailUsers.length > 0) {
+                        const user = emailUsers[0];
+                        if (user.verification_status === 'pending') {
+                            errorMessages.push('Email already registered but not verified. Check your email for verification link.');
+                        } else {
+                            errorMessages.push('Email already registered. Try logging in instead.');
+                        }
+                        hasDuplicates = true;
+                        
+                        // Update UI to show error
+                        const emailInput = document.getElementById('email');
+                        if (emailInput) {
+                            showFieldError('emailError', errorMessages[errorMessages.length - 1]);
+                            emailInput.style.borderColor = '#ef4444';
+                        }
+                    }
+                }
+                
+                // Check for duplicate phone
+                if (phone && phone.length === 10) {
+                    const { data: phoneUsers, error: phoneError } = await supabase
+                        .from('user_profiles')
+                        .select('id')
+                        .eq('phone', phone)
+                        .limit(1);
+                    
+                    if (phoneError && phoneError.code !== 'PGRST116') {
+                        console.warn('Could not check phone duplicates:', phoneError);
+                    } else if (phoneUsers && phoneUsers.length > 0) {
+                        errorMessages.push('Phone number already registered. Try logging in instead.');
+                        hasDuplicates = true;
+                        
+                        // Update UI to show error
+                        const phoneInput = document.getElementById('phone');
+                        if (phoneInput) {
+                            showFieldError('phoneError', errorMessages[errorMessages.length - 1]);
+                            phoneInput.style.borderColor = '#ef4444';
+                        }
+                    }
+                }
+                
+                // Show combined error message if duplicates found
+                if (hasDuplicates) {
+                    const combinedMessage = errorMessages.join(' ');
+                    showMessage(combinedMessage, 'error');
+                    console.log('❌ Duplicates found:', errorMessages);
+                } else {
+                    console.log('✅ No duplicates found');
+                    // Clear the checking message
+                    const messageEl = document.getElementById('globalMessage');
+                    if (messageEl && messageEl.textContent.includes('Checking for existing accounts')) {
+                        messageEl.classList.add('hidden');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error checking for duplicates:', error);
+                showMessage('Error checking for existing accounts. Please try again.', 'error');
+                hasDuplicates = true;
+            }
+            
+            return { hasDuplicates, errorMessages };
         }
 
         // Phone validation function
@@ -1306,24 +1613,124 @@
             
             // Real-time validation feedback
             if (value.length === 0) {
-                hideFieldError('phoneError');
+                // Don't hide if it's a duplicate warning
+                const phoneErrorDiv = document.getElementById('phoneError');
+                if (phoneErrorDiv && !phoneErrorDiv.textContent.includes('already registered')) {
+                    hideFieldError('phoneError');
+                }
             } else if (value.length < 10) {
                 showFieldError('phoneError', `Enter ${10 - value.length} more digits`);
             } else if (!/^[6-9]/.test(value)) {
                 showFieldError('phoneError', 'Mobile number must start with 6, 7, 8, or 9');
             } else {
-                hideFieldError('phoneError');
+                // Don't hide if it's a duplicate warning
+                const phoneErrorDiv = document.getElementById('phoneError');
+                if (phoneErrorDiv && !phoneErrorDiv.textContent.includes('already registered')) {
+                    hideFieldError('phoneError');
+                }
             }
+        }
+        
+        // Validate all form fields before registration
+        function validateAllFields() {
+            let isValid = true;
+            const errors = [];
+            
+            // Check required fields
+            const requiredFields = [
+                { id: 'fullName', name: 'Full Name' },
+                { id: 'gender', name: 'Gender' },
+                { id: 'email', name: 'Email' },
+                { id: 'password', name: 'Password' },
+                { id: 'phone', name: 'Phone Number' },
+                { id: 'class', name: 'Class' },
+                { id: 'board', name: 'Board' },
+                { id: 'schoolName', name: 'School Name' },
+                { id: 'city', name: 'City' },
+                { id: 'state', name: 'State' },
+                { id: 'language', name: 'Preferred Language' }
+            ];
+            
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field.id);
+                if (!element || !element.value.trim()) {
+                    errors.push(`${field.name} is required`);
+                    isValid = false;
+                    if (element) {
+                        showFieldError(`${field.id}Error`, `${field.name} is required`);
+                        element.style.borderColor = '#ef4444';
+                    }
+                }
+            });
+            
+            // Check email format
+            const email = document.getElementById('email')?.value.trim();
+            if (email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    errors.push('Please enter a valid email address');
+                    isValid = false;
+                    showFieldError('emailError', 'Please enter a valid email address');
+                    document.getElementById('email').style.borderColor = '#ef4444';
+                }
+            }
+            
+            // Check password length
+            const password = document.getElementById('password')?.value;
+            if (password && password.length < 6) {
+                errors.push('Password must be at least 6 characters long');
+                isValid = false;
+                showFieldError('passwordError', 'Password must be at least 6 characters long');
+                document.getElementById('password').style.borderColor = '#ef4444';
+            }
+            
+            // Check phone number
+            const phone = document.getElementById('phone')?.value.trim();
+            if (phone) {
+                if (phone.length !== 10) {
+                    errors.push('Phone number must be exactly 10 digits');
+                    isValid = false;
+                    showFieldError('phoneError', 'Phone number must be exactly 10 digits');
+                    document.getElementById('phone').style.borderColor = '#ef4444';
+                } else if (!/^[6-9]/.test(phone)) {
+                    errors.push('Phone number must start with 6, 7, 8, or 9');
+                    isValid = false;
+                    showFieldError('phoneError', 'Phone number must start with 6, 7, 8, or 9');
+                    document.getElementById('phone').style.borderColor = '#ef4444';
+                }
+            }
+            
+            if (!isValid) {
+                showMessage(errors.join('. '), 'error');
+            }
+            
+            return isValid;
         }
 
         // Helper functions
         function showMessage(message, type) {
             const messageEl = document.getElementById('globalMessage');
             messageEl.textContent = message;
-            messageEl.className = `mb-4 p-3 rounded-lg ${type === 'error' ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-green-500/20 text-green-300 border border-green-500/30'}`;
+            
+            let className = 'mb-4 p-3 rounded-lg ';
+            switch (type) {
+                case 'error':
+                    className += 'bg-red-500/20 text-red-300 border border-red-500/30';
+                    break;
+                case 'success':
+                    className += 'bg-green-500/20 text-green-300 border border-green-500/30';
+                    break;
+                case 'info':
+                    className += 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
+                    break;
+                default:
+                    className += 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+            }
+            
+            messageEl.className = className;
             messageEl.classList.remove('hidden');
             
-            if (type === 'success') {
+            if (type === 'success' || type === 'info') {
                 setTimeout(() => {
                     messageEl.classList.add('hidden');
                 }, 5000);
@@ -1341,6 +1748,10 @@
         function hideFieldError(fieldId) {
             const errorEl = document.getElementById(fieldId);
             if (errorEl) {
+                // NEVER hide duplicate warnings
+                if (errorEl.textContent.includes('already registered')) {
+                    return; // Don't hide duplicate warnings
+                }
                 errorEl.style.display = 'none';
             }
         }

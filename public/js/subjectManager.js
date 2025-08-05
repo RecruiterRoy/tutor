@@ -26,28 +26,11 @@ class SubjectManager {
             'Social Studies': { icon: '🏛️', color: 'bg-orange-500', category: 'Social', order: 5 },
             'Social Science': { icon: '🏛️', color: 'bg-orange-500', category: 'Social', order: 5 },
             'Science': { icon: '🔬', color: 'bg-purple-500', category: 'Science', order: 6 },
-            'Computers (IT)': { icon: '💻', color: 'bg-indigo-500', category: 'Technology', order: 7 },
+            'Computers': { icon: '💻', color: 'bg-indigo-500', category: 'Technology', order: 7 },
             'Computer Science': { icon: '💻', color: 'bg-indigo-500', category: 'Technology', order: 7 },
-            'Information Technology': { icon: '💻', color: 'bg-indigo-500', category: 'Technology', order: 7 },
-            'Physics': { icon: '⚡', color: 'bg-yellow-500', category: 'Science', order: 8 },
-            'Chemistry': { icon: '🧪', color: 'bg-pink-500', category: 'Science', order: 9 },
-            'Biology': { icon: '🧬', color: 'bg-teal-500', category: 'Science', order: 10 },
-            'History': { icon: '📜', color: 'bg-amber-500', category: 'Social', order: 11 },
-            'Geography': { icon: '🗺️', color: 'bg-cyan-500', category: 'Social', order: 12 },
-            'Accountancy': { icon: '📊', color: 'bg-violet-500', category: 'Commerce', order: 13 },
-            'Accounting': { icon: '📊', color: 'bg-violet-500', category: 'Commerce', order: 13 },
-            
-            // Additional subjects
-            'General Knowledge (GK)': { icon: '🧠', color: 'bg-rose-500', category: 'General', order: 14 },
-            'General Knowledge': { icon: '🧠', color: 'bg-rose-500', category: 'General', order: 14 },
-            'Business Studies': { icon: '💼', color: 'bg-sky-500', category: 'Commerce', order: 15 },
-            'Business': { icon: '💼', color: 'bg-sky-500', category: 'Commerce', order: 15 },
-            'Economics': { icon: '💰', color: 'bg-lime-500', category: 'Commerce', order: 16 },
-            'Political Science': { icon: '🏛️', color: 'bg-fuchsia-500', category: 'Social', order: 17 },
-            'Civics': { icon: '🏛️', color: 'bg-fuchsia-500', category: 'Social', order: 17 },
-            'Biotechnology': { icon: '🧬', color: 'bg-emerald-600', category: 'Science', order: 18 },
-            'Home Science': { icon: '🏠', color: 'bg-orange-400', category: 'Home', order: 19 },
-            'Information Practice': { icon: '💾', color: 'bg-blue-600', category: 'Technology', order: 20 }
+            'GK': { icon: '🧠', color: 'bg-rose-500', category: 'General', order: 8 },
+            'General Knowledge': { icon: '🧠', color: 'bg-rose-500', category: 'General', order: 8 },
+            'Others': { icon: '➕', color: 'bg-gray-500', category: 'Custom', order: 9 }
         };
         
         return subjects;
@@ -647,6 +630,12 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
 
     // Add subject
     addSubject(subjectName) {
+        // Handle "Others" option - show custom subject input
+        if (subjectName === 'Others') {
+            this.showCustomSubjectInput();
+            return;
+        }
+        
         if (!this.userSubjects.includes(subjectName)) {
             this.userSubjects.push(subjectName);
             this.populateSubjectManager();
@@ -654,6 +643,40 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
             // Show immediate feedback
             if (window.showSuccess) {
                 window.showSuccess(`${subjectName} added!`);
+            }
+        }
+    }
+    
+    // Show custom subject input modal
+    showCustomSubjectInput() {
+        const customSubjectName = prompt('Enter your custom subject name:');
+        if (customSubjectName && customSubjectName.trim()) {
+            const trimmedName = customSubjectName.trim();
+            
+            // Check if subject already exists
+            if (this.userSubjects.includes(trimmedName)) {
+                if (window.showError) {
+                    window.showError(`${trimmedName} is already added!`);
+                }
+                return;
+            }
+            
+            // Add custom subject
+            this.userSubjects.push(trimmedName);
+            
+            // Add to available subjects for this user
+            this.availableSubjects[trimmedName] = {
+                icon: '📚',
+                color: 'bg-purple-500',
+                category: 'Custom',
+                order: 999 // High order to appear at the end
+            };
+            
+            this.populateSubjectManager();
+            
+            // Show success message
+            if (window.showSuccess) {
+                window.showSuccess(`${trimmedName} added as custom subject!`);
             }
         }
     }
