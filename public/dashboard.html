@@ -1127,49 +1127,59 @@
                         <!-- Welcome message will be added by JavaScript to prevent duplication -->
                     </div>
                     
-                    <!-- Input Area - At bottom -->
+                    <!-- Input Area -->
                     <div class="input-area sticky bottom-0 bg-gray-900/95 backdrop-blur-sm p-3 border-t border-gray-700">
-                        <!-- Desktop Layout -->
+                        <!-- Desktop Input -->
                         <div class="hidden md:flex items-center space-x-3">
-                            <div class="relative flex-1">
-                                <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." class="chat-input">
-                            </div>
-                            <button id="sendButton" class="btn-modern">
-                                <span>Send</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                                </svg>
-                            </button>
-                            <button id="cameraButton" onclick="startCameraScan()" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50">
+                            <!-- Camera Button (Right side of text area) -->
+                            <button id="cameraButton" onclick="startCameraScan()" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50 flex-shrink-0">
                                 <span>📸</span>
                                 <span>Camera</span>
                             </button>
-                            <button id="voiceButton" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50">
+                            
+                            <!-- Text Input (Maximum space) -->
+                            <div class="flex-1 relative">
+                                <input type="text" 
+                                       id="chatInput" 
+                                       placeholder="Type your message..." 
+                                       class="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <!-- Mic Button (Between text and send) -->
+                            <button id="voiceButton" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50 flex-shrink-0">
                                 <span id="voiceIcon">🎤</span>
                                 <span>Voice</span>
                             </button>
+                            
+                            <!-- Send Button -->
+                            <button id="sendButton" class="btn-modern flex-shrink-0">
+                                <span>📤</span>
+                                <span>Send</span>
+                            </button>
                         </div>
                         
-                        <!-- Mobile Layout -->
+                        <!-- Mobile Input (Two lines) -->
                         <div class="md:hidden">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <div class="relative flex-1">
-                                    <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="chat-input">
-                                </div>
-                                <button id="sendButtonMobile" class="btn-modern flex-shrink-0">
-                                    <span>Send</span>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                                    </svg>
-                                </button>
+                            <!-- First line: Full width text input -->
+                            <div class="mb-2">
+                                <input type="text" 
+                                       id="chatInputMobile" 
+                                       placeholder="Type your message..." 
+                                       class="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
-                            <!-- Camera and Mic buttons side by side -->
+                            
+                            <!-- Second line: Camera, Send, Mic buttons -->
                             <div class="flex items-center space-x-2">
                                 <button id="cameraButtonMobile" onclick="startCameraScan()" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
-                                    <span class="text-sm">📸 Camera</span>
+                                    <span>📸</span>
                                 </button>
+                                
+                                <button id="sendButtonMobile" class="flex-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center">
+                                    <span>📤</span>
+                                </button>
+                                
                                 <button id="voiceButtonMobile" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
-                                    <span id="voiceIconMobile" class="text-sm">🎤 Voice</span>
+                                    <span id="voiceIconMobile">🎤</span>
                                 </button>
                             </div>
                         </div>

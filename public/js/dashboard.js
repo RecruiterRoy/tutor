@@ -1272,16 +1272,38 @@ window.isMobile = isMobile; // Make it globally accessible
                 window.userData = userProfile;
                 window.userDataLoaded = true;
                 
-                // Force subscription expiry check with detailed logging
+                // Force subscription expiry check with detailed logging - check multiple expiry columns
+                let isExpired = false;
+                let expiryDate = null;
+                let expiryType = null;
+                
+                // Check subscription_expiry first
                 if (userProfile && userProfile.subscription_expiry) {
-                    const expiry = new Date(userProfile.subscription_expiry);
+                    expiryDate = new Date(userProfile.subscription_expiry);
+                    expiryType = 'subscription_expiry';
+                    isExpired = expiryDate <= new Date();
+                }
+                // Check trial_end if subscription_expiry is not available or not expired
+                else if (userProfile && userProfile.trial_end) {
+                    expiryDate = new Date(userProfile.trial_end);
+                    expiryType = 'trial_end';
+                    isExpired = expiryDate <= new Date();
+                }
+                // Check subscription_end as fallback
+                else if (userProfile && userProfile.subscription_end) {
+                    expiryDate = new Date(userProfile.subscription_end);
+                    expiryType = 'subscription_end';
+                    isExpired = expiryDate <= new Date();
+                }
+                
+                if (expiryDate) {
                     const now = new Date();
-                    const isExpired = expiry <= now;
-                    const timeRemaining = expiry.getTime() - now.getTime();
+                    const timeRemaining = expiryDate.getTime() - now.getTime();
                     const daysRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
                     
-                    console.log('📅 Detailed subscription expiry check:', {
-                        expiry: expiry.toISOString(),
+                    console.log('📅 Detailed expiry check:', {
+                        expiryType: expiryType,
+                        expiry: expiryDate.toISOString(),
                         now: now.toISOString(),
                         isExpired: isExpired,
                         timeRemaining: timeRemaining,
@@ -1291,13 +1313,13 @@ window.isMobile = isMobile; // Make it globally accessible
                     
                     // If expired, show the voice message
                     if (isExpired) {
-                        console.log('❌ Subscription expired, showing voice message');
+                        console.log('❌ Subscription/trial expired, showing voice message');
                         showExpiredSubscriptionVoiceMessage();
                     } else {
-                        console.log('✅ Subscription is active, days remaining:', daysRemaining);
+                        console.log('✅ Subscription/trial is active, days remaining:', daysRemaining);
                     }
                 } else {
-                    console.log('⚠️ No subscription expiry date found in user profile');
+                    console.log('⚠️ No expiry date found in user profile');
                 }
                 
                 console.log('✅ User data force refreshed successfully:', userProfile);
