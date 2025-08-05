@@ -1187,6 +1187,34 @@ window.isMobile = isMobile; // Make it globally accessible
             }
         }
         
+        // Force refresh user data to ensure APK gets latest data from Supabase
+        async function forceRefreshUserData() {
+            console.log('🔄 Force refreshing user data from Supabase...');
+            try {
+                // Clear any cached data
+                localStorage.removeItem('userData');
+                localStorage.removeItem('userProfile');
+                
+                // Reload user data with cache busting
+                await loadUserData();
+                
+                // Force subscription expiry check
+                if (window.userData && window.userData.subscription_expiry) {
+                    const expiry = new Date(window.userData.subscription_expiry);
+                    const now = new Date();
+                    console.log('📅 Subscription expiry check:', {
+                        expiry: expiry.toISOString(),
+                        now: now.toISOString(),
+                        isExpired: expiry <= now
+                    });
+                }
+                
+                console.log('✅ User data force refreshed successfully');
+            } catch (error) {
+                console.error('❌ Error force refreshing user data:', error);
+            }
+        }
+        
         // Update UI to show permission status
         function updatePermissionUI(micPermission, cameraPermission) {
             // Update voice button
@@ -1214,7 +1242,7 @@ window.isMobile = isMobile; // Make it globally accessible
             }
         }
 
-        // Request camera permission with enhanced error handling and user feedback
+        // Request camera permission with proper system dialog
         async function requestCameraPermission() {
             try {
                 console.log('🔧 Requesting camera permission...');
@@ -1222,7 +1250,6 @@ window.isMobile = isMobile; // Make it globally accessible
                 // Check if getUserMedia is supported
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     console.error('❌ getUserMedia not supported');
-                    showError('Camera access not supported in this browser');
                     return false;
                 }
                 
@@ -1244,33 +1271,15 @@ window.isMobile = isMobile; // Make it globally accessible
                 });
                 
                 console.log('✅ Camera permission granted successfully');
-                showSuccess('Camera permission granted! 📸');
                 return true;
                 
             } catch (error) {
                 console.warn('⚠️ Camera permission error:', error);
-                
-                // Provide specific error messages based on error type
-                let errorMessage = 'Camera permission denied';
-                
-                if (error.name === 'NotAllowedError') {
-                    errorMessage = 'Camera access was denied. Please allow camera access in your browser settings.';
-                } else if (error.name === 'NotFoundError') {
-                    errorMessage = 'No camera found on this device.';
-                } else if (error.name === 'NotReadableError') {
-                    errorMessage = 'Camera is already in use by another application.';
-                } else if (error.name === 'OverconstrainedError') {
-                    errorMessage = 'Camera does not meet the required specifications.';
-                } else if (error.name === 'TypeError') {
-                    errorMessage = 'Camera access not supported in this browser.';
-                }
-                
-                showError(errorMessage);
                 return false;
             }
         }
 
-        // Request microphone permission with enhanced error handling and user feedback
+        // Request microphone permission with proper system dialog
         async function requestMicrophonePermission() {
             try {
                 console.log('🔧 Requesting microphone permission...');
@@ -1278,7 +1287,6 @@ window.isMobile = isMobile; // Make it globally accessible
                 // Check if getUserMedia is supported
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     console.error('❌ getUserMedia not supported');
-                    showError('Microphone access not supported in this browser');
                     return false;
                 }
                 
@@ -1300,28 +1308,10 @@ window.isMobile = isMobile; // Make it globally accessible
                 });
                 
                 console.log('✅ Microphone permission granted successfully');
-                showSuccess('Microphone permission granted! 🎤');
                 return true;
                 
             } catch (error) {
                 console.warn('⚠️ Microphone permission error:', error);
-                
-                // Provide specific error messages based on error type
-                let errorMessage = 'Microphone permission denied';
-                
-                if (error.name === 'NotAllowedError') {
-                    errorMessage = 'Microphone access was denied. Please allow microphone access in your browser settings.';
-                } else if (error.name === 'NotFoundError') {
-                    errorMessage = 'No microphone found on this device.';
-                } else if (error.name === 'NotReadableError') {
-                    errorMessage = 'Microphone is already in use by another application.';
-                } else if (error.name === 'OverconstrainedError') {
-                    errorMessage = 'Microphone does not meet the required specifications.';
-                } else if (error.name === 'TypeError') {
-                    errorMessage = 'Microphone access not supported in this browser.';
-                }
-                
-                showError(errorMessage);
                 return false;
             }
         }
@@ -1673,6 +1663,10 @@ async function initializeDashboard() {
     
     // currentUser is already set from authentication
     await loadUserData();
+    
+    // Force refresh user data to ensure APK gets latest data from Supabase
+    await forceRefreshUserData();
+    
     setupEventListeners();
     populateAvatarGrid();
     initializeVoiceFeatures();
@@ -5183,30 +5177,15 @@ window.testMobileSidebar = function() {
             }
         }
 
-        // Function to start camera scan with permission check and retry logic
+        // Function to start camera scan with permission check
         async function startCameraScanWithPermission() {
             console.log('🔧 Starting camera scan with permission check...');
             
             try {
-                // First check if we already have permission
-                const permissions = await navigator.permissions.query({ name: 'camera' });
-                
-                if (permissions.state === 'granted') {
-                    console.log('✅ Camera permission already granted, starting scan...');
-                    startCameraScan();
-                    return;
-                }
-                
-                // Request camera permission
+                // Request camera permission directly - this will show system permission dialog
                 const hasPermission = await requestCameraPermissionDirect();
                 if (!hasPermission) {
-                    console.log('❌ Camera permission denied, showing instructions...');
-                    showError('Camera permission is required to scan problems. Please allow camera access and try again.');
-                    
-                    // Show a helpful message about how to enable camera
-                    setTimeout(() => {
-                        showError('To enable camera: 1) Click the camera icon in your browser address bar, 2) Select "Allow", 3) Refresh the page');
-                    }, 3000);
+                    console.log('❌ Camera permission denied');
                     return;
                 }
                 
@@ -5216,34 +5195,18 @@ window.testMobileSidebar = function() {
                 
             } catch (error) {
                 console.error('❌ Error in camera permission check:', error);
-                showError('Unable to access camera. Please check your browser settings.');
             }
         }
 
-        // Function to start voice recording with permission check and retry logic
+        // Function to start voice recording with permission check
         async function startVoiceRecordingWithPermission() {
             console.log('🔧 Starting voice recording with permission check...');
             
             try {
-                // First check if we already have permission
-                const permissions = await navigator.permissions.query({ name: 'microphone' });
-                
-                if (permissions.state === 'granted') {
-                    console.log('✅ Microphone permission already granted, starting recording...');
-                    toggleVoiceRecording();
-                    return;
-                }
-                
-                // Request microphone permission
+                // Request microphone permission directly - this will show system permission dialog
                 const hasPermission = await requestMicrophonePermissionDirect();
                 if (!hasPermission) {
-                    console.log('❌ Microphone permission denied, showing instructions...');
-                    showError('Microphone permission is required for voice input. Please allow microphone access and try again.');
-                    
-                    // Show a helpful message about how to enable microphone
-                    setTimeout(() => {
-                        showError('To enable microphone: 1) Click the microphone icon in your browser address bar, 2) Select "Allow", 3) Refresh the page');
-                    }, 3000);
+                    console.log('❌ Microphone permission denied');
                     return;
                 }
                 
@@ -5253,7 +5216,6 @@ window.testMobileSidebar = function() {
                 
             } catch (error) {
                 console.error('❌ Error in microphone permission check:', error);
-                showError('Unable to access microphone. Please check your browser settings.');
             }
         }
 

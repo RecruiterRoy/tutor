@@ -943,7 +943,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen overflow-x-hidden">
+<body class="min-h-screen overflow-x-hidden overflow-y-auto">
             <!-- Mobile Sidebar -->
         <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
         <div class="flex flex-col h-full">
@@ -1005,7 +1005,7 @@
         <div id="mobileSidebarOverlay" class="fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out lg:hidden" onclick="closeMobileSidebar()"></div>
     
     <!-- Main Layout -->
-    <div class="flex h-screen">
+    <div class="flex min-h-screen">
         <!-- Desktop Sidebar -->
         <div class="hidden lg:flex lg:w-80 lg:flex-col sidebar-modern">
             <!-- Sidebar Header -->
@@ -1097,7 +1097,7 @@
             <!-- Content Area -->
             <main class="flex-1 overflow-hidden">
                 <!-- Chat Section -->
-                <div id="chatSection" class="h-full flex flex-col overflow-y-auto">
+                <div id="chatSection" class="flex-1 flex flex-col overflow-y-auto p-6">
 
                     
                     <!-- Chat Header - Compact -->
@@ -1119,30 +1119,12 @@
                     </div>
                     
                     <!-- Chat Messages - Takes most space -->
-                    <div id="chatMessages" class="chat-container flex-1 overflow-y-auto">
+                    <div id="chatMessages" class="chat-container flex-1 overflow-y-auto min-h-96">
                         <!-- Welcome message will be added by JavaScript to prevent duplication -->
                     </div>
                     
-                    <!-- Subject Header - Pushed down -->
-                    <div class="subject-header mt-4 mb-3 p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center space-x-2">
-                                <span id="currentSubjectName" class="text-white font-semibold text-sm">Select Subject</span>
-                            </div>
-                            <button onclick="showSection('progress')" class="text-purple-300 hover:text-white text-xs flex items-center space-x-1">
-                                <span>⚙️</span>
-                                <span>Manage</span>
-                            </button>
-                        </div>
-                        
-                        <!-- Small Subject Buttons -->
-                        <div id="subjectButtonsGrid" class="flex flex-wrap gap-1 mt-2">
-                            <!-- All user-added subjects will be shown here -->
-                        </div>
-                    </div>
-                    
                     <!-- Input Area - Positioned at bottom -->
-                    <div class="input-area">
+                    <div class="input-area sticky bottom-0 bg-gray-900/95 backdrop-blur-sm p-3 border-t border-gray-700">
                         <!-- Desktop Layout -->
                         <div class="hidden md:flex items-center space-x-2">
                             <div class="relative flex-1">
@@ -1158,7 +1140,7 @@
                         
                         <!-- Mobile Layout - Compact -->
                         <div class="md:hidden">
-                            <div class="flex items-center space-x-1 mb-1">
+                            <div class="flex items-center space-x-1 mb-2">
                                 <div class="relative flex-1">
                                     <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="chat-input">
                                 </div>
@@ -1169,14 +1151,33 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div class="flex items-center space-x-1">
-                                <button id="cameraButtonMobile" onclick="startCameraScan()" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-1 rounded-lg flex items-center justify-center">
-                                    <span class="text-xs">📸 Camera</span>
+                            <!-- Camera and Mic buttons side by side -->
+                            <div class="flex items-center space-x-2">
+                                <button id="cameraButtonMobile" onclick="startCameraScan()" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
+                                    <span class="text-sm">📸 Camera</span>
                                 </button>
-                                <button id="voiceButtonMobile" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-1 rounded-lg flex items-center justify-center">
-                                    <span id="voiceIconMobile" class="text-xs">🎤 Voice</span>
+                                <button id="voiceButtonMobile" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
+                                    <span id="voiceIconMobile" class="text-sm">🎤 Voice</span>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Subject Header - Moved to bottom after input -->
+                    <div class="subject-header mt-4 mb-6 p-3 bg-purple-600/20 rounded-lg border border-purple-500/30">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <span id="currentSubjectName" class="text-white font-semibold text-sm">Select Subject</span>
+                            </div>
+                            <button onclick="showSection('progress')" class="text-purple-300 hover:text-white text-xs flex items-center space-x-1">
+                                <span>⚙️</span>
+                                <span>Manage</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Small Subject Buttons -->
+                        <div id="subjectButtonsGrid" class="flex flex-wrap gap-1 mt-2">
+                            <!-- All user-added subjects will be shown here -->
                         </div>
                     </div>
                 </div>
