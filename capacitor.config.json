@@ -1,6 +1,6 @@
 {
-  "appId": "com.tutorai.app",
-  "appName": "Tutor AI",
+  "appId": "com.tution.app",
+  "appName": "tution.app",
   "webDir": "dist",
   "server": {
     "androidScheme": "https",

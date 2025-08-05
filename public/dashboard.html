@@ -1135,7 +1135,8 @@
                     
                     <!-- Input Area -->
                     <div class="input-area mt-20">
-                        <div class="flex items-center space-x-3">
+                        <!-- Desktop Layout -->
+                        <div class="hidden md:flex items-center space-x-3">
                             <button id="cameraButton" onclick="startCameraScan()" class="text-gray-400 hover:text-white transition-colors p-2 rounded-lg bg-gray-700/50">
                                 <span class="text-xl">📸</span>
                             </button>
@@ -1152,6 +1153,30 @@
                                 </svg>
                             </button>
                         </div>
+                        
+                        <!-- Mobile Layout -->
+                        <div class="md:hidden">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <div class="relative flex-1">
+                                    <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="chat-input">
+                                </div>
+                                <button id="sendButtonMobile" class="btn-modern flex-shrink-0">
+                                    <span>Send</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button id="cameraButtonMobile" onclick="startCameraScan()" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-white transition-colors p-3 rounded-lg flex items-center justify-center">
+                                    <span class="text-lg">📸 Camera</span>
+                                </button>
+                                <button id="voiceButtonMobile" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-white transition-colors p-3 rounded-lg flex items-center justify-center">
+                                    <span id="voiceIconMobile" class="text-lg">🎤 Voice</span>
+                                </button>
+                            </div>
+                        </div>
+                        
                         <div class="mt-3 text-xs text-gray-400 text-center">
                             Press Enter to send • Use voice input for hands-free learning
                         </div>

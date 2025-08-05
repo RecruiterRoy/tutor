@@ -1159,6 +1159,55 @@ const regionalAvatars = [
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 window.isMobile = isMobile; // Make it globally accessible
 
+        // Request all permissions immediately after login
+        async function requestInitialPermissions() {
+            console.log('🔧 Requesting initial permissions...');
+            
+            try {
+                // Request microphone permission
+                const micPermission = await requestMicrophonePermission();
+                
+                // Request camera permission
+                const cameraPermission = await requestCameraPermission();
+                
+                console.log('✅ Initial permissions requested - Mic:', micPermission, 'Camera:', cameraPermission);
+                
+                return { micPermission, cameraPermission };
+            } catch (error) {
+                console.error('❌ Error requesting initial permissions:', error);
+                return { micPermission: false, cameraPermission: false };
+            }
+        }
+
+        // Request camera permission
+        async function requestCameraPermission() {
+            try {
+                // Check if camera permission is already granted
+                const permissions = await navigator.permissions.query({ name: 'camera' });
+                
+                if (permissions.state === 'denied') {
+                    showPermissionModal('camera', 'Camera access is required to scan problems. Please enable camera permissions in your browser settings.');
+                    return false;
+                }
+                
+                // Request camera permission
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
+                console.log('✅ Camera permission granted');
+                
+                return true;
+            } catch (error) {
+                console.warn('⚠️ Camera permission denied or not available:', error);
+                
+                // Show permission request
+                if (error.name === 'NotAllowedError') {
+                    showPermissionModal('camera', 'Camera access denied. Please allow camera permissions to scan problems.');
+                }
+                
+                return false;
+            }
+        }
+
         // Request microphone permission
         async function requestMicrophonePermission() {
             try {
@@ -1497,6 +1546,9 @@ async function initializeDashboard() {
     // Initialize Supabase
     await initializeSupabase();
     
+    // Request permissions immediately after login
+    await requestInitialPermissions();
+    
     // Initialize avatar selection system
     initializeAvatarSelection();
     
@@ -1507,6 +1559,9 @@ async function initializeDashboard() {
         securityLevel: 'loose'
     });
 
+    // Initialize TTS state
+    initializeTTSState();
+    
     // Initialize voice services
     if ('speechSynthesis' in window) {
         await initVoiceSelection();
@@ -1567,18 +1622,18 @@ async function initializeDashboard() {
         
         initSpeechRecognition();
         
-    // Show welcome message only once
+    // Show welcome message only once - let AI handle it
     if (!window.welcomeMessageShown) {
         showWelcomeMessage();
     }
     // --- End of existing logic ---
 
-    // Test voice services
+    // Test voice services (without welcome message to avoid repetition)
     setTimeout(() => {
         if (speechSynthesis && speechSynthesis.getVoices().length > 0) {
-            speakText("Welcome to Tution App. Voice services are ready.");
+            console.log("Voice services are ready.");
         } else {
-             console.log("Skipping welcome message as voices are not ready yet.");
+             console.log("Skipping voice test as voices are not ready yet.");
         }
     }, 1500);
     
@@ -2551,6 +2606,29 @@ function setupVoiceSettingsListeners() {
     if (voiceButton) {
         voiceButton.addEventListener('click', toggleVoiceRecording);
     }
+    
+    // Mobile button event listeners
+    const voiceButtonMobile = document.getElementById('voiceButtonMobile');
+    if (voiceButtonMobile) {
+        voiceButtonMobile.addEventListener('click', toggleVoiceRecording);
+        console.log('✅ Mobile voice button listener added');
+    }
+    
+    const sendButtonMobile = document.getElementById('sendButtonMobile');
+    if (sendButtonMobile) {
+        sendButtonMobile.addEventListener('click', sendMessage);
+        console.log('✅ Mobile send button listener added');
+    }
+    
+    const chatInputMobile = document.getElementById('chatInputMobile');
+    if (chatInputMobile) {
+        chatInputMobile.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        console.log('✅ Mobile chat input listener added');
+    }
 }
 
 // Global variables for voice recognition
@@ -2730,6 +2808,12 @@ async function speakText(text) {
         return;
     }
 
+    // Check if TTS is enabled (default to true unless user explicitly disabled)
+    if (window.ttsDisabled === true) {
+        console.log('[TTS] TTS is disabled by user');
+        return;
+    }
+
     // Check if user has interacted with the page
     if (!window.userHasInteracted) {
         console.log('[TTS] User has not interacted yet, skipping autoplay speech');
@@ -2741,6 +2825,31 @@ async function speakText(text) {
         window.textToSpeech.speak(text, { role: 'ai' });
     } catch (error) {
         console.error('[TTS] Error speaking text:', error);
+    }
+}
+
+// TTS Control Functions
+function enableTTS() {
+    window.ttsDisabled = false;
+    localStorage.setItem('ttsEnabled', 'true');
+    console.log('[TTS] TTS enabled');
+}
+
+function disableTTS() {
+    window.ttsDisabled = true;
+    localStorage.setItem('ttsEnabled', 'false');
+    console.log('[TTS] TTS disabled');
+}
+
+// Initialize TTS state on page load
+function initializeTTSState() {
+    const ttsEnabled = localStorage.getItem('ttsEnabled');
+    if (ttsEnabled === 'false') {
+        window.ttsDisabled = true;
+        console.log('[TTS] TTS disabled from previous session');
+    } else {
+        window.ttsDisabled = false;
+        console.log('[TTS] TTS enabled by default');
     }
 }
 

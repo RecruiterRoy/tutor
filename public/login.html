@@ -206,8 +206,8 @@
                            class="input-field w-full px-4 py-3 pr-12 rounded-lg glass-effect text-white placeholder-gray-300 input-glow transition-all duration-200">
                     <button type="button" 
                             @click="togglePassword()"
-                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
-                        <span x-text="showPassword ? '🙈' : '👁️'"></span>
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors z-10 bg-transparent border-none p-2">
+                        <span x-text="showPassword ? '🙈' : '👁️'" class="text-lg"></span>
                     </button>
                 </div>
             </div>
