@@ -236,15 +236,15 @@
             
             <div class="form-group">
                 <label class="form-label text-sm font-medium text-gray-200">Password</label>
-                <div class="relative">
+                <div class="flex items-center">
                     <input x-model="password" 
                            x-ref="passwordField"
                            type="password" 
                            placeholder="Enter your password"
-                           class="login-input pr-12">
+                           class="login-input flex-1">
                     <button type="button" 
                             @click="togglePassword()"
-                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors z-10 bg-transparent border-none p-2">
+                            class="ml-2 text-gray-400 hover:text-white transition-colors bg-transparent border-none p-2">
                         <span x-text="showPassword ? '🙈' : '👁️'" class="text-lg"></span>
                     </button>
                 </div>
@@ -594,7 +594,7 @@
                 const { data: existingProfile, error: fetchError } = await window.supabaseClient
                     .from('user_profiles')
                     .select('*')
-                    .eq('user_id', user.id)
+                    .eq('id', user.id)
                     .single();
                 
                 if (fetchError && fetchError.code !== 'PGRST116') {
@@ -612,7 +612,7 @@
                 const { data: newProfile, error: createError } = await window.supabaseClient
                     .from('user_profiles')
                     .insert({
-                        user_id: user.id,
+                        id: user.id,
                         email: user.email,
                         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
                         class: '10', // Default class
