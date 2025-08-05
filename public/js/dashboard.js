@@ -1182,28 +1182,13 @@ window.isMobile = isMobile; // Make it globally accessible
         // Request camera permission
         async function requestCameraPermission() {
             try {
-                // Check if camera permission is already granted
-                const permissions = await navigator.permissions.query({ name: 'camera' });
-                
-                if (permissions.state === 'denied') {
-                    showPermissionModal('camera', 'Camera access is required to scan problems. Please enable camera permissions in your browser settings.');
-                    return false;
-                }
-                
-                // Request camera permission
+                // Directly request camera permission without showing instruction modal
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
                 console.log('✅ Camera permission granted');
-                
                 return true;
             } catch (error) {
                 console.warn('⚠️ Camera permission denied or not available:', error);
-                
-                // Show permission request
-                if (error.name === 'NotAllowedError') {
-                    showPermissionModal('camera', 'Camera access denied. Please allow camera permissions to scan problems.');
-                }
-                
                 return false;
             }
         }
@@ -1211,15 +1196,8 @@ window.isMobile = isMobile; // Make it globally accessible
         // Request microphone permission
         async function requestMicrophonePermission() {
             try {
-                // Check if microphone permission is already granted
-                const permissions = await navigator.permissions.query({ name: 'microphone' });
-                
-                if (permissions.state === 'denied') {
-                    showPermissionModal('microphone', 'Microphone access is required for voice features. Please enable microphone permissions in your browser settings.');
-                    return false;
-                }
-                
                 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    // Directly request microphone permission without showing instruction modal
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     console.log('✅ Microphone permission granted');
                     stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
@@ -1242,11 +1220,6 @@ window.isMobile = isMobile; // Make it globally accessible
                     voiceButton.title = 'Microphone permission needed';
                     voiceButton.classList.remove('text-green-400');
                     voiceButton.classList.add('text-red-400');
-                }
-                
-                // Show permission request on first voice button click
-                if (error.name === 'NotAllowedError') {
-                    showPermissionModal('microphone', 'Microphone access denied. Please allow microphone permissions for voice features.');
                 }
                 return false;
             }
@@ -1825,6 +1798,9 @@ async function loadUserData() {
     // Update UI with user data
     updateUserDisplay(profile);
     
+    // Set current user profile for voice message
+    window.currentUserProfile = profile;
+    
     // Read welcome message at login
     setTimeout(() => {
         readWelcomeMessageAtLogin();
@@ -1980,8 +1956,8 @@ function setupEventListeners() {
         
         // Add only one event listener
         voiceButton.addEventListener('click', () => {
-            console.log('🔧 Voice button clicked, calling toggleVoiceRecording');
-            toggleVoiceRecording();
+            console.log('🔧 Voice button clicked, calling startVoiceRecordingWithPermission');
+            startVoiceRecordingWithPermission();
         });
         console.log('✅ Voice button listener added');
     } else {
@@ -1995,11 +1971,29 @@ function setupEventListeners() {
         sendButton.removeAttribute('onclick');
         sendButton.removeEventListener('click', sendMessage);
         
-        // Add only one event listener
+        // Add send button event listener
         sendButton.addEventListener('click', () => {
             console.log('🔧 Send button clicked, calling sendMessage');
             sendMessage();
         });
+        
+        // Add mobile send button event listener
+        const sendButtonMobile = document.getElementById('sendButtonMobile');
+        if (sendButtonMobile) {
+            sendButtonMobile.addEventListener('click', () => {
+                console.log('🔧 Mobile send button clicked, calling sendMessage');
+                sendMessage();
+            });
+        }
+        
+        // Add mobile voice button event listener
+        const voiceButtonMobile = document.getElementById('voiceButtonMobile');
+        if (voiceButtonMobile) {
+            voiceButtonMobile.addEventListener('click', () => {
+                console.log('🔧 Mobile voice button clicked, calling startVoiceRecordingWithPermission');
+                startVoiceRecordingWithPermission();
+            });
+        }
         console.log('✅ Send button listener added');
     } else {
         console.log('❌ Send button not found');
@@ -2297,6 +2291,20 @@ async function sendMessage() {
     // Add user message to chat
     await addMessage('user', text);
     input.value = '';
+    
+    // Check if subscription is expired
+    const userProfile = window.userData;
+    if (userProfile && userProfile.subscription_expiry) {
+        const expiry = new Date(userProfile.subscription_expiry);
+        const now = new Date();
+        if (expiry <= now) {
+            console.log('❌ Subscription expired, blocking AI response');
+            removeTypingIndicator();
+            await addMessage('assistant', 'Your subscription has expired. Please recharge to continue using the AI tutor.');
+            return;
+        }
+    }
+    
     showTypingIndicator();
     
     try {
@@ -4762,6 +4770,32 @@ function checkSubscriptionExpiry(expiryDate) {
             reminderDiv.innerHTML = expiredHtml;
             chatSection.insertBefore(reminderDiv, chatSection.firstChild);
         }
+        
+        // Show voice message for expired subscription
+        showExpiredSubscriptionVoiceMessage();
+    }
+}
+
+// Function to show voice message for expired subscription
+function showExpiredSubscriptionVoiceMessage() {
+    try {
+        // Get user name from profile
+        const userName = window.currentUserProfile?.full_name || 'Student';
+        
+        // Create the voice message
+        const message = `Hi ${userName}, I liked teaching you but your plan has expired. Please recharge so that we can enjoy studying together.`;
+        
+        // Add message to chat
+        addMessage('assistant', message);
+        
+        // Speak the message
+        setTimeout(() => {
+            speakText(message);
+        }, 500);
+        
+        console.log('✅ Expired subscription voice message shown and spoken');
+    } catch (error) {
+        console.error('❌ Error showing expired subscription message:', error);
     }
 }
 
@@ -4929,3 +4963,66 @@ window.testMobileSidebar = function() {
         console.log('❌ Button not found');
     }
 };
+
+        // Request camera permission directly through system dialog
+        async function requestCameraPermissionDirect() {
+            try {
+                console.log('🔧 Requesting camera permission directly...');
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
+                console.log('✅ Camera permission granted');
+                return true;
+            } catch (error) {
+                console.warn('⚠️ Camera permission denied:', error);
+                return false;
+            }
+        }
+
+        // Request microphone permission directly through system dialog
+        async function requestMicrophonePermissionDirect() {
+            try {
+                console.log('🔧 Requesting microphone permission directly...');
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
+                console.log('✅ Microphone permission granted');
+                return true;
+            } catch (error) {
+                console.warn('⚠️ Microphone permission denied:', error);
+                return false;
+            }
+        }
+
+        // Function to start camera scan with permission check
+        async function startCameraScanWithPermission() {
+            console.log('🔧 Starting camera scan with permission check...');
+            
+            // First request camera permission
+            const hasPermission = await requestCameraPermissionDirect();
+            if (!hasPermission) {
+                console.log('❌ Camera permission denied, cannot start camera');
+                showError('Camera permission is required to scan problems');
+                return;
+            }
+            
+            // Now start the camera scan
+            startCameraScan();
+        }
+
+        // Function to start voice recording with permission check
+        async function startVoiceRecordingWithPermission() {
+            console.log('🔧 Starting voice recording with permission check...');
+            
+            // First request microphone permission
+            const hasPermission = await requestMicrophonePermissionDirect();
+            if (!hasPermission) {
+                console.log('❌ Microphone permission denied, cannot start voice recording');
+                showError('Microphone permission is required for voice input');
+                return;
+            }
+            
+            // Now start voice recording
+            toggleVoiceRecording();
+        }
+
+        // Override the existing startCameraScan function
+        window.startCameraScan = startCameraScanWithPermission;
