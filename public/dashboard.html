@@ -163,8 +163,8 @@
             
             /* Mobile chat improvements */
             .chat-container {
-                height: calc(100vh - 200px);
-                max-height: calc(100vh - 200px);
+                height: calc(100vh - 280px); /* Even more space for chat on mobile */
+                padding: 15px;
             }
             
             /* Mobile chat header improvements - keep items in horizontal line */
@@ -276,7 +276,9 @@
                 background: rgba(102, 126, 234, 0.95);
                 backdrop-filter: blur(10px);
                 padding: 12px;
+                margin: 0;
                 border-top: 1px solid rgba(255, 255, 255, 0.2);
+                z-index: 10;
             }
             
             /* Mobile voice button improvements */
@@ -322,7 +324,7 @@
         
         /* Modern Chat Interface */
         .chat-container {
-            height: calc(100vh - 40px);
+            height: calc(100vh - 200px); /* Increased height for longer chat window */
             overflow-y: auto;
             scroll-behavior: smooth;
             padding: 20px;
@@ -605,7 +607,7 @@
         /* Mobile Optimizations */
         @media (max-width: 768px) {
             .chat-container {
-                height: calc(100vh - 60px);
+                height: calc(100vh - 280px); /* Even more space for chat on mobile */
                 padding: 15px;
             }
             
@@ -1116,25 +1118,31 @@
                         </div>
                     </div>
                     
-                    <!-- Chat Messages -->
+                    <!-- Chat Messages - Takes most space -->
                     <div id="chatMessages" class="chat-container flex-1 overflow-y-auto">
-                        <!-- Welcome Message -->
-                        <div class="message message-ai">
-                            <div class="message-bubble">
-                                <div class="flex items-center space-x-3 mb-3">
-                                    <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
-                                    <span id="welcomeTeacherName" class="text-sm font-medium text-blue-200">Tution App</span>
-                                </div>
-                                <p>Welcome to Tution App, your study buddy. What would you like to learn today? Roy Sir and Miss Sapna are here to help you. You may change your teachers in the settings.</p>
-                                <div class="mt-3 text-xs text-gray-300">
-                                    💡 <strong>Tip:</strong> Try asking me about Math, Science, English, or any homework problems!
-                                </div>
+                        <!-- Welcome message will be added by JavaScript to prevent duplication -->
+                    </div>
+                    
+                    <!-- Subject Header - Pushed down -->
+                    <div class="subject-header mt-4 mb-3 p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <span id="currentSubjectName" class="text-white font-semibold text-sm">Select Subject</span>
                             </div>
+                            <button onclick="showSection('progress')" class="text-purple-300 hover:text-white text-xs flex items-center space-x-1">
+                                <span>⚙️</span>
+                                <span>Manage</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Small Subject Buttons -->
+                        <div id="subjectButtonsGrid" class="flex flex-wrap gap-1 mt-2">
+                            <!-- All user-added subjects will be shown here -->
                         </div>
                     </div>
                     
-                    <!-- Input Area -->
-                    <div class="input-area mt-20">
+                    <!-- Input Area - Positioned at bottom -->
+                    <div class="input-area">
                         <!-- Desktop Layout -->
                         <div class="hidden md:flex items-center space-x-2">
                             <div class="relative flex-1">
@@ -1150,7 +1158,7 @@
                         
                         <!-- Mobile Layout - Compact -->
                         <div class="md:hidden">
-                            <div class="flex items-center space-x-2 mb-2">
+                            <div class="flex items-center space-x-1 mb-1">
                                 <div class="relative flex-1">
                                     <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="chat-input">
                                 </div>
@@ -1162,35 +1170,13 @@
                                 </button>
                             </div>
                             <div class="flex items-center space-x-1">
-                                <button id="cameraButtonMobile" onclick="startCameraScan()" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
-                                    <span class="text-sm">📸 Camera</span>
+                                <button id="cameraButtonMobile" onclick="startCameraScan()" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-1 rounded-lg flex items-center justify-center">
+                                    <span class="text-xs">📸 Camera</span>
                                 </button>
-                                <button id="voiceButtonMobile" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
-                                    <span id="voiceIconMobile" class="text-sm">🎤 Voice</span>
+                                <button id="voiceButtonMobile" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-1 rounded-lg flex items-center justify-center">
+                                    <span id="voiceIconMobile" class="text-xs">🎤 Voice</span>
                                 </button>
                             </div>
-                        </div>
-                        
-                        <div class="mt-2 text-xs text-white text-center">
-                            Press Enter to send • Use voice input for hands-free learning
-                        </div>
-                    </div>
-                    
-                    <!-- Small Subject Header in Chat Area -->
-                    <div class="subject-header mt-4 mb-3 p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center space-x-2">
-                                <span id="currentSubjectName" class="text-white font-semibold text-sm">Select Subject</span>
-                            </div>
-                            <button onclick="showSection('progress')" class="text-purple-300 hover:text-white text-xs flex items-center space-x-1">
-                                <span>⚙️</span>
-                                <span>Manage</span>
-                            </button>
-                        </div>
-                        
-                        <!-- Small Subject Buttons -->
-                        <div id="subjectButtonsGrid" class="flex flex-wrap gap-1 mt-2">
-                            <!-- All user-added subjects will be shown here -->
                         </div>
                     </div>
                 </div>

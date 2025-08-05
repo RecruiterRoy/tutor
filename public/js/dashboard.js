@@ -1164,13 +1164,21 @@ window.isMobile = isMobile; // Make it globally accessible
             console.log('🔧 Requesting initial permissions...');
             
             try {
-                // Request microphone permission
+                // Request microphone permission first
+                console.log('🎤 Requesting microphone permission...');
                 const micPermission = await requestMicrophonePermission();
                 
+                // Small delay to avoid overwhelming the user
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
                 // Request camera permission
+                console.log('📸 Requesting camera permission...');
                 const cameraPermission = await requestCameraPermission();
                 
                 console.log('✅ Initial permissions requested - Mic:', micPermission, 'Camera:', cameraPermission);
+                
+                // Update UI to reflect permission status
+                updatePermissionUI(micPermission, cameraPermission);
                 
                 return { micPermission, cameraPermission };
             } catch (error) {
@@ -1178,49 +1186,142 @@ window.isMobile = isMobile; // Make it globally accessible
                 return { micPermission: false, cameraPermission: false };
             }
         }
+        
+        // Update UI to show permission status
+        function updatePermissionUI(micPermission, cameraPermission) {
+            // Update voice button
+            const voiceButton = document.getElementById('voiceButton');
+            const voiceButtonMobile = document.getElementById('voiceButtonMobile');
+            
+            if (voiceButton) {
+                voiceButton.title = micPermission ? 'Voice input ready' : 'Microphone permission needed';
+                voiceButton.classList.remove(micPermission ? 'text-red-400' : 'text-green-400');
+                voiceButton.classList.add(micPermission ? 'text-green-400' : 'text-red-400');
+            }
+            
+            if (voiceButtonMobile) {
+                voiceButtonMobile.title = micPermission ? 'Voice input ready' : 'Microphone permission needed';
+                voiceButtonMobile.classList.remove(micPermission ? 'text-red-400' : 'text-green-400');
+                voiceButtonMobile.classList.add(micPermission ? 'text-green-400' : 'text-red-400');
+            }
+            
+            // Update camera button
+            const cameraButtonMobile = document.getElementById('cameraButtonMobile');
+            if (cameraButtonMobile) {
+                cameraButtonMobile.title = cameraPermission ? 'Camera ready' : 'Camera permission needed';
+                cameraButtonMobile.classList.remove(cameraPermission ? 'text-red-400' : 'text-green-400');
+                cameraButtonMobile.classList.add(cameraPermission ? 'text-green-400' : 'text-red-400');
+            }
+        }
 
-        // Request camera permission
+        // Request camera permission with enhanced error handling and user feedback
         async function requestCameraPermission() {
             try {
-                // Directly request camera permission without showing instruction modal
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
-                console.log('✅ Camera permission granted');
+                console.log('🔧 Requesting camera permission...');
+                
+                // Check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    console.error('❌ getUserMedia not supported');
+                    showError('Camera access not supported in this browser');
+                    return false;
+                }
+                
+                // Request camera permission with specific constraints for better mobile support
+                const constraints = {
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'environment' // Prefer back camera on mobile
+                    }
+                };
+                
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Stop the stream immediately after getting permission
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('✅ Camera track stopped:', track.kind);
+                });
+                
+                console.log('✅ Camera permission granted successfully');
+                showSuccess('Camera permission granted! 📸');
                 return true;
+                
             } catch (error) {
-                console.warn('⚠️ Camera permission denied or not available:', error);
+                console.warn('⚠️ Camera permission error:', error);
+                
+                // Provide specific error messages based on error type
+                let errorMessage = 'Camera permission denied';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Camera access was denied. Please allow camera access in your browser settings.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = 'No camera found on this device.';
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage = 'Camera is already in use by another application.';
+                } else if (error.name === 'OverconstrainedError') {
+                    errorMessage = 'Camera does not meet the required specifications.';
+                } else if (error.name === 'TypeError') {
+                    errorMessage = 'Camera access not supported in this browser.';
+                }
+                
+                showError(errorMessage);
                 return false;
             }
         }
 
-        // Request microphone permission
+        // Request microphone permission with enhanced error handling and user feedback
         async function requestMicrophonePermission() {
             try {
-                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    // Directly request microphone permission without showing instruction modal
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    console.log('✅ Microphone permission granted');
-                    stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
-                    
-                    // Update voice button to show permission granted
-                    const voiceButton = document.getElementById('voiceButton');
-                    if (voiceButton) {
-                        voiceButton.title = 'Voice input ready';
-                        voiceButton.classList.remove('text-red-400');
-                        voiceButton.classList.add('text-green-400');
-                    }
-                    return true;
-                }
-            } catch (error) {
-                console.warn('⚠️ Microphone permission denied or not available:', error);
+                console.log('🔧 Requesting microphone permission...');
                 
-                // Update voice button to show permission needed
-                const voiceButton = document.getElementById('voiceButton');
-                if (voiceButton) {
-                    voiceButton.title = 'Microphone permission needed';
-                    voiceButton.classList.remove('text-green-400');
-                    voiceButton.classList.add('text-red-400');
+                // Check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    console.error('❌ getUserMedia not supported');
+                    showError('Microphone access not supported in this browser');
+                    return false;
                 }
+                
+                // Request microphone permission with specific constraints
+                const constraints = {
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                };
+                
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Stop the stream immediately after getting permission
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('✅ Microphone track stopped:', track.kind);
+                });
+                
+                console.log('✅ Microphone permission granted successfully');
+                showSuccess('Microphone permission granted! 🎤');
+                return true;
+                
+            } catch (error) {
+                console.warn('⚠️ Microphone permission error:', error);
+                
+                // Provide specific error messages based on error type
+                let errorMessage = 'Microphone permission denied';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Microphone access was denied. Please allow microphone access in your browser settings.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = 'No microphone found on this device.';
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage = 'Microphone is already in use by another application.';
+                } else if (error.name === 'OverconstrainedError') {
+                    errorMessage = 'Microphone does not meet the required specifications.';
+                } else if (error.name === 'TypeError') {
+                    errorMessage = 'Microphone access not supported in this browser.';
+                }
+                
+                showError(errorMessage);
                 return false;
             }
         }
@@ -1519,8 +1620,12 @@ async function initializeDashboard() {
     // Initialize Supabase
     await initializeSupabase();
     
-    // Request permissions immediately after login
-    await requestInitialPermissions();
+    // Request permissions immediately after login with a small delay to ensure UI is ready
+    console.log('🔧 Requesting permissions immediately after login...');
+    setTimeout(async () => {
+      const { micPermission, cameraPermission } = await requestInitialPermissions();
+      updatePermissionUI(micPermission, cameraPermission); // Update UI after permissions
+    }, 1000); // Small delay to ensure UI is ready
     
     // Initialize avatar selection system
     initializeAvatarSelection();
@@ -1532,13 +1637,13 @@ async function initializeDashboard() {
         securityLevel: 'loose'
     });
 
-    // Initialize TTS state
+    // Initialize TTS state immediately
     initializeTTSState();
     
-    // Initialize voice services
+    // Initialize voice services immediately
     if ('speechSynthesis' in window) {
         await initVoiceSelection();
-                    } else {
+    } else {
         const voiceSelect = document.getElementById('voiceSelect');
         if(voiceSelect) voiceSelect.disabled = true;
         console.log('Text-to-speech not supported');
@@ -1567,11 +1672,11 @@ async function initializeDashboard() {
     console.log('✅ User authenticated:', user.id);
     
     // currentUser is already set from authentication
-        await loadUserData();
-        setupEventListeners();
-        populateAvatarGrid();
-        initializeVoiceFeatures();
-        populateVoices();
+    await loadUserData();
+    setupEventListeners();
+    populateAvatarGrid();
+    initializeVoiceFeatures();
+    populateVoices();
     
     // Initialize subject manager if available
     if (window.subjectManager) {
@@ -1586,29 +1691,35 @@ async function initializeDashboard() {
         console.warn('⚠️ Subject manager not available');
     }
         
-        // Wait for TTS to be ready before loading voice settings
-        setTimeout(() => {
-            loadVoiceSettings();
-            setupVoiceSettingsListeners();
-        setupSmallTTSControls();
-        }, 1000);
+    // Load voice settings and setup TTS controls immediately
+    loadVoiceSettings();
+    setupVoiceSettingsListeners();
+    setupSmallTTSControls();
         
-        initSpeechRecognition();
-        
-    // Show welcome message only once - let AI handle it
+    // Show welcome message only once and start TTS immediately
     if (!window.welcomeMessageShown) {
         showWelcomeMessage();
+        // Start TTS immediately after dashboard initialization
+        setTimeout(() => {
+            readWelcomeMessageAtLogin();
+        }, 500); // Small delay to ensure everything is ready
     }
     // --- End of existing logic ---
 
-    // Test voice services (without welcome message to avoid repetition)
+    // Ensure TTS is ready and voices are loaded
     setTimeout(() => {
         if (speechSynthesis && speechSynthesis.getVoices().length > 0) {
-            console.log("Voice services are ready.");
+            console.log("✅ Voice services are ready and TTS should be active.");
         } else {
-             console.log("Skipping voice test as voices are not ready yet.");
+            console.log("⚠️ Voices not ready yet, retrying TTS initialization...");
+            // Retry TTS initialization
+            initVoiceSelection().then(() => {
+                if (!window.welcomeMessageShown) {
+                    readWelcomeMessageAtLogin();
+                }
+            });
         }
-    }, 1500);
+    }, 1000);
     
     // Set up periodic user session refresh for multiple users
     setInterval(async () => {
@@ -1825,10 +1936,47 @@ function showWelcomeMessage() {
         return;
     }
     
-    // Don't show the welcome message in chat - let AI handle it
-    // Just mark it as shown to prevent duplication
+    // Add the welcome message to chat only once
+    const welcomeText = "Welcome to Tution App, your study buddy. What would you like to learn today? Roy Sir and Miss Sapna are here to help you. You may change your teachers in the settings.";
+    
+    // Check if welcome message already exists in chat
+    const chatMessages = document.querySelectorAll('.message.message-ai');
+    let welcomeExists = false;
+    
+    chatMessages.forEach(message => {
+        const messageText = message.textContent || '';
+        if (messageText.includes(welcomeText.substring(0, 50))) {
+            welcomeExists = true;
+        }
+    });
+    
+    if (!welcomeExists) {
+        // Add welcome message to chat
+        const welcomeMessage = `
+            <div class="message message-ai">
+                <div class="message-bubble">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
+                        <span id="welcomeTeacherName" class="text-sm font-medium text-blue-200">Tution App</span>
+                    </div>
+                    <p>${welcomeText}</p>
+                    <div class="mt-3 text-xs text-gray-300">
+                        💡 <strong>Tip:</strong> Try asking me about Math, Science, English, or any homework problems!
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.insertAdjacentHTML('beforeend', welcomeMessage);
+            console.log('✅ Welcome message added to chat');
+        }
+    }
+    
+    // Mark as shown to prevent duplication
     window.welcomeMessageShown = true;
-    console.log('✅ Welcome message flag set - AI will handle the message');
+    console.log('✅ Welcome message flag set');
 }
 
 async function loadBooks() {
@@ -2612,13 +2760,13 @@ function setupVoiceSettingsListeners() {
     }
 
     if (voiceButton) {
-        voiceButton.addEventListener('click', toggleVoiceRecording);
+        voiceButton.addEventListener('click', startVoiceRecordingWithPermission);
     }
     
     // Mobile button event listeners
     const voiceButtonMobile = document.getElementById('voiceButtonMobile');
     if (voiceButtonMobile) {
-        voiceButtonMobile.addEventListener('click', toggleVoiceRecording);
+        voiceButtonMobile.addEventListener('click', startVoiceRecordingWithPermission);
         console.log('✅ Mobile voice button listener added');
     }
     
@@ -2858,6 +3006,16 @@ function initializeTTSState() {
     } else {
         window.ttsDisabled = false;
         console.log('[TTS] TTS enabled by default');
+    }
+    
+    // Ensure TTS is ready for immediate use
+    if ('speechSynthesis' in window) {
+        // Force load voices if not already loaded
+        if (speechSynthesis.getVoices().length === 0) {
+            speechSynthesis.onvoiceschanged = () => {
+                console.log('[TTS] Voices loaded:', speechSynthesis.getVoices().length);
+            };
+        }
     }
 }
 
@@ -4540,7 +4698,7 @@ function initializeEventListeners() {
   
   if (voiceButton) {
     voiceButton.removeEventListener('click', toggleVoiceRecording);
-    voiceButton.addEventListener('click', toggleVoiceRecording);
+    voiceButton.addEventListener('click', startVoiceRecordingWithPermission);
   }
   
   // Don't call setupEventListeners() here as it's already called elsewhere
@@ -4877,8 +5035,8 @@ function getTeacherPersonality() {
 // Function to read welcome message at login
 function readWelcomeMessageAtLogin() {
     // Prevent repeated welcome messages
-    if (window.welcomeMessageShown) {
-        console.log('🔧 Welcome message already shown at login, skipping...');
+    if (window.welcomeMessageShown && window.welcomeMessageSpoken) {
+        console.log('🔧 Welcome message already shown and spoken at login, skipping...');
         return;
     }
     
@@ -4886,21 +5044,40 @@ function readWelcomeMessageAtLogin() {
     
     console.log('🔧 Reading welcome message at login');
     
-    // Add to chat if not already present
-    const chatMessages = document.querySelectorAll('.message.ai');
-    const lastMessage = chatMessages[chatMessages.length - 1];
-    const lastMessageText = lastMessage?.textContent || '';
-    
-    if (!lastMessageText.includes(welcomeText.substring(0, 50))) {
-        addMessage('ai', welcomeText);
-    }
-    
-    // Speak the welcome message
-    if (window.textToSpeech && !window.textToSpeech.isSpeaking) {
-        window.textToSpeech.speak(welcomeText, { role: 'ai' });
-        window.welcomeMessageShown = true; // Mark as shown
+    // Speak the welcome message using TTS
+    if (speechSynthesis && !window.ttsDisabled) {
+        try {
+            // Get the selected voice
+            const voiceSelect = document.getElementById('voiceSelect');
+            const selectedVoice = voiceSelect ? voiceSelect.value : null;
+            
+            // Create speech synthesis utterance
+            const utterance = new SpeechSynthesisUtterance(welcomeText);
+            
+            // Set voice if available
+            if (selectedVoice) {
+                const voices = speechSynthesis.getVoices();
+                const voice = voices.find(v => v.name === selectedVoice);
+                if (voice) {
+                    utterance.voice = voice;
+                }
+            }
+            
+            // Set speech properties
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            // Speak the message
+            speechSynthesis.speak(utterance);
+            window.welcomeMessageSpoken = true;
+            console.log('✅ Welcome message spoken via TTS');
+            
+        } catch (error) {
+            console.error('❌ Error speaking welcome message:', error);
+        }
     } else {
-        console.log('🔧 Skipping TTS for login welcome - already speaking or TTS not ready');
+        console.log('🔧 TTS not available or disabled, skipping welcome message speech');
     }
 }
 
@@ -4964,65 +5141,124 @@ window.testMobileSidebar = function() {
     }
 };
 
-        // Request camera permission directly through system dialog
+        // Request camera permission directly through system dialog with enhanced feedback
         async function requestCameraPermissionDirect() {
             try {
                 console.log('🔧 Requesting camera permission directly...');
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
-                console.log('✅ Camera permission granted');
-                return true;
+                
+                // Use the enhanced camera permission function
+                const result = await requestCameraPermission();
+                
+                if (result) {
+                    console.log('✅ Camera permission granted via direct request');
+                    return true;
+                } else {
+                    console.log('❌ Camera permission denied via direct request');
+                    return false;
+                }
             } catch (error) {
-                console.warn('⚠️ Camera permission denied:', error);
+                console.error('❌ Error in direct camera permission request:', error);
                 return false;
             }
         }
 
-        // Request microphone permission directly through system dialog
+        // Request microphone permission directly through system dialog with enhanced feedback
         async function requestMicrophonePermissionDirect() {
             try {
                 console.log('🔧 Requesting microphone permission directly...');
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
-                console.log('✅ Microphone permission granted');
-                return true;
+                
+                // Use the enhanced microphone permission function
+                const result = await requestMicrophonePermission();
+                
+                if (result) {
+                    console.log('✅ Microphone permission granted via direct request');
+                    return true;
+                } else {
+                    console.log('❌ Microphone permission denied via direct request');
+                    return false;
+                }
             } catch (error) {
-                console.warn('⚠️ Microphone permission denied:', error);
+                console.error('❌ Error in direct microphone permission request:', error);
                 return false;
             }
         }
 
-        // Function to start camera scan with permission check
+        // Function to start camera scan with permission check and retry logic
         async function startCameraScanWithPermission() {
             console.log('🔧 Starting camera scan with permission check...');
             
-            // First request camera permission
-            const hasPermission = await requestCameraPermissionDirect();
-            if (!hasPermission) {
-                console.log('❌ Camera permission denied, cannot start camera');
-                showError('Camera permission is required to scan problems');
-                return;
+            try {
+                // First check if we already have permission
+                const permissions = await navigator.permissions.query({ name: 'camera' });
+                
+                if (permissions.state === 'granted') {
+                    console.log('✅ Camera permission already granted, starting scan...');
+                    startCameraScan();
+                    return;
+                }
+                
+                // Request camera permission
+                const hasPermission = await requestCameraPermissionDirect();
+                if (!hasPermission) {
+                    console.log('❌ Camera permission denied, showing instructions...');
+                    showError('Camera permission is required to scan problems. Please allow camera access and try again.');
+                    
+                    // Show a helpful message about how to enable camera
+                    setTimeout(() => {
+                        showError('To enable camera: 1) Click the camera icon in your browser address bar, 2) Select "Allow", 3) Refresh the page');
+                    }, 3000);
+                    return;
+                }
+                
+                // Permission granted, start the camera scan
+                console.log('✅ Camera permission granted, starting scan...');
+                startCameraScan();
+                
+            } catch (error) {
+                console.error('❌ Error in camera permission check:', error);
+                showError('Unable to access camera. Please check your browser settings.');
             }
-            
-            // Now start the camera scan
-            startCameraScan();
         }
 
-        // Function to start voice recording with permission check
+        // Function to start voice recording with permission check and retry logic
         async function startVoiceRecordingWithPermission() {
             console.log('🔧 Starting voice recording with permission check...');
             
-            // First request microphone permission
-            const hasPermission = await requestMicrophonePermissionDirect();
-            if (!hasPermission) {
-                console.log('❌ Microphone permission denied, cannot start voice recording');
-                showError('Microphone permission is required for voice input');
-                return;
+            try {
+                // First check if we already have permission
+                const permissions = await navigator.permissions.query({ name: 'microphone' });
+                
+                if (permissions.state === 'granted') {
+                    console.log('✅ Microphone permission already granted, starting recording...');
+                    toggleVoiceRecording();
+                    return;
+                }
+                
+                // Request microphone permission
+                const hasPermission = await requestMicrophonePermissionDirect();
+                if (!hasPermission) {
+                    console.log('❌ Microphone permission denied, showing instructions...');
+                    showError('Microphone permission is required for voice input. Please allow microphone access and try again.');
+                    
+                    // Show a helpful message about how to enable microphone
+                    setTimeout(() => {
+                        showError('To enable microphone: 1) Click the microphone icon in your browser address bar, 2) Select "Allow", 3) Refresh the page');
+                    }, 3000);
+                    return;
+                }
+                
+                // Permission granted, start voice recording
+                console.log('✅ Microphone permission granted, starting recording...');
+                toggleVoiceRecording();
+                
+            } catch (error) {
+                console.error('❌ Error in microphone permission check:', error);
+                showError('Unable to access microphone. Please check your browser settings.');
             }
-            
-            // Now start voice recording
-            toggleVoiceRecording();
         }
 
-        // Override the existing startCameraScan function
+        // Make permission-aware functions globally available
         window.startCameraScan = startCameraScanWithPermission;
+        window.startVoiceRecordingWithPermission = startVoiceRecordingWithPermission;
+        window.requestCameraPermissionDirect = requestCameraPermissionDirect;
+        window.requestMicrophonePermissionDirect = requestMicrophonePermissionDirect;
