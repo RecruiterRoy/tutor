@@ -1194,24 +1194,117 @@ window.isMobile = isMobile; // Make it globally accessible
                 // Clear any cached data
                 localStorage.removeItem('userData');
                 localStorage.removeItem('userProfile');
+                sessionStorage.removeItem('userData');
+                sessionStorage.removeItem('userProfile');
                 
-                // Reload user data with cache busting
-                await loadUserData();
-                
-                // Force subscription expiry check
-                if (window.userData && window.userData.subscription_expiry) {
-                    const expiry = new Date(window.userData.subscription_expiry);
-                    const now = new Date();
-                    console.log('📅 Subscription expiry check:', {
-                        expiry: expiry.toISOString(),
-                        now: now.toISOString(),
-                        isExpired: expiry <= now
-                    });
+                // Ensure Supabase is properly initialized
+                if (!window.supabaseClient) {
+                    console.log('🔄 Supabase client not available, reinitializing...');
+                    await initializeSupabase();
                 }
                 
-                console.log('✅ User data force refreshed successfully');
+                // Force reload user data from Supabase with retry logic
+                let user = null;
+                let authError = null;
+                
+                // Retry auth check up to 3 times
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        const { data, error } = await window.supabaseClient.auth.getUser();
+                        if (!error && data.user) {
+                            user = data.user;
+                            break;
+                        } else {
+                            authError = error;
+                            console.warn(`⚠️ Auth check attempt ${i + 1} failed:`, error);
+                            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+                        }
+                    } catch (error) {
+                        authError = error;
+                        console.warn(`⚠️ Auth check attempt ${i + 1} threw error:`, error);
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+                
+                if (authError || !user) {
+                    console.error('❌ Auth error during force refresh after retries:', authError);
+                    return;
+                }
+                
+                console.log('✅ User authenticated successfully:', user.id);
+                
+                // Fetch fresh user profile from database with retry logic
+                let userProfile = null;
+                let profileError = null;
+                
+                // Retry profile fetch up to 3 times
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        const { data, error } = await window.supabaseClient
+                            .from('user_profiles')
+                            .select('*')
+                            .eq('id', user.id)
+                            .single();
+                        
+                        if (!error && data) {
+                            userProfile = data;
+                            break;
+                        } else {
+                            profileError = error;
+                            console.warn(`⚠️ Profile fetch attempt ${i + 1} failed:`, error);
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                    } catch (error) {
+                        profileError = error;
+                        console.warn(`⚠️ Profile fetch attempt ${i + 1} threw error:`, error);
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+                
+                if (profileError || !userProfile) {
+                    console.error('❌ Profile fetch error during force refresh after retries:', profileError);
+                    return;
+                }
+                
+                console.log('✅ Fresh user profile fetched:', userProfile);
+                
+                // Update global user data
+                window.userData = userProfile;
+                window.userDataLoaded = true;
+                
+                // Force subscription expiry check with detailed logging
+                if (userProfile && userProfile.subscription_expiry) {
+                    const expiry = new Date(userProfile.subscription_expiry);
+                    const now = new Date();
+                    const isExpired = expiry <= now;
+                    const timeRemaining = expiry.getTime() - now.getTime();
+                    const daysRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
+                    
+                    console.log('📅 Detailed subscription expiry check:', {
+                        expiry: expiry.toISOString(),
+                        now: now.toISOString(),
+                        isExpired: isExpired,
+                        timeRemaining: timeRemaining,
+                        daysRemaining: daysRemaining,
+                        userProfile: userProfile
+                    });
+                    
+                    // If expired, show the voice message
+                    if (isExpired) {
+                        console.log('❌ Subscription expired, showing voice message');
+                        showExpiredSubscriptionVoiceMessage();
+                    } else {
+                        console.log('✅ Subscription is active, days remaining:', daysRemaining);
+                    }
+                } else {
+                    console.log('⚠️ No subscription expiry date found in user profile');
+                }
+                
+                console.log('✅ User data force refreshed successfully:', userProfile);
+                return userProfile;
             } catch (error) {
                 console.error('❌ Error force refreshing user data:', error);
+                throw error;
             }
         }
         
@@ -1665,12 +1758,36 @@ async function initializeDashboard() {
     await loadUserData();
     
     // Force refresh user data to ensure APK gets latest data from Supabase
-    await forceRefreshUserData();
+    console.log('🔄 Force refreshing user data for APK...');
+    try {
+        const refreshedUserData = await forceRefreshUserData();
+        if (refreshedUserData) {
+            console.log('✅ User data refreshed successfully for APK');
+            // Update global user data
+            window.userData = refreshedUserData;
+            window.userDataLoaded = true;
+        } else {
+            console.warn('⚠️ Force refresh returned no data, using loaded data');
+        }
+    } catch (error) {
+        console.error('❌ Error during force refresh:', error);
+        // Continue with loaded data if force refresh fails
+    }
     
     setupEventListeners();
     populateAvatarGrid();
     initializeVoiceFeatures();
     populateVoices();
+    
+    // Ensure welcome message shows after data is loaded
+    if (!window.welcomeMessageShown) {
+        console.log('🔧 Showing welcome message after data load...');
+        showWelcomeMessage();
+        // Start TTS immediately after dashboard initialization
+        setTimeout(() => {
+            readWelcomeMessageAtLogin();
+        }, 1000); // Small delay to ensure everything is ready
+    }
     
     // Initialize subject manager if available
     if (window.subjectManager) {
@@ -1689,15 +1806,6 @@ async function initializeDashboard() {
     loadVoiceSettings();
     setupVoiceSettingsListeners();
     setupSmallTTSControls();
-        
-    // Show welcome message only once and start TTS immediately
-    if (!window.welcomeMessageShown) {
-        showWelcomeMessage();
-        // Start TTS immediately after dashboard initialization
-        setTimeout(() => {
-            readWelcomeMessageAtLogin();
-        }, 500); // Small delay to ensure everything is ready
-    }
     // --- End of existing logic ---
 
     // Ensure TTS is ready and voices are loaded
@@ -1730,6 +1838,22 @@ async function initializeDashboard() {
             console.warn('⚠️ Session check failed:', sessionError);
         }
     }, 300000); // Check every 5 minutes
+    
+    // Set up periodic data refresh for APK to ensure fresh subscription data
+    setInterval(async () => {
+        try {
+            console.log('🔄 Periodic data refresh for APK...');
+            const refreshedData = await forceRefreshUserData();
+            if (refreshedData) {
+                console.log('✅ Periodic data refresh successful');
+                // Update global user data
+                window.userData = refreshedData;
+                window.userDataLoaded = true;
+            }
+        } catch (refreshError) {
+            console.warn('⚠️ Periodic data refresh failed:', refreshError);
+        }
+    }, 60000); // Refresh every 1 minute for APK
         
     } catch (error) {
         console.error('❌ Dashboard initialization failed:', error);
@@ -2411,6 +2535,10 @@ async function sendMessage() {
         console.log('⚠️ Empty text, not sending');
         return;
     }
+    
+    // Force refresh user data to ensure we have latest subscription info
+    console.log('🔄 Force refreshing user data before sending message...');
+    await forceRefreshUserData();
     
     // Check if user data is loaded
     if (!window.userDataLoaded || !window.userData) {
