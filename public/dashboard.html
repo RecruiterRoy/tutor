@@ -166,6 +166,8 @@
             .chat-box-container {
                 height: calc(100vh - 100px) !important;
                 margin: 10px;
+                display: flex;
+                flex-direction: column;
             }
             
             .chat-container {
@@ -173,6 +175,7 @@
                 padding: 15px;
                 overflow-y: auto;
                 min-height: 0;
+                max-height: calc(100vh - 250px);
             }
             
             /* Mobile chat header improvements - keep items in horizontal line */
@@ -335,6 +338,8 @@
         .chat-box-container {
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
         /* Modern Chat Interface */
@@ -343,10 +348,10 @@
             overflow-y: auto !important;
             scroll-behavior: smooth;
             padding: 20px;
-            /* Fixed box with own scroll */
-            position: relative;
+            /* Fixed height with scroll */
+            height: 300px;
             min-height: 0;
-            max-height: none;
+            max-height: 300px;
         }
         
         /* Scroll to top button */
