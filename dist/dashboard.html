@@ -89,6 +89,7 @@
     <script src="js/enhancedAIService.js?v=1.0.1" defer></script>
     <script src="js/claudeChat.js?v=1.0.1" defer></script>
     <script src="js/aiHealthCheck.js?v=1.0.1" defer></script>
+    <script src="js/syllabusSearch.js?v=1.0.1" defer></script>
     
     <!-- Load Razorpay for payments -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -163,8 +164,9 @@
             
             /* Mobile chat improvements */
             .chat-container {
-                height: calc(100vh - 280px); /* Even more space for chat on mobile */
+                height: calc(100vh - 280px); /* Fixed height for chat on mobile */
                 padding: 15px;
+                overflow-y: auto;
             }
             
             /* Mobile chat header improvements - keep items in horizontal line */
@@ -279,6 +281,7 @@
                 margin: 0;
                 border-top: 1px solid rgba(255, 255, 255, 0.2);
                 z-index: 10;
+                flex-shrink: 0;
             }
             
             /* Mobile voice button improvements */
@@ -324,10 +327,11 @@
         
         /* Modern Chat Interface */
         .chat-container {
-            height: calc(100vh - 200px); /* Increased height for longer chat window */
+            height: calc(100vh - 200px); /* Fixed height for chat window */
             overflow-y: auto;
             scroll-behavior: smooth;
             padding: 20px;
+            flex: 1;
         }
         
         /* Scroll to top button */
@@ -943,7 +947,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen overflow-x-hidden overflow-y-auto">
+<body class="min-h-screen overflow-x-hidden">
             <!-- Mobile Sidebar -->
         <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
         <div class="flex flex-col h-full">
@@ -1095,41 +1099,50 @@
             </header>
             
             <!-- Content Area -->
-            <main class="flex-1 overflow-hidden">
+            <main class="flex-1">
                 <!-- Chat Section -->
                 <div id="chatSection" class="h-full flex flex-col">
-
-                    
-                    <!-- Chat Header - Compact -->
-                    <div class="chat-header p-2 border-b border-gray-700 bg-gray-800/50">
+                    <!-- Chat Header -->
+                    <div class="chat-header p-4 border-b border-white/20 bg-white/10">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
-                                <span id="welcomeTeacherName" class="text-white font-semibold text-sm">Loading...</span>
+                            <div class="flex items-center space-x-4">
+                                <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="teacher-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
+                                <div>
+                                    <div id="welcomeTeacherName" class="text-white font-semibold">Loading...</div>
+                                    <div class="text-white/70 text-sm">Your AI Tutor</div>
+                                </div>
                             </div>
-                            <div class="flex items-center space-x-1">
-                                <button id="playButton" class="p-1 bg-purple-600 rounded hover:bg-purple-700 transition-colors">
-                                    <span class="text-white text-xs">▶️</span>
+                            <div class="flex items-center space-x-2">
+                                <button id="playButton" class="btn-secondary">
+                                    <span>▶️</span>
+                                    <span>Play</span>
                                 </button>
-                                <button id="stopButton" class="p-1 bg-red-600 rounded hover:bg-red-700 transition-colors">
-                                    <span class="text-white text-xs">⏹️</span>
+                                <button id="stopButton" class="btn-secondary">
+                                    <span>⏹️</span>
+                                    <span>Stop</span>
                                 </button>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Chat Messages - Takes most space -->
-                    <div id="chatMessages" class="chat-container flex-1 overflow-y-auto p-4">
-                        <!-- Welcome message will be added by JavaScript to prevent duplication -->
+                    <!-- Chat Messages -->
+                    <div id="chatMessages" class="chat-container">
+                        <!-- Messages will be added here -->
                     </div>
                     
-                    <!-- Input Area - At bottom -->
-                    <div class="input-area sticky bottom-0 bg-gray-900/95 backdrop-blur-sm p-3 border-t border-gray-700">
-                        <!-- Desktop Layout -->
+                    <!-- Input Area -->
+                    <div class="input-area">
+                        <!-- Desktop Input -->
                         <div class="hidden md:flex items-center space-x-3">
                             <div class="relative flex-1">
                                 <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." class="chat-input">
                             </div>
+                            <button id="cameraButton" onclick="startCameraScan()" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50">
+                                <span>Camera</span>
+                            </button>
+                            <button id="voiceButton" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50">
+                                <span id="voiceIcon">Mic</span>
+                            </button>
                             <button id="sendButton" class="btn-modern">
                                 <span>Send</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1154,30 +1167,30 @@
                             <!-- Camera and Mic buttons side by side -->
                             <div class="flex items-center space-x-2">
                                 <button id="cameraButtonMobile" onclick="startCameraScan()" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
-                                    <span class="text-sm">📸 Camera</span>
+                                    <span class="text-sm">Camera</span>
                                 </button>
                                 <button id="voiceButtonMobile" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
-                                    <span id="voiceIconMobile" class="text-sm">🎤 Voice</span>
+                                    <span id="voiceIconMobile" class="text-sm">Mic</span>
                                 </button>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Subject Header - Below input area -->
-                    <div class="subject-header p-2 bg-purple-600/20 border border-purple-500/30">
+                    <!-- Subject Header -->
+                    <div class="subject-header p-4 bg-purple-600/20 border-t border-purple-500/30">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center space-x-2">
-                                <span id="currentSubjectName" class="text-white font-semibold text-sm">Select Subject</span>
+                                <span id="currentSubjectName" class="text-white font-semibold">Select Subject</span>
                             </div>
-                            <button onclick="showSection('progress')" class="text-purple-300 hover:text-white text-xs flex items-center space-x-1">
+                            <button onclick="showSection('progress')" class="text-purple-300 hover:text-white text-sm flex items-center space-x-1">
                                 <span>⚙️</span>
                                 <span>Manage</span>
                             </button>
                         </div>
                         
-                        <!-- Small Subject Buttons -->
-                        <div id="subjectButtonsGrid" class="flex flex-wrap gap-1 mt-1">
-                            <!-- All user-added subjects will be shown here -->
+                        <!-- Subject Buttons -->
+                        <div id="subjectButtonsGrid" class="flex flex-wrap gap-2 mt-2">
+                            <!-- Subject buttons will be added here -->
                         </div>
                     </div>
                 </div>

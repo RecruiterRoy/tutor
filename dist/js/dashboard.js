@@ -129,18 +129,20 @@ window.handleAvatarSelection = function(language) {
 };
 
 // Camera Scan Functions
-window.startCameraScan = function() {
-    console.log('📸 Starting camera scan');
-    
-    // Check if user has opted to not show tips
-    const hideCameraTips = localStorage.getItem('hideCameraTips');
-    
-    if (!hideCameraTips) {
-        showCameraTips();
-    } else {
-        openCameraModal();
-    }
-};
+if (!window.startCameraScan) {
+    window.startCameraScan = function() {
+        console.log('📸 Starting camera scan');
+        
+        // Check if user has opted to not show tips
+        const hideCameraTips = localStorage.getItem('hideCameraTips');
+        
+        if (!hideCameraTips) {
+            showCameraTips();
+        } else {
+            openCameraModal();
+        }
+    };
+}
 
 function showCameraTips() {
     const tipsModal = document.createElement('div');
@@ -1272,16 +1274,38 @@ window.isMobile = isMobile; // Make it globally accessible
                 window.userData = userProfile;
                 window.userDataLoaded = true;
                 
-                // Force subscription expiry check with detailed logging
+                // Force subscription expiry check with detailed logging - check multiple expiry columns
+                let isExpired = false;
+                let expiryDate = null;
+                let expiryType = null;
+                
+                // Check subscription_expiry first
                 if (userProfile && userProfile.subscription_expiry) {
-                    const expiry = new Date(userProfile.subscription_expiry);
+                    expiryDate = new Date(userProfile.subscription_expiry);
+                    expiryType = 'subscription_expiry';
+                    isExpired = expiryDate <= new Date();
+                }
+                // Check trial_end if subscription_expiry is not available or not expired
+                else if (userProfile && userProfile.trial_end) {
+                    expiryDate = new Date(userProfile.trial_end);
+                    expiryType = 'trial_end';
+                    isExpired = expiryDate <= new Date();
+                }
+                // Check subscription_end as fallback
+                else if (userProfile && userProfile.subscription_end) {
+                    expiryDate = new Date(userProfile.subscription_end);
+                    expiryType = 'subscription_end';
+                    isExpired = expiryDate <= new Date();
+                }
+                
+                if (expiryDate) {
                     const now = new Date();
-                    const isExpired = expiry <= now;
-                    const timeRemaining = expiry.getTime() - now.getTime();
+                    const timeRemaining = expiryDate.getTime() - now.getTime();
                     const daysRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
                     
-                    console.log('📅 Detailed subscription expiry check:', {
-                        expiry: expiry.toISOString(),
+                    console.log('📅 Detailed expiry check:', {
+                        expiryType: expiryType,
+                        expiry: expiryDate.toISOString(),
                         now: now.toISOString(),
                         isExpired: isExpired,
                         timeRemaining: timeRemaining,
@@ -1291,13 +1315,13 @@ window.isMobile = isMobile; // Make it globally accessible
                     
                     // If expired, show the voice message
                     if (isExpired) {
-                        console.log('❌ Subscription expired, showing voice message');
+                        console.log('❌ Subscription/trial expired, showing voice message');
                         showExpiredSubscriptionVoiceMessage();
                     } else {
-                        console.log('✅ Subscription is active, days remaining:', daysRemaining);
+                        console.log('✅ Subscription/trial is active, days remaining:', daysRemaining);
                     }
                 } else {
-                    console.log('⚠️ No subscription expiry date found in user profile');
+                    console.log('⚠️ No expiry date found in user profile');
                 }
                 
                 console.log('✅ User data force refreshed successfully:', userProfile);
@@ -2243,26 +2267,35 @@ function setupEventListeners() {
             sendMessage();
         });
         
-        // Add mobile send button event listener
-        const sendButtonMobile = document.getElementById('sendButtonMobile');
-        if (sendButtonMobile) {
-            sendButtonMobile.addEventListener('click', () => {
-                console.log('🔧 Mobile send button clicked, calling sendMessage');
-                sendMessage();
-            });
-        }
-        
-        // Add mobile voice button event listener
-        const voiceButtonMobile = document.getElementById('voiceButtonMobile');
-        if (voiceButtonMobile) {
-            voiceButtonMobile.addEventListener('click', () => {
-                console.log('🔧 Mobile voice button clicked, calling startVoiceRecordingWithPermission');
-                startVoiceRecordingWithPermission();
-            });
-        }
         console.log('✅ Send button listener added');
     } else {
         console.log('❌ Send button not found');
+    }
+    
+    // Mobile send button
+    const sendButtonMobile = document.getElementById('sendButtonMobile');
+    if (sendButtonMobile) {
+        sendButtonMobile.removeEventListener('click', sendMessage);
+        sendButtonMobile.addEventListener('click', () => {
+            console.log('🔧 Mobile send button clicked, calling sendMessage');
+            sendMessage();
+        });
+        console.log('✅ Mobile send button listener added');
+    } else {
+        console.log('❌ Mobile send button not found');
+    }
+    
+    // Mobile voice button
+    const voiceButtonMobile = document.getElementById('voiceButtonMobile');
+    if (voiceButtonMobile) {
+        voiceButtonMobile.removeEventListener('click', startVoiceRecordingWithPermission);
+        voiceButtonMobile.addEventListener('click', () => {
+            console.log('🔧 Mobile voice button clicked, calling startVoiceRecordingWithPermission');
+            startVoiceRecordingWithPermission();
+        });
+        console.log('✅ Mobile voice button listener added');
+    } else {
+        console.log('❌ Mobile voice button not found');
     }
     
     // Accessibility options
@@ -2522,13 +2555,26 @@ async function updateContext() {
 async function sendMessage() {
     console.log('🔧 sendMessage function called');
     
+    // Get both desktop and mobile inputs
     const input = document.getElementById('chatInput');
-    if (!input) {
+    const inputMobile = document.getElementById('chatInputMobile');
+    
+    // Use whichever input has text, or desktop input as fallback
+    let activeInput = input;
+    let text = '';
+    
+    if (inputMobile && inputMobile.value.trim()) {
+        activeInput = inputMobile;
+        text = inputMobile.value.trim();
+    } else if (input && input.value.trim()) {
+        text = input.value.trim();
+    }
+    
+    if (!activeInput) {
         console.error('❌ Chat input not found');
         return;
     }
     
-    const text = input.value.trim();
     console.log('🔧 Input text:', text);
     
     if (!text) {
@@ -2560,19 +2606,37 @@ async function sendMessage() {
     console.log('🔧 Adding user message to chat...');
     // Add user message to chat
     await addMessage('user', text);
-    input.value = '';
     
-    // Check if subscription is expired
+    // Clear both inputs
+    if (input) input.value = '';
+    if (inputMobile) inputMobile.value = '';
+    
+    // Check if subscription/trial is expired
     const userProfile = window.userData;
-    if (userProfile && userProfile.subscription_expiry) {
-        const expiry = new Date(userProfile.subscription_expiry);
-        const now = new Date();
-        if (expiry <= now) {
-            console.log('❌ Subscription expired, blocking AI response');
-            removeTypingIndicator();
-            await addMessage('assistant', 'Your subscription has expired. Please recharge to continue using the AI tutor.');
-            return;
-        }
+    let isExpired = false;
+    let expiryDate = null;
+    
+    // Check trial_end first (primary column)
+    if (userProfile && userProfile.trial_end) {
+        expiryDate = new Date(userProfile.trial_end);
+        isExpired = expiryDate <= new Date();
+    }
+    // Check subscription_expiry as fallback
+    else if (userProfile && userProfile.subscription_expiry) {
+        expiryDate = new Date(userProfile.subscription_expiry);
+        isExpired = expiryDate <= new Date();
+    }
+    // Check subscription_end as final fallback
+    else if (userProfile && userProfile.subscription_end) {
+        expiryDate = new Date(userProfile.subscription_end);
+        isExpired = expiryDate <= new Date();
+    }
+    
+    if (isExpired) {
+        console.log('❌ Trial/subscription expired, blocking AI response');
+        removeTypingIndicator();
+        await addMessage('assistant', 'Your trial has expired. Please recharge to continue using the AI tutor.');
+        return;
     }
     
     showTypingIndicator();
@@ -2629,6 +2693,45 @@ async function sendMessage() {
             subjectHistory = subjectChatHistory.slice(-5); // Last 5 messages for context
         }
 
+                            // Search syllabus for relevant content if syllabusSearch is available
+                    let syllabusContext = '';
+                    let lessonPlanData = null;
+                    
+                    if (window.syllabusSearch && userSubject) {
+                        try {
+                            console.log('🔍 Searching syllabus for:', { text, userClass, userSubject });
+                            const syllabusResult = await window.syllabusSearch.searchSyllabus(text, userClass, userSubject);
+                            
+                            if (syllabusResult.found) {
+                                syllabusContext = window.syllabusSearch.generateSyllabusContext(userClass, userSubject, text);
+                                console.log('✅ Syllabus context found:', syllabusResult.message);
+                            } else {
+                                console.log('⚠️ No specific syllabus content found');
+                            }
+                            
+                            // Check if user is asking for lesson plan or exam preparation
+                            const lessonPlanKeywords = ['lesson plan', 'study plan', 'exam preparation', 'exam prep', 'study schedule', 'monthly plan', 'exam months', 'months remaining'];
+                            const isLessonPlanRequest = lessonPlanKeywords.some(keyword => 
+                                text.toLowerCase().includes(keyword)
+                            );
+                            
+                            if (isLessonPlanRequest) {
+                                console.log('📚 Creating lesson plan for exam preparation');
+                                lessonPlanData = window.syllabusSearch.createExamPreparationPlan(userClass, userSubject);
+                                
+                                if (lessonPlanData.success) {
+                                    syllabusContext += `\n\n**EXAM PREPARATION PLAN:**\n`;
+                                    syllabusContext += `- Months remaining: ${lessonPlanData.monthsRemaining}\n`;
+                                    syllabusContext += `- Total topics: ${lessonPlanData.totalTopics}\n`;
+                                    syllabusContext += `- Study hours per day: ${window.syllabusSearch.calculateStudyHours(lessonPlanData.monthsRemaining, lessonPlanData.totalTopics)}\n`;
+                                    syllabusContext += `- Recommendations: ${lessonPlanData.recommendations.join(', ')}\n`;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('❌ Error searching syllabus:', error);
+                        }
+                    }
+
         // Send to AI backend with complete user profile and chat history
         const requestBody = {
                 message: text,
@@ -2642,6 +2745,7 @@ async function sendMessage() {
                 isFirstResponseOfDay: isFirstResponseOfDay,
                 conversationContext: conversationContext, // Add conversation context
                 subjectHistory: subjectHistory, // Add subject history
+                syllabusContext: syllabusContext, // Add syllabus context
             teacherPersonality: getTeacherPersonality(),
             shortWelcomeMessage: getShortWelcomeMessage()
         };
@@ -2894,6 +2998,7 @@ function setupVoiceSettingsListeners() {
     
     const sendButtonMobile = document.getElementById('sendButtonMobile');
     if (sendButtonMobile) {
+        sendButtonMobile.removeEventListener('click', sendMessage);
         sendButtonMobile.addEventListener('click', sendMessage);
         console.log('✅ Mobile send button listener added');
     }
@@ -2974,7 +3079,14 @@ function initSpeechRecognition() {
             clearTimeout(recognitionTimeout);
             const transcript = event.results[0][0].transcript;
             console.log('✅ Speech recognized:', transcript);
-            document.getElementById('chatInput').value = transcript;
+            
+            // Set value in both desktop and mobile inputs
+            const chatInput = document.getElementById('chatInput');
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            
+            if (chatInput) chatInput.value = transcript;
+            if (chatInputMobile) chatInputMobile.value = transcript;
+            
             showSuccess("Voice input received: " + transcript);
             stopRecording();
         };
@@ -4815,7 +4927,10 @@ function initializeEventListeners() {
   
   if (sendButton) {
     sendButton.removeEventListener('click', sendMessage);
-    sendButton.addEventListener('click', sendMessage);
+    sendButton.addEventListener('click', () => {
+      console.log('🔧 Send button clicked, calling sendMessage');
+      sendMessage();
+    });
   }
   
   if (voiceButton) {
@@ -5348,7 +5463,7 @@ window.testMobileSidebar = function() {
         }
 
         // Make permission-aware functions globally available
-        window.startCameraScan = startCameraScanWithPermission;
+        // Don't redefine startCameraScan to avoid conflicts
         window.startVoiceRecordingWithPermission = startVoiceRecordingWithPermission;
         window.requestCameraPermissionDirect = requestCameraPermissionDirect;
         window.requestMicrophonePermissionDirect = requestMicrophonePermissionDirect;

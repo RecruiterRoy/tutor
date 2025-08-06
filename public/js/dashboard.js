@@ -129,18 +129,20 @@ window.handleAvatarSelection = function(language) {
 };
 
 // Camera Scan Functions
-window.startCameraScan = function() {
-    console.log('📸 Starting camera scan');
-    
-    // Check if user has opted to not show tips
-    const hideCameraTips = localStorage.getItem('hideCameraTips');
-    
-    if (!hideCameraTips) {
-        showCameraTips();
-    } else {
-        openCameraModal();
-    }
-};
+if (!window.startCameraScan) {
+    window.startCameraScan = function() {
+        console.log('📸 Starting camera scan');
+        
+        // Check if user has opted to not show tips
+        const hideCameraTips = localStorage.getItem('hideCameraTips');
+        
+        if (!hideCameraTips) {
+            showCameraTips();
+        } else {
+            openCameraModal();
+        }
+    };
+}
 
 function showCameraTips() {
     const tipsModal = document.createElement('div');
@@ -2265,26 +2267,35 @@ function setupEventListeners() {
             sendMessage();
         });
         
-        // Add mobile send button event listener
-        const sendButtonMobile = document.getElementById('sendButtonMobile');
-        if (sendButtonMobile) {
-            sendButtonMobile.addEventListener('click', () => {
-                console.log('🔧 Mobile send button clicked, calling sendMessage');
-                sendMessage();
-            });
-        }
-        
-        // Add mobile voice button event listener
-        const voiceButtonMobile = document.getElementById('voiceButtonMobile');
-        if (voiceButtonMobile) {
-            voiceButtonMobile.addEventListener('click', () => {
-                console.log('🔧 Mobile voice button clicked, calling startVoiceRecordingWithPermission');
-                startVoiceRecordingWithPermission();
-            });
-        }
         console.log('✅ Send button listener added');
     } else {
         console.log('❌ Send button not found');
+    }
+    
+    // Mobile send button
+    const sendButtonMobile = document.getElementById('sendButtonMobile');
+    if (sendButtonMobile) {
+        sendButtonMobile.removeEventListener('click', sendMessage);
+        sendButtonMobile.addEventListener('click', () => {
+            console.log('🔧 Mobile send button clicked, calling sendMessage');
+            sendMessage();
+        });
+        console.log('✅ Mobile send button listener added');
+    } else {
+        console.log('❌ Mobile send button not found');
+    }
+    
+    // Mobile voice button
+    const voiceButtonMobile = document.getElementById('voiceButtonMobile');
+    if (voiceButtonMobile) {
+        voiceButtonMobile.removeEventListener('click', startVoiceRecordingWithPermission);
+        voiceButtonMobile.addEventListener('click', () => {
+            console.log('🔧 Mobile voice button clicked, calling startVoiceRecordingWithPermission');
+            startVoiceRecordingWithPermission();
+        });
+        console.log('✅ Mobile voice button listener added');
+    } else {
+        console.log('❌ Mobile voice button not found');
     }
     
     // Accessibility options
@@ -2544,9 +2555,8 @@ async function updateContext() {
 async function sendMessage() {
     console.log('🔧 sendMessage function called');
     
-    // Get all input elements (desktop, tablet, mobile)
+    // Get both desktop and mobile inputs
     const input = document.getElementById('chatInput');
-    const inputTablet = document.getElementById('chatInputTablet');
     const inputMobile = document.getElementById('chatInputMobile');
     
     // Use whichever input has text, or desktop input as fallback
@@ -2556,9 +2566,6 @@ async function sendMessage() {
     if (inputMobile && inputMobile.value.trim()) {
         activeInput = inputMobile;
         text = inputMobile.value.trim();
-    } else if (inputTablet && inputTablet.value.trim()) {
-        activeInput = inputTablet;
-        text = inputTablet.value.trim();
     } else if (input && input.value.trim()) {
         text = input.value.trim();
     }
@@ -2600,9 +2607,8 @@ async function sendMessage() {
     // Add user message to chat
     await addMessage('user', text);
     
-    // Clear all inputs
+    // Clear both inputs
     if (input) input.value = '';
-    if (inputTablet) inputTablet.value = '';
     if (inputMobile) inputMobile.value = '';
     
     // Check if subscription/trial is expired
@@ -2992,6 +2998,7 @@ function setupVoiceSettingsListeners() {
     
     const sendButtonMobile = document.getElementById('sendButtonMobile');
     if (sendButtonMobile) {
+        sendButtonMobile.removeEventListener('click', sendMessage);
         sendButtonMobile.addEventListener('click', sendMessage);
         console.log('✅ Mobile send button listener added');
     }
@@ -3073,13 +3080,11 @@ function initSpeechRecognition() {
             const transcript = event.results[0][0].transcript;
             console.log('✅ Speech recognized:', transcript);
             
-            // Set value in all input fields (desktop, tablet, mobile)
+            // Set value in both desktop and mobile inputs
             const chatInput = document.getElementById('chatInput');
-            const chatInputTablet = document.getElementById('chatInputTablet');
             const chatInputMobile = document.getElementById('chatInputMobile');
             
             if (chatInput) chatInput.value = transcript;
-            if (chatInputTablet) chatInputTablet.value = transcript;
             if (chatInputMobile) chatInputMobile.value = transcript;
             
             showSuccess("Voice input received: " + transcript);
@@ -4922,7 +4927,10 @@ function initializeEventListeners() {
   
   if (sendButton) {
     sendButton.removeEventListener('click', sendMessage);
-    sendButton.addEventListener('click', sendMessage);
+    sendButton.addEventListener('click', () => {
+      console.log('🔧 Send button clicked, calling sendMessage');
+      sendMessage();
+    });
   }
   
   if (voiceButton) {
@@ -5455,7 +5463,7 @@ window.testMobileSidebar = function() {
         }
 
         // Make permission-aware functions globally available
-        window.startCameraScan = startCameraScanWithPermission;
+        // Don't redefine startCameraScan to avoid conflicts
         window.startVoiceRecordingWithPermission = startVoiceRecordingWithPermission;
         window.requestCameraPermissionDirect = requestCameraPermissionDirect;
         window.requestMicrophonePermissionDirect = requestMicrophonePermissionDirect;
