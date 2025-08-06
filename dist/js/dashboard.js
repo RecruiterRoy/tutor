@@ -2557,7 +2557,14 @@ async function updateContext() {
 }
 
 async function sendMessage() {
-    console.log('🔧 sendMessage function called');
+    // Prevent multiple simultaneous calls
+    if (window.isSendingMessage) {
+        console.log('🔧 sendMessage already in progress, ignoring duplicate call');
+        return;
+    }
+    
+    window.isSendingMessage = true;
+    console.log('🔧 sendMessage function called - SINGLE CALL');
     
     // Get both desktop and mobile inputs
     const input = document.getElementById('chatInput');
@@ -2799,6 +2806,9 @@ async function sendMessage() {
         console.error('❌ Send message error:', err);
         removeTypingIndicator();
         await addMessage('ai', 'Error connecting to AI server.');
+    } finally {
+        // Reset the flag to allow next message
+        window.isSendingMessage = false;
     }
 }
 
@@ -4037,9 +4047,8 @@ function showSuccess(message, duration = 3000) {
 // Attach chat and voice event listeners on DOMContentLoaded
 
 document.addEventListener('DOMContentLoaded', function() {
-    // These event listeners are already handled in setupEventListeners()
-    // Removing duplicate setup to prevent multiple AI responses
-    console.log('✅ Event listeners already set up in setupEventListeners()');
+      // REMOVED ALL DUPLICATE EVENT LISTENERS
+  console.log('✅ No duplicate event listeners - all handled in initializeEventListeners()');
 });
 
 if (window.mermaid) {
@@ -4929,46 +4938,78 @@ function initializeUI() {
 function initializeEventListeners() {
   console.log('🔧 Initializing event listeners...');
   
-  // Remove existing listeners first to prevent duplicates
+  // COMPLETELY REMOVE ALL EXISTING LISTENERS
   const sendButton = document.getElementById('sendButton');
+  const sendButtonMobile = document.getElementById('sendButtonMobile');
   const voiceButton = document.getElementById('voiceButton');
+  const voiceButtonMobile = document.getElementById('voiceButtonMobile');
   
+  // Desktop Send Button - COMPLETE RESET
   if (sendButton) {
-    // Remove ALL existing listeners by cloning
+    console.log('🔧 Resetting desktop send button...');
     const newSendButton = sendButton.cloneNode(true);
     sendButton.parentNode.replaceChild(newSendButton, sendButton);
     
-    // Add single event listener
-    newSendButton.addEventListener('click', () => {
-      console.log('🔧 Send button clicked, calling sendMessage');
+    // ONLY ONE EVENT LISTENER
+    newSendButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('🔧 Desktop send button clicked ONCE');
       sendMessage();
     });
   }
   
+  // Mobile Send Button - COMPLETE RESET
+  if (sendButtonMobile) {
+    console.log('🔧 Resetting mobile send button...');
+    const newSendButtonMobile = sendButtonMobile.cloneNode(true);
+    sendButtonMobile.parentNode.replaceChild(newSendButtonMobile, sendButtonMobile);
+    
+    // ONLY ONE EVENT LISTENER
+    newSendButtonMobile.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('🔧 Mobile send button clicked ONCE');
+      sendMessage();
+    });
+  }
+  
+  // Voice Buttons
   if (voiceButton) {
     voiceButton.removeEventListener('click', toggleVoiceRecording);
     voiceButton.addEventListener('click', startVoiceRecordingWithPermission);
   }
   
-  // Add Enter key handling for chat inputs
+  if (voiceButtonMobile) {
+    voiceButtonMobile.removeEventListener('click', startVoiceRecordingWithPermission);
+    voiceButtonMobile.addEventListener('click', startVoiceRecordingWithPermission);
+  }
+  
+  // Enter Key - COMPLETE RESET
   const chatInput = document.getElementById('chatInput');
   const chatInputMobile = document.getElementById('chatInputMobile');
   
   if (chatInput) {
-    chatInput.removeEventListener('keypress', null);
-    chatInput.addEventListener('keypress', (e) => {
+    const newChatInput = chatInput.cloneNode(true);
+    chatInput.parentNode.replaceChild(newChatInput, chatInput);
+    
+    newChatInput.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        console.log('🔧 Enter key pressed in desktop input');
+        e.preventDefault();
+        console.log('🔧 Enter key pressed ONCE in desktop input');
         sendMessage();
       }
     });
   }
   
   if (chatInputMobile) {
-    chatInputMobile.removeEventListener('keypress', null);
-    chatInputMobile.addEventListener('keypress', (e) => {
+    const newChatInputMobile = chatInputMobile.cloneNode(true);
+    chatInputMobile.parentNode.replaceChild(newChatInputMobile, chatInputMobile);
+    
+    newChatInputMobile.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        console.log('🔧 Enter key pressed in mobile input');
+        e.preventDefault();
+        console.log('🔧 Enter key pressed ONCE in mobile input');
         sendMessage();
       }
     });
@@ -4982,7 +5023,7 @@ function initializeEventListeners() {
     });
   });
   
-  console.log('✅ Event listeners initialized');
+  console.log('✅ Event listeners initialized - ALL DUPLICATES REMOVED');
 }
 
 // Track user interaction for TTS
