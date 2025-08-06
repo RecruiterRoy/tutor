@@ -138,7 +138,7 @@
             overscroll-behavior-y: contain;
             touch-action: manipulation;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden !important;
+            overflow-y: auto;
             /* Mobile-specific improvements */
             -webkit-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
@@ -164,9 +164,10 @@
             
             /* Mobile chat improvements */
             .chat-container {
-                height: calc(100vh - 280px); /* Fixed height for chat on mobile */
+                flex: 1;
                 padding: 15px;
                 overflow-y: auto;
+                min-height: 0;
             }
             
             /* Mobile chat header improvements - keep items in horizontal line */
@@ -327,14 +328,13 @@
         
         /* Modern Chat Interface */
         .chat-container {
-            height: calc(100vh - 200px); /* Fixed height for chat window */
+            flex: 1;
             overflow-y: auto !important;
             scroll-behavior: smooth;
             padding: 20px;
-            flex: 1;
-            /* Force only chat container scrolls */
+            /* Fixed box with own scroll - no height constraint */
             position: relative;
-            max-height: calc(100vh - 200px);
+            min-height: 0;
         }
         
         /* Scroll to top button */
@@ -1102,11 +1102,11 @@
             </header>
             
             <!-- Content Area -->
-            <main class="flex-1 overflow-hidden !important">
+            <main class="flex-1 flex flex-col h-screen">
                 <!-- Chat Section -->
-                <div id="chatSection" class="h-full flex flex-col overflow-hidden !important">
+                <div id="chatSection" class="flex flex-col h-full">
                     <!-- Chat Header -->
-                    <div class="chat-header p-4 border-b border-white/20 bg-white/10">
+                    <div class="chat-header p-4 border-b border-white/20 bg-white/10 flex-shrink-0">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="teacher-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
@@ -1128,13 +1128,13 @@
                         </div>
                     </div>
                     
-                    <!-- Chat Messages -->
-                    <div id="chatMessages" class="chat-container">
+                    <!-- Chat Messages - Fixed Box with Own Scroll -->
+                    <div id="chatMessages" class="chat-container flex-1 overflow-y-auto">
                         <!-- Messages will be added here -->
                     </div>
                     
-                    <!-- Input Area -->
-                    <div class="input-area">
+                    <!-- Input Area - Fixed at Bottom -->
+                    <div class="input-area flex-shrink-0">
                         <!-- Desktop Input -->
                         <div class="hidden md:flex items-center space-x-3">
                             <div class="relative flex-1">
@@ -1179,8 +1179,8 @@
                         </div>
                     </div>
                     
-                    <!-- Subject Header -->
-                    <div class="subject-header p-4 bg-purple-600/20 border-t border-purple-500/30">
+                    <!-- Subject Header - Fixed at Bottom -->
+                    <div class="subject-header p-4 bg-purple-600/20 border-t border-purple-500/30 flex-shrink-0">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center space-x-2">
                                 <span id="currentSubjectName" class="text-white font-semibold">Select Subject</span>
