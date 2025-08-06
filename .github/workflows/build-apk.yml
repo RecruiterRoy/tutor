@@ -32,14 +32,20 @@ jobs:
     - name: Copy web assets
       run: |
         mkdir -p dist
-        # Copy everything from public except CBSE Syllabus folder
-        find public -maxdepth 1 -not -name "CBSE Syllabus" -exec cp -r {} dist/ \;
+        # Copy only specific files and folders, excluding syllabus
+        cp -r public/images dist/
+        cp -r public/js dist/
+        cp -r public/scripts dist/
+        cp public/*.html dist/
+        cp public/*.json dist/
+        cp public/*.js dist/
+        cp public/*.md dist/
         cp -r pages dist/
         cp server.js dist/
         cp package.json dist/
         cp vercel.json dist/
         cp capacitor.config.json dist/
-        echo "Web assets copied successfully (syllabus excluded)"
+        echo "Web assets copied successfully (syllabus completely excluded)"
         ls -la dist/
         
     - name: Add Android platform
