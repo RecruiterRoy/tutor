@@ -1,0 +1,81 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master, apk-updates ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '21'
+        
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Copy web assets
+      run: |
+        mkdir -p dist
+        # Copy only specific files and folders, excluding syllabus
+        cp -r public/images dist/
+        cp -r public/js dist/
+        cp -r public/scripts dist/
+        cp public/*.html dist/
+        cp public/*.json dist/
+        cp public/*.js dist/
+        cp public/*.md dist/
+        cp -r pages dist/
+        cp server.js dist/
+        cp package.json dist/
+        cp vercel.json dist/
+        cp capacitor.config.json dist/
+        echo "Web assets copied successfully (syllabus completely excluded)"
+        ls -la dist/
+        
+    - name: Add Android platform
+      run: |
+        npx cap add android
+        echo "Android platform added successfully"
+        ls -la android/
+        
+    - name: Copy to Android
+      run: |
+        npx cap copy android
+        echo "Web assets copied to Android"
+        
+    - name: Sync Android
+      run: |
+        npx cap sync android
+        echo "Android synced successfully"
+        
+    - name: Build APK
+      run: |
+        cd android
+        chmod +x ./gradlew
+        ./gradlew assembleDebug
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: tutor-ai-apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk 
+
+
+
+
