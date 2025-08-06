@@ -138,7 +138,7 @@
             overscroll-behavior-y: contain;
             touch-action: manipulation;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow-y: auto;
+            overflow: hidden;
             /* Mobile-specific improvements */
             -webkit-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
@@ -332,6 +332,8 @@
             scroll-behavior: smooth;
             padding: 20px;
             flex: 1;
+            /* Ensure only chat container scrolls */
+            position: relative;
         }
         
         /* Scroll to top button */
@@ -1099,9 +1101,9 @@
             </header>
             
             <!-- Content Area -->
-            <main class="flex-1">
+            <main class="flex-1 overflow-hidden">
                 <!-- Chat Section -->
-                <div id="chatSection" class="h-full flex flex-col">
+                <div id="chatSection" class="h-full flex flex-col overflow-hidden">
                     <!-- Chat Header -->
                     <div class="chat-header p-4 border-b border-white/20 bg-white/10">
                         <div class="flex items-center justify-between">

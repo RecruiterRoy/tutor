@@ -2257,17 +2257,17 @@ function setupEventListeners() {
     // Send button - use only one event listener to avoid duplicates
     const sendButton = document.getElementById('sendButton');
     if (sendButton) {
-        // Remove any existing listeners to avoid conflicts
-        sendButton.removeAttribute('onclick');
-        sendButton.removeEventListener('click', sendMessage);
+        // Remove ALL existing listeners to avoid conflicts
+        const newSendButton = sendButton.cloneNode(true);
+        sendButton.parentNode.replaceChild(newSendButton, sendButton);
         
-        // Add send button event listener
-        sendButton.addEventListener('click', () => {
+        // Add single event listener
+        newSendButton.addEventListener('click', () => {
             console.log('🔧 Send button clicked, calling sendMessage');
             sendMessage();
         });
         
-        console.log('✅ Send button listener added');
+        console.log('✅ Send button listener added (cleaned)');
     } else {
         console.log('❌ Send button not found');
     }
@@ -2275,12 +2275,16 @@ function setupEventListeners() {
     // Mobile send button
     const sendButtonMobile = document.getElementById('sendButtonMobile');
     if (sendButtonMobile) {
-        sendButtonMobile.removeEventListener('click', sendMessage);
-        sendButtonMobile.addEventListener('click', () => {
+        // Remove ALL existing listeners to avoid conflicts
+        const newSendButtonMobile = sendButtonMobile.cloneNode(true);
+        sendButtonMobile.parentNode.replaceChild(newSendButtonMobile, sendButtonMobile);
+        
+        // Add single event listener
+        newSendButtonMobile.addEventListener('click', () => {
             console.log('🔧 Mobile send button clicked, calling sendMessage');
             sendMessage();
         });
-        console.log('✅ Mobile send button listener added');
+        console.log('✅ Mobile send button listener added (cleaned)');
     } else {
         console.log('❌ Mobile send button not found');
     }
@@ -2998,9 +3002,16 @@ function setupVoiceSettingsListeners() {
     
     const sendButtonMobile = document.getElementById('sendButtonMobile');
     if (sendButtonMobile) {
-        sendButtonMobile.removeEventListener('click', sendMessage);
-        sendButtonMobile.addEventListener('click', sendMessage);
-        console.log('✅ Mobile send button listener added');
+        // Remove ALL existing listeners by cloning
+        const newSendButtonMobile = sendButtonMobile.cloneNode(true);
+        sendButtonMobile.parentNode.replaceChild(newSendButtonMobile, sendButtonMobile);
+        
+        // Add single event listener
+        newSendButtonMobile.addEventListener('click', () => {
+            console.log('🔧 Mobile send button clicked, calling sendMessage');
+            sendMessage();
+        });
+        console.log('✅ Mobile send button listener added (cleaned)');
     }
     
     const chatInputMobile = document.getElementById('chatInputMobile');
@@ -4026,12 +4037,9 @@ function showSuccess(message, duration = 3000) {
 // Attach chat and voice event listeners on DOMContentLoaded
 
 document.addEventListener('DOMContentLoaded', function() {
-    const sendButton = document.getElementById('sendButton');
-    const chatInput = document.getElementById('chatInput');
-    const voiceButton = document.getElementById('voiceButton');
-    if (sendButton) sendButton.onclick = sendMessage;
-    if (chatInput) chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
-    if (voiceButton) voiceButton.onclick = toggleVoiceRecording;
+    // These event listeners are already handled in setupEventListeners()
+    // Removing duplicate setup to prevent multiple AI responses
+    console.log('✅ Event listeners already set up in setupEventListeners()');
 });
 
 if (window.mermaid) {
@@ -4926,8 +4934,12 @@ function initializeEventListeners() {
   const voiceButton = document.getElementById('voiceButton');
   
   if (sendButton) {
-    sendButton.removeEventListener('click', sendMessage);
-    sendButton.addEventListener('click', () => {
+    // Remove ALL existing listeners by cloning
+    const newSendButton = sendButton.cloneNode(true);
+    sendButton.parentNode.replaceChild(newSendButton, sendButton);
+    
+    // Add single event listener
+    newSendButton.addEventListener('click', () => {
       console.log('🔧 Send button clicked, calling sendMessage');
       sendMessage();
     });
@@ -4938,8 +4950,29 @@ function initializeEventListeners() {
     voiceButton.addEventListener('click', startVoiceRecordingWithPermission);
   }
   
-  // Don't call setupEventListeners() here as it's already called elsewhere
-  // setupEventListeners();
+  // Add Enter key handling for chat inputs
+  const chatInput = document.getElementById('chatInput');
+  const chatInputMobile = document.getElementById('chatInputMobile');
+  
+  if (chatInput) {
+    chatInput.removeEventListener('keypress', null);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        console.log('🔧 Enter key pressed in desktop input');
+        sendMessage();
+      }
+    });
+  }
+  
+  if (chatInputMobile) {
+    chatInputMobile.removeEventListener('keypress', null);
+    chatInputMobile.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        console.log('🔧 Enter key pressed in mobile input');
+        sendMessage();
+      }
+    });
+  }
   
   // Sidebar navigation
   document.querySelectorAll('.nav-item').forEach(item => {
