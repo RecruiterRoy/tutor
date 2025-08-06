@@ -163,6 +163,11 @@
             }
             
             /* Mobile chat improvements */
+            .chat-box-container {
+                height: calc(100vh - 100px) !important;
+                margin: 10px;
+            }
+            
             .chat-container {
                 flex: 1;
                 padding: 15px;
@@ -326,15 +331,22 @@
             border-color: rgba(255, 255, 255, 0.3);
         }
         
+        /* Chat Box Container */
+        .chat-box-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
         /* Modern Chat Interface */
         .chat-container {
             flex: 1;
             overflow-y: auto !important;
             scroll-behavior: smooth;
             padding: 20px;
-            /* Fixed box with own scroll - no height constraint */
+            /* Fixed box with own scroll */
             position: relative;
             min-height: 0;
+            max-height: none;
         }
         
         /* Scroll to top button */
@@ -1102,11 +1114,11 @@
             </header>
             
             <!-- Content Area -->
-            <main class="flex-1 flex flex-col h-screen">
-                <!-- Chat Section -->
-                <div id="chatSection" class="flex flex-col h-full">
+            <main class="flex-1 p-4">
+                <!-- Chat Box Container - Fixed Size -->
+                <div class="chat-box-container bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl max-w-4xl mx-auto h-[600px] flex flex-col">
                     <!-- Chat Header -->
-                    <div class="chat-header p-4 border-b border-white/20 bg-white/10 flex-shrink-0">
+                    <div class="chat-header p-4 border-b border-white/20 flex-shrink-0">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="teacher-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
