@@ -1720,19 +1720,38 @@ function ensureTTSReady() {
 async function initializeDashboard() {
   console.log('🔧 Initializing dashboard...');
   
+  // Detect if running in APK
+  window.isAPK = window.location.protocol === 'file:' || 
+                  window.navigator.userAgent.includes('Capacitor') ||
+                  window.navigator.userAgent.includes('Android');
+  
   try {
+    // Check for cached login first (for APK)
+    if (window.isAPK) {
+      console.log('📱 APK detected, checking for cached login...');
+      checkForCachedLogin();
+    }
+    
     // Initialize mobile sidebar first
     initializeMobileSidebar();
     
     // Initialize Supabase
     await initializeSupabase();
     
-    // Request permissions immediately after login with a small delay to ensure UI is ready
-    console.log('🔧 Requesting permissions immediately after login...');
-    setTimeout(async () => {
-      const { micPermission, cameraPermission } = await requestInitialPermissions();
-      updatePermissionUI(micPermission, cameraPermission); // Update UI after permissions
-    }, 1000); // Small delay to ensure UI is ready
+    // Request permissions immediately for APK
+    if (window.isAPK) {
+      console.log('📱 APK detected - showing permission popup immediately...');
+      setTimeout(() => {
+        showAPKPermissionPopup();
+      }, 1000);
+    } else {
+      // For web, delay permissions
+      console.log('🌐 Web detected - delaying permissions...');
+      setTimeout(async () => {
+        const { micPermission, cameraPermission } = await requestInitialPermissions();
+        updatePermissionUI(micPermission, cameraPermission);
+      }, 1000);
+    }
     
     // Initialize avatar selection system
     initializeAvatarSelection();
@@ -2597,6 +2616,12 @@ async function sendMessage() {
     console.log('🔄 Force refreshing user data before sending message...');
     await forceRefreshUserData();
     
+    // For APK, ensure Supabase is connected
+    if (window.isAPK) {
+        console.log('📱 APK: Ensuring Supabase connection...');
+        await ensureSupabaseReady();
+    }
+    
     // Check if user data is loaded
     if (!window.userDataLoaded || !window.userData) {
         console.error('❌ User data not loaded yet');
@@ -3404,6 +3429,9 @@ async function logout() {
         const { error } = await window.supabaseClient.auth.signOut();
         if (error) throw error;
         
+        // Clear cached credentials
+        clearCachedUserCredentials();
+        
         // Reset welcome message flag for next login
         window.welcomeMessageShown = false;
         
@@ -3459,6 +3487,20 @@ function showSection(sectionName) {
             console.log('✅ Active class added to nav item:', text);
         }
     });
+    
+    // For APK, hide main content when showing other sections
+    if (window.isAPK) {
+        const mainContent = document.querySelector('main');
+        const chatBox = document.querySelector('.chat-box-container');
+        
+        if (sectionName === 'chat' || sectionName === 'dashboard') {
+            if (mainContent) mainContent.style.display = 'block';
+            if (chatBox) chatBox.style.display = 'flex';
+        } else {
+            if (mainContent) mainContent.style.display = 'none';
+            if (chatBox) chatBox.style.display = 'none';
+        }
+    }
     
     console.log('✅ Section navigation completed for:', sectionName);
 }
@@ -5457,6 +5499,11 @@ window.testMobileSidebar = function() {
             try {
                 console.log('🔧 Requesting camera permission directly...');
                 
+                // For APK, show native permission dialog
+                if (window.isAPK) {
+                    console.log('📱 APK: Showing native camera permission dialog');
+                }
+                
                 // Use the enhanced camera permission function
                 const result = await requestCameraPermission();
                 
@@ -5465,6 +5512,12 @@ window.testMobileSidebar = function() {
                     return true;
                 } else {
                     console.log('❌ Camera permission denied via direct request');
+                    
+                    // For APK, show retry option
+                    if (window.isAPK) {
+                        showError('Camera permission is required. Please allow camera access in settings.', 5000);
+                    }
+                    
                     return false;
                 }
             } catch (error) {
@@ -5541,3 +5594,169 @@ window.testMobileSidebar = function() {
         window.startVoiceRecordingWithPermission = startVoiceRecordingWithPermission;
         window.requestCameraPermissionDirect = requestCameraPermissionDirect;
         window.requestMicrophonePermissionDirect = requestMicrophonePermissionDirect;
+        
+        // APK Permission Popup Function
+        function showAPKPermissionPopup() {
+            console.log('📱 Showing APK permission popup...');
+            
+            // Create popup HTML
+            const popupHTML = `
+                <div id="apkPermissionPopup" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-lg p-6 mx-4 max-w-sm w-full">
+                        <div class="text-center">
+                            <div class="text-2xl mb-4">📱</div>
+                            <h3 class="text-lg font-semibold mb-2">Permission Required</h3>
+                            <p class="text-gray-600 mb-4">This app needs camera and microphone access to work properly.</p>
+                            
+                            <div class="space-y-3">
+                                <button id="grantCameraPermission" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+                                    Allow Camera Access
+                                </button>
+                                <button id="grantMicPermission" class="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">
+                                    Allow Microphone Access
+                                </button>
+                                <button id="grantAllPermissions" class="w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600">
+                                    Allow All Permissions
+                                </button>
+                            </div>
+                            
+                            <button id="skipPermissions" class="w-full mt-4 text-gray-500 hover:text-gray-700">
+                                Skip for now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add popup to page
+            document.body.insertAdjacentHTML('beforeend', popupHTML);
+            
+            // Add event listeners
+            document.getElementById('grantCameraPermission').addEventListener('click', async () => {
+                const granted = await requestCameraPermissionDirect();
+                if (granted) {
+                    showSuccess('Camera permission granted!');
+                }
+            });
+            
+            document.getElementById('grantMicPermission').addEventListener('click', async () => {
+                const granted = await requestMicrophonePermissionDirect();
+                if (granted) {
+                    showSuccess('Microphone permission granted!');
+                }
+            });
+            
+            document.getElementById('grantAllPermissions').addEventListener('click', async () => {
+                const cameraGranted = await requestCameraPermissionDirect();
+                const micGranted = await requestMicrophonePermissionDirect();
+                
+                if (cameraGranted && micGranted) {
+                    showSuccess('All permissions granted!');
+                    closeAPKPermissionPopup();
+                }
+            });
+            
+            document.getElementById('skipPermissions').addEventListener('click', () => {
+                closeAPKPermissionPopup();
+            });
+        }
+        
+        function closeAPKPermissionPopup() {
+            const popup = document.getElementById('apkPermissionPopup');
+            if (popup) {
+                popup.remove();
+            }
+        }
+        
+        // Make functions globally available
+        window.showAPKPermissionPopup = showAPKPermissionPopup;
+        window.closeAPKPermissionPopup = closeAPKPermissionPopup;
+        
+        // ========== CACHING FUNCTIONS FOR APK ==========
+        
+        // Save user credentials to cache
+        function saveUserCredentialsToCache(email, password) {
+            try {
+                console.log('💾 Saving user credentials to cache...');
+                localStorage.setItem('tution_cached_user', email);
+                localStorage.setItem('tution_cached_password', password);
+                localStorage.setItem('tution_last_login', Date.now().toString());
+                console.log('✅ Credentials saved to cache');
+            } catch (error) {
+                console.error('❌ Error saving credentials to cache:', error);
+            }
+        }
+        
+        // Load cached user credentials
+        function loadCachedUserCredentials() {
+            try {
+                console.log('🔍 Loading cached user credentials...');
+                const cachedUser = localStorage.getItem('tution_cached_user');
+                const cachedPassword = localStorage.getItem('tution_cached_password');
+                const lastLoginTime = localStorage.getItem('tution_last_login');
+                
+                if (cachedUser && cachedPassword && lastLoginTime) {
+                    console.log('✅ Found cached credentials');
+                    
+                    // Check if cache is not too old (7 days)
+                    const cacheAge = Date.now() - parseInt(lastLoginTime);
+                    const maxCacheAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+                    
+                    if (cacheAge < maxCacheAge) {
+                        console.log('✅ Cache is still valid');
+                        return { email: cachedUser, password: cachedPassword };
+                    } else {
+                        console.log('❌ Cache expired, clearing old credentials');
+                        clearCachedUserCredentials();
+                        return null;
+                    }
+                } else {
+                    console.log('❌ No cached credentials found');
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Error loading cached credentials:', error);
+                return null;
+            }
+        }
+        
+        // Clear cached user credentials
+        function clearCachedUserCredentials() {
+            try {
+                localStorage.removeItem('tution_cached_user');
+                localStorage.removeItem('tution_cached_password');
+                localStorage.removeItem('tution_last_login');
+                console.log('✅ Cached credentials cleared');
+            } catch (error) {
+                console.error('❌ Error clearing cached credentials:', error);
+            }
+        }
+        
+        // Check if user should be redirected to login with prefilled credentials
+        function checkForCachedLogin() {
+            try {
+                console.log('🔍 Checking for cached login...');
+                
+                // Only for APK
+                if (!window.isAPK) {
+                    console.log('🌐 Not APK, skipping cached login check');
+                    return;
+                }
+                
+                const cachedCredentials = loadCachedUserCredentials();
+                if (cachedCredentials) {
+                    console.log('✅ Found cached credentials, redirecting to login with prefilled form');
+                    window.location.href = 'login.html?prefill=true';
+                } else {
+                    console.log('❌ No cached credentials found');
+                }
+            } catch (error) {
+                console.error('❌ Error checking for cached login:', error);
+            }
+        }
+        
+        // Make caching functions globally available
+        window.saveUserCredentialsToCache = saveUserCredentialsToCache;
+        window.loadCachedUserCredentials = loadCachedUserCredentials;
+        window.clearCachedUserCredentials = clearCachedUserCredentials;
+        window.checkForCachedLogin = checkForCachedLogin;

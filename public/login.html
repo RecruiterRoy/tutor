@@ -577,6 +577,9 @@
                 
                 console.log('✅ Login successful for user:', data.user.email);
                 
+                // Save credentials to cache for future logins
+                saveUserCredentials(email, password);
+                
                 // Check if user profile exists
                 await ensureUserProfile(data.user);
                 
@@ -651,6 +654,95 @@
             console.log('✅ Success:', message);
             // Alpine.js will handle the display
         }
+        
+        // ========== CACHING FUNCTIONS ==========
+        
+        function saveUserCredentials(email, password) {
+            try {
+                console.log('💾 Saving user credentials to cache...');
+                localStorage.setItem('tution_cached_user', email);
+                localStorage.setItem('tution_cached_password', password);
+                localStorage.setItem('tution_last_login', Date.now().toString());
+                console.log('✅ Credentials saved to cache');
+            } catch (error) {
+                console.error('❌ Error saving credentials to cache:', error);
+            }
+        }
+        
+        function loadCachedCredentials() {
+            try {
+                console.log('🔍 Loading cached credentials...');
+                const cachedUser = localStorage.getItem('tution_cached_user');
+                const cachedPassword = localStorage.getItem('tution_cached_password');
+                
+                if (cachedUser && cachedPassword) {
+                    console.log('✅ Found cached credentials, prefilling form');
+                    return { email: cachedUser, password: cachedPassword };
+                } else {
+                    console.log('❌ No cached credentials found');
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Error loading cached credentials:', error);
+                return null;
+            }
+        }
+        
+        function clearCachedCredentials() {
+            try {
+                localStorage.removeItem('tution_cached_user');
+                localStorage.removeItem('tution_cached_password');
+                localStorage.removeItem('tution_last_login');
+                console.log('✅ Cached credentials cleared');
+            } catch (error) {
+                console.error('❌ Error clearing cached credentials:', error);
+            }
+        }
+        
+        // Check for prefilled credentials on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const shouldPrefill = urlParams.get('prefill');
+            
+            if (shouldPrefill === 'true') {
+                console.log('🔍 Checking for prefilled credentials...');
+                const cachedCredentials = loadCachedCredentials();
+                
+                if (cachedCredentials) {
+                    console.log('✅ Prefilling form with cached credentials');
+                    // Use Alpine.js to set the values
+                    if (window.Alpine) {
+                        window.Alpine.store('loginForm', {
+                            email: cachedCredentials.email,
+                            password: cachedCredentials.password
+                        });
+                    }
+                }
+            }
+            
+            // Check if this is an APK and should redirect to dashboard
+            const isAPK = window.location.protocol === 'file:' || 
+                         window.navigator.userAgent.includes('Capacitor') ||
+                         window.navigator.userAgent.includes('Android');
+            
+            if (isAPK) {
+                console.log('📱 APK detected, checking for cached login...');
+                // Check if user is already logged in
+                checkIfLoggedIn().then(isLoggedIn => {
+                    if (isLoggedIn) {
+                        console.log('✅ User already logged in, redirecting to dashboard');
+                        window.location.href = 'dashboard.html';
+                    }
+                }).catch(error => {
+                    console.log('❌ Error checking login status:', error);
+                });
+            }
+        });
+        
+        // Make functions globally available
+        window.saveUserCredentials = saveUserCredentials;
+        window.loadCachedCredentials = loadCachedCredentials;
+        window.clearCachedCredentials = clearCachedCredentials;
     </script>
 </body>
 </html>

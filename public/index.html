@@ -1872,6 +1872,9 @@
 
         // Initialize demo on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Check for cached user credentials first
+            checkCachedUserCredentials();
+            
             startDemo();
             
             // Check if user should be redirected to download after registration
@@ -1946,6 +1949,66 @@
             const img = new Image();
             img.src = src;
         });
+        
+        // Caching functions for app
+        function checkCachedUserCredentials() {
+            try {
+                console.log('🔍 Checking for cached user credentials...');
+                
+                // Check if this is an APK
+                const isAPK = window.location.protocol === 'file:' || 
+                             window.navigator.userAgent.includes('Capacitor') ||
+                             window.navigator.userAgent.includes('Android');
+                
+                // Get cached credentials
+                const cachedUser = localStorage.getItem('tution_cached_user');
+                const cachedPassword = localStorage.getItem('tution_cached_password');
+                const lastLoginTime = localStorage.getItem('tution_last_login');
+                
+                if (cachedUser && cachedPassword && lastLoginTime) {
+                    console.log('✅ Found cached credentials');
+                    
+                    // Check if cache is not too old (7 days)
+                    const cacheAge = Date.now() - parseInt(lastLoginTime);
+                    const maxCacheAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+                    
+                    if (cacheAge < maxCacheAge) {
+                        console.log('✅ Cache is still valid, redirecting to login with prefilled credentials');
+                        
+                        // For APK, redirect to login page with prefilled credentials
+                        if (isAPK) {
+                            window.location.href = 'login.html?prefill=true';
+                        } else {
+                            // For web, redirect to login page
+                            window.location.href = 'login.html?prefill=true';
+                        }
+                        return;
+                    } else {
+                        console.log('❌ Cache expired, clearing old credentials');
+                        clearCachedCredentials();
+                    }
+                } else {
+                    console.log('❌ No cached credentials found');
+                }
+            } catch (error) {
+                console.error('❌ Error checking cached credentials:', error);
+            }
+        }
+        
+        function clearCachedCredentials() {
+            try {
+                localStorage.removeItem('tution_cached_user');
+                localStorage.removeItem('tution_cached_password');
+                localStorage.removeItem('tution_last_login');
+                console.log('✅ Cached credentials cleared');
+            } catch (error) {
+                console.error('❌ Error clearing cached credentials:', error);
+            }
+        }
+        
+        // Make functions globally available
+        window.checkCachedUserCredentials = checkCachedUserCredentials;
+        window.clearCachedCredentials = clearCachedCredentials;
     </script>
 </body>
 </html>
