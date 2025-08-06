@@ -1127,63 +1127,89 @@
                         <!-- Welcome message will be added by JavaScript to prevent duplication -->
                     </div>
                     
-                    <!-- Input Area -->
-                    <div class="input-area sticky bottom-0 bg-gray-900/95 backdrop-blur-sm p-3 border-t border-gray-700">
-                        <!-- Desktop Input -->
-                        <div class="hidden md:flex items-center space-x-3">
-                            <!-- Camera Button (Right side of text area) -->
-                            <button id="cameraButton" onclick="startCameraScan()" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50 flex-shrink-0">
-                                <span>📸</span>
-                                <span>Camera</span>
-                            </button>
-                            
-                            <!-- Text Input (Maximum space) -->
-                            <div class="flex-1 relative">
-                                <input type="text" 
-                                       id="chatInput" 
-                                       placeholder="Type your message..." 
-                                       class="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            
-                            <!-- Mic Button (Between text and send) -->
-                            <button id="voiceButton" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50 flex-shrink-0">
-                                <span id="voiceIcon">🎤</span>
-                                <span>Voice</span>
-                            </button>
-                            
-                            <!-- Send Button -->
-                            <button id="sendButton" class="btn-modern flex-shrink-0">
-                                <span>📤</span>
-                                <span>Send</span>
-                            </button>
-                        </div>
-                        
-                        <!-- Mobile Input (Two lines) -->
-                        <div class="md:hidden">
-                            <!-- First line: Full width text input -->
-                            <div class="mb-2">
-                                <input type="text" 
-                                       id="chatInputMobile" 
-                                       placeholder="Type your message..." 
-                                       class="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            
-                            <!-- Second line: Camera, Send, Mic buttons -->
-                            <div class="flex items-center space-x-2">
-                                <button id="cameraButtonMobile" onclick="startCameraScan()" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
-                                    <span>📸</span>
-                                </button>
-                                
-                                <button id="sendButtonMobile" class="flex-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center">
-                                    <span>📤</span>
-                                </button>
-                                
-                                <button id="voiceButtonMobile" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
-                                    <span id="voiceIconMobile">🎤</span>
-                                </button>
-                            </div>
-                        </div>
+                                <!-- Input Area -->
+            <div class="input-area sticky bottom-0 bg-gray-900/95 backdrop-blur-sm p-3 border-t border-gray-700">
+                <!-- Desktop Input (Always visible on larger screens) -->
+                <div class="hidden lg:flex items-center space-x-3">
+                    <!-- Camera Button (Right side of text area) -->
+                    <button id="cameraButton" onclick="startCameraScan()" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50 flex-shrink-0">
+                        <span>📸</span>
+                        <span>Camera</span>
+                    </button>
+                    
+                    <!-- Text Input (Maximum space) -->
+                    <div class="flex-1 relative">
+                        <input type="text" 
+                               id="chatInput" 
+                               placeholder="Type your message..." 
+                               class="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
+                    
+                    <!-- Mic Button (Between text and send) -->
+                    <button id="voiceButton" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50 flex-shrink-0">
+                        <span id="voiceIcon">🎤</span>
+                        <span>Voice</span>
+                    </button>
+                    
+                    <!-- Send Button -->
+                    <button id="sendButton" class="btn-modern flex-shrink-0">
+                        <span>📤</span>
+                        <span>Send</span>
+                    </button>
+                </div>
+                
+                <!-- Tablet Input (Medium screens) -->
+                <div class="hidden md:flex lg:hidden items-center space-x-3">
+                    <!-- Camera Button -->
+                    <button id="cameraButtonTablet" onclick="startCameraScan()" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50 flex-shrink-0">
+                        <span>📸</span>
+                    </button>
+                    
+                    <!-- Text Input -->
+                    <div class="flex-1 relative">
+                        <input type="text" 
+                               id="chatInputTablet" 
+                               placeholder="Type your message..." 
+                               class="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <!-- Mic Button -->
+                    <button id="voiceButtonTablet" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50 flex-shrink-0">
+                        <span id="voiceIconTablet">🎤</span>
+                    </button>
+                    
+                    <!-- Send Button -->
+                    <button id="sendButtonTablet" class="btn-modern flex-shrink-0">
+                        <span>📤</span>
+                    </button>
+                </div>
+                
+                <!-- Mobile Input (Small screens) -->
+                <div class="md:hidden">
+                    <!-- First line: Full width text input -->
+                    <div class="mb-2">
+                        <input type="text" 
+                               id="chatInputMobile" 
+                               placeholder="Type your message..." 
+                               class="w-full bg-gray-800/50 text-white placeholder-gray-400 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <!-- Second line: Camera, Send, Mic buttons -->
+                    <div class="flex items-center space-x-2">
+                        <button id="cameraButtonMobile" onclick="startCameraScan()" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
+                            <span>📸</span>
+                        </button>
+                        
+                        <button id="sendButtonMobile" class="flex-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center">
+                            <span>📤</span>
+                        </button>
+                        
+                        <button id="voiceButtonMobile" class="flex-1 bg-gray-700/50 hover:bg-gray-600/50 text-white transition-colors p-2 rounded-lg flex items-center justify-center">
+                            <span id="voiceIconMobile">🎤</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
                     
                     <!-- Subject Header - Below input area -->
                     <div class="subject-header p-2 bg-purple-600/20 border border-purple-500/30">

@@ -2544,8 +2544,9 @@ async function updateContext() {
 async function sendMessage() {
     console.log('🔧 sendMessage function called');
     
-    // Get both desktop and mobile inputs
+    // Get all input elements (desktop, tablet, mobile)
     const input = document.getElementById('chatInput');
+    const inputTablet = document.getElementById('chatInputTablet');
     const inputMobile = document.getElementById('chatInputMobile');
     
     // Use whichever input has text, or desktop input as fallback
@@ -2555,6 +2556,9 @@ async function sendMessage() {
     if (inputMobile && inputMobile.value.trim()) {
         activeInput = inputMobile;
         text = inputMobile.value.trim();
+    } else if (inputTablet && inputTablet.value.trim()) {
+        activeInput = inputTablet;
+        text = inputTablet.value.trim();
     } else if (input && input.value.trim()) {
         text = input.value.trim();
     }
@@ -2596,21 +2600,37 @@ async function sendMessage() {
     // Add user message to chat
     await addMessage('user', text);
     
-    // Clear both inputs
+    // Clear all inputs
     if (input) input.value = '';
+    if (inputTablet) inputTablet.value = '';
     if (inputMobile) inputMobile.value = '';
     
-    // Check if subscription is expired
+    // Check if subscription/trial is expired
     const userProfile = window.userData;
-    if (userProfile && userProfile.subscription_expiry) {
-        const expiry = new Date(userProfile.subscription_expiry);
-        const now = new Date();
-        if (expiry <= now) {
-            console.log('❌ Subscription expired, blocking AI response');
-            removeTypingIndicator();
-            await addMessage('assistant', 'Your subscription has expired. Please recharge to continue using the AI tutor.');
-            return;
-        }
+    let isExpired = false;
+    let expiryDate = null;
+    
+    // Check trial_end first (primary column)
+    if (userProfile && userProfile.trial_end) {
+        expiryDate = new Date(userProfile.trial_end);
+        isExpired = expiryDate <= new Date();
+    }
+    // Check subscription_expiry as fallback
+    else if (userProfile && userProfile.subscription_expiry) {
+        expiryDate = new Date(userProfile.subscription_expiry);
+        isExpired = expiryDate <= new Date();
+    }
+    // Check subscription_end as final fallback
+    else if (userProfile && userProfile.subscription_end) {
+        expiryDate = new Date(userProfile.subscription_end);
+        isExpired = expiryDate <= new Date();
+    }
+    
+    if (isExpired) {
+        console.log('❌ Trial/subscription expired, blocking AI response');
+        removeTypingIndicator();
+        await addMessage('assistant', 'Your trial has expired. Please recharge to continue using the AI tutor.');
+        return;
     }
     
     showTypingIndicator();
@@ -3053,11 +3073,13 @@ function initSpeechRecognition() {
             const transcript = event.results[0][0].transcript;
             console.log('✅ Speech recognized:', transcript);
             
-            // Set value in both desktop and mobile inputs
+            // Set value in all input fields (desktop, tablet, mobile)
             const chatInput = document.getElementById('chatInput');
+            const chatInputTablet = document.getElementById('chatInputTablet');
             const chatInputMobile = document.getElementById('chatInputMobile');
             
             if (chatInput) chatInput.value = transcript;
+            if (chatInputTablet) chatInputTablet.value = transcript;
             if (chatInputMobile) chatInputMobile.value = transcript;
             
             showSuccess("Voice input received: " + transcript);
