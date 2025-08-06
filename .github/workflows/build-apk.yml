@@ -32,14 +32,14 @@ jobs:
     - name: Copy web assets
       run: |
         mkdir -p dist
-        # Copy only specific files and folders, excluding syllabus
-        cp -r public/images dist/
-        cp -r public/js dist/
-        cp -r public/scripts dist/
-        cp public/*.html dist/
-        cp public/*.json dist/
-        cp public/*.js dist/
-        cp public/*.md dist/
+        # Copy only files that exist
+        [ -d "public/images" ] && cp -r public/images dist/
+        [ -d "public/js" ] && cp -r public/js dist/
+        [ -d "public/scripts" ] && cp -r public/scripts dist/
+        cp public/*.html dist/ 2>/dev/null || true
+        cp public/*.json dist/ 2>/dev/null || true
+        cp public/*.js dist/ 2>/dev/null || true
+        cp public/*.md dist/ 2>/dev/null || true
         cp -r pages dist/
         cp server.js dist/
         cp package.json dist/
