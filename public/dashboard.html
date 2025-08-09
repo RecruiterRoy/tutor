@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Dashboard - tution.app</title>
+    
+    <!-- PWA Manifest and App Icons -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/jpeg" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" sizes="72x72" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" sizes="96x96" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" sizes="128x128" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" sizes="144x144" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" sizes="152x152" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" sizes="192x192" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" sizes="384x384" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" sizes="512x512" href="images/tution.app_emblem.jpg">
+    
+    <!-- Google Translate -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,hi,gu,ta,te,kn,ml,pa,bn,mr,or,as',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    
+    <!-- Preload essential resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="images/roy_sir.jpg" as="image">
+    
+    <!-- Load Tailwind CSS production version -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Load essential scripts with proper order -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="js/config.js" defer></script>
+    
+    <!-- Environment Variables Loader -->
+    <script>
+        // Direct Supabase credentials (fallback if .env doesn't work)
+        window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
+        window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
+        
+        // Anthropic API Key - will be set by Vercel environment variables
+        window.anthropicApiKey = window.TUTOR_CONFIG?.ANTHROPIC_API_KEY || null;
+        
+        console.log('🔧 Supabase URL:', window.supabaseUrl);
+        console.log('🔧 Supabase Key:', window.supabaseKey ? 'Available' : 'Not found');
+        console.log('🔧 Anthropic API Key:', window.anthropicApiKey ? 'Available' : 'Not found');
+        
+        // Add error handling for script loading
+        window.addEventListener('error', function(e) {
+            console.error('❌ Script loading error:', e);
+            if (e.target && e.target.src && e.target.src.includes('supabase')) {
+                console.error('❌ Supabase script failed to load');
+                if (window.showError) {
+                    window.showError('Failed to load database library. Please check your internet connection.');
+                }
+            }
+        });
+    </script>
+    
+    <script src="js/supabaseClient.js?v=1.0.1" defer></script>
+    <script src="js/textToSpeech.js?v=1.0.1" defer></script>
+    <script src="js/subjectManager.js?v=1.0.1" defer></script>
+    <script src="js/dashboard.js?v=1.0.1" defer></script>
+    
+    <!-- Load other essential scripts -->
+    <script src="js/gptService.js?v=1.0.1" defer></script>
+    <script src="js/voiceRecognition.js?v=1.0.1" defer></script>
+    <script src="js/learningProgress.js?v=1.0.1" defer></script>
+    <script src="js/classBookManager.js?v=1.0.1" defer></script>
+    <script src="js/groupLearning.js?v=1.0.1" defer></script>
+    <script src="js/imageSearch.js?v=1.0.1" defer></script>
+    <script src="js/enhancedAIService.js?v=1.0.1" defer></script>
+    <script src="js/claudeChat.js?v=1.0.1" defer></script>
+    <script src="js/aiHealthCheck.js?v=1.0.1" defer></script>
+    <script src="js/syllabusSearch.js?v=1.0.1" defer></script>
+    
+    <!-- Load Razorpay for payments -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <!-- Load payment system -->
+    <script src="js/paymentSystem.js?v=1.0.1" defer></script>
+    
+    <!-- Load non-critical scripts after page load -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.3/dist/purify.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js" defer></script>
+    
+    <!-- Load fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { 
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Ensure images display properly */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .object-cover {
+            object-fit: cover;
+            object-position: center;
+        }
+        
+        /* Force image refresh */
+        .force-refresh {
+            animation: refresh 0.1s ease-in-out;
+        }
+        
+        @keyframes refresh {
+            0% { opacity: 0.8; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        body {
+            overscroll-behavior-y: contain;
+            touch-action: manipulation;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow-y: auto;
+            /* Mobile-specific improvements */
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        
+        /* Mobile-specific touch improvements */
+        @media (max-width: 768px) {
+            body {
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+            
+            /* Improve touch targets */
+            button, .btn-modern, .nav-item {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            /* Better mobile spacing */
+            .p-6 {
+                padding: 1rem;
+            }
+            
+            /* Mobile chat improvements */
+            .chat-box-container {
+                height: calc(100vh - 100px) !important;
+                margin: 10px;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .chat-container {
+                flex: 1;
+                padding: 15px;
+                overflow-y: auto;
+                min-height: 0;
+                max-height: calc(100vh - 250px);
+            }
+            
+            /* Mobile chat header improvements - keep items in horizontal line */
+            .chat-header {
+                padding: 8px 12px;
+            }
+            
+            .chat-header .flex.items-center.justify-between {
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .chat-header .flex.items-center.space-x-2 {
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                flex-shrink: 0;
+            }
+            
+            .chat-header .flex.items-center.space-x-1 {
+                flex-direction: row;
+                align-items: center;
+                gap: 4px;
+                flex-shrink: 0;
+            }
+            
+            /* Ensure avatar and name stay together */
+            .chat-header img {
+                width: 32px;
+                height: 32px;
+                flex-shrink: 0;
+            }
+            
+            .chat-header span {
+                white-space: nowrap;
+                font-size: 14px;
+            }
+            
+            /* Ensure buttons stay small and horizontal */
+            .chat-header button {
+                padding: 4px 6px;
+                min-width: 32px;
+                min-height: 32px;
+                flex-shrink: 0;
+            }
+            
+            .chat-header button span {
+                font-size: 12px;
+            }
+            
+            /* Mobile input improvements */
+            .chat-input {
+                font-size: 16px; /* Prevent zoom on iOS */
+                padding: 12px 16px;
+                border-radius: 12px;
+            }
+            
+            /* Mobile sidebar improvements */
+            #mobileSidebar {
+                width: 85vw;
+                max-width: 320px;
+            }
+            
+            /* Mobile subject buttons */
+            .subject-button {
+                padding: 8px 12px;
+                font-size: 14px;
+                border-radius: 8px;
+            }
+            
+            /* Mobile modal improvements */
+            .modal-content {
+                width: 95vw;
+                max-width: 400px;
+                max-height: 80vh;
+                margin: 2.5vh auto;
+            }
+            
+            /* Mobile-specific touch improvements */
+            .mobile-device button,
+            .mobile-device .btn-modern,
+            .mobile-device .nav-item {
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            }
+            
+            /* Mobile chat message improvements */
+            .mobile-device .message {
+                margin-bottom: 12px;
+                padding: 12px;
+                border-radius: 12px;
+            }
+            
+            /* Mobile subject manager improvements */
+            .mobile-device .subject-manager-modal {
+                padding: 16px;
+            }
+            
+            .mobile-device .subject-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 8px;
+            }
+            
+            /* Mobile keyboard handling */
+            .mobile-device .input-area {
+                position: sticky;
+                bottom: 0;
+                background: rgba(102, 126, 234, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 12px;
+                margin: 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+                z-index: 10;
+                flex-shrink: 0;
+            }
+            
+            /* Mobile voice button improvements */
+            .mobile-device #voiceButton {
+                min-width: 48px;
+                min-height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Mobile sidebar improvements */
+            .mobile-device #mobileSidebar {
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+            }
+            
+            /* Mobile scroll improvements */
+            .mobile-device .chat-container {
+                -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
+            }
+        }
+        
+        /* Modern Glass Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+        }
+        
+        .glass-card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Chat Box Container */
+        .chat-box-container {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Modern Chat Interface */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto !important;
+            scroll-behavior: smooth;
+            padding: 20px;
+            /* Fixed height with scroll */
+            height: 300px;
+            min-height: 0;
+            max-height: 300px;
+        }
+        
+        /* Scroll to top button */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+        }
+        
+        /* Page scroll container */
+        .page-content {
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        
+        /* Settings and Progress pages scroll */
+        .settings-content,
+        .progress-content {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            padding: 20px;
+            scroll-behavior: smooth;
+        }
+        
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .scroll-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Smooth scrolling for entire page */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar for chat container */
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        
+        .message-user {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .message-ai {
+            display: flex;
+            justify-content: flex-start;
+        }
+        
+        .message-bubble {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            position: relative;
+            word-wrap: break-word;
+        }
+        
+        .message-user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 8px;
+        }
+        
+        .message-ai .message-bubble {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-bottom-left-radius: 8px;
+        }
+        
+        /* Modern Input Area */
+        .input-area {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px;
+        }
+        
+        .chat-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: white;
+            font-size: 16px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* Modern Buttons */
+        .btn-modern {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-modern:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Modern Navigation */
+        .nav-modern {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        /* Modern Sidebar */
+        .sidebar-modern {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Modern Cards */
+        .card-modern {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .card-modern:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Modern Progress Bars */
+        .progress-modern {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Modern Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            max-width: 80px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .chat-container {
+                height: calc(100vh - 280px); /* Even more space for chat on mobile */
+                padding: 15px;
+            }
+            
+            .input-area {
+                margin: 15px;
+                padding: 15px;
+            }
+            
+            .message-bubble {
+                max-width: 90%;
+                padding: 14px 18px;
+            }
+            
+            .nav-item {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .card-modern {
+                padding: 20px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .quick-action-btn {
+                padding: 10px 6px;
+            }
+            
+            /* Mobile header adjustments */
+            header.nav-modern {
+                padding: 12px;
+            }
+            
+            /* Mobile sidebar adjustments */
+            #mobileSidebar {
+                width: 280px;
+            }
+            
+            /* Input area adjustments */
+            .input-area .flex {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .input-area button {
+                width: 100%;
+            }
+            
+            /* Chat header adjustments */
+            .chat-header .flex {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            /* Settings content adjustments */
+            .settings-content {
+                padding: 15px;
+            }
+            
+            /* Avatar selection grid */
+            .avatar-selection-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Teacher Avatar */
+        .teacher-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .quick-action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quick-action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .quick-action-btn:hover::before {
+            left: 100%;
+        }
+        
+        .quick-action-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Avatar Selection */
+        .avatar-selection-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .avatar-selection-card.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+        
+        .avatar-selection-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        /* Subscription Badge */
+        .subscription-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .subscription-badge.trial {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .subscription-badge.expired {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        /* Mobile Responsiveness Improvements */
+        @media (max-width: 640px) {
+            /* Chat input area */
+            .input-area {
+                padding: 12px;
+                margin: 12px;
+            }
+            
+            .chat-input {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            /* Chat messages */
+            .message-bubble {
+                max-width: 90%;
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            /* Header adjustments */
+            header.nav-modern {
+                padding: 8px;
+            }
+            
+            /* Teacher/student info in chat header */
+            .chat-header .flex.items-center.space-x-4 {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            /* Avatar sizes */
+            .teacher-avatar {
+                width: 40px;
+                height: 40px;
+            }
+            
+            /* Quick actions grid */
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            /* Buttons */
+            .btn-modern {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            /* Cards */
+            .card-modern {
+                padding: 16px;
+            }
+            
+            /* Hide non-essential elements on mobile */
+            .student-info-details {
+                display: none;
+            }
+        }
+
+        /* Very small devices (phones, 400px and down) */
+        @media (max-width: 400px) {
+            /* Further reduce padding */
+            .input-area {
+                padding: 10px;
+                margin: 10px;
+                    }
+        
+        /* Mobile button layout - one line with specified proportions */
+        .mobile-device .input-area .button-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .mobile-device .input-area .camera-btn {
+            flex: 0 0 25%;
+            background: rgba(107, 114, 128, 0.5);
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        
+        .mobile-device .input-area .camera-btn:hover {
+            background: rgba(107, 114, 128, 0.7);
+            transform: translateY(-1px);
+        }
+        
+        .mobile-device .input-area .mic-btn {
+            flex: 0 0 25%;
+            background: rgba(107, 114, 128, 0.5);
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        
+        .mobile-device .input-area .mic-btn:hover {
+            background: rgba(107, 114, 128, 0.7);
+            transform: translateY(-1px);
+        }
+        
+        .mobile-device .input-area .mic-btn.recording {
+            background: rgba(239, 68, 68, 0.8);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .mobile-device .input-area .send-btn {
+            flex: 0 0 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        
+        .mobile-device .input-area .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .mobile-device .input-area .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Stack send button below input */
+            .input-area .flex.items-center.space-x-3 {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .input-area button {
+                width: 100%;
+            }
+            
+            /* Fix mic button positioning on mobile */
+            .chat-input {
+                padding-right: 50px !important;
+            }
+            
+            #voiceButton {
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 10;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 8px;
+                border: none;
+            }
+            
+            /* Ensure input area has proper spacing */
+            .input-area .relative {
+                margin-bottom: 10px;
+            }
+            
+            /* Reduce avatar sizes further */
+            .teacher-avatar {
+                width: 36px;
+                height: 36px;
+            }
+            
+            /* Ensure images load properly on mobile */
+            img {
+                max-width: 100%;
+                height: auto;
+            }
+            
+            /* Fix image loading issues */
+            img[src*="images/"] {
+                display: block;
+            }
+            
+            /* Add fallback for broken images */
+            img:not([src]), img[src=""], img[src*="undefined"] {
+                display: none;
+            }
+        }
+
+        /* APK-specific fixes for side buttons */
+        @media (max-width: 768px) {
+            .sidebar {
+                background: rgba(17, 24, 39, 0.95) !important;
+                backdrop-filter: blur(10px);
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                z-index: 50;
+            }
+            
+            .sidebar-nav {
+                background: rgba(31, 41, 55, 0.98) !important;
+                border-radius: 8px;
+                margin: 8px;
+                padding: 8px;
+            }
+            
+            .sidebar-nav button {
+                background: rgba(55, 65, 81, 0.9) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                margin-bottom: 4px;
+            }
+            
+            .sidebar-nav button:hover {
+                background: rgba(75, 85, 99, 0.95) !important;
+            }
+            
+            .sidebar-nav button.active {
+                background: rgba(59, 130, 246, 0.9) !important;
+                border-color: rgba(59, 130, 246, 0.5);
+            }
+            
+            /* Ensure chat area doesn't overlap */
+            #chatSection {
+                margin-left: 0;
+                width: 100%;
+                z-index: 10;
+            }
+            
+            /* Make sure content is readable */
+            .content-section {
+                background: rgba(17, 24, 39, 0.95) !important;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                margin: 8px;
+            }
+        }
+
+        /* Mobile button layout - one line with specified proportions */
+        .mobile-device .input-area .button-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .mobile-device .input-area .camera-btn {
+            flex: 0 0 25%;
+            background: rgba(107, 114, 128, 0.5);
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        
+        .mobile-device .input-area .camera-btn:hover {
+            background: rgba(107, 114, 128, 0.7);
+            transform: translateY(-1px);
+        }
+        
+        .mobile-device .input-area .mic-btn {
+            flex: 0 0 25%;
+            background: rgba(107, 114, 128, 0.5);
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        
+        .mobile-device .input-area .mic-btn:hover {
+            background: rgba(107, 114, 128, 0.7);
+            transform: translateY(-1px);
+        }
+        
+        .mobile-device .input-area .mic-btn.recording {
+            background: rgba(239, 68, 68, 0.8);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .mobile-device .input-area .send-btn {
+            flex: 0 0 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        
+        .mobile-device .input-area .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .mobile-device .input-area .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Fix side buttons to appear in front */
+        .mobile-sidebar {
+            z-index: 2000 !important;
+        }
+        
+        .mobile-sidebar.active {
+            z-index: 2000 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+            <!-- Mobile Sidebar -->
+        <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
+        <div class="flex flex-col h-full">
+            <!-- Sidebar Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <img src="images/tution.app_logo.jpg" alt="tution.app Logo" class="h-8 cursor-pointer" id="sidebarLogo">
+                    <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="h-9 cursor-pointer" id="sidebarEmblem">
+                </div>
+                <button id="closeSidebarBtn" class="text-gray-300 hover:text-white text-2xl transition-colors">×</button>
+            </div>
+            
+            <!-- Sidebar Navigation -->
+            <nav class="flex-1 p-6 space-y-4">
+                <div class="nav-item active bg-gray-800 hover:bg-gray-700 text-white" data-section="chat">
+                    <span class="text-xl">🏫</span>
+                    <span>Classroom</span>
+                </div>
+                <div class="nav-item bg-gray-800 hover:bg-gray-700 text-white" data-section="materials">
+                    <span class="text-xl">📚</span>
+                    <span>Study Materials</span>
+                </div>
+                <div class="nav-item bg-gray-800 hover:bg-gray-700 text-white" data-section="progress">
+                    <span class="text-xl">📊</span>
+                    <span>Progress</span>
+                </div>
+                <div class="nav-item bg-gray-800 hover:bg-gray-700 text-white" data-section="settings">
+                    <span class="text-xl">⚙️</span>
+                    <span>Settings</span>
+                </div>
+            </nav>
+            
+            <!-- User Info -->
+            <div class="p-6 border-t border-gray-700">
+                <!-- User Display Info -->
+                <div class="user-info-section mb-4 p-3 bg-gray-800 rounded-lg">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <div id="userAvatar" class="text-2xl">👤</div>
+                        <div>
+                            <div id="userName" class="text-white font-medium">Student</div>
+                            <div id="userClass" class="text-gray-300 text-sm">Class 10</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="logoutBtn" class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10 bg-gray-800">
+                    <span class="text-xl">🚪</span>
+                    <span>Logout</span>
+                </button>
+                <button id="trialInfoBtn" class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 bg-gray-800">
+                    <span class="text-xl">⏰</span>
+                    <span>Test Trial</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+            <!-- Mobile Sidebar Overlay -->
+        <div id="mobileSidebarOverlay" class="fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out lg:hidden" onclick="closeMobileSidebar()"></div>
+    
+    <!-- Main Layout -->
+    <div class="flex min-h-screen">
+        <!-- Desktop Sidebar -->
+        <div class="hidden lg:flex lg:w-80 lg:flex-col sidebar-modern">
+            <!-- Sidebar Header -->
+            <div class="flex items-center justify-between p-6 border-b border-white/20">
+                <div class="flex items-center space-x-3">
+                                    <img src="images/tution.app_logo.jpg" alt="tution.app Logo" class="h-8 cursor-pointer" id="mainLogo">
+                <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="h-9 cursor-pointer" id="mainEmblem">
+                </div>
+            </div>
+            
+            <!-- Sidebar Navigation -->
+            <nav class="flex-1 p-6 space-y-4">
+                <div class="nav-item active">
+                    <span class="text-xl">🏫</span>
+                    <span>Classroom</span>
+                </div>
+                <div class="nav-item">
+                    <span class="text-xl">📚</span>
+                    <span>Study Materials</span>
+                </div>
+                <div class="nav-item">
+                    <span class="text-xl">📊</span>
+                    <span>Progress</span>
+                </div>
+                <div class="nav-item">
+                    <span class="text-xl">⚙️</span>
+                    <span>Settings</span>
+                </div>
+            </nav>
+            
+            <!-- User Info -->
+            <div class="p-6 border-t border-white/20">
+                <!-- User Display Info -->
+                <div class="user-info-section mb-4 p-3 bg-white/20 rounded-lg">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <div id="userAvatar2" class="text-2xl">👤</div>
+                        <div>
+                            <div id="userName2" class="text-white font-medium">Student</div>
+                            <div id="userClass2" class="text-white/70 text-sm">Class 10</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="nav-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                    <span class="text-xl">🚪</span>
+                    <span>Logout</span>
+                </button>
+                <button class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
+                    <span class="text-xl">⏰</span>
+                    <span>Test Trial</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="nav-modern p-4">
+                <div class="flex items-center justify-between">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileSidebarToggle" class="text-white text-2xl hover:text-blue-300 transition-colors lg:hidden">☰</button>
+                    
+                    <!-- Logo (Mobile) -->
+                    <div class="lg:hidden flex items-center">
+                        <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="h-8 cursor-pointer hover:opacity-80 transition-opacity" onclick="window.location.href='index.html'">
+                    </div>
+                    
+                    <!-- Desktop Header Content -->
+                    <div class="hidden lg:flex lg:items-center lg:space-x-4">
+                        <div class="subscription-badge trial" id="subscriptionBadge">
+                            <span class="flex items-center space-x-1">
+                                <span>⭐</span>
+                                <span>Trial</span>
+                            </span>
+                        </div>
+                        <button id="upgradeButton" onclick="window.location.href='public/payment.html'" class="btn-modern text-sm">
+                            <span>🚀</span>
+                            <span>Upgrade</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Google Translate - Extreme Right -->
+                    <div class="hidden lg:block">
+                        <div id="google_translate_element"></div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <main class="flex-1 p-4">
+                <!-- Chat Box Container - Fixed Size -->
+                <div class="chat-box-container bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl max-w-4xl mx-auto h-[600px] flex flex-col">
+                    <!-- Chat Header -->
+                    <div class="chat-header p-4 border-b border-white/20 flex-shrink-0">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="teacher-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
+                                <div>
+                                    <div id="welcomeTeacherName" class="text-white font-semibold">Loading...</div>
+                                    <div class="text-white/70 text-sm">Your AI Tutor</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button id="playButton" class="btn-secondary">
+                                    <span>▶️</span>
+                                    <span>Play</span>
+                                </button>
+                                <button id="stopButton" class="btn-secondary">
+                                    <span>⏹️</span>
+                                    <span>Stop</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Messages - Fixed Box with Own Scroll -->
+                    <div id="chatMessages" class="chat-container flex-1 overflow-y-auto">
+                        <!-- Messages will be added here -->
+                    </div>
+                    
+                    <!-- Input Area - Fixed at Bottom -->
+                    <div class="input-area flex-shrink-0">
+                        <!-- Desktop Input -->
+                        <div class="hidden md:flex items-center space-x-3">
+                            <div class="relative flex-1">
+                                <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." class="chat-input">
+                            </div>
+                            <button id="cameraButton" onclick="startCameraScan()" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50">
+                                <span>Camera</span>
+                            </button>
+                            <button id="voiceButton" class="btn-modern bg-gray-700/50 hover:bg-gray-600/50">
+                                <span id="voiceIcon">Mic</span>
+                            </button>
+                            <button id="sendButton" class="btn-modern">
+                                <span>Send</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Mobile Layout -->
+                        <div class="md:hidden">
+                            <!-- Mobile Chat Input -->
+                            <div class="mobile-chat-input p-4 bg-gray-800/50 border-t border-gray-700/50 flex-shrink-0">
+                                <!-- Mobile Input Area -->
+                                <div class="mobile-input-area bg-gray-800 border-t border-gray-700 p-4">
+                                    <!-- Text Input (Full Width) -->
+                                    <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 mb-3">
+                                    
+                                    <!-- Camera, Mic, Send Buttons in One Row -->
+                                    <div class="flex space-x-2">
+                                        <!-- Camera Button (25%) -->
+                                        <button id="cameraButtonMobile" class="w-1/4 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center">
+                                            📷
+                                        </button>
+                                        <!-- Mic Button (25%) -->
+                                        <button id="voiceButtonMobile" class="w-1/4 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center">
+                                            <span id="voiceIconMobile">🎤</span>
+                                        </button>
+                                        <!-- Send Button (50%) -->
+                                        <button id="sendButtonMobile" onclick="sendMessage()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center">
+                                            Send
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Subject Header - Fixed at Bottom -->
+                    <div class="subject-header p-4 bg-purple-600/20 border-t border-purple-500/30 flex-shrink-0">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <span id="currentSubjectName" class="text-white font-semibold">Select Subject</span>
+                            </div>
+                            <button id="manageSubjectsBtn" class="text-purple-300 hover:text-white text-sm flex items-center space-x-1">
+                                <span>⚙️</span>
+                                <span>Manage</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Subject Buttons -->
+                        <div id="subjectButtonsGrid" class="flex flex-wrap gap-2 mt-2">
+                            <!-- Subject buttons will be added here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other Sections (Hidden by default) -->
+                <div id="materialsSection" class="h-full hidden">
+                    <div class="p-6">
+                        <h2 class="text-white text-2xl font-bold mb-6">Study Materials</h2>
+                        <div class="flex items-center justify-center h-64">
+                            <div class="text-center">
+                                <div class="text-6xl mb-4">🚧</div>
+                                <h3 class="text-white text-xl font-semibold mb-2">Coming Soon!</h3>
+                                <p class="text-gray-300 mb-4">We're working hard to bring you amazing study materials.</p>
+                                <p class="text-gray-400 text-sm">NCERT Books, Practice Tests, and Video Lessons will be available soon!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="progressSection" class="h-full hidden">
+                    <div class="progress-content p-6">
+                        <h2 class="text-white text-2xl font-bold mb-6">Learning Progress</h2>
+                        <div class="space-y-6">
+                            <!-- Final Exam Section -->
+                            <div class="card-modern">
+                                <h3 class="text-white text-lg font-semibold mb-4">Final Exam Planning</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Final Exam in:</label>
+                                        <select id="finalExamMonth" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400" onchange="updateMonthsRemaining()">
+                                            <option value="1">January</option>
+                                            <option value="2">February</option>
+                                            <option value="3">March</option>
+                                            <option value="4" selected>April</option>
+                                            <option value="5">May</option>
+                                            <option value="6">June</option>
+                                            <option value="7">July</option>
+                                            <option value="8">August</option>
+                                            <option value="9">September</option>
+                                            <option value="10">October</option>
+                                            <option value="11">November</option>
+                                            <option value="12">December</option>
+                                        </select>
+                                    </div>
+                                    <div class="text-center p-4 bg-purple-600/20 rounded-lg">
+                                        <p class="text-white text-lg font-semibold" id="monthsRemaining">Months remaining to final exam: 8</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Subject Management Section -->
+                            <div class="card-modern">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-white text-lg font-semibold">📚 My Subjects</h3>
+                                    <button id="subjectManagerBtn" class="btn-modern text-sm">
+                                        <span>⚙️</span>
+                                        <span>Manage Subjects</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Current Subject Display -->
+                                <div id="currentSubjectDisplay" class="mb-4 p-3 bg-purple-600/20 rounded-lg border border-purple-500/30">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="text-purple-200 text-sm">Current Subject:</span>
+                                            <span id="currentSubjectNameProgress" class="text-white font-semibold ml-2">Select a subject to start learning</span>
+                                        </div>
+                                        <div id="subjectProgressDisplay" class="text-right">
+                                            <div class="text-xs text-gray-300">Progress</div>
+                                            <div class="text-sm text-green-400 font-semibold">0%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Subject Buttons Grid -->
+                                <div id="subjectButtonsGridProgress" class="grid grid-cols-3 gap-3 mb-4">
+                                    <!-- All subjects will be shown here -->
+                                </div>
+                                
+                                <!-- Subject Recall and Next Topic -->
+                                <div id="subjectRecallSection" class="mt-4 p-4 bg-blue-600/20 rounded-lg border border-blue-500/30 hidden">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="text-blue-400 text-lg">📖</div>
+                                        <div class="flex-1">
+                                            <h4 class="text-white font-semibold mb-2">Quick Recall</h4>
+                                            <div id="subjectRecall" class="text-gray-200 text-sm mb-3">
+                                                <!-- Recall content will be loaded here -->
+                                            </div>
+                                            <h4 class="text-white font-semibold mb-2">Next Topic</h4>
+                                            <div id="nextTopic" class="text-gray-200 text-sm">
+                                                <!-- Next topic will be loaded here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Subject Progress -->
+                            <div class="card-modern">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-white text-lg font-semibold">Subject Progress</h3>
+                                </div>
+                                <div id="subjectsContainer" class="space-y-4">
+                                    <div class="subject-item">
+                                        <div class="flex justify-between text-white text-sm mb-2">
+                                            <span>Mathematics</span>
+                                            <span id="mathProgress">0%</span>
+                                        </div>
+                                        <div class="progress-modern">
+                                            <div class="progress-fill" id="mathProgressBar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="subject-item">
+                                        <div class="flex justify-between text-white text-sm mb-2">
+                                            <span>Science</span>
+                                            <span id="scienceProgress">0%</span>
+                                        </div>
+                                        <div class="progress-modern">
+                                            <div class="progress-fill" id="scienceProgressBar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="subject-item">
+                                        <div class="flex justify-between text-white text-sm mb-2">
+                                            <span>English</span>
+                                            <span id="englishProgress">0%</span>
+                                        </div>
+                                        <div class="progress-modern">
+                                            <div class="progress-fill" id="englishProgressBar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="settingsSection" class="h-full hidden">
+                    <div class="settings-content p-6">
+                        <h2 class="text-white text-2xl font-bold mb-6">Settings</h2>
+                        <div class="space-y-6">
+                            <!-- Teacher Avatar -->
+                            <div class="card-modern">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-white text-lg font-semibold">Teacher Avatar</h3>
+                                    <button id="avatarSelectionBtn" class="btn-modern text-sm">
+                                        <span>⚙️</span>
+                                        <span>Change Avatar</span>
+                                    </button>
+                                </div>
+                                <div id="currentAvatarDisplay" class="p-4 bg-purple-600/20 rounded-lg border border-purple-500/30">
+                                    <!-- Current avatar will be displayed here -->
+                                    <div class="flex items-center space-x-3">
+                                        <div class="text-2xl">👨‍🏫</div>
+                                        <div>
+                                            <div class="text-white font-semibold">Roy Sir</div>
+                                            <div class="text-gray-300 text-sm">AI Teacher</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Voice Settings -->
+                            <div class="card-modern">
+                                <h3 class="text-white text-lg font-semibold mb-4">Voice Settings</h3>
+                                <div class="space-y-4">
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="ttsEnabled" checked class="rounded" onchange="handleTTSToggle()">
+                                        <span class="text-white">Enable Text-to-Speech</span>
+                                    </label>
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="voiceInputEnabled" checked class="rounded" onchange="handleVoiceInputToggle()">
+                                        <span class="text-white">Enable Voice Input</span>
+                                    </label>
+                                    
+                                    <!-- Voice Rate -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Speed: <span id="voiceRateValue">1.25</span>x</label>
+                                        <input type="range" id="voiceRate" min="0.5" max="2.0" step="0.1" value="1.25" class="w-full">
+                                    </div>
+                                    
+                                    <!-- Voice Pitch -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Pitch: <span id="voicePitchValue">1.0</span></label>
+                                        <input type="range" id="voicePitch" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full">
+                                    </div>
+                                    
+                                    <!-- Voice Status -->
+                                    <div id="voiceStatus" class="text-green-400 text-sm">Voice ready</div>
+                                </div>
+                                <div id="voiceWarning" class="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg hidden">
+                                    <p class="text-yellow-200 text-sm">⚠️ <strong>Note:</strong> If voice features are disabled, chat will support typing only.</p>
+                                </div>
+                            </div>
+
+                            <!-- Download App Button -->
+                            <div class="card-modern">
+                                <button id="downloadAppBtn" class="btn-modern w-full">
+                                    <span>📱</span>
+                                    <span>Download App</span>
+                                </button>
+                            </div>
+
+                            <!-- View Profile Button -->
+                            <div class="card-modern">
+                                <button id="profilePopupBtn" class="btn-modern w-full">
+                                    <span>👤</span>
+                                    <span>View Profile</span>
+                                </button>
+                            </div>
+
+                            <!-- Contact Us Button -->
+                            <div class="card-modern">
+                                <button id="contactUsBtn" class="btn-modern w-full">
+                                    <span>💬</span>
+                                    <span>Contact Us</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Scroll to Top Button -->
+                <div class="scroll-to-top" id="scrollToTopBtn">
+        <span class="text-white text-xl">↑</span>
+    </div>
+
+    <!-- Profile Popup Overlay -->
+    <div id="profilePopupOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-6 relative">
+            <button onclick="closeProfilePopup()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 transition-colors">×</button>
+            <h3 class="text-white text-xl font-bold mb-4">View & Edit Profile</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Full Name:</label>
+                    <input type="text" id="popupProfileName" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400">
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Class:</label>
+                    <input type="text" id="popupProfileClass" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400">
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Gender:</label>
+                    <select id="popupProfileGender" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="others">Others</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Board:</label>
+                    <input type="text" id="popupProfileBoard" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400">
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Email:</label>
+                    <input type="email" id="popupProfileEmail" class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-gray-400" readonly>
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Mobile:</label>
+                    <input type="tel" id="popupProfileMobile" class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-gray-400" readonly>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button onclick="saveProfileFromPopup()" class="btn-modern flex-1">
+                        <span>💾</span>
+                        <span>Save</span>
+                    </button>
+                    <button onclick="closeProfilePopup()" class="btn-modern btn-secondary flex-1">
+                        <span>❌</span>
+                        <span>Cancel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Scan Modal -->
+    <div id="cameraScanModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full p-6 relative">
+            <button onclick="closeCameraModal()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 transition-colors">×</button>
+            <h3 class="text-white text-xl font-bold mb-4">📸 Scan Your Problem</h3>
+            
+            <!-- Camera View -->
+            <div id="cameraContainer" class="mb-4">
+                <video id="cameraView" autoplay playsinline class="w-full rounded-lg bg-black"></video>
+                <canvas id="photoCanvas" style="display:none;"></canvas>
+            </div>
+            
+            <!-- Controls -->
+            <div class="flex space-x-3 mb-4">
+                <button onclick="capturePhoto()" id="captureBtn" class="btn-modern flex-1">
+                    <span>📷</span>
+                    <span>Capture</span>
+                </button>
+                <button onclick="retakePhoto()" id="retakeBtn" class="btn-modern btn-secondary flex-1 hidden">
+                    <span>🔄</span>
+                    <span>Retake</span>
+                </button>
+            </div>
+            
+            <!-- Processing Status -->
+            <div id="processingStatus" class="hidden">
+                <div class="text-center text-white">
+                    <div class="animate-spin text-2xl mb-2">⏳</div>
+                    <p id="statusText">Processing image...</p>
+                </div>
+            </div>
+            
+                                    <!-- Results -->
+                        <div id="scanResults" class="hidden">
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="text-white font-semibold">📝 Extracted Text:</h4>
+                                        <button onclick="editExtractedText()" class="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors">
+                                            ✏️ Edit
+                                        </button>
+                                    </div>
+                                    <div id="extractedText" class="bg-gray-700 p-3 rounded-lg text-white text-sm"></div>
+                                    <div id="editTextArea" class="hidden">
+                                        <textarea id="textEditor" class="w-full bg-gray-700 p-3 rounded-lg text-white text-sm border border-gray-600 focus:border-blue-500 focus:outline-none resize-none" rows="4" placeholder="Edit the extracted text here..."></textarea>
+                                        <div class="flex space-x-2 mt-2">
+                                            <button onclick="saveEditedText()" class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+                                                ✅ Save
+                                            </button>
+                                            <button onclick="cancelEdit()" class="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors">
+                                                ❌ Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex space-x-3">
+                                    <button onclick="sendToChat()" class="btn-modern flex-1">
+                                        <span>💬</span>
+                                        <span>Ask AI About This</span>
+                                    </button>
+                                    <button onclick="closeCameraModal()" class="btn-modern btn-secondary flex-1">
+                                        <span>✅</span>
+                                        <span>Done</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+        </div>
+    </div>
+
+    <!-- Contact Us Popup Overlay -->
+    <div id="contactUsPopupOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-lg w-full p-6 relative">
+            <button onclick="closeContactUsPopup()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 transition-colors">×</button>
+            <h3 class="text-white text-xl font-bold mb-4">We'd Love to Hear from You</h3>
+            <p class="text-gray-300 text-sm mb-4">Your feedback helps us improve and serve you better</p>
+            <form id="contactUsForm" class="space-y-4">
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Your Name:</label>
+                    <input type="text" id="contactUsName" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400" readonly>
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Your Email:</label>
+                    <input type="email" id="contactUsEmail" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400" readonly>
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Your Mobile:</label>
+                    <input type="tel" id="contactUsMobile" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400" readonly>
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Category:</label>
+                    <select id="contactUsCategory" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400">
+                        <option value="">Select Category</option>
+                        <option value="feedback">General Feedback</option>
+                        <option value="books">Books & Content</option>
+                        <option value="technical">Technical Issue</option>
+                        <option value="suggestion">Feature Suggestion</option>
+                        <option value="general">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Subject:</label>
+                    <input type="text" id="contactUsSubject" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400" placeholder="Brief subject of your message">
+                </div>
+                <div>
+                    <label class="text-white text-sm font-medium mb-2 block">Message:</label>
+                    <textarea id="contactUsMessage" rows="4" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400" placeholder="Tell us about your experience, suggestions, or any issues you're facing..."></textarea>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button type="submit" class="btn-modern flex-1">
+                        <span>📧</span>
+                        <span>Send Message</span>
+                    </button>
+                    <button type="button" onclick="closeContactUsPopup()" class="btn-modern btn-secondary flex-1">
+                        <span>❌</span>
+                        <span>Cancel</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Trial Expired Overlay -->
+    <div id="trialExpiredOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-8 text-center relative">
+            <button onclick="closeTrialOverlay()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 transition-colors">×</button>
+            <div class="text-6xl mb-4">⏰</div>
+            <h3 class="text-white text-2xl font-bold mb-4">Trial Expired</h3>
+            <p class="text-gray-300 mb-6">Your free trial has ended. Upgrade to continue learning with unlimited access!</p>
+            <div class="space-y-3">
+                <button onclick="upgradeToPremium()" class="btn-modern w-full">Upgrade Now - ₹99/month</button>
+                <button onclick="closeTrialOverlay()" class="btn-modern btn-secondary w-full">Maybe Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Manager Modal -->
+    <div id="subjectManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4" onclick="closeSubjectManagerOnOutsideClick(event)">
+        <div class="bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-4 flex-shrink-0 border-b border-gray-700">
+                <h3 class="text-white text-lg font-semibold">📚 Manage Your Subjects</h3>
+                <button onclick="window.subjectManager?.hideSubjectManager()" class="text-gray-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-4" style="max-height: 60vh;">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- Available Subjects -->
+                    <div class="bg-gray-700 rounded-lg p-3">
+                        <h4 class="text-white text-sm font-medium mb-2">Available Subjects</h4>
+                        <div id="availableSubjectsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            <!-- Available subjects will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Selected Subjects -->
+                    <div class="bg-gray-700 rounded-lg p-3">
+                        <h4 class="text-white text-sm font-medium mb-2">Your Subjects</h4>
+                        <div id="selectedSubjectsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            <!-- Selected subjects will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="flex justify-end space-x-3 p-4 flex-shrink-0 border-t border-gray-700">
+                <button onclick="window.subjectManager?.hideSubjectManager()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm">
+                    Cancel
+                </button>
+                <button onclick="window.subjectManager?.saveSubjectChanges()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avatar Selection Modal -->
+    <div id="avatarSelectionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" onclick="closeAvatarSelectionOnOutsideClick(event)">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-white text-xl font-semibold">👨‍🏫 Choose Your AI Teacher</h3>
+                <button onclick="closeAvatarSelectionModal()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Roy Sir -->
+                <div class="avatar-option bg-gradient-to-br from-blue-600 to-purple-600 p-4 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105" 
+                     onclick="selectAvatarOption('roy-sir', 'Roy Sir')">
+                    <div class="text-center">
+                        <img src="images/roy_sir.jpg" alt="Roy Sir" class="w-16 h-16 rounded-full mx-auto mb-2 object-cover">
+                        <h4 class="text-white font-semibold">Roy Sir</h4>
+                        <p class="text-blue-200 text-sm">English & Advanced Topics</p>
+                    </div>
+                </div>
+                
+                <!-- Miss Sapna -->
+                <div class="avatar-option bg-gradient-to-br from-pink-600 to-red-600 p-4 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105" 
+                     onclick="selectAvatarOption('miss-sapna', 'Miss Sapna')">
+                    <div class="text-center">
+                        <img src="images/miss_sapna.jpg" alt="Miss Sapna" class="w-16 h-16 rounded-full mx-auto mb-2 object-cover">
+                        <h4 class="text-white font-semibold">Miss Sapna</h4>
+                        <p class="text-pink-200 text-sm">Hindi & Hinglish</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="closeAvatarSelectionModal()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    Cancel
+                </button>
+                <button onclick="saveAvatarSelection()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Save Selection
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- External Scripts - REMOVED DUPLICATES -->
+    <!-- Scripts are already loaded in head with defer -->
+</body>
+</html>

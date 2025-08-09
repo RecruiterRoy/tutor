@@ -1,0 +1,5 @@
+[33m0e0753a4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m COMPREHENSIVE MOBILE FIXES: All mobile functionality working - buttons in one line, sidebar toggle, mic/camera working, TTS/STT auto-start, user data loading, long press functionality
+[33m69839373[m Fix dashboard initialization and event listeners - restore site functionality
+[33me602e524[m Fix mic responsiveness and mobile optimization - Consolidated voice button event listeners, enhanced long press functionality, mobile-optimized voice recognition settings, improved device detection, and better error handling for smaller devices
+[33m60292d78[m FIXED: Desktop chat box scrolling, mobile button event listeners, sidebar functionality, and TTS for mobile
+[33mfffe8e58[m COMPREHENSIVE MOBILE FIXES: Fixed APK login crash, mobile profile loading, sidebar, button layout, TTS, STT, and long press functionality

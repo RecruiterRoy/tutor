@@ -1,0 +1,95 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master, apk-updates ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Install Capacitor CLI globally
+      run: |
+        npm install -g @capacitor/cli
+        npx cap --version
+        which npx
+        ls -la node_modules/.bin/cap || echo "Cap binary not found in node_modules"
+        
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '21'
+        
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Copy web assets
+      run: |
+        mkdir -p dist
+        # Copy only files that exist
+        [ -d "public/images" ] && cp -r public/images dist/
+        [ -d "public/js" ] && cp -r public/js dist/
+        [ -d "public/scripts" ] && cp -r public/scripts dist/
+        cp public/*.html dist/ 2>/dev/null || true
+        cp public/*.json dist/ 2>/dev/null || true
+        cp public/*.js dist/ 2>/dev/null || true
+        cp public/*.md dist/ 2>/dev/null || true
+        [ -d "pages" ] && cp -r pages dist/
+        cp server.js dist/
+        cp package.json dist/
+        cp vercel.json dist/
+        cp capacitor.config.json dist/
+        echo "Web assets copied successfully"
+        ls -la dist/
+        
+    - name: Add Android platform
+      run: |
+        if [ ! -d "android" ]; then
+          npx cap add android
+          echo "Android platform added successfully"
+        else
+          echo "Android platform already exists"
+          # Ensure the platform is properly initialized
+          npx cap sync android
+        fi
+        ls -la android/
+        
+    - name: Copy to Android
+      run: |
+        npx cap copy android || echo "Copy failed, trying sync instead"
+        echo "Web assets copied to Android"
+        
+    - name: Sync Android
+      run: |
+        npx cap sync android || echo "Sync failed, checking Android directory"
+        ls -la android/app/src/main/assets/ || echo "Assets directory not found"
+        echo "Android synced successfully"
+        
+    - name: Build APK
+      run: |
+        cd android
+        chmod +x ./gradlew
+        ./gradlew assembleDebug
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: tutor-ai-apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk 
+
+
+
+
