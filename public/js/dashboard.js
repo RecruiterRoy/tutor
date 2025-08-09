@@ -3676,6 +3676,9 @@ function closeMobileSidebar() {
         overlay.classList.add('opacity-0', 'pointer-events-none');
     }
     
+    // Reset body overflow
+    document.body.style.overflow = 'auto';
+    
     console.log('✅ Mobile sidebar closed');
 }
 
