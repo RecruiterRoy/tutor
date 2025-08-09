@@ -6215,11 +6215,17 @@ let micSystem = {
         const micButton = document.getElementById('voiceButtonMobile');
         if (micButton) {
             if (isRecording) {
-                micButton.innerHTML = '<span class="text-xs">🔴</span>';
+                // Red light when recording
+                micButton.innerHTML = '<span class="text-xs animate-pulse">🔴</span>';
                 micButton.classList.add('recording');
+                micButton.style.backgroundColor = '#dc2626'; // Red background
+                micButton.style.color = 'white';
             } else {
+                // Normal mic icon when not recording
                 micButton.innerHTML = '<span class="text-xs">🎤</span>';
                 micButton.classList.remove('recording');
+                micButton.style.backgroundColor = ''; // Reset to default
+                micButton.style.color = '';
             }
         }
     },
@@ -6243,6 +6249,9 @@ let micSystem = {
         if (this.currentTranscript.trim()) {
             console.log('🎤 Sending transcript:', this.currentTranscript);
             
+            // Show hourglass while processing
+            this.showProcessingIndicator();
+            
             // Set the transcript in input fields
             const chatInput = document.getElementById('chatInput');
             const chatInputMobile = document.getElementById('chatInputMobile');
@@ -6255,6 +6264,20 @@ let micSystem = {
             
             // Clear transcript
             this.currentTranscript = '';
+        }
+    },
+    
+    showProcessingIndicator() {
+        const micButton = document.getElementById('voiceButtonMobile');
+        if (micButton) {
+            micButton.innerHTML = '<span class="text-xs animate-spin">⏳</span>';
+            micButton.style.backgroundColor = '#f59e0b'; // Orange background
+            micButton.style.color = 'white';
+            
+            // Reset after 3 seconds
+            setTimeout(() => {
+                this.updateMicButton(false);
+            }, 3000);
         }
     },
     

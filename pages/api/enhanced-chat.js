@@ -21,13 +21,19 @@ function runMiddleware(req, res, fn) {
 }
 
 // Check if API key is available
+console.log('🔧 Environment check:');
+console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔧 ANTHROPIC_API_KEY exists:', !!process.env.ANTHROPIC_API_KEY);
+console.log('🔧 ANTHROPIC_API_KEY length:', process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.length : 0);
+console.log('🔧 ANTHROPIC_API_KEY starts with:', process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.substring(0, 10) + '...' : 'NOT_SET');
+
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error('❌ ANTHROPIC_API_KEY environment variable is not set');
   console.error('❌ Available environment variables:', Object.keys(process.env).filter(key => key.includes('ANTHROPIC') || key.includes('API')));
 }
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY || 'dummy-key-for-testing',
 });
 
 const supabase = createClient(
