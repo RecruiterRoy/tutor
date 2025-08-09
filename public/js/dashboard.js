@@ -5623,18 +5623,27 @@ window.testMobileSidebar = function() {
                     return;
                 }
                 
-                // Start voice recording directly without calling toggleVoiceRecording
-                if (!voiceRecognition) {
-                    console.log('🎤 Initializing voice recognition...');
-                    initEnhancedSpeechRecognition();
-                }
-                
-                        // Start recording directly
-        try {
-            startContinuousRecording();
-        } catch (error) {
-            console.error('🎤 Error in startContinuousRecording:', error);
-            showError('Failed to start voice recording. Please try again.');
+                        // Start voice recording directly without calling toggleVoiceRecording
+        if (!voiceRecognition) {
+            console.log('🎤 Initializing voice recognition...');
+            initEnhancedSpeechRecognition();
+        }
+        
+        // Check if already recording
+        if (isRecording) {
+            console.log('🎤 Already recording, stopping first...');
+            stopContinuousRecording();
+            setTimeout(() => {
+                startContinuousRecording();
+            }, 100);
+        } else {
+            // Start recording directly
+            try {
+                startContinuousRecording();
+            } catch (error) {
+                console.error('🎤 Error in startContinuousRecording:', error);
+                showError('Failed to start voice recording. Please try again.');
+            }
         }
                 
             } catch (error) {
@@ -6279,6 +6288,18 @@ function setupDashboardEventListeners() {
             e.preventDefault();
             e.stopPropagation();
             console.log('🔧 Voice button clicked, calling startVoiceRecordingWithPermission');
+            
+            // Prevent multiple rapid clicks
+            if (voiceButtonMobile.disabled) {
+                console.log('🔧 Voice button disabled, ignoring click');
+                return;
+            }
+            
+            voiceButtonMobile.disabled = true;
+            setTimeout(() => {
+                voiceButtonMobile.disabled = false;
+            }, 1000);
+            
             startVoiceRecordingWithPermission();
         });
     } else {

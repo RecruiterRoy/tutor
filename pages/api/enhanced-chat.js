@@ -20,6 +20,12 @@ function runMiddleware(req, res, fn) {
   });
 }
 
+// Check if API key is available
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('❌ ANTHROPIC_API_KEY environment variable is not set');
+  console.error('❌ Available environment variables:', Object.keys(process.env).filter(key => key.includes('ANTHROPIC') || key.includes('API')));
+}
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
