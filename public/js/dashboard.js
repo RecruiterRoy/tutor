@@ -3201,10 +3201,7 @@ function setupVoiceSettingsListeners() {
         const newVoiceButtonMobile = voiceButtonMobile.cloneNode(true);
         voiceButtonMobile.parentNode.replaceChild(newVoiceButtonMobile, voiceButtonMobile);
         
-        // Add single event listener for click
-        newVoiceButtonMobile.addEventListener('click', startVoiceRecordingWithPermission);
-        
-        // Setup long press functionality
+        // Setup long press functionality ONLY - no additional click listener
         setupMicLongPress(newVoiceButtonMobile);
         
         console.log('✅ Mobile voice button listener added (consolidated)');
@@ -6104,19 +6101,41 @@ function startNormalRecording() {
         initEnhancedSpeechRecognition();
     }
     
-    try {
-        voiceRecognition.start();
-        console.log('🎤 Normal recording started');
-        
-        // Show visual feedback
-        const micButton = document.getElementById('voiceButtonMobile');
-        if (micButton) {
-            micButton.innerHTML = '<span class="text-xs">🔴</span>';
-            micButton.classList.add('recording');
+    // Check if already recording to prevent InvalidStateError
+    if (isRecording) {
+        console.log('🎤 Already recording, stopping first...');
+        stopContinuousRecording();
+        setTimeout(() => {
+            try {
+                voiceRecognition.start();
+                console.log('🎤 Normal recording started');
+                
+                // Show visual feedback
+                const micButton = document.getElementById('voiceButtonMobile');
+                if (micButton) {
+                    micButton.innerHTML = '<span class="text-xs">🔴</span>';
+                    micButton.classList.add('recording');
+                }
+            } catch (error) {
+                console.error('🎤 Error starting normal recording:', error);
+                showError('Failed to start voice recording. Please try again.');
+            }
+        }, 100);
+    } else {
+        try {
+            voiceRecognition.start();
+            console.log('🎤 Normal recording started');
+            
+            // Show visual feedback
+            const micButton = document.getElementById('voiceButtonMobile');
+            if (micButton) {
+                micButton.innerHTML = '<span class="text-xs">🔴</span>';
+                micButton.classList.add('recording');
+            }
+        } catch (error) {
+            console.error('🎤 Error starting normal recording:', error);
+            showError('Failed to start voice recording. Please try again.');
         }
-    } catch (error) {
-        console.error('🎤 Error starting normal recording:', error);
-        showError('Failed to start voice recording. Please try again.');
     }
 }
 
