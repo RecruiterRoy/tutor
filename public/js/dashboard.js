@@ -5603,13 +5603,21 @@ window.testMobileSidebar = function() {
         }
         
         async function startVoiceRecordingWithPermission() {
+            // Prevent multiple simultaneous calls
+            if (window.isRecordingInProgress) {
+                console.log('🎤 Recording already in progress, ignoring duplicate call');
+                return;
+            }
+            
             try {
                 console.log('🎤 Starting voice recording with permission...');
+                window.isRecordingInProgress = true;
                 
                 // Request microphone permission first
                 const permission = await navigator.permissions.query({ name: 'microphone' });
                 if (permission.state === 'denied') {
                     showError('Microphone permission denied. Please enable microphone access in your browser settings.');
+                    window.isRecordingInProgress = false;
                     return;
                 }
                 
@@ -5626,6 +5634,7 @@ window.testMobileSidebar = function() {
             } catch (error) {
                 console.error('❌ Error starting voice recording:', error);
                 showError('Failed to start voice recording. Please check microphone permissions.');
+                window.isRecordingInProgress = false;
             }
         }
 
@@ -6043,6 +6052,9 @@ function initEnhancedSpeechRecognition() {
         console.log('🎤 Speech recognition ended');
         isRecording = false;
         updateVoiceButton();
+        
+        // Reset the recording progress flag
+        window.isRecordingInProgress = false;
     };
 }
 
@@ -6094,6 +6106,9 @@ function stopContinuousRecording() {
             micButton.classList.remove('recording');
         }
     }
+    
+    // Reset the recording progress flag
+    window.isRecordingInProgress = false;
 }
 
 function startNormalRecording() {
