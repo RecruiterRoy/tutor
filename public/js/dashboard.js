@@ -2938,7 +2938,8 @@ async function sendMessage() {
             subjectHistory: context.subjectHistory,
             syllabusContext: context.syllabusContext,
             userProfile: context.userProfile,
-            selectedAvatar: getCurrentAvatarId(),
+            teacher: getCurrentAvatarName(),
+            avatar: getCurrentAvatarId(),
             selectedVoice: window.selectedVoice || 'Google Hindi'
         };
         
