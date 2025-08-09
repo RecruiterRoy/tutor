@@ -1185,8 +1185,8 @@ function getCurrentAvatarName() {
         console.log('✅ Returning avatar name:', avatarName);
         return avatarName;
     }
-    console.log('⚠️ Using default avatar name: Roy Sir');
-    return 'Roy Sir'; // Default fallback
+    console.log('✅ Using default avatar name: Miss Sapna');
+    return 'Miss Sapna'; // Default to Miss Sapna
 }
 
 // Function to get current avatar ID dynamically
@@ -1199,8 +1199,8 @@ function getCurrentAvatarId() {
         console.log('✅ Returning avatar ID:', window.userData.ai_avatar);
         return window.userData.ai_avatar;
     }
-    console.log('⚠️ Using default avatar ID: roy-sir');
-    return 'roy-sir'; // Default fallback
+    console.log('✅ Using default avatar ID: miss-sapna');
+    return 'miss-sapna'; // Default to Miss Sapna
 }
 
 // Function to get avatar gender
@@ -1219,8 +1219,8 @@ function getCurrentAvatarGender() {
         console.log('✅ Returning avatar gender:', gender);
         return gender;
     }
-    console.log('⚠️ Using default avatar gender: male');
-    return 'male'; // Default fallback
+    console.log('✅ Using default avatar gender: female');
+    return 'female'; // Default to Miss Sapna (female)
 }
 
 // Function to get avatar-specific welcome message
