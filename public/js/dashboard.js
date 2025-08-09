@@ -78,7 +78,16 @@ window.showSection = function(sectionName) {
                 const chatBox = document.querySelector('.chat-box-container');
                 if (chatBox) {
                     chatBox.style.display = 'none';
+                    chatBox.style.zIndex = '1';
                     console.log('✅ Chat box hidden on mobile');
+                }
+                
+                // Also hide the main chat area
+                const mainChatArea = document.querySelector('.chat-area');
+                if (mainChatArea) {
+                    mainChatArea.style.display = 'none';
+                    mainChatArea.style.zIndex = '1';
+                    console.log('✅ Main chat area hidden on mobile');
                 }
                 
                 // Show the selected section
@@ -2936,6 +2945,7 @@ async function sendMessage() {
         console.log('🔧 Request body prepared:', requestBody);
         
         // Send to AI
+        console.log('🔧 Sending request to /api/enhanced-chat');
         const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
             headers: {
@@ -2944,8 +2954,12 @@ async function sendMessage() {
             body: JSON.stringify(requestBody)
         });
         
+        console.log('🔧 Response status:', response.status);
+        
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ API Error:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
         
         const data = await response.json();
@@ -6020,10 +6034,18 @@ function initEnhancedSpeechRecognition() {
 
 function startContinuousRecording() {
     if (!voiceRecognition) {
+        console.log('🎤 Initializing voice recognition...');
         initEnhancedSpeechRecognition();
     }
     
+    if (!voiceRecognition) {
+        console.error('🎤 Voice recognition not available');
+        showError('Voice recognition not supported in this browser');
+        return;
+    }
+    
     try {
+        console.log('🎤 Starting voice recognition...');
         voiceRecognition.start();
         console.log('🎤 Continuous recording started');
         
@@ -6201,7 +6223,7 @@ function setupDashboardEventListeners() {
     const voiceButtonMobile = document.getElementById('voiceButtonMobile');
     if (voiceButtonMobile) {
         console.log('🔧 Setting up mobile voice button with long press');
-        setupMicLongPress();
+        setupMicLongPress(voiceButtonMobile);
     } else {
         console.warn('⚠️ Mobile voice button not found');
     }
