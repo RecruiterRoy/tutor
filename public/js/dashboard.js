@@ -3375,15 +3375,20 @@ function stopRecording() {
 }
 
 async function toggleVoiceRecording() {
+    console.log('🎤 toggleVoiceRecording called, isRecording:', isRecording);
+    
     if (!voiceRecognition) {
+        console.log('🎤 Initializing voice recognition...');
         initEnhancedSpeechRecognition();
     }
 
     if (isRecording) {
+        console.log('🎤 Stopping recording...');
         // Stop recording
         stopContinuousRecording();
         updateVoiceButton();
     } else {
+        console.log('🎤 Starting recording...');
         // Stop any ongoing TTS immediately
         if (window.speechSynthesis && window.speechSynthesis.speaking) {
             window.speechSynthesis.cancel();
@@ -6044,6 +6049,13 @@ function startContinuousRecording() {
         return;
     }
     
+    // Check if already recording to prevent multiple starts
+    if (isRecording) {
+        console.log('🎤 Already recording, stopping first...');
+        stopContinuousRecording();
+        return;
+    }
+    
     try {
         console.log('🎤 Starting voice recognition...');
         voiceRecognition.start();
@@ -6199,7 +6211,14 @@ function setupDashboardEventListeners() {
     // Mobile sidebar toggle button
     const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
     if (mobileSidebarToggle) {
-        mobileSidebarToggle.addEventListener('click', toggleMobileSidebar);
+        // Remove existing listeners to prevent duplicates
+        mobileSidebarToggle.removeEventListener('click', toggleMobileSidebar);
+        mobileSidebarToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔧 Mobile sidebar toggle clicked');
+            toggleMobileSidebar();
+        });
     }
     
     // Logout button
