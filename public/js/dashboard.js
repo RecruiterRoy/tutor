@@ -2946,6 +2946,7 @@ async function sendMessage() {
         
         // Send to AI
         console.log('🔧 Sending request to /api/enhanced-chat');
+        
         const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
             headers: {
@@ -5607,6 +5608,13 @@ window.testMobileSidebar = function() {
             try {
                 console.log('🎤 Starting voice recording with permission...');
                 
+                // Check if already recording to prevent multiple starts
+                if (isRecording) {
+                    console.log('🎤 Already recording, stopping first...');
+                    stopContinuousRecording();
+                    return;
+                }
+                
                 // Request microphone permission first
                 const permission = await navigator.permissions.query({ name: 'microphone' });
                 if (permission.state === 'denied') {
@@ -5614,8 +5622,19 @@ window.testMobileSidebar = function() {
                     return;
                 }
                 
-                // Start voice recording
-                await toggleVoiceRecording();
+                // Start voice recording directly without calling toggleVoiceRecording
+                if (!voiceRecognition) {
+                    console.log('🎤 Initializing voice recognition...');
+                    initEnhancedSpeechRecognition();
+                }
+                
+                        // Start recording directly
+        try {
+            startContinuousRecording();
+        } catch (error) {
+            console.error('🎤 Error in startContinuousRecording:', error);
+            showError('Failed to start voice recording. Please try again.');
+        }
                 
             } catch (error) {
                 console.error('❌ Error starting voice recording:', error);
@@ -6245,7 +6264,22 @@ function setupDashboardEventListeners() {
     const voiceButtonMobile = document.getElementById('voiceButtonMobile');
     if (voiceButtonMobile) {
         console.log('🔧 Setting up mobile voice button with long press');
+        
+        // Remove existing listeners to prevent duplicates
+        voiceButtonMobile.removeEventListener('click', startVoiceRecordingWithPermission);
+        voiceButtonMobile.removeEventListener('touchstart', handleMicPress);
+        voiceButtonMobile.removeEventListener('touchend', handleMicRelease);
+        
+        // Add new listeners
         setupMicLongPress(voiceButtonMobile);
+        
+        // Also add direct click handler for immediate response
+        voiceButtonMobile.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔧 Voice button clicked, calling startVoiceRecordingWithPermission');
+            startVoiceRecordingWithPermission();
+        });
     } else {
         console.warn('⚠️ Mobile voice button not found');
     }
