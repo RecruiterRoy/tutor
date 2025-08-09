@@ -4,6 +4,17 @@
 // Use the global supabaseClient that's initialized in config.js
 // No need to declare supabase here as it's already available via window.supabaseClient
 
+// Global variable declarations to prevent redeclaration errors
+window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+window.isAPK = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+window.ttsEnabled = true;
+window.isRecording = false;
+window.currentUser = null;
+window.selectedAvatar = 'miss-sapna'; // Default to Miss Sapna
+window.userData = null;
+window.textToSpeech = null;
+window.voiceRecognition = null;
+
 // Make functions globally accessible IMMEDIATELY for HTML onclick handlers
 // These will be replaced with actual implementations later
 // Note: toggleVoiceRecording is defined later in the file
@@ -1314,7 +1325,7 @@ let isRecording = false; // Declare isRecording at top level
 let isAmbientListening = false;
 
 // Enhanced voice recognition variables
-let voiceRecognition = null;
+
 let isLongPressActive = false;
 let currentTranscript = '';
 let micLongPressTimer = null;
@@ -3350,14 +3361,13 @@ function stopRecording() {
 }
 
 async function toggleVoiceRecording() {
-    if (!window.voiceRecognition) {
-        console.log('Voice recognition not initialized');
-        return;
+    if (!voiceRecognition) {
+        initEnhancedSpeechRecognition();
     }
 
-    if (window.voiceRecognition.isListening) {
+    if (isRecording) {
         // Stop recording
-        window.voiceRecognition.stop();
+        stopContinuousRecording();
         updateVoiceButton();
     } else {
         // Stop any ongoing TTS immediately
@@ -3368,30 +3378,8 @@ async function toggleVoiceRecording() {
         
         // Start recording immediately
         try {
-            await window.voiceRecognition.startListening();
+            startContinuousRecording();
             updateVoiceButton();
-            
-            // Auto-send after voice recognition completes
-            window.voiceRecognition.onResult = async (transcript) => {
-                if (transcript && transcript.trim()) {
-                    // Set the transcript in the input field
-                    const chatInput = document.getElementById('chatInput');
-                    const chatInputMobile = document.getElementById('chatInputMobile');
-                    if (chatInput) {
-                        chatInput.value = transcript;
-                    }
-                    if (chatInputMobile) {
-                        chatInputMobile.value = transcript;
-                    }
-                    
-                    // Auto-send the message
-                    await sendMessage();
-                    
-                    // Update voice button
-                    updateVoiceButton();
-                }
-            };
-        
         } catch (error) {
             console.error('Voice recording error:', error);
             showError('Voice recording failed. Please try again.');
@@ -5939,15 +5927,15 @@ function initEnhancedSpeechRecognition() {
     }
     
     // Set language based on current avatar
-    const currentAvatar = window.selectedAvatar || 'roy-sir';
+    const currentAvatar = window.selectedAvatar || 'miss-sapna';
     if (currentAvatar === 'miss-sapna') {
         voiceRecognition.lang = 'hi-IN'; // Hindi for Ms. Sapna
     } else {
         voiceRecognition.lang = 'en-IN'; // English for Roy Sir
     }
     
-    // Configure for multiple voices (adults and children)
-    voiceRecognition.grammars = null; // Allow any speech
+    // Remove the problematic grammars assignment
+    // voiceRecognition.grammars = null; // This was causing the error
     
     voiceRecognition.onstart = () => {
         console.log('🎤 Speech recognition started');
