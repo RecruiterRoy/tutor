@@ -6468,4 +6468,216 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Enhanced voice recognition variables are already declared globally
 
+// ===== NEW SIMPLIFIED MIC SYSTEM =====
+let micSystem = {
+    isRecording: false,
+    recognition: null,
+    currentTranscript: '',
+    isLongPressActive: false,
+    longPressTimer: null,
+    
+    init() {
+        console.log('🎤 Initializing new mic system...');
+        
+        // Check for speech recognition support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.error('❌ Speech recognition not supported');
+            return false;
+        }
+        
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = false;
+        this.recognition.interimResults = true;
+        this.recognition.maxAlternatives = 1;
+        this.recognition.lang = 'hi-IN'; // Default to Hindi for Miss Sapna
+        
+        // Event handlers
+        this.recognition.onstart = () => {
+            console.log('🎤 Recording started');
+            this.isRecording = true;
+            this.updateMicButton(true);
+        };
+        
+        this.recognition.onresult = (event) => {
+            let finalTranscript = '';
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            
+            this.currentTranscript = finalTranscript + interimTranscript;
+            this.displayTranscript(this.currentTranscript);
+        };
+        
+        this.recognition.onend = () => {
+            console.log('🎤 Recording ended');
+            this.isRecording = false;
+            this.updateMicButton(false);
+            
+            // Send transcript if we have one
+            if (this.currentTranscript.trim()) {
+                this.sendTranscript();
+            }
+        };
+        
+        this.recognition.onerror = (event) => {
+            console.error('🎤 Recording error:', event.error);
+            this.isRecording = false;
+            this.updateMicButton(false);
+            
+            if (event.error === 'no-speech') {
+                showError('No speech detected. Please try again.');
+            }
+        };
+        
+        console.log('✅ Mic system initialized');
+        return true;
+    },
+    
+    startRecording() {
+        if (this.isRecording) {
+            console.log('🎤 Already recording, stopping first...');
+            this.stopRecording();
+            return;
+        }
+        
+        if (!this.recognition) {
+            if (!this.init()) {
+                showError('Voice recognition not supported');
+                return;
+            }
+        }
+        
+        try {
+            this.currentTranscript = '';
+            this.recognition.start();
+        } catch (error) {
+            console.error('🎤 Error starting recording:', error);
+            showError('Failed to start recording');
+        }
+    },
+    
+    stopRecording() {
+        if (this.recognition && this.isRecording) {
+            this.recognition.stop();
+        }
+    },
+    
+    updateMicButton(isRecording) {
+        const micButton = document.getElementById('voiceButtonMobile');
+        if (micButton) {
+            if (isRecording) {
+                micButton.innerHTML = '<span class="text-xs">🔴</span>';
+                micButton.classList.add('recording');
+            } else {
+                micButton.innerHTML = '<span class="text-xs">🎤</span>';
+                micButton.classList.remove('recording');
+            }
+        }
+    },
+    
+    displayTranscript(transcript) {
+        const chatInput = document.getElementById('chatInput');
+        const chatInputMobile = document.getElementById('chatInputMobile');
+        
+        if (chatInput) {
+            chatInput.value = transcript;
+            chatInput.placeholder = 'Listening...';
+        }
+        
+        if (chatInputMobile) {
+            chatInputMobile.value = transcript;
+            chatInputMobile.placeholder = 'Listening...';
+        }
+    },
+    
+    sendTranscript() {
+        if (this.currentTranscript.trim()) {
+            console.log('🎤 Sending transcript:', this.currentTranscript);
+            
+            // Set the transcript in input fields
+            const chatInput = document.getElementById('chatInput');
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            
+            if (chatInput) chatInput.value = this.currentTranscript;
+            if (chatInputMobile) chatInputMobile.value = this.currentTranscript;
+            
+            // Send the message
+            sendMessage();
+            
+            // Clear transcript
+            this.currentTranscript = '';
+        }
+    },
+    
+    setupLongPress(micButton) {
+        let pressTimer = null;
+        let isLongPress = false;
+        
+        const handlePress = (e) => {
+            e.preventDefault();
+            isLongPress = false;
+            pressTimer = setTimeout(() => {
+                isLongPress = true;
+                console.log('🎤 Long press detected - starting continuous recording');
+                this.startRecording();
+            }, 500); // 500ms for long press
+        };
+        
+        const handleRelease = (e) => {
+            e.preventDefault();
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+            
+            if (isLongPress) {
+                // Long press release - stop recording and send
+                console.log('🎤 Long press release - stopping recording');
+                this.stopRecording();
+            } else {
+                // Short press - start recording (will auto-stop on speech end)
+                console.log('🎤 Short press - starting recording');
+                this.startRecording();
+            }
+        };
+        
+        // Remove any existing listeners
+        micButton.removeEventListener('touchstart', handlePress);
+        micButton.removeEventListener('touchend', handleRelease);
+        micButton.removeEventListener('mousedown', handlePress);
+        micButton.removeEventListener('mouseup', handleRelease);
+        micButton.removeEventListener('click', () => {});
+        
+        // Add new listeners
+        micButton.addEventListener('touchstart', handlePress);
+        micButton.addEventListener('touchend', handleRelease);
+        micButton.addEventListener('mousedown', handlePress);
+        micButton.addEventListener('mouseup', handleRelease);
+        
+        console.log('✅ Long press setup complete');
+    }
+};
+
+// ===== REPLACE OLD FUNCTIONS =====
+function startVoiceRecordingWithPermission() {
+    console.log('🎤 Starting voice recording with permission...');
+    micSystem.startRecording();
+}
+
+function setupMicLongPress(micButton) {
+    micSystem.setupLongPress(micButton);
+}
+
+// Remove all the old complex functions
+// initEnhancedSpeechRecognition, startContinuousRecording, stopContinuousRecording, startNormalRecording
+// are all replaced by the new micSystem
+
 
