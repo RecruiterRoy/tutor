@@ -12,7 +12,10 @@ window.isRecording = false;
 window.currentUser = null;
 window.selectedAvatar = 'miss-sapna'; // Default to Miss Sapna
 window.userData = null;
-window.textToSpeech = null;
+// Do not override the TTS instance created by textToSpeech.js
+if (typeof window.textToSpeech === 'undefined') {
+    window.textToSpeech = null;
+}
 window.voiceRecognition = null;
 
 // Make functions globally accessible IMMEDIATELY for HTML onclick handlers
@@ -5184,6 +5187,29 @@ document.addEventListener('touchstart', trackUserInteraction);
 
 // Initialize user interaction tracking
 window.userHasInteracted = false;
+
+// Global click delegation to ensure critical buttons always work
+document.addEventListener('click', (event) => {
+    const target = event.target.closest('#downloadAppBtn, #profilePopupBtn, #contactUsBtn, #subjectManagerBtn');
+    if (!target) return;
+    event.preventDefault();
+    switch (target.id) {
+        case 'downloadAppBtn':
+            if (typeof window.downloadApp === 'function') window.downloadApp();
+            break;
+        case 'profilePopupBtn':
+            if (typeof window.showProfilePopup === 'function') window.showProfilePopup();
+            break;
+        case 'contactUsBtn':
+            if (typeof window.showContactUs === 'function') window.showContactUs();
+            break;
+        case 'subjectManagerBtn':
+            if (typeof window.showSubjectManager === 'function') window.showSubjectManager();
+            break;
+        default:
+            break;
+    }
+});
 
 // Close avatar selection when clicking outside
 function closeAvatarSelectionOnOutsideClick(event) {
