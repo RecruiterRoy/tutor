@@ -164,6 +164,10 @@ window.showSubjectManager = function() {
     } else {
         console.error('❌ subjectManager not available');
         showError('Subject manager not loaded. Please refresh the page.');
+        // Try to load subjectManager
+        if (typeof loadSubjectManager === 'function') {
+            loadSubjectManager();
+        }
     }
 };
 
@@ -3315,16 +3319,11 @@ function initSpeechRecognition() {
         recognition.interimResults = isMobile ? true : false; // Enable interim results on mobile for better responsiveness
         recognition.maxAlternatives = isMobile ? 2 : 1; // More alternatives on mobile for better accuracy
         
-        // Set language based on current avatar
-        const currentAvatar = window.selectedAvatar || 'roy-sir';
-        if (currentAvatar === 'miss-sapna') {
-            recognition.lang = 'hi-IN'; // Hindi for Ms. Sapna
-        } else {
-            recognition.lang = 'en-IN'; // English for Roy Sir
-        }
+        // Set language to support both Hindi and English
+        recognition.lang = 'hi-IN,en-IN'; // Support both Hindi and English
         
-        // Store current language for transcript processing
-        recognition.currentLanguage = currentAvatar === 'miss-sapna' ? 'hindi' : 'english';
+        // Store current avatar for reference
+        recognition.currentAvatar = window.selectedAvatar || 'miss-sapna';
 
         recognition.onstart = () => {
             console.log('✅ Speech recognition started');
@@ -3366,14 +3365,9 @@ function initSpeechRecognition() {
                 processedTranscript = transcript;
                 console.log('🔤 Detected Hindi speech, keeping in Devanagari script');
             } else {
-                // Mixed or unclear - use based on current avatar setting
-                if (recognition.currentLanguage === 'english') {
-                    // Convert to English if possible, otherwise keep as is
-                    processedTranscript = transcript;
-                } else {
-                    // Keep as is for Hindi
-                    processedTranscript = transcript;
-                }
+                // Mixed or unclear - keep as is (let the user decide)
+                processedTranscript = transcript;
+                console.log('🔤 Mixed or unclear language, keeping transcript as is');
             }
             
             // Set value in both desktop and mobile inputs
@@ -6035,31 +6029,71 @@ function setupDashboardEventListeners() {
     // Download app button
     const downloadAppBtn = document.getElementById('downloadAppBtn');
     if (downloadAppBtn) {
-        downloadAppBtn.addEventListener('click', downloadApp);
+        downloadAppBtn.addEventListener('click', () => {
+            console.log('📱 Download App button clicked');
+            if (typeof window.downloadApp === 'function') {
+                window.downloadApp();
+            } else {
+                console.error('❌ downloadApp function not found');
+                showError('Download app function not available');
+            }
+        });
     }
     
     // Profile popup button
     const profilePopupBtn = document.getElementById('profilePopupBtn');
     if (profilePopupBtn) {
-        profilePopupBtn.addEventListener('click', showProfilePopup);
+        profilePopupBtn.addEventListener('click', () => {
+            console.log('👤 Profile popup button clicked');
+            if (typeof window.showProfilePopup === 'function') {
+                window.showProfilePopup();
+            } else {
+                console.error('❌ showProfilePopup function not found');
+                showError('Profile popup function not available');
+            }
+        });
     }
     
     // Contact us button
     const contactUsBtn = document.getElementById('contactUsBtn');
     if (contactUsBtn) {
-        contactUsBtn.addEventListener('click', showContactUs);
+        contactUsBtn.addEventListener('click', () => {
+            console.log('💬 Contact us button clicked');
+            if (typeof window.showContactUs === 'function') {
+                window.showContactUs();
+            } else {
+                console.error('❌ showContactUs function not found');
+                showError('Contact us function not available');
+            }
+        });
     }
     
     // Scroll to top button
     const scrollToTopBtn = document.getElementById('scrollToTopBtn');
     if (scrollToTopBtn) {
-        scrollToTopBtn.addEventListener('click', scrollToTop);
+        scrollToTopBtn.addEventListener('click', () => {
+            console.log('⬆️ Scroll to top button clicked');
+            if (typeof window.scrollToTop === 'function') {
+                window.scrollToTop();
+            } else {
+                console.error('❌ scrollToTop function not found');
+                showError('Scroll to top function not available');
+            }
+        });
     }
     
     // Subject manager button
     const subjectManagerBtn = document.getElementById('subjectManagerBtn');
     if (subjectManagerBtn) {
-        subjectManagerBtn.addEventListener('click', showSubjectManager);
+        subjectManagerBtn.addEventListener('click', () => {
+            console.log('📚 Subject manager button clicked');
+            if (typeof window.showSubjectManager === 'function') {
+                window.showSubjectManager();
+            } else {
+                console.error('❌ showSubjectManager function not found');
+                showError('Subject manager function not available');
+            }
+        });
     }
     
     // Avatar selection button
@@ -6107,13 +6141,37 @@ function setupDashboardEventListeners() {
             } else if (onclick.includes('showTrialInfo')) {
                 button.addEventListener('click', showTrialInfo);
             } else if (onclick.includes('downloadApp')) {
-                button.addEventListener('click', downloadApp);
+                button.addEventListener('click', () => {
+                    if (typeof window.downloadApp === 'function') {
+                        window.downloadApp();
+                    } else {
+                        showError('Download app function not available');
+                    }
+                });
             } else if (onclick.includes('showProfilePopup')) {
-                button.addEventListener('click', showProfilePopup);
+                button.addEventListener('click', () => {
+                    if (typeof window.showProfilePopup === 'function') {
+                        window.showProfilePopup();
+                    } else {
+                        showError('Profile popup function not available');
+                    }
+                });
             } else if (onclick.includes('showContactUs')) {
-                button.addEventListener('click', showContactUs);
+                button.addEventListener('click', () => {
+                    if (typeof window.showContactUs === 'function') {
+                        window.showContactUs();
+                    } else {
+                        showError('Contact us function not available');
+                    }
+                });
             } else if (onclick.includes('scrollToTop')) {
-                button.addEventListener('click', scrollToTop);
+                button.addEventListener('click', () => {
+                    if (typeof window.scrollToTop === 'function') {
+                        window.scrollToTop();
+                    } else {
+                        showError('Scroll to top function not available');
+                    }
+                });
             } else if (onclick.includes('closeProfilePopup')) {
                 button.addEventListener('click', closeProfilePopup);
             } else if (onclick.includes('saveProfileFromPopup')) {
@@ -6139,7 +6197,13 @@ function setupDashboardEventListeners() {
             } else if (onclick.includes('upgradeToPremium')) {
                 button.addEventListener('click', upgradeToPremium);
             } else if (onclick.includes('showSubjectManager')) {
-                button.addEventListener('click', showSubjectManager);
+                button.addEventListener('click', () => {
+                    if (typeof window.showSubjectManager === 'function') {
+                        window.showSubjectManager();
+                    } else {
+                        showError('Subject manager function not available');
+                    }
+                });
             } else if (onclick.includes('showAvatarSelectionModal')) {
                 button.addEventListener('click', showAvatarSelectionModal);
             } else if (onclick.includes('closeAvatarSelectionModal')) {
@@ -6203,13 +6267,8 @@ let micSystem = {
         this.recognition.continuous = false;
         this.recognition.interimResults = true;
         this.recognition.maxAlternatives = 1;
-        // Set language based on current avatar
-        const currentAvatar = window.selectedAvatar || 'miss-sapna';
-        if (currentAvatar === 'miss-sapna') {
-            this.recognition.lang = 'hi-IN'; // Hindi for Miss Sapna
-        } else {
-            this.recognition.lang = 'en-IN'; // English for Roy Sir
-        }
+        // Set language to support both Hindi and English
+        this.recognition.lang = 'hi-IN,en-IN'; // Support both Hindi and English
         
         // Event handlers
         this.recognition.onstart = () => {
