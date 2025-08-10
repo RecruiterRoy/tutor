@@ -2931,69 +2931,52 @@ async function sendMessage() {
         // Get conversation context
         const context = getConversationContext();
         
-        // Prepare request body
-        const requestBody = {
-            message: message,
-            grade: window.userData?.class?.replace('Class ', '') || '5',
-            subject: 'General',
-            chatHistory: context.chatHistory,
-            subjectHistory: context.subjectHistory,
-            syllabusContext: context.syllabusContext,
-            userProfile: context.userProfile,
-            teacher: getCurrentAvatarName(),
-            avatar: getCurrentAvatarId(),
-            selectedVoice: window.selectedVoice || 'Google Hindi'
-        };
-        
-        console.log('🔧 Request body prepared:', requestBody);
-        
-        // Send to AI
-        console.log('🔧 Sending request to /api/enhanced-chat');
-        
-        const response = await fetch('/api/enhanced-chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody)
-        });
-        
-        console.log('🔧 Response status:', response.status);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ API Error:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        // Set up GPTService context
+        if (window.gptService) {
+            window.gptService.setContext(
+                window.userData?.class?.replace('Class ', '') || '5',
+                'General'
+            );
+            window.gptService.setTeacher(getCurrentAvatarName());
         }
         
-        const data = await response.json();
-        console.log('✅ AI response received:', data);
+        console.log('🔧 Using GPTService to send message');
+        
+        // Use GPTService instead of direct API call
+        let aiResponse;
+        try {
+            aiResponse = await window.gptService.sendMessage(message, context.userProfile);
+            console.log('✅ AI response received via GPTService:', aiResponse);
+        } catch (error) {
+            console.error('❌ GPTService Error:', error);
+            throw error;
+        }
         
         // Remove typing indicator
         removeTypingIndicator();
         
         // Add AI response to chat
-        if (data.response) {
-            await addMessage('assistant', data.response);
+        if (aiResponse) {
+            await addMessage('assistant', aiResponse);
             
-                    // Speak the response if TTS is enabled
-        if (window.ttsEnabled && !micSystem.isRecording) {
-            speakText(data.response);
-        } else if (window.ttsEnabled) {
-            // Force enable TTS on mobile
-            console.log('🔧 Forcing TTS on mobile');
-            speakText(data.response);
-        } else {
-            // Force TTS for mobile devices
-            if (window.isMobile || window.isAPK) {
-                console.log('🔧 Forcing TTS for mobile device');
-                speakText(data.response);
+            // Speak the response if TTS is enabled
+            if (window.ttsEnabled && !micSystem.isRecording) {
+                speakText(aiResponse);
+            } else if (window.ttsEnabled) {
+                // Force enable TTS on mobile
+                console.log('🔧 Forcing TTS on mobile');
+                speakText(aiResponse);
+            } else {
+                // Force TTS for mobile devices
+                if (window.isMobile || window.isAPK) {
+                    console.log('🔧 Forcing TTS for mobile device');
+                    speakText(aiResponse);
+                }
             }
-        }
         }
         
         // Save study session
-        await saveStudySession(message, data.response || 'No response received');
+        await saveStudySession(message, aiResponse || 'No response received');
         
     } catch (error) {
         console.error('❌ Error in sendMessage:', error);
