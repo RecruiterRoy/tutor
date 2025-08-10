@@ -5067,11 +5067,8 @@ function initializeEventListeners() {
     });
   }
   
-  // Voice Buttons
-  if (voiceButton) {
-    voiceButton.removeEventListener('click', toggleVoiceRecording);
-    voiceButton.addEventListener('click', startVoiceRecordingWithPermission);
-  }
+  // Voice Buttons - handled by micSystem in setupVoiceSettingsListeners
+  console.log('✅ Voice button listeners handled by micSystem');
   
   // Mobile voice button - handled in setupVoiceSettingsListeners
   console.log('✅ Mobile voice button listeners handled in setupVoiceSettingsListeners');
