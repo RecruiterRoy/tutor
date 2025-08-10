@@ -1,0 +1,3 @@
+[33mf3a6ff06[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m FIXED: Added API key validation test to identify authentication issue
+[33m06901d55[m ENHANCED: Added detailed error logging to GPTService for better debugging
+[33m55995af5[m FIXED: Changed workflow to Dashboard  GPTService  enhanced-chat  Return

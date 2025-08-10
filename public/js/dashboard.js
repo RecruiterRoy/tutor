@@ -79,6 +79,8 @@ window.showSection = function(sectionName) {
                 if (chatBox) {
                     chatBox.style.display = 'none';
                     chatBox.style.zIndex = '1';
+                    chatBox.style.position = 'absolute';
+                    chatBox.style.top = '-9999px';
                     console.log('✅ Chat box hidden on mobile');
                 }
                 
@@ -87,13 +89,25 @@ window.showSection = function(sectionName) {
                 if (mainChatArea) {
                     mainChatArea.style.display = 'none';
                     mainChatArea.style.zIndex = '1';
+                    mainChatArea.style.position = 'absolute';
+                    mainChatArea.style.top = '-9999px';
                     console.log('✅ Main chat area hidden on mobile');
+                }
+                
+                // Hide the entire chat container
+                const chatContainer = document.querySelector('.chat-container');
+                if (chatContainer) {
+                    chatContainer.style.display = 'none';
+                    chatContainer.style.zIndex = '1';
+                    console.log('✅ Chat container hidden on mobile');
                 }
                 
                 // Show the selected section
                 if (selectedSection) {
                     selectedSection.style.display = 'block';
                     selectedSection.style.zIndex = '10';
+                    selectedSection.style.position = 'relative';
+                    selectedSection.style.top = '0';
                     console.log('✅ Section shown on mobile:', sectionName);
                 }
             }

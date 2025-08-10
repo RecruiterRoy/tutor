@@ -347,21 +347,13 @@ export default async function handler(req, res) {
     });
   }
 
-  // Test API key immediately
-  try {
-    console.log('🔧 Testing API key with Anthropic...');
-    const testResponse = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 10,
-      messages: [{ role: "user", content: "Hello" }]
-    });
-    console.log('✅ API key test successful:', testResponse.content[0].text);
-  } catch (error) {
-    console.error('❌ API key test failed:', error.message);
+  // Validate API key format
+  if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+    console.error('❌ Invalid API key format');
     return res.status(500).json({
       success: false,
-      error: 'API key authentication failed',
-      details: error.message
+      error: 'Invalid API key format',
+      details: 'API key must start with sk-ant-'
     });
   }
 

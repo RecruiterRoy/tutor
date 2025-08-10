@@ -240,30 +240,37 @@
                 max-width: 320px;
             }
             
-            /* Mobile button layout fixes */
+            /* Mobile button layout fixes - ENHANCED */
             .mobile-chat-input .flex.space-x-2.flex-nowrap {
                 width: 100% !important;
                 display: flex !important;
                 flex-wrap: nowrap !important;
-                overflow-x: hidden;
+                overflow-x: hidden !important;
+                flex-direction: row !important;
+                align-items: center !important;
             }
             
             .mobile-chat-input button:nth-child(1) {
                 width: 25% !important;
                 flex-shrink: 0 !important;
                 flex-grow: 0 !important;
+                min-width: 60px !important;
+                max-width: 80px !important;
             }
             
             .mobile-chat-input button:nth-child(2) {
                 width: 25% !important;
                 flex-shrink: 0 !important;
                 flex-grow: 0 !important;
+                min-width: 60px !important;
+                max-width: 80px !important;
             }
             
             .mobile-chat-input button:nth-child(3) {
                 width: 50% !important;
                 flex-shrink: 0 !important;
                 flex-grow: 0 !important;
+                min-width: 120px !important;
             }
             
             .mobile-chat-input button {
@@ -272,6 +279,22 @@
                 display: inline-block !important;
                 float: none !important;
                 clear: none !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+            
+            /* Force single line on very small screens */
+            @media (max-width: 480px) {
+                .mobile-chat-input .flex.space-x-2.flex-nowrap {
+                    flex-direction: row !important;
+                    flex-wrap: nowrap !important;
+                }
+                
+                .mobile-chat-input button {
+                    font-size: 12px !important;
+                    padding: 8px 4px !important;
+                }
             }
             
             /* Mobile subject buttons */
