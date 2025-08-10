@@ -2934,6 +2934,8 @@ async function sendMessage() {
         // Prepare request body
         const requestBody = {
             message: message,
+            grade: window.userData?.class?.replace('Class ', '') || '5',
+            subject: 'General',
             chatHistory: context.chatHistory,
             subjectHistory: context.subjectHistory,
             syllabusContext: context.syllabusContext,
@@ -3190,8 +3192,15 @@ function setupVoiceSettingsListeners() {
         });
     }
 
+    // Desktop voice button - handled by micSystem
     if (voiceButton) {
-        voiceButton.addEventListener('click', startVoiceRecordingWithPermission);
+        // Remove any existing listeners to avoid conflicts
+        const newVoiceButton = voiceButton.cloneNode(true);
+        voiceButton.parentNode.replaceChild(newVoiceButton, voiceButton);
+        
+        // Setup long press functionality ONLY
+        setupMicLongPress(newVoiceButton);
+        console.log('✅ Desktop voice button listener added (consolidated)');
     }
     
     // Mobile button event listeners - CONSOLIDATED
@@ -6186,6 +6195,10 @@ let micSystem = {
         if (this.isRecording) {
             console.log('🎤 Already recording, stopping first...');
             this.stopRecording();
+            // Wait a bit before starting new recording
+            setTimeout(() => {
+                this.startRecording();
+            }, 100);
             return;
         }
         
@@ -6201,7 +6214,15 @@ let micSystem = {
             this.recognition.start();
         } catch (error) {
             console.error('🎤 Error starting recording:', error);
-            showError('Failed to start recording');
+            // Don't show error to user, just log it
+            if (error.name === 'InvalidStateError') {
+                console.log('🎤 Recognition already started, resetting...');
+                this.isRecording = false;
+                // Try again after a short delay
+                setTimeout(() => {
+                    this.startRecording();
+                }, 200);
+            }
         }
     },
     
@@ -6212,8 +6233,13 @@ let micSystem = {
     },
     
     updateMicButton(isRecording) {
-        const micButton = document.getElementById('voiceButtonMobile');
-        if (micButton) {
+        // Update both mobile and desktop mic buttons
+        const micButtonMobile = document.getElementById('voiceButtonMobile');
+        const micButtonDesktop = document.getElementById('voiceButton');
+        
+        const buttons = [micButtonMobile, micButtonDesktop].filter(Boolean);
+        
+        buttons.forEach(micButton => {
             if (isRecording) {
                 // Red light when recording
                 micButton.innerHTML = '<span class="text-xs animate-pulse">🔴</span>';
@@ -6227,7 +6253,7 @@ let micSystem = {
                 micButton.style.backgroundColor = ''; // Reset to default
                 micButton.style.color = '';
             }
-        }
+        });
     },
     
     displayTranscript(transcript) {
@@ -6268,17 +6294,22 @@ let micSystem = {
     },
     
     showProcessingIndicator() {
-        const micButton = document.getElementById('voiceButtonMobile');
-        if (micButton) {
+        // Update both mobile and desktop mic buttons
+        const micButtonMobile = document.getElementById('voiceButtonMobile');
+        const micButtonDesktop = document.getElementById('voiceButton');
+        
+        const buttons = [micButtonMobile, micButtonDesktop].filter(Boolean);
+        
+        buttons.forEach(micButton => {
             micButton.innerHTML = '<span class="text-xs animate-spin">⏳</span>';
             micButton.style.backgroundColor = '#f59e0b'; // Orange background
             micButton.style.color = 'white';
-            
-            // Reset after 3 seconds
-            setTimeout(() => {
-                this.updateMicButton(false);
-            }, 3000);
-        }
+        });
+        
+        // Reset after 3 seconds
+        setTimeout(() => {
+            this.updateMicButton(false);
+        }, 3000);
     },
     
     setupLongPress(micButton) {

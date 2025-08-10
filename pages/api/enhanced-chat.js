@@ -32,6 +32,12 @@ if (!process.env.ANTHROPIC_API_KEY) {
   console.error('❌ Available environment variables:', Object.keys(process.env).filter(key => key.includes('ANTHROPIC') || key.includes('API')));
 }
 
+// Check if we have a valid API key
+if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'dummy-key-for-testing') {
+  console.error('❌ ANTHROPIC_API_KEY is not properly set in Vercel environment variables');
+  console.error('❌ Please add ANTHROPIC_API_KEY to your Vercel project settings');
+}
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || 'dummy-key-for-testing',
 });
@@ -366,8 +372,13 @@ export default async function handler(req, res) {
     let response = '';
     let additionalData = {};
 
-    // Get knowledge bank context
-    const knowledgeResults = await enhancedTutor.searchKnowledgeBank(message, `class${grade}`, subject);
+    // Get knowledge bank context (optional - don't fail if it doesn't work)
+    let knowledgeResults = { context: '', results: [] };
+    try {
+        knowledgeResults = await enhancedTutor.searchKnowledgeBank(message, `class${grade}`, subject);
+    } catch (error) {
+        console.log('⚠️ Knowledge bank search failed, continuing without it:', error.message);
+    }
 
     // Build user context from profile - FIXED: Use actual user data
     const userContext = userProfile ? {
