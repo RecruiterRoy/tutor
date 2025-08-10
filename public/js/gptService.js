@@ -60,11 +60,14 @@ class GPTService {
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.error('❌ API Error Response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
             }
             
             const data = await response.json();
+            console.log('🔧 API Response Data:', data);
+            
             if (!data.success) {
                 throw new Error(data.error || 'API request failed');
             }
