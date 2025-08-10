@@ -84,6 +84,10 @@ window.showSection = function(sectionName) {
         selectedSection.style.zIndex = '10';
         selectedSection.style.position = 'relative';
         selectedSection.style.top = '0';
+        // Ensure mobile scrollability
+        selectedSection.style.overflowY = 'auto';
+        selectedSection.style.maxHeight = '100vh';
+        selectedSection.style.webkitOverflowScrolling = 'touch';
         console.log('✅ Section shown:', sectionName + 'Section');
         
         // Update subject progress when progress section is shown
@@ -196,6 +200,8 @@ window.openMobileSidebar = function() {
         if (window.isMobile) {
             document.body.style.overflow = 'hidden';
         }
+        // Allow repeated opens
+        sidebar.dataset.transitioning = 'false';
         console.log('✅ Mobile sidebar opened');
     } else {
         console.log('❌ Mobile sidebar elements not found');
@@ -3326,11 +3332,10 @@ function initSpeechRecognition() {
         recognition.interimResults = isMobile ? true : false; // Enable interim results on mobile for better responsiveness
         recognition.maxAlternatives = isMobile ? 2 : 1; // More alternatives on mobile for better accuracy
         
-        // Set language to support both Hindi and English
-        recognition.lang = 'hi-IN,en-IN'; // Support both Hindi and English
-        
-        // Store current avatar for reference
-        recognition.currentAvatar = window.selectedAvatar || 'miss-sapna';
+        // Start with English and dynamically switch if Hindi is detected
+        recognition.lang = 'en-IN';
+        recognition._dynamicSwitch = true;
+        recognition._lastLang = 'en-IN';
 
         recognition.onstart = () => {
             console.log('✅ Speech recognition started');
@@ -3359,18 +3364,35 @@ function initSpeechRecognition() {
             // Process transcript based on detected language
             let processedTranscript = transcript;
             
-            // Detect if user is speaking English or Hindi
-            const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
-            const englishPattern = /^[a-zA-Z\s.,!?]+$/; // Only English characters
-            
-            if (englishPattern.test(transcript) && !hindiPattern.test(transcript)) {
+    // Detect if user is speaking English or Hindi
+    const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
+    const englishPattern = /[A-Za-z]/; // any English letters anywhere
+
+            const isEnglish = englishPattern.test(transcript) && !hindiPattern.test(transcript);
+            const isHindi = !isEnglish && hindiPattern.test(transcript);
+
+            if (isEnglish) {
                 // User is speaking English - keep in English script
                 processedTranscript = transcript;
                 console.log('🔤 Detected English speech, keeping in English script');
-            } else if (hindiPattern.test(transcript)) {
+                // Dynamic switch: if recognition in Hindi, switch to English
+                if (recognition._dynamicSwitch && recognition._lastLang !== 'en-IN') {
+                    try { recognition.stop(); } catch(_) {}
+                    recognition.lang = 'en-IN';
+                    recognition._lastLang = 'en-IN';
+                    console.log('🔁 Switched STT language to en-IN');
+                }
+            } else if (isHindi) {
                 // User is speaking Hindi - keep in Devanagari script
                 processedTranscript = transcript;
                 console.log('🔤 Detected Hindi speech, keeping in Devanagari script');
+                // Dynamic switch: if recognition in English, switch to Hindi
+                if (recognition._dynamicSwitch && recognition._lastLang !== 'hi-IN') {
+                    try { recognition.stop(); } catch(_) {}
+                    recognition.lang = 'hi-IN';
+                    recognition._lastLang = 'hi-IN';
+                    console.log('🔁 Switched STT language to hi-IN');
+                }
             } else {
                 // Mixed or unclear - keep as is (let the user decide)
                 processedTranscript = transcript;
@@ -3796,6 +3818,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const overlay = document.getElementById('mobileSidebarOverlay');
     if (overlay) {
         overlay.addEventListener('click', closeMobileSidebar);
+        // Close on any tap outside the sidebar
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('mobileSidebar');
+            if (!sidebar) return;
+            const isOpen = sidebar.classList.contains('translate-x-0');
+            if (!isOpen) return;
+            if (!sidebar.contains(e.target) && e.target !== document.getElementById('mobileSidebarToggle')) {
+                closeMobileSidebar();
+            }
+        });
+        // Close on ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMobileSidebar();
+        });
     }
 });
 
@@ -4677,6 +4713,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Initialize Supabase first
         await initializeSupabase();
+        // After supabase auth, ensure userData is loaded for mobile
+        if (!window.userData || !window.userData.full_name) {
+            try {
+                await loadUserData();
+                updateUserDisplay(window.userData || {});
+            } catch (_) {}
+        }
         
         // Initialize the dashboard
         await initializeDashboard();
@@ -4846,11 +4889,8 @@ async function addMessage(role, content) {
     }
 
     if (role === 'ai') {
-        if (window.textToSpeech) {
-            window.textToSpeech.speak(content, { role: 'ai' });
-        } else {
-            speakText(content);
-        }
+        // Use resilient speaker that waits for TTS init if needed
+        speakText(content);
     }
 }
 
@@ -6141,10 +6181,12 @@ function setupDashboardEventListeners() {
     }
     
     // Mobile sidebar navigation items
-    const navItems = document.querySelectorAll('.nav-item[data-section]');
+    const navItems = document.querySelectorAll('.nav-item[data-section], .sidebar-modern .nav-item');
     navItems.forEach(item => {
         item.addEventListener('click', () => {
-            const section = item.getAttribute('data-section');
+            const ds = item.getAttribute('data-section');
+            const rawText = item.textContent.trim().toLowerCase();
+            const section = ds || (rawText.includes('classroom') ? 'chat' : rawText.includes('study') ? 'materials' : rawText.includes('progress') ? 'progress' : rawText.includes('settings') ? 'settings' : 'chat');
             showSection(section);
             closeMobileSidebar();
         });
@@ -6327,7 +6369,7 @@ let micSystem = {
             
             // Detect if user is speaking English or Hindi
             const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
-            const englishPattern = /^[a-zA-Z\s.,!?]+$/; // Only English characters
+            const englishPattern = /[A-Za-z]/; // any English letters anywhere
             
             if (englishPattern.test(processedTranscript) && !hindiPattern.test(processedTranscript)) {
                 // User is speaking English - keep in English script
