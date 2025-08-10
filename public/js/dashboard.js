@@ -131,6 +131,10 @@ window.showSection = function(sectionName) {
     });
     
     console.log('✅ Section navigation completed for:', sectionName);
+    // Notify listeners that a section is shown (for rebinding buttons)
+    try {
+        document.dispatchEvent(new CustomEvent('section:shown', { detail: { sectionName } }));
+    } catch (_) {}
 }
 
 window.saveChatMessage = function(message, response) {
@@ -3765,42 +3769,23 @@ function toggleMobileSidebar() {
     
     console.log('🔧 Mobile sidebar elements found, toggling...');
     
-    const isOpen = sidebar.classList.contains('translate-x-0');
-    console.log('🔧 Current state - isOpen:', isOpen);
-    console.log('🔧 Sidebar classes:', sidebar.className);
-    
-    // Set transition lock
+    // Always open on toggle (menu button), closing is handled by overlay/close button only
+    console.log('🔧 Forcing sidebar OPEN');
     sidebar.dataset.transitioning = 'true';
-    
-    if (isOpen) {
-        console.log('🔧 Sidebar is open, closing...');
-        closeMobileSidebar();
-    } else {
-        console.log('🔧 Sidebar is closed, opening...');
-        
-        // Force show elements first and ensure they're visible
-        sidebar.style.display = 'block';
-        sidebar.style.visibility = 'visible';
-        sidebar.style.zIndex = '50';
-        
-        overlay.style.display = 'block';
-        overlay.style.visibility = 'visible';
-        overlay.style.zIndex = '40';
-        
-        // Then animate
-        setTimeout(() => {
-            sidebar.classList.remove('-translate-x-full');
-            sidebar.classList.add('translate-x-0');
-            overlay.classList.remove('opacity-0', 'pointer-events-none');
-            overlay.classList.add('opacity-100', 'pointer-events-auto');
-            console.log('✅ Mobile sidebar opened');
-        }, 10);
-    }
-    
-    // Remove transition lock after animation completes
+    sidebar.style.display = 'block';
+    sidebar.style.visibility = 'visible';
+    sidebar.style.zIndex = '50';
+    overlay.style.display = 'block';
+    overlay.style.visibility = 'visible';
+    overlay.style.zIndex = '40';
     setTimeout(() => {
+        sidebar.classList.remove('-translate-x-full');
+        sidebar.classList.add('translate-x-0');
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        overlay.classList.add('opacity-100', 'pointer-events-auto');
+        console.log('✅ Mobile sidebar opened');
         sidebar.dataset.transitioning = 'false';
-    }, 350);
+    }, 10);
 }
 
 // Close sidebar when clicking overlay
@@ -4797,6 +4782,9 @@ window.showSection = showSection;
 window.closeMobileSidebar = closeMobileSidebar;
 window.logout = logout;
 window.saveChatMessage = saveChatMessage;
+// Ensure UI handlers are globally accessible for button bindings
+window.showProfilePopup = showProfilePopup;
+window.showContactUs = showContactUs;
 
 // Add a test function to verify button clicks
 window.testButtonClick = function(buttonName) {
@@ -4823,44 +4811,38 @@ console.log('✅ All functions assigned to window object');
 async function addMessage(role, content) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message-${role} p-4 rounded-2xl mb-4`;
-    
+    // Restore legacy classes so messages stack vertically
+    messageDiv.className = `message ${role === 'user' ? 'message-user' : 'message-ai'}`;
+
     // Process Mermaid diagrams
-    // Ensure content is a string before processing
     const contentString = typeof content === 'string' ? content : JSON.stringify(content);
     let processedContent = contentString;
     const hasMermaid = contentString.includes('```mermaid');
-    
+
     if (hasMermaid) {
-        processedContent = contentString.replace(/```mermaid([\s\S]*?)```/g, 
+        processedContent = contentString.replace(/```mermaid([\s\S]*?)```/g,
             '<div class="mermaid bg-gray-800 p-4 rounded-lg my-4">$1</div>');
     }
-    
+
     // Process other markdown
     processedContent = marked.parse(processedContent);
-    
+
+    // Bubble layout that respects vertical stacking
     messageDiv.innerHTML = `
-        <div class="flex items-start space-x-4">
-            <div class="w-10 h-10 ${role === 'user' ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gradient-to-r from-green-500 to-blue-600'} rounded-full flex items-center justify-center flex-shrink-0">
-                <span class="text-white font-bold text-sm">${role === 'user' ? 'You' : 'AI'}</span>
-            </div>
-            <div class="flex-1 overflow-x-auto">
-                <div class="text-white message-content prose prose-invert max-w-none">${processedContent}</div>
-                <p class="text-gray-400 text-xs mt-2">Just now</p>
-            </div>
+        <div class="message-bubble">
+            <div class="text-white message-content prose prose-invert max-w-none">${processedContent}</div>
+            <p class="text-gray-400 text-xs mt-2">Just now</p>
         </div>
     `;
-    
+
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    // Render diagrams after a small delay
+
     if (hasMermaid) {
         setTimeout(renderDiagrams, 100);
     }
 
     if (role === 'ai') {
-        // Use the new TTS system for AI responses
         if (window.textToSpeech) {
             window.textToSpeech.speak(content, { role: 'ai' });
         } else {
@@ -6026,10 +6008,13 @@ function setupDashboardEventListeners() {
         trialInfoBtn.addEventListener('click', showTrialInfo);
     }
     
-    // Download app button
-    const downloadAppBtn = document.getElementById('downloadAppBtn');
-    if (downloadAppBtn) {
-        downloadAppBtn.addEventListener('click', () => {
+    // Download app button (bind robustly, handle dynamic re-renders)
+    const bindDownload = () => {
+        const btn = document.getElementById('downloadAppBtn');
+        if (!btn) return;
+        btn.replaceWith(btn.cloneNode(true));
+        const fresh = document.getElementById('downloadAppBtn');
+        fresh.addEventListener('click', () => {
             console.log('📱 Download App button clicked');
             if (typeof window.downloadApp === 'function') {
                 window.downloadApp();
@@ -6038,12 +6023,16 @@ function setupDashboardEventListeners() {
                 showError('Download app function not available');
             }
         });
-    }
+    };
+    bindDownload();
     
     // Profile popup button
-    const profilePopupBtn = document.getElementById('profilePopupBtn');
-    if (profilePopupBtn) {
-        profilePopupBtn.addEventListener('click', () => {
+    const bindProfile = () => {
+        const btn = document.getElementById('profilePopupBtn');
+        if (!btn) return;
+        btn.replaceWith(btn.cloneNode(true));
+        const fresh = document.getElementById('profilePopupBtn');
+        fresh.addEventListener('click', () => {
             console.log('👤 Profile popup button clicked');
             if (typeof window.showProfilePopup === 'function') {
                 window.showProfilePopup();
@@ -6052,12 +6041,16 @@ function setupDashboardEventListeners() {
                 showError('Profile popup function not available');
             }
         });
-    }
+    };
+    bindProfile();
     
     // Contact us button
-    const contactUsBtn = document.getElementById('contactUsBtn');
-    if (contactUsBtn) {
-        contactUsBtn.addEventListener('click', () => {
+    const bindContact = () => {
+        const btn = document.getElementById('contactUsBtn');
+        if (!btn) return;
+        btn.replaceWith(btn.cloneNode(true));
+        const fresh = document.getElementById('contactUsBtn');
+        fresh.addEventListener('click', () => {
             console.log('💬 Contact us button clicked');
             if (typeof window.showContactUs === 'function') {
                 window.showContactUs();
@@ -6066,7 +6059,8 @@ function setupDashboardEventListeners() {
                 showError('Contact us function not available');
             }
         });
-    }
+    };
+    bindContact();
     
     // Scroll to top button
     const scrollToTopBtn = document.getElementById('scrollToTopBtn');
@@ -6083,9 +6077,12 @@ function setupDashboardEventListeners() {
     }
     
     // Subject manager button
-    const subjectManagerBtn = document.getElementById('subjectManagerBtn');
-    if (subjectManagerBtn) {
-        subjectManagerBtn.addEventListener('click', () => {
+    const bindSubjectManager = () => {
+        const btn = document.getElementById('subjectManagerBtn');
+        if (!btn) return;
+        btn.replaceWith(btn.cloneNode(true));
+        const fresh = document.getElementById('subjectManagerBtn');
+        fresh.addEventListener('click', () => {
             console.log('📚 Subject manager button clicked');
             if (typeof window.showSubjectManager === 'function') {
                 window.showSubjectManager();
@@ -6094,7 +6091,16 @@ function setupDashboardEventListeners() {
                 showError('Subject manager function not available');
             }
         });
-    }
+    };
+    bindSubjectManager();
+
+    // Re-bind on section changes (DOM may re-render parts)
+    document.addEventListener('section:shown', () => {
+        bindDownload();
+        bindProfile();
+        bindContact();
+        bindSubjectManager();
+    });
     
     // Avatar selection button
     const avatarSelectionBtn = document.getElementById('avatarSelectionBtn');
