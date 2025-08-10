@@ -42,6 +42,8 @@ if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'dummy-k
 const apiKey = process.env.ANTHROPIC_API_KEY || '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';
 
 console.log('🔧 Using API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'NOT_SET');
+console.log('🔧 API key length:', apiKey ? apiKey.length : 0);
+console.log('🔧 API key valid format:', apiKey ? apiKey.startsWith('sk-ant-') : false);
 
 const anthropic = new Anthropic({
   apiKey: apiKey,
@@ -342,6 +344,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ 
       success: false,
       error: 'Method not allowed' 
+    });
+  }
+
+  // Test API key immediately
+  try {
+    console.log('🔧 Testing API key with Anthropic...');
+    const testResponse = await anthropic.messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 10,
+      messages: [{ role: "user", content: "Hello" }]
+    });
+    console.log('✅ API key test successful:', testResponse.content[0].text);
+  } catch (error) {
+    console.error('❌ API key test failed:', error.message);
+    return res.status(500).json({
+      success: false,
+      error: 'API key authentication failed',
+      details: error.message
     });
   }
 
