@@ -198,6 +198,28 @@ class TextToSpeech {
             return;
         }
 
+        // Respect TTS enable/disable flags and autoplay constraints
+        if (options.role === 'ai') {
+            const isDisabled = (typeof window !== 'undefined') && (window.ttsDisabled === true || localStorage.getItem('ttsEnabled') === 'false');
+            if (isDisabled) {
+                console.log('[TTS] Skipping AI speech because TTS is disabled');
+                return;
+            }
+            // If user hasn't interacted yet (mobile autoplay policy), queue on first interaction
+            if (typeof window !== 'undefined' && !window.userHasInteracted) {
+                console.log('[TTS] Waiting for first user interaction to unlock audio');
+                const unlock = () => {
+                    document.removeEventListener('click', unlock);
+                    document.removeEventListener('keydown', unlock);
+                    try { this.synth.resume(); } catch (_) {}
+                    this.speak(text, { role: 'ai' });
+                };
+                document.addEventListener('click', unlock, { once: true });
+                document.addEventListener('keydown', unlock, { once: true });
+                return;
+            }
+        }
+
         // Force auto-start for Miss Sapna
         const currentAvatar = window.selectedAvatar || 'miss-sapna';
         if (currentAvatar === 'miss-sapna') {
