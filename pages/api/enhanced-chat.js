@@ -33,13 +33,13 @@ if (!process.env.ANTHROPIC_API_KEY) {
 }
 
 // Check if we have a valid API key
-if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'dummy-key-for-testing') {
-  console.error('❌ ANTHROPIC_API_KEY is not properly set in Vercel environment variables');
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('❌ ANTHROPIC_API_KEY is not set in Vercel environment variables');
   console.error('❌ Please add ANTHROPIC_API_KEY to your Vercel project settings');
 }
 
-// Use the provided API key as fallback
-const apiKey = process.env.ANTHROPIC_API_KEY || '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';
+// Use environment variable API key only
+const apiKey = process.env.ANTHROPIC_API_KEY;
 
 console.log('🔧 Using API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'NOT_SET');
 console.log('🔧 API key length:', apiKey ? apiKey.length : 0);
@@ -347,8 +347,17 @@ export default async function handler(req, res) {
     });
   }
 
-  // Validate API key format
-  if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+  // Validate API key
+  if (!apiKey) {
+    console.error('❌ ANTHROPIC_API_KEY environment variable is not set');
+    return res.status(500).json({
+      success: false,
+      error: 'API key not configured',
+      details: 'ANTHROPIC_API_KEY environment variable is not set in Vercel'
+    });
+  }
+  
+  if (!apiKey.startsWith('sk-ant-')) {
     console.error('❌ Invalid API key format');
     return res.status(500).json({
       success: false,
@@ -397,36 +406,54 @@ export default async function handler(req, res) {
         console.log('⚠️ Knowledge bank search failed, continuing without it:', error.message);
     }
 
-    // Build user context from profile - FIXED: Use actual user data
-    const userContext = userProfile ? {
-      name: userProfile.full_name || userProfile.name || 'Student',
-      class: userProfile.class || grade,
-      board: userProfile.board || 'CBSE',
-      subject: userProfile.subject || subject
-    } : {
-      name: 'Student',
-      class: grade,
-      board: 'CBSE',
-      subject: subject
-    };
+            // Build user context from profile - FIXED: Use actual user data
+        const userContext = userProfile ? {
+          name: userProfile.full_name || userProfile.name || 'Student',
+          class: userProfile.class || grade,
+          board: userProfile.board || 'CBSE',
+          subject: userProfile.subject || subject
+        } : {
+          name: 'Student',
+          class: grade,
+          board: 'CBSE',
+          subject: subject
+        };
+        
+        // Detect user's input language to determine response language
+        const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
+        const englishPattern = /^[a-zA-Z\s.,!?]+$/; // Only English characters
+        const userInputLanguage = hindiPattern.test(message) ? 'hindi' : 
+                                 (englishPattern.test(message) ? 'english' : 'mixed');
+        
+        console.log('🔤 User input language detected:', userInputLanguage);
 
     // Enhanced system prompt with user data and teacher persona - PLAIN TEXT ONLY
     const getTeacherPersona = (teacherName, avatarId) => {
       console.log('🔧 getTeacherPersona called with teacherName:', teacherName, 'avatarId:', avatarId);
       
       // Check avatar first, then teacher name
-      if (avatarId === 'miss-sapna' || teacherName === 'Miss Sapna' || teacherName === 'Ms. Sapana') {
-        console.log('✅ Selected Miss Sapna persona');
-        return {
-          name: 'Miss Sapna',
-          style: 'Hindi/Hinglish',
-          personality: 'nurturing and culturally aware',
-          language: 'Mix Hindi and English (Hinglish) naturally. Use simple Hindi words like "samjha", "achha", "bilkul", "beta", "shiksha", etc. For technical terms, use English but explain in Hindi. Example: "Beta, yeh \'verb\' hota hai, jo action dikhata hai."',
-          greeting: 'Namaste! Main Miss Sapna hun, aapki shiksha mein help karungi.',
-          cultural: 'Share stories from Hindu mythology (Ramayan, Mahabharat, Panchtantra) when relevant to lessons. Maximum 1 story per hour, 3 per day. Never repeat stories unless specifically asked. Story maturity should match student\'s class level.',
-          specialFeatures: 'Focus on helping students who are not comfortable with English. Use Hindi as primary language with English terms for academic concepts.',
-          teachingStyle: 'Use Socratic method with gentle questioning. Ask "Kya aap samajhte hain?" or "Aap kya sochte hain?" to encourage thinking. Provide scaffolded explanations breaking complex topics into simple steps. Create personalized quizzes based on student\'s learning pace. Use real-life examples from Indian context. Make learning feel like a conversation with a caring teacher.'
-        };
+              if (avatarId === 'miss-sapna' || teacherName === 'Miss Sapna' || teacherName === 'Ms. Sapana') {
+          console.log('✅ Selected Miss Sapna persona');
+          
+          // Determine response language based on user input
+          let responseLanguage = 'Mix Hindi and English (Hinglish) naturally. Use simple Hindi words like "samjha", "achha", "bilkul", "beta", "shiksha", etc. For technical terms, use English but explain in Hindi. Example: "Beta, yeh \'verb\' hota hai, jo action dikhata hai."';
+          
+          if (userInputLanguage === 'english') {
+            responseLanguage = 'Respond in English only. Use clear, simple English explanations. If the student asks in English, respond in English.';
+          } else if (userInputLanguage === 'hindi') {
+            responseLanguage = 'Respond primarily in Hindi with English terms for technical concepts. Use Hinglish naturally.';
+          }
+          
+          return {
+            name: 'Miss Sapna',
+            style: 'Hindi/Hinglish',
+            personality: 'nurturing and culturally aware',
+            language: responseLanguage,
+            greeting: 'Namaste! Main Miss Sapna hun, aapki shiksha mein help karungi.',
+            cultural: 'Share stories from Hindu mythology (Ramayan, Mahabharat, Panchtantra) when relevant to lessons. Maximum 1 story per hour, 3 per day. Never repeat stories unless specifically asked. Story maturity should match student\'s class level.',
+            specialFeatures: 'Focus on helping students who are not comfortable with English. Use Hindi as primary language with English terms for academic concepts.',
+            teachingStyle: 'Use Socratic method with gentle questioning. Ask "Kya aap samajhte hain?" or "Aap kya sochte hain?" to encourage thinking. Provide scaffolded explanations breaking complex topics into simple steps. Create personalized quizzes based on student\'s learning pace. Use real-life examples from Indian context. Make learning feel like a conversation with a caring teacher.'
+          };
       } else {
         console.log('✅ Selected Roy Sir persona');
         return {

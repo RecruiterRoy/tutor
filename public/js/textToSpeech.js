@@ -198,6 +198,12 @@ class TextToSpeech {
             return;
         }
 
+        // Force auto-start for Miss Sapna
+        const currentAvatar = window.selectedAvatar || 'miss-sapna';
+        if (currentAvatar === 'miss-sapna') {
+            this.autoStart = true;
+        }
+
         // Only speak AI responses
         if (options.role !== 'ai' && this.autoStart) {
             return; // Don't auto-speak user messages

@@ -27,12 +27,43 @@ window.closeSidebar = function() {
 window.showSection = function(sectionName) {
     console.log('🔧 Showing section:', sectionName);
     
-    // Hide all sections
-    const sections = document.querySelectorAll('[id$="Section"]');
-    console.log(`🔧 Found ${sections.length} sections to hide`);
-    sections.forEach(section => {
+    // First, hide ALL sections and chat containers
+    const allSections = document.querySelectorAll('[id$="Section"]');
+    console.log(`🔧 Found ${allSections.length} sections to hide`);
+    allSections.forEach(section => {
         section.classList.add('hidden');
+        section.style.display = 'none';
+        section.style.zIndex = '1';
+        section.style.position = 'absolute';
+        section.style.top = '-9999px';
     });
+    
+    // Hide all chat containers
+    const chatBox = document.querySelector('.chat-box-container');
+    const mainChatArea = document.querySelector('.chat-area');
+    const chatContainer = document.querySelector('.chat-container');
+    
+    if (chatBox) {
+        chatBox.classList.add('hidden');
+        chatBox.style.display = 'none';
+        chatBox.style.zIndex = '1';
+        chatBox.style.position = 'absolute';
+        chatBox.style.top = '-9999px';
+    }
+    
+    if (mainChatArea) {
+        mainChatArea.style.display = 'none';
+        mainChatArea.style.zIndex = '1';
+        mainChatArea.style.position = 'absolute';
+        mainChatArea.style.top = '-9999px';
+    }
+    
+    if (chatContainer) {
+        chatContainer.style.display = 'none';
+        chatContainer.style.zIndex = '1';
+        chatContainer.style.position = 'absolute';
+        chatContainer.style.top = '-9999px';
+    }
     
     // Remove active class from all nav items
     const navItems = document.querySelectorAll('.nav-item');
@@ -46,93 +77,41 @@ window.showSection = function(sectionName) {
     const selectedSection = document.getElementById(sectionName + 'Section');
     if (selectedSection) {
         selectedSection.classList.remove('hidden');
+        selectedSection.style.display = 'block';
+        selectedSection.style.zIndex = '10';
+        selectedSection.style.position = 'relative';
+        selectedSection.style.top = '0';
         console.log('✅ Section shown:', sectionName + 'Section');
         
         // Update subject progress when progress section is shown
         if (sectionName === 'progress') {
             updateSubjectProgress();
         }
-        
+    } else if (sectionName === 'chat') {
         // Handle chat section specially since it doesn't have a Section ID
-        if (sectionName === 'chat') {
-            // Hide all other sections
-            const allSections = document.querySelectorAll('[id$="Section"]');
-            allSections.forEach(section => {
-                section.classList.add('hidden');
-                section.style.display = 'none';
-                section.style.zIndex = '1';
-            });
-            
-            // Show chat container
-            const chatBox = document.querySelector('.chat-box-container');
-            if (chatBox) {
-                chatBox.classList.remove('hidden');
-                chatBox.style.display = 'flex';
-                chatBox.style.zIndex = '10';
-                chatBox.style.position = 'relative';
-                chatBox.style.top = '0';
-                console.log('✅ Chat section shown');
-            }
-            
-            // Show main chat area
-            const mainChatArea = document.querySelector('.chat-area');
-            if (mainChatArea) {
-                mainChatArea.style.display = 'block';
-                mainChatArea.style.zIndex = '10';
-                mainChatArea.style.position = 'relative';
-                mainChatArea.style.top = '0';
-                console.log('✅ Main chat area shown');
-            }
-            
-            // Show chat container
-            const chatContainer = document.querySelector('.chat-container');
-            if (chatContainer) {
-                chatContainer.style.display = 'flex';
-                chatContainer.style.zIndex = '10';
-                chatContainer.style.position = 'relative';
-                chatContainer.style.top = '0';
-                console.log('✅ Chat container shown');
-            }
-        } else {
-            // For non-chat sections, hide chat and show the selected section
-            const chatBox = document.querySelector('.chat-box-container');
-            if (chatBox) {
-                chatBox.classList.add('hidden');
-                chatBox.style.display = 'none';
-                chatBox.style.zIndex = '1';
-                chatBox.style.position = 'absolute';
-                chatBox.style.top = '-9999px';
-                console.log('✅ Chat box hidden');
-            }
-            
-            // Also hide the main chat area
-            const mainChatArea = document.querySelector('.chat-area');
-            if (mainChatArea) {
-                mainChatArea.style.display = 'none';
-                mainChatArea.style.zIndex = '1';
-                mainChatArea.style.position = 'absolute';
-                mainChatArea.style.top = '-9999px';
-                console.log('✅ Main chat area hidden');
-            }
-            
-            // Hide the entire chat container
-            const chatContainer = document.querySelector('.chat-container');
-            if (chatContainer) {
-                chatContainer.style.display = 'none';
-                chatContainer.style.zIndex = '1';
-                chatContainer.style.position = 'absolute';
-                chatContainer.style.top = '-9999px';
-                console.log('✅ Chat container hidden');
-            }
-            
-            // Show the selected section
-            if (selectedSection) {
-                selectedSection.style.display = 'block';
-                selectedSection.style.zIndex = '10';
-                selectedSection.style.position = 'relative';
-                selectedSection.style.top = '0';
-                console.log('✅ Section shown:', sectionName);
-            }
+        if (chatBox) {
+            chatBox.classList.remove('hidden');
+            chatBox.style.display = 'flex';
+            chatBox.style.zIndex = '10';
+            chatBox.style.position = 'relative';
+            chatBox.style.top = '0';
+            console.log('✅ Chat section shown');
+        }
+        
+        if (mainChatArea) {
+            mainChatArea.style.display = 'block';
+            mainChatArea.style.zIndex = '10';
+            mainChatArea.style.position = 'relative';
+            mainChatArea.style.top = '0';
+            console.log('✅ Main chat area shown');
+        }
+        
+        if (chatContainer) {
+            chatContainer.style.display = 'flex';
+            chatContainer.style.zIndex = '10';
+            chatContainer.style.position = 'relative';
+            chatContainer.style.top = '0';
+            console.log('✅ Chat container shown');
         }
     } else {
         console.log('❌ Section not found:', sectionName + 'Section');
@@ -3343,6 +3322,9 @@ function initSpeechRecognition() {
         } else {
             recognition.lang = 'en-IN'; // English for Roy Sir
         }
+        
+        // Store current language for transcript processing
+        recognition.currentLanguage = currentAvatar === 'miss-sapna' ? 'hindi' : 'english';
 
         recognition.onstart = () => {
             console.log('✅ Speech recognition started');
@@ -3368,14 +3350,40 @@ function initSpeechRecognition() {
             const transcript = event.results[0][0].transcript;
             console.log('✅ Speech recognized:', transcript);
             
+            // Process transcript based on detected language
+            let processedTranscript = transcript;
+            
+            // Detect if user is speaking English or Hindi
+            const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
+            const englishPattern = /^[a-zA-Z\s.,!?]+$/; // Only English characters
+            
+            if (englishPattern.test(transcript) && !hindiPattern.test(transcript)) {
+                // User is speaking English - keep in English script
+                processedTranscript = transcript;
+                console.log('🔤 Detected English speech, keeping in English script');
+            } else if (hindiPattern.test(transcript)) {
+                // User is speaking Hindi - keep in Devanagari script
+                processedTranscript = transcript;
+                console.log('🔤 Detected Hindi speech, keeping in Devanagari script');
+            } else {
+                // Mixed or unclear - use based on current avatar setting
+                if (recognition.currentLanguage === 'english') {
+                    // Convert to English if possible, otherwise keep as is
+                    processedTranscript = transcript;
+                } else {
+                    // Keep as is for Hindi
+                    processedTranscript = transcript;
+                }
+            }
+            
             // Set value in both desktop and mobile inputs
             const chatInput = document.getElementById('chatInput');
             const chatInputMobile = document.getElementById('chatInputMobile');
             
-            if (chatInput) chatInput.value = transcript;
-            if (chatInputMobile) chatInputMobile.value = transcript;
+            if (chatInput) chatInput.value = processedTranscript;
+            if (chatInputMobile) chatInputMobile.value = processedTranscript;
             
-            showSuccess("Voice input received: " + transcript);
+            showSuccess("Voice input received: " + processedTranscript);
             stopRecording();
         };
 
@@ -6195,7 +6203,13 @@ let micSystem = {
         this.recognition.continuous = false;
         this.recognition.interimResults = true;
         this.recognition.maxAlternatives = 1;
-        this.recognition.lang = 'hi-IN'; // Default to Hindi for Miss Sapna
+        // Set language based on current avatar
+        const currentAvatar = window.selectedAvatar || 'miss-sapna';
+        if (currentAvatar === 'miss-sapna') {
+            this.recognition.lang = 'hi-IN'; // Hindi for Miss Sapna
+        } else {
+            this.recognition.lang = 'en-IN'; // English for Roy Sir
+        }
         
         // Event handlers
         this.recognition.onstart = () => {
@@ -6217,7 +6231,22 @@ let micSystem = {
                 }
             }
             
-            this.currentTranscript = finalTranscript + interimTranscript;
+            // Process transcript based on detected language
+            let processedTranscript = finalTranscript + interimTranscript;
+            
+            // Detect if user is speaking English or Hindi
+            const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
+            const englishPattern = /^[a-zA-Z\s.,!?]+$/; // Only English characters
+            
+            if (englishPattern.test(processedTranscript) && !hindiPattern.test(processedTranscript)) {
+                // User is speaking English - keep in English script
+                console.log('🔤 Enhanced STT: Detected English speech, keeping in English script');
+            } else if (hindiPattern.test(processedTranscript)) {
+                // User is speaking Hindi - keep in Devanagari script
+                console.log('🔤 Enhanced STT: Detected Hindi speech, keeping in Devanagari script');
+            }
+            
+            this.currentTranscript = processedTranscript;
             this.displayTranscript(this.currentTranscript);
         };
         
