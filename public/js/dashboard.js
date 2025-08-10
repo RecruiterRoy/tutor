@@ -59,6 +59,8 @@ window.showSection = function(sectionName) {
             const allSections = document.querySelectorAll('[id$="Section"]');
             allSections.forEach(section => {
                 section.classList.add('hidden');
+                section.style.display = 'none';
+                section.style.zIndex = '1';
             });
             
             // Show chat container
@@ -67,6 +69,8 @@ window.showSection = function(sectionName) {
                 chatBox.classList.remove('hidden');
                 chatBox.style.display = 'flex';
                 chatBox.style.zIndex = '10';
+                chatBox.style.position = 'relative';
+                chatBox.style.top = '0';
                 console.log('✅ Chat section shown');
             }
             
@@ -85,6 +89,8 @@ window.showSection = function(sectionName) {
             if (chatContainer) {
                 chatContainer.style.display = 'flex';
                 chatContainer.style.zIndex = '10';
+                chatContainer.style.position = 'relative';
+                chatContainer.style.top = '0';
                 console.log('✅ Chat container shown');
             }
         } else {
@@ -94,6 +100,8 @@ window.showSection = function(sectionName) {
                 chatBox.classList.add('hidden');
                 chatBox.style.display = 'none';
                 chatBox.style.zIndex = '1';
+                chatBox.style.position = 'absolute';
+                chatBox.style.top = '-9999px';
                 console.log('✅ Chat box hidden');
             }
             
@@ -102,6 +110,8 @@ window.showSection = function(sectionName) {
             if (mainChatArea) {
                 mainChatArea.style.display = 'none';
                 mainChatArea.style.zIndex = '1';
+                mainChatArea.style.position = 'absolute';
+                mainChatArea.style.top = '-9999px';
                 console.log('✅ Main chat area hidden');
             }
             
@@ -110,6 +120,8 @@ window.showSection = function(sectionName) {
             if (chatContainer) {
                 chatContainer.style.display = 'none';
                 chatContainer.style.zIndex = '1';
+                chatContainer.style.position = 'absolute';
+                chatContainer.style.top = '-9999px';
                 console.log('✅ Chat container hidden');
             }
             
@@ -174,6 +186,11 @@ window.showSubjectManager = function() {
         console.error('❌ subjectManager not available');
         showError('Subject manager not loaded. Please refresh the page.');
     }
+};
+
+window.showTrialInfo = function() {
+    console.log('⏰ Trial info clicked');
+    showSuccess('Trial information feature coming soon!');
 };
 
 window.openMobileSidebar = function() {
@@ -2982,6 +2999,9 @@ async function sendMessage() {
         // Get conversation context
         const context = getConversationContext();
         
+        // Add user profile to context
+        context.userProfile = window.userData;
+        
         // Set up GPTService context
         if (window.gptService) {
             window.gptService.setContext(
@@ -2992,6 +3012,7 @@ async function sendMessage() {
         }
         
         console.log('🔧 Using GPTService to send message');
+        console.log('🔧 User profile being sent:', context.userProfile);
         
         // Use GPTService instead of direct API call
         let aiResponse;
