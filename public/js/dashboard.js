@@ -53,63 +53,73 @@ window.showSection = function(sectionName) {
             updateSubjectProgress();
         }
         
-        // For mobile, ensure proper section visibility
-        if (window.isMobile) {
-            console.log('📱 Mobile section navigation:', sectionName);
+        // Handle chat section specially since it doesn't have a Section ID
+        if (sectionName === 'chat') {
+            // Hide all other sections
+            const allSections = document.querySelectorAll('[id$="Section"]');
+            allSections.forEach(section => {
+                section.classList.add('hidden');
+            });
             
-            // Handle chat section specially since it doesn't have a Section ID
-            if (sectionName === 'chat') {
-                // Hide all other sections
-                const allSections = document.querySelectorAll('[id$="Section"]');
-                allSections.forEach(section => {
-                    section.style.display = 'none';
-                    section.style.zIndex = '1';
-                });
-                
-                // Show chat container
-                const chatBox = document.querySelector('.chat-box-container');
-                if (chatBox) {
-                    chatBox.style.display = 'flex';
-                    chatBox.style.zIndex = '10';
-                    console.log('✅ Chat section shown on mobile');
-                }
-            } else {
-                // For non-chat sections, hide chat and show the selected section
-                const chatBox = document.querySelector('.chat-box-container');
-                if (chatBox) {
-                    chatBox.style.display = 'none';
-                    chatBox.style.zIndex = '1';
-                    chatBox.style.position = 'absolute';
-                    chatBox.style.top = '-9999px';
-                    console.log('✅ Chat box hidden on mobile');
-                }
-                
-                // Also hide the main chat area
-                const mainChatArea = document.querySelector('.chat-area');
-                if (mainChatArea) {
-                    mainChatArea.style.display = 'none';
-                    mainChatArea.style.zIndex = '1';
-                    mainChatArea.style.position = 'absolute';
-                    mainChatArea.style.top = '-9999px';
-                    console.log('✅ Main chat area hidden on mobile');
-                }
-                
-                // Hide the entire chat container
-                const chatContainer = document.querySelector('.chat-container');
-                if (chatContainer) {
-                    chatContainer.style.display = 'none';
-                    chatContainer.style.zIndex = '1';
-                    console.log('✅ Chat container hidden on mobile');
-                }
-                
-                // Show the selected section
-                if (selectedSection) {
-                    selectedSection.style.display = 'block';
-                    selectedSection.style.zIndex = '10';
-                    selectedSection.style.position = 'relative';
-                    selectedSection.style.top = '0';
-                    console.log('✅ Section shown on mobile:', sectionName);
-                }
+            // Show chat container
+            const chatBox = document.querySelector('.chat-box-container');
+            if (chatBox) {
+                chatBox.classList.remove('hidden');
+                chatBox.style.display = 'flex';
+                chatBox.style.zIndex = '10';
+                console.log('✅ Chat section shown');
+            }
+            
+            // Show main chat area
+            const mainChatArea = document.querySelector('.chat-area');
+            if (mainChatArea) {
+                mainChatArea.style.display = 'block';
+                mainChatArea.style.zIndex = '10';
+                mainChatArea.style.position = 'relative';
+                mainChatArea.style.top = '0';
+                console.log('✅ Main chat area shown');
+            }
+            
+            // Show chat container
+            const chatContainer = document.querySelector('.chat-container');
+            if (chatContainer) {
+                chatContainer.style.display = 'flex';
+                chatContainer.style.zIndex = '10';
+                console.log('✅ Chat container shown');
+            }
+        } else {
+            // For non-chat sections, hide chat and show the selected section
+            const chatBox = document.querySelector('.chat-box-container');
+            if (chatBox) {
+                chatBox.classList.add('hidden');
+                chatBox.style.display = 'none';
+                chatBox.style.zIndex = '1';
+                console.log('✅ Chat box hidden');
+            }
+            
+            // Also hide the main chat area
+            const mainChatArea = document.querySelector('.chat-area');
+            if (mainChatArea) {
+                mainChatArea.style.display = 'none';
+                mainChatArea.style.zIndex = '1';
+                console.log('✅ Main chat area hidden');
+            }
+            
+            // Hide the entire chat container
+            const chatContainer = document.querySelector('.chat-container');
+            if (chatContainer) {
+                chatContainer.style.display = 'none';
+                chatContainer.style.zIndex = '1';
+                console.log('✅ Chat container hidden');
+            }
+            
+            // Show the selected section
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+                selectedSection.style.zIndex = '10';
+                selectedSection.style.position = 'relative';
+                selectedSection.style.top = '0';
+                console.log('✅ Section shown:', sectionName);
             }
         }
     } else {
@@ -308,7 +318,7 @@ function closeTipsModal() {
     }
 }
 
-function openCameraModal() {
+window.openCameraModal = function() {
     const modal = document.getElementById('cameraScanModal');
     modal.classList.remove('hidden');
     
@@ -1401,23 +1411,50 @@ console.log('📱 Device detection - Mobile:', isMobile, 'Small device:', isSmal
             console.log('🔧 Requesting initial permissions...');
             
             try {
-                // Request microphone permission first
-                console.log('🎤 Requesting microphone permission...');
-                const micPermission = await requestMicrophonePermission();
+                // Check if permissions are already granted
+                const micPermission = await navigator.permissions.query({ name: 'microphone' });
+                const cameraPermission = await navigator.permissions.query({ name: 'camera' });
+                
+                let micGranted = micPermission.state === 'granted';
+                let cameraGranted = cameraPermission.state === 'granted';
+                
+                // Request microphone permission if not granted
+                if (!micGranted) {
+                    console.log('🎤 Requesting microphone permission...');
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        stream.getTracks().forEach(track => track.stop());
+                        micGranted = true;
+                        console.log('✅ Microphone permission granted');
+                    } catch (error) {
+                        console.warn('⚠️ Microphone permission denied:', error);
+                        micGranted = false;
+                    }
+                }
                 
                 // Small delay to avoid overwhelming the user
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                // Request camera permission
-                console.log('📸 Requesting camera permission...');
-                const cameraPermission = await requestCameraPermission();
+                // Request camera permission if not granted
+                if (!cameraGranted) {
+                    console.log('📸 Requesting camera permission...');
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        stream.getTracks().forEach(track => track.stop());
+                        cameraGranted = true;
+                        console.log('✅ Camera permission granted');
+                    } catch (error) {
+                        console.warn('⚠️ Camera permission denied:', error);
+                        cameraGranted = false;
+                    }
+                }
                 
-                console.log('✅ Initial permissions requested - Mic:', micPermission, 'Camera:', cameraPermission);
+                console.log('✅ Initial permissions requested - Mic:', micGranted, 'Camera:', cameraGranted);
                 
                 // Update UI to reflect permission status
-                updatePermissionUI(micPermission, cameraPermission);
+                updatePermissionUI(micGranted, cameraGranted);
                 
-                return { micPermission, cameraPermission };
+                return { micPermission: micGranted, cameraPermission: cameraGranted };
             } catch (error) {
                 console.error('❌ Error requesting initial permissions:', error);
                 return { micPermission: false, cameraPermission: false };
@@ -3667,6 +3704,8 @@ function closeMobileSidebar() {
     if (sidebar) {
         sidebar.classList.remove('translate-x-0');
         sidebar.classList.add('-translate-x-full');
+        // Reset transition lock
+        sidebar.dataset.transitioning = 'false';
     }
     
     if (overlay) {
@@ -3695,11 +3734,20 @@ function toggleMobileSidebar() {
         return;
     }
     
+    // Prevent multiple rapid clicks
+    if (sidebar.dataset.transitioning === 'true') {
+        console.log('⚠️ Sidebar transition in progress, ignoring click');
+        return;
+    }
+    
     console.log('🔧 Mobile sidebar elements found, toggling...');
     
     const isOpen = sidebar.classList.contains('translate-x-0');
     console.log('🔧 Current state - isOpen:', isOpen);
     console.log('🔧 Sidebar classes:', sidebar.className);
+    
+    // Set transition lock
+    sidebar.dataset.transitioning = 'true';
     
     if (isOpen) {
         console.log('🔧 Sidebar is open, closing...');
@@ -3725,6 +3773,11 @@ function toggleMobileSidebar() {
             console.log('✅ Mobile sidebar opened');
         }, 10);
     }
+    
+    // Remove transition lock after animation completes
+    setTimeout(() => {
+        sidebar.dataset.transitioning = 'false';
+    }, 350);
 }
 
 // Close sidebar when clicking overlay
@@ -5909,7 +5962,7 @@ function setupDashboardEventListeners() {
     if (cameraButtonMobile) {
         cameraButtonMobile.addEventListener('click', () => {
             console.log('🔧 Mobile camera button clicked');
-            startCameraScanWithPermission();
+            openCameraModal();
         });
     } else {
         console.warn('⚠️ Mobile camera button not found');
