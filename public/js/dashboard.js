@@ -386,15 +386,15 @@ window.retakePhoto = function() {
 
 window.sendToChat = function() {
     // Use edited text if available, otherwise use the displayed text
-    const textToSend = window.editedExtractedText || document.getElementById('extractedText').textContent;
+    const textToSend = (window.editedExtractedText && window.editedExtractedText.trim()) || document.getElementById('extractedText').textContent.trim();
     
     // Add the scanned question to chat input and send it through existing chat system
     const chatInput = document.getElementById('chatInput');
-    if (chatInput) {
-        chatInput.value = textToSend;
-        // Trigger the existing send message function
-        sendMessage();
-    }
+    const chatInputMobile = document.getElementById('chatInputMobile');
+    if (chatInputMobile) chatInputMobile.value = textToSend;
+    if (chatInput) chatInput.value = textToSend;
+    // Trigger the existing send message function
+    sendMessage();
     
     // Close modal
     closeCameraModal();
@@ -494,6 +494,9 @@ async function processCapturedImage() {
     
     // Show processing status
     document.getElementById('processingStatus').classList.remove('hidden');
+    // Reset progress once per processing cycle
+    const statusText = document.getElementById('statusText');
+    if (statusText) statusText.textContent = 'Processing image... 0%';
     document.getElementById('cameraContainer').classList.add('hidden');
     
     try {
@@ -506,7 +509,7 @@ async function processCapturedImage() {
         window.editedExtractedText = null; // Clear any previous edits
         
         // Show results with confidence indicator
-        updateStatus('Processing complete!');
+        updateStatus('Processing complete! 100%');
         const resultsElement = document.getElementById('extractedText');
         resultsElement.textContent = extractedText;
         
@@ -563,7 +566,9 @@ async function extractTextFromImage(imageData) {
                     { 
                         logger: m => {
                             if (m.status === 'recognizing text') {
-                                updateStatus(`Processing... ${Math.round(m.progress * 100)}%`);
+                            // Clamp to 99% until finalize to show 100% only once
+                            const pct = Math.min(99, Math.round(m.progress * 100));
+                            updateStatus(`Processing... ${pct}%`);
                             }
                         },
                         errorHandler: err => console.error('OCR Error:', err)
