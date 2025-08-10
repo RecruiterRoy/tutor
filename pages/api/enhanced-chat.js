@@ -38,8 +38,13 @@ if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'dummy-k
   console.error('❌ Please add ANTHROPIC_API_KEY to your Vercel project settings');
 }
 
+// Use the provided API key as fallback
+const apiKey = process.env.ANTHROPIC_API_KEY || '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';
+
+console.log('🔧 Using API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'NOT_SET');
+
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || 'dummy-key-for-testing',
+  apiKey: apiKey,
 });
 
 const supabase = createClient(

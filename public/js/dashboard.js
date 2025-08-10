@@ -2977,10 +2977,10 @@ async function sendMessage() {
             await addMessage('assistant', data.response);
             
                     // Speak the response if TTS is enabled
-        if (window.ttsEnabled && !window.isRecording) {
+        if (window.ttsEnabled && !micSystem.isRecording) {
             speakText(data.response);
         } else if (window.ttsEnabled) {
-            // Force enable TTS for mobile
+            // Force enable TTS on mobile
             console.log('🔧 Forcing TTS on mobile');
             speakText(data.response);
         } else {
@@ -3383,18 +3383,12 @@ function stopRecording() {
 }
 
 async function toggleVoiceRecording() {
-    console.log('🎤 toggleVoiceRecording called, isRecording:', isRecording);
+    console.log('🎤 toggleVoiceRecording called - using micSystem');
     
-    if (!voiceRecognition) {
-        console.log('🎤 Initializing voice recognition...');
-        initEnhancedSpeechRecognition();
-    }
-
-    if (isRecording) {
+    // Use the new micSystem instead of old functions
+    if (micSystem.isRecording) {
         console.log('🎤 Stopping recording...');
-        // Stop recording
-        stopContinuousRecording();
-        updateVoiceButton();
+        micSystem.stopRecording();
     } else {
         console.log('🎤 Starting recording...');
         // Stop any ongoing TTS immediately
@@ -3403,10 +3397,9 @@ async function toggleVoiceRecording() {
             console.log('[TTS] Stopped TTS for voice recording');
         }
         
-        // Start recording immediately
+        // Start recording using micSystem
         try {
-            startContinuousRecording();
-            updateVoiceButton();
+            micSystem.startRecording();
         } catch (error) {
             console.error('Voice recording error:', error);
             showError('Voice recording failed. Please try again.');
@@ -3436,7 +3429,7 @@ async function speakText(text) {
     }
 
     // Don't speak if voice recording is active
-    if (window.isRecording) {
+    if (micSystem.isRecording) {
         console.log('[TTS] Voice recording active, skipping TTS');
         return;
     }
@@ -4133,7 +4126,7 @@ function handleQuickAction(event) {
 function updateVoiceButton() {
     const voiceToggle = document.getElementById('voiceToggle');
     if (!voiceToggle) return;
-    if (isRecording) {
+    if (micSystem.isRecording) {
         voiceToggle.innerHTML = '<i class="fas fa-microphone-slash"></i>';
         voiceToggle.classList.add('listening');
     } else {
@@ -5627,15 +5620,9 @@ window.testMobileSidebar = function() {
                     return;
                 }
                 
-                // Initialize speech recognition if not already done
-                if (!voiceRecognition) {
-                    console.log('🎤 Initializing voice recognition...');
-                    initEnhancedSpeechRecognition();
-                }
-                
-                // Start normal recording (short press mode)
-                console.log('🎤 Starting normal recording mode');
-                startNormalRecording();
+                // Use micSystem for recording
+                console.log('🎤 Starting recording with micSystem');
+                micSystem.startRecording();
                 
             } catch (error) {
                 console.error('❌ Error starting voice recording:', error);
