@@ -20,30 +20,13 @@ function runMiddleware(req, res, fn) {
   });
 }
 
-// Check if API key is available
-console.log('🔧 Environment check:');
-console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
-console.log('🔧 ANTHROPIC_API_KEY exists:', !!process.env.ANTHROPIC_API_KEY);
-console.log('🔧 ANTHROPIC_API_KEY length:', process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.length : 0);
-console.log('🔧 ANTHROPIC_API_KEY starts with:', process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.substring(0, 10) + '...' : 'NOT_SET');
-
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('❌ ANTHROPIC_API_KEY environment variable is not set');
-  console.error('❌ Available environment variables:', Object.keys(process.env).filter(key => key.includes('ANTHROPIC') || key.includes('API')));
-}
-
-// Check if we have a valid API key
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('❌ ANTHROPIC_API_KEY is not set in Vercel environment variables');
-  console.error('❌ Please add ANTHROPIC_API_KEY to your Vercel project settings');
-}
-
 // Use OpenAI API
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-console.log('🔧 Using API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'NOT_SET');
-console.log('🔧 API key length:', apiKey ? apiKey.length : 0);
-console.log('🔧 API key valid format:', apiKey ? apiKey.startsWith('sk-ant-') : false);
+console.log('🔧 Environment check:');
+console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔧 OPENAI_API_KEY exists:', !!OPENAI_API_KEY);
+console.log('🔧 OPENAI_API_KEY length:', OPENAI_API_KEY ? OPENAI_API_KEY.length : 0);
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
