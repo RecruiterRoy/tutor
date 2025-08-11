@@ -150,6 +150,7 @@ window.saveChatMessage = function(message, response) {
 
 // Route to unified closer to avoid duplicate logic bugs
 window.closeMobileSidebar = function() { try { closeMobileSidebar(); } catch (e) { console.warn(e); } };
+function closeSidebar() { try { closeMobileSidebar(); } catch (e) {} }
 
 window.showSubjectManager = function() {
     console.log('🔧 showSubjectManager called');
@@ -178,7 +179,12 @@ window.openMobileSidebar = function() {
     
     if (sidebar && overlay) {
         sidebar.classList.remove('-translate-x-full');
+        sidebar.classList.add('translate-x-0');
         overlay.classList.remove('opacity-0', 'pointer-events-none');
+        overlay.style.removeProperty('display');
+        overlay.style.removeProperty('visibility');
+        overlay.style.pointerEvents = 'auto';
+        overlay.classList.add('pointer-events-auto');
         
         // Prevent body scroll on mobile
         if (window.isMobile) {
@@ -2725,14 +2731,13 @@ function setupEventListeners() {
         mobileSidebarOverlay.addEventListener('click', closeMobileSidebar);
     }
     
-    // Mobile sidebar button - look for the hamburger menu button
-    const mobileSidebarButton = document.querySelector('button.lg\\:hidden.text-white.text-2xl');
+    // Mobile sidebar button - use explicit ID for reliability
+    const mobileSidebarButton = document.getElementById('mobileSidebarToggle');
     if (mobileSidebarButton) {
         mobileSidebarButton.addEventListener('click', () => {
             console.log('🔧 Mobile sidebar button clicked, calling openMobileSidebar');
             openMobileSidebar();
         });
-        // Add onclick as fallback
         mobileSidebarButton.onclick = () => {
             console.log('🔧 Mobile sidebar button onclick fallback');
             openMobileSidebar();
@@ -2742,8 +2747,8 @@ function setupEventListeners() {
         console.log('❌ Mobile sidebar button not found');
     }
     
-    // Close mobile sidebar button - look for the X button
-    const closeMobileSidebarButton = document.querySelector('button.text-purple-800.text-2xl');
+    // Close mobile sidebar button - use explicit ID
+    const closeMobileSidebarButton = document.getElementById('closeSidebarBtn');
     if (closeMobileSidebarButton) {
         closeMobileSidebarButton.addEventListener('click', () => {
             console.log('🔧 Close mobile sidebar button clicked, calling closeMobileSidebar');
@@ -2757,6 +2762,17 @@ function setupEventListeners() {
         console.log('✅ Close mobile sidebar button listener added');
     } else {
         console.log('❌ Close mobile sidebar button not found');
+    }
+
+    // Ensure nav items inside sidebar close it after navigation on mobile
+    const sidebarEl = document.getElementById('mobileSidebar');
+    if (sidebarEl) {
+        sidebarEl.addEventListener('click', (e) => {
+            const targetNav = e.target.closest('.nav-item');
+            if (!targetNav) return;
+            // Defer close slightly to allow section switch handlers to run
+            setTimeout(() => { try { closeMobileSidebar(); } catch (_) {} }, 0);
+        });
     }
     
     // TTS buttons
@@ -3704,7 +3720,12 @@ function toggleSidebar() {
     if (sidebar.classList.contains('-translate-x-full')) {
         // Open sidebar
         sidebar.classList.remove('-translate-x-full');
+        sidebar.classList.add('translate-x-0');
         overlay.classList.remove('opacity-0', 'pointer-events-none');
+        overlay.style.removeProperty('display');
+        overlay.style.removeProperty('visibility');
+        overlay.style.pointerEvents = 'auto';
+        overlay.classList.add('pointer-events-auto');
         
         // Mobile-specific improvements
         if (isMobile) {
@@ -3712,7 +3733,7 @@ function toggleSidebar() {
             document.body.style.overflow = 'hidden';
             
             // Add touch-to-close functionality
-            overlay.addEventListener('click', closeSidebar, { once: true });
+            overlay.addEventListener('click', closeMobileSidebar, { once: true });
             
             // Add swipe-to-close functionality
             let touchStartX = 0;
@@ -3725,12 +3746,12 @@ function toggleSidebar() {
                 const diff = touchStartX - touchEndX;
                 
                 if (diff > 50) { // Swipe left to close
-                    closeSidebar();
+                    closeMobileSidebar();
                 }
             }, { passive: true });
         }
     } else {
-        closeSidebar();
+        closeMobileSidebar();
     }
 }
 
@@ -3783,6 +3804,7 @@ function toggleMobileSidebar() {
         sidebar.style.removeProperty('visibility');
         overlay.style.removeProperty('display');
         overlay.style.removeProperty('visibility');
+        overlay.style.pointerEvents = 'auto';
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.remove('opacity-0', 'pointer-events-none');
         sidebar.classList.add('translate-x-0');
@@ -3813,6 +3835,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.key === 'Escape') closeMobileSidebar();
         });
     }
+    // Close on any nav item click inside sidebar
+    document.addEventListener('click', (e) => {
+        const navItem = e.target.closest('#mobileSidebar .nav-item');
+        if (!navItem) return;
+        setTimeout(() => { try { closeMobileSidebar(); } catch(_){} }, 0);
+    }, true);
 });
 
 function updateUserDisplay(profile) {
