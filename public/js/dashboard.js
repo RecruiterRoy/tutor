@@ -148,9 +148,8 @@ window.saveChatMessage = function(message, response) {
     console.log('saveChatMessage called - waiting for implementation');
 };
 
-// Route to unified closer to avoid duplicate logic bugs
-window.closeMobileSidebar = function() { try { closeMobileSidebar(); } catch (e) { console.warn(e); } };
-function closeSidebar() { try { closeMobileSidebar(); } catch (e) {} }
+// Legacy alias only (avoid wrapper recursion)
+window.closeSidebar = function() { try { closeMobileSidebar(); } catch (_) {} };
 
 window.showSubjectManager = function() {
     console.log('🔧 showSubjectManager called');
@@ -4838,7 +4837,7 @@ window.addEventListener('load', function() {
 window.sendMessage = sendMessage;
 window.toggleVoiceRecording = toggleVoiceRecording;
 window.showSection = showSection;
-window.closeMobileSidebar = closeMobileSidebar;
+// Remove duplicate re-assignments to avoid confusion; keep a single export only
 window.logout = logout;
 window.saveChatMessage = saveChatMessage;
 // Ensure UI handlers are globally accessible for button bindings
