@@ -6,7 +6,10 @@
 
 // Global variable declarations to prevent redeclaration errors
 window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-window.isAPK = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// Proper APK detection (Capacitor/Android or file protocol)
+window.isAPK = (window.location.protocol === 'file:'
+  || navigator.userAgent.includes('Capacitor')
+  || navigator.userAgent.includes('Android'));
 window.ttsEnabled = true;
 window.isRecording = false;
 window.currentUser = null;
