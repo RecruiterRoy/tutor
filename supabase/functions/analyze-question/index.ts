@@ -20,11 +20,8 @@ serve(async (req) => {
       throw new Error('Missing required fields: imageData and extractedText')
     }
 
-    // Get Anthropic API key from environment
-    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
-    if (!anthropicKey) {
-      throw new Error('Anthropic API key not configured')
-    }
+    // No external AI used here anymore. This function only validates inputs
+    // and stores the provided images/text to Supabase for later processing.
 
     // Check if this is a literature question
     const isLiteratureQuestion = checkIfLiteratureQuestion(extractedText);
@@ -64,31 +61,8 @@ serve(async (req) => {
       });
     }
 
-    // Call Anthropic Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: "claude-3-sonnet-20240229",
-        max_tokens: 1500,
-        temperature: 0.3,
-        messages: [{
-          role: "user",
-          content: content
-        }]
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error(`Anthropic API error: ${response.status}`)
-    }
-
-    const result = await response.json()
-    const solution = result.content[0]?.text || 'No solution generated'
+    // Skip external AI call. Use provided extractedText as-is and mark for review.
+    const solution = ''
 
     // Store the analysis in database for future reference
     const supabase = createClient(
@@ -106,7 +80,7 @@ serve(async (req) => {
         await supabase.from('question_analyses').insert({
           user_id: user.id,
           extracted_text: extractedText,
-          solution: solution,
+          solution: solution, // intentionally empty; AI handled by app later
           image_url: imageData.substring(0, 100) + '...', // Store truncated version
           created_at: new Date().toISOString()
         })
