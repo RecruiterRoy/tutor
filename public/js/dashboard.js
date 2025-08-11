@@ -181,6 +181,7 @@ window.openMobileSidebar = function() {
         sidebar.classList.remove('-translate-x-full');
         sidebar.classList.add('translate-x-0');
         overlay.classList.remove('opacity-0', 'pointer-events-none');
+        overlay.classList.add('opacity-100');
         overlay.style.removeProperty('display');
         overlay.style.removeProperty('visibility');
         overlay.style.pointerEvents = 'auto';
@@ -4706,27 +4707,31 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         if (typeof window.supabase === 'undefined') {
-            throw new Error('Supabase library failed to load after multiple attempts');
-        }
-        
-        console.log('✅ Supabase library loaded successfully');
-        
-        // Test that key functions are available
-        console.log('🔧 Testing function availability:');
-        console.log('- toggleVoiceRecording:', typeof window.toggleVoiceRecording);
-        console.log('- openMobileSidebar:', typeof window.openMobileSidebar);
-        console.log('- closeMobileSidebar:', typeof window.closeMobileSidebar);
-        console.log('- showSection:', typeof window.showSection);
-        console.log('- sendMessage:', typeof window.sendMessage);
-        
-        // Initialize Supabase first
-        await initializeSupabase();
-        // After supabase auth, ensure userData is loaded for mobile
-        if (!window.userData || !window.userData.full_name) {
+            console.warn('⚠️ Supabase library failed to load after multiple attempts. Continuing without Supabase.');
+        } else {
+            console.log('✅ Supabase library loaded successfully');
+            
+            // Test that key functions are available
+            console.log('🔧 Testing function availability:');
+            console.log('- toggleVoiceRecording:', typeof window.toggleVoiceRecording);
+            console.log('- openMobileSidebar:', typeof window.openMobileSidebar);
+            console.log('- closeMobileSidebar:', typeof window.closeMobileSidebar);
+            console.log('- showSection:', typeof window.showSection);
+            console.log('- sendMessage:', typeof window.sendMessage);
+            
+            // Initialize Supabase first
             try {
-                await loadUserData();
-                updateUserDisplay(window.userData || {});
-            } catch (_) {}
+                await initializeSupabase();
+                // After supabase auth, ensure userData is loaded for mobile
+                if (!window.userData || !window.userData.full_name) {
+                    try {
+                        await loadUserData();
+                        updateUserDisplay(window.userData || {});
+                    } catch (_) {}
+                }
+            } catch (e) {
+                console.warn('⚠️ initializeSupabase failed in DOMContentLoaded. Continuing without Supabase.', e);
+            }
         }
         
         // Initialize the dashboard
