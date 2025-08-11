@@ -6024,7 +6024,11 @@ function setupDashboardEventListeners() {
     const logos = document.querySelectorAll('[id*="Logo"], [id*="Emblem"], #mainLogo, #mainEmblem, #sidebarLogo, #sidebarEmblem');
     logos.forEach(logo => {
         logo.addEventListener('click', () => {
-            window.location.href = 'index.html';
+            if (window.location.protocol === 'file:') {
+                window.location.href = 'index.html';
+            } else {
+                window.location.href = '/index.html';
+            }
         });
     });
     

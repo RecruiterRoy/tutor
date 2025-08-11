@@ -753,7 +753,11 @@
                 checkIfLoggedIn().then(isLoggedIn => {
                     if (isLoggedIn) {
                         console.log('✅ User already logged in, redirecting to dashboard');
-                        window.location.href = '/dashboard';
+                        if (window.location.protocol === 'file:') {
+                            window.location.href = 'dashboard.html';
+                        } else {
+                            window.location.href = '/dashboard';
+                        }
                     }
                 }).catch(error => {
                     console.log('❌ Error checking login status:', error);
