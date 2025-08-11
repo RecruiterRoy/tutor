@@ -4323,10 +4323,17 @@ function showProfilePopup() {
     console.log('User data:', userData);
     console.log('Current user:', currentUser);
     
-    // Check if currentUser is available
-    if (!currentUser) {
-        console.error('Current user not available');
-        alert('Please log in again to access your profile.');
+    // If currentUser missing, try to refresh once before failing
+    if (!currentUser && window.supabaseClient) {
+        console.warn('Current user missing; attempting to refresh session...');
+        window.supabaseClient.auth.getUser().then(({ data }) => {
+            if (data && data.user) {
+                currentUser = data.user;
+                showProfilePopup(); // re-enter with user present
+            } else {
+                alert('Please log in again to access your profile.');
+            }
+        });
         return;
     }
     
@@ -6186,16 +6193,36 @@ function setupDashboardEventListeners() {
     const bindAvatarBtn = () => {
         const btn = document.getElementById('avatarSelectionBtn');
         if (!btn) return;
-        btn.replaceWith(btn.cloneNode(true));
-        const fresh = document.getElementById('avatarSelectionBtn');
-        fresh.addEventListener('click', showAvatarSelectionModal);
+        const clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+        clone.addEventListener('click', showAvatarSelectionModal, { once: false });
     };
     bindAvatarBtn();
+    // Quick avatar taps in settings
+    const quickRoy = document.getElementById('quickAvatarRoy');
+    if (quickRoy) {
+        quickRoy.addEventListener('click', async () => {
+            await selectAvatar('roy-sir');
+            showSuccess('Avatar changed to Roy Sir');
+        });
+    }
+    const quickSapna = document.getElementById('quickAvatarSapna');
+    if (quickSapna) {
+        quickSapna.addEventListener('click', async () => {
+            await selectAvatar('miss-sapna');
+            showSuccess('Avatar changed to Miss Sapna');
+        });
+    }
     
     // Manage subjects button
     const manageSubjectsBtn = document.getElementById('manageSubjectsBtn');
     if (manageSubjectsBtn) {
-        manageSubjectsBtn.addEventListener('click', () => showSection('progress'));
+        manageSubjectsBtn.addEventListener('click', () => {
+            showSection('progress');
+            if (typeof window.showSubjectManager === 'function') {
+                setTimeout(() => window.showSubjectManager(), 50);
+            }
+        });
     }
     
     // Mobile sidebar navigation items

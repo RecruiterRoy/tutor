@@ -598,7 +598,7 @@ ${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR:
           content: message
         });
 
-        const chat = await openai.chat.completions.create({
+        let chat = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           temperature: 0.7,
           messages: [
@@ -609,6 +609,34 @@ ${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR:
 
         response = chat.choices[0]?.message?.content || '';
         additionalData.usage = chat.usage || {};
+
+        // Enforce script rules as a safety net without extra cost unless needed
+        const hasDevanagari = /[\u0900-\u097F]/.test(response);
+        if ((userInputLanguage === 'hindi' || userInputLanguage === 'mixed') && !hasDevanagari) {
+          // Convert to Devanagari while preserving any English segments
+          const fix = await openai.chat.completions.create({
+            model: 'gpt-3.5-turbo',
+            temperature: 0.3,
+            messages: [
+              { role: 'system', content: 'Convert the following reply to proper Hindi written strictly in Devanagari script. Keep any English terms as English. Output plain text only.' },
+              { role: 'user', content: response }
+            ]
+          });
+          response = fix.choices[0]?.message?.content || response;
+          additionalData.usage_fix = fix.usage || {};
+        } else if (userInputLanguage === 'english' && hasDevanagari) {
+          // Ensure English-only for English questions
+          const fixEn = await openai.chat.completions.create({
+            model: 'gpt-3.5-turbo',
+            temperature: 0.3,
+            messages: [
+              { role: 'system', content: 'Convert the following reply to English only. Do not include any Devanagari or Hindi words. Output plain English text only.' },
+              { role: 'user', content: response }
+            ]
+          });
+          response = fixEn.choices[0]?.message?.content || response;
+          additionalData.usage_fix = fixEn.usage || {};
+        }
         break;
     }
 
