@@ -148,24 +148,8 @@ window.saveChatMessage = function(message, response) {
     console.log('saveChatMessage called - waiting for implementation');
 };
 
-window.closeMobileSidebar = function() {
-    console.log('🔧 Closing mobile sidebar...');
-    const sidebar = document.getElementById('mobileSidebar');
-    const overlay = document.getElementById('mobileSidebarOverlay');
-    
-    if (sidebar && overlay) {
-        sidebar.classList.add('-translate-x-full');
-        overlay.classList.add('opacity-0', 'pointer-events-none');
-        
-        // Restore body scroll
-        if (window.isMobile) {
-            document.body.style.overflow = '';
-        }
-        console.log('✅ Mobile sidebar closed');
-    } else {
-        console.log('❌ Mobile sidebar elements not found');
-    }
-};
+// Route to unified closer to avoid duplicate logic bugs
+window.closeMobileSidebar = function() { try { closeMobileSidebar(); } catch (e) { console.warn(e); } };
 
 window.showSubjectManager = function() {
     console.log('🔧 showSubjectManager called');
@@ -3763,15 +3747,22 @@ function closeMobileSidebar() {
         sidebar.classList.add('-translate-x-full');
         // Reset transition lock
         sidebar.dataset.transitioning = 'false';
+        // Clean inline styles that might block input layers
+        sidebar.style.removeProperty('display');
+        sidebar.style.removeProperty('visibility');
+        sidebar.style.zIndex = '';
     }
     
     if (overlay) {
         overlay.classList.remove('opacity-100', 'pointer-events-auto');
         overlay.classList.add('opacity-0', 'pointer-events-none');
+        overlay.style.pointerEvents = 'none';
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
     }
     
     // Reset body overflow
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = '';
     
     console.log('✅ Mobile sidebar closed');
 }
@@ -6174,10 +6165,14 @@ function setupDashboardEventListeners() {
     });
     
     // Avatar selection button
-    const avatarSelectionBtn = document.getElementById('avatarSelectionBtn');
-    if (avatarSelectionBtn) {
-        avatarSelectionBtn.addEventListener('click', showAvatarSelectionModal);
-    }
+    const bindAvatarBtn = () => {
+        const btn = document.getElementById('avatarSelectionBtn');
+        if (!btn) return;
+        btn.replaceWith(btn.cloneNode(true));
+        const fresh = document.getElementById('avatarSelectionBtn');
+        fresh.addEventListener('click', showAvatarSelectionModal);
+    };
+    bindAvatarBtn();
     
     // Manage subjects button
     const manageSubjectsBtn = document.getElementById('manageSubjectsBtn');
@@ -6299,6 +6294,9 @@ function setupDashboardEventListeners() {
             }
         }
     });
+
+    // Also rebind avatar button on section show
+    document.addEventListener('section:shown', () => bindAvatarBtn());
     
     // Handle modal outside clicks
     const modals = document.querySelectorAll('[onclick*="closeSubjectManagerOnOutsideClick"], [onclick*="closeAvatarSelectionOnOutsideClick"]');
