@@ -2149,10 +2149,10 @@ async function initializeDashboard() {
         localStorage.removeItem('tution_cached_user');
         localStorage.removeItem('tution_cached_password');
         
-        // For APK, redirect to index page
+        // For APK, stay on login and let user authenticate (do not bounce)
         if (window.isAPK) {
-            console.log('📱 APK detected - redirecting to index page');
-            window.location.href = '/index.html';
+            console.log('📱 APK detected - staying on current page for login');
+            // Do not redirect in APK to prevent loop
             return;
         } else {
             console.log('Web user not authenticated, redirecting to login');
