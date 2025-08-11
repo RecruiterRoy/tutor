@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import Cors from 'cors';
 
@@ -38,16 +38,14 @@ if (!process.env.ANTHROPIC_API_KEY) {
   console.error('❌ Please add ANTHROPIC_API_KEY to your Vercel project settings');
 }
 
-// Use environment variable API key only
-const apiKey = process.env.ANTHROPIC_API_KEY;
+// Use OpenAI API
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 console.log('🔧 Using API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'NOT_SET');
 console.log('🔧 API key length:', apiKey ? apiKey.length : 0);
 console.log('🔧 API key valid format:', apiKey ? apiKey.startsWith('sk-ant-') : false);
 
-const anthropic = new Anthropic({
-  apiKey: apiKey,
-});
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 const supabase = createClient(
   'https://vfqdjpiyaabufpaofysz.supabase.co',
@@ -348,21 +346,12 @@ export default async function handler(req, res) {
   }
 
   // Validate API key
-  if (!apiKey) {
-    console.error('❌ ANTHROPIC_API_KEY environment variable is not set');
+  if (!OPENAI_API_KEY) {
+    console.error('❌ OPENAI_API_KEY environment variable is not set');
     return res.status(500).json({
       success: false,
       error: 'API key not configured',
-      details: 'ANTHROPIC_API_KEY environment variable is not set in Vercel'
-    });
-  }
-  
-  if (!apiKey.startsWith('sk-ant-')) {
-    console.error('❌ Invalid API key format');
-    return res.status(500).json({
-      success: false,
-      error: 'Invalid API key format',
-      details: 'API key must start with sk-ant-'
+      details: 'OPENAI_API_KEY environment variable is not set in Vercel'
     });
   }
 
@@ -626,23 +615,17 @@ ${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR:
           content: message
         });
 
-        const completion = await anthropic.messages.create({
-          model: "claude-3-5-sonnet-20241022",
-          max_tokens: 1500,
-          system: systemPrompt,
-          messages: messages,
-          temperature: 0.7
+        const chat = await openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          temperature: 0.7,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...messages.map(m => ({ role: m.role, content: m.content }))
+          ]
         });
 
-        response = completion.content[0].text;
-        
-        // Log usage for cost monitoring
-        logUsage(completion.usage);
-        
-        additionalData.usage = {
-          input_tokens: completion.usage.input_tokens,
-          output_tokens: completion.usage.output_tokens
-        };
+        response = chat.choices[0]?.message?.content || '';
+        additionalData.usage = chat.usage || {};
         break;
     }
 

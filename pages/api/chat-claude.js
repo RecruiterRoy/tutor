@@ -1,8 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import OpenAI from 'openai';
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -52,28 +49,21 @@ Available Resources: You have access to textbooks, images, and educational mater
 
 Remember: Guide the student to understand, don't just provide answers. Use the available educational resources to provide accurate, grade-appropriate information.`;
 
-    const completion = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1500,
-      system: systemPrompt,
+    const chat = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      temperature: 0.7,
       messages: [
-        {
-          role: "user",
-          content: message
-        }
-      ],
-      temperature: 0.7
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ]
     });
 
-    const response = completion.content[0].text;
+    const response = chat.choices[0]?.message?.content || '';
 
     res.status(200).json({ 
       success: true, 
       response: response,
-      usage: {
-        input_tokens: completion.usage.input_tokens,
-        output_tokens: completion.usage.output_tokens
-      }
+      usage: chat.usage || {}
     });
 
   } catch (error) {
@@ -134,27 +124,16 @@ Available Resources: You have access to textbooks, images, and educational mater
 
 Remember: Guide the student to understand, don't just provide answers. Use the available educational resources to provide accurate, grade-appropriate information.`;
 
-    const completion = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1500,
-      system: systemPrompt,
+    const chat2 = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      temperature: 0.7,
       messages: [
-        {
-          role: "user",
-          content: message
-        }
-      ],
-      temperature: 0.7
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ]
     });
 
-    return Response.json({ 
-      success: true, 
-      response: completion.content[0].text,
-      usage: {
-        input_tokens: completion.usage.input_tokens,
-        output_tokens: completion.usage.output_tokens
-      }
-    });
+    return Response.json({ success: true, response: chat2.choices[0]?.message?.content || '', usage: chat2.usage || {} });
 
   } catch (error) {
     console.error('Claude API Error:', error);

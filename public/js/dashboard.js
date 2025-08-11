@@ -4479,19 +4479,21 @@ window.openMobileSidebar = function() {
     console.log('🔧 Opening mobile sidebar...');
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
-    
-    if (sidebar && overlay) {
-        sidebar.classList.remove('-translate-x-full');
-        overlay.classList.remove('opacity-0', 'pointer-events-none');
-        
-        // Prevent body scroll on mobile
-        if (window.isMobile) {
-            document.body.style.overflow = 'hidden';
-        }
-        console.log('✅ Mobile sidebar opened');
-    } else {
-        console.log('❌ Mobile sidebar elements not found');
-    }
+    if (!sidebar || !overlay) return;
+    // Clear any inline styles from previous close
+    sidebar.style.removeProperty('display');
+    sidebar.style.removeProperty('visibility');
+    overlay.style.removeProperty('display');
+    overlay.style.removeProperty('visibility');
+    overlay.style.pointerEvents = 'auto';
+    // Apply classes to open
+    sidebar.classList.remove('-translate-x-full');
+    sidebar.classList.add('translate-x-0');
+    overlay.classList.remove('opacity-0', 'pointer-events-none');
+    overlay.classList.add('opacity-100', 'pointer-events-auto');
+    if (window.isMobile) document.body.style.overflow = 'hidden';
+    sidebar.dataset.transitioning = 'false';
+    console.log('✅ Mobile sidebar opened');
 };
     
 // Assign to global immediately

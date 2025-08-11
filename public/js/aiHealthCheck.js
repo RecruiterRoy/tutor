@@ -5,11 +5,7 @@ class AIHealthCheck {
     constructor() {
         // Use relative URL to avoid CORS issues
         this.apiBaseUrl = '/api';
-        this.healthStatus = {
-            anthropic: false,
-            chat: false,
-            enhanced: false
-        };
+        this.healthStatus = { openai: false, chat: false, enhanced: false };
     }
 
     async checkAllServices() {
@@ -22,14 +18,14 @@ class AIHealthCheck {
                 const healthData = await healthResponse.json();
                 console.log('✅ Health check response:', healthData);
                 
-                this.healthStatus.anthropic = healthData.anthropic || false;
+                this.healthStatus.openai = healthData.openai || false;
                 this.healthStatus.chat = healthData.chat || false;
                 this.healthStatus.enhanced = healthData.enhanced || false;
                 
-                if (this.healthStatus.anthropic) {
-                    console.log('✅ Anthropic API is connected');
+                if (this.healthStatus.openai) {
+                    console.log('✅ OpenAI API is connected');
                 } else {
-                    console.log('ℹ️ Anthropic API check skipped');
+                    console.log('ℹ️ OpenAI API check skipped');
                 }
                 
                 if (this.healthStatus.chat) {
@@ -91,7 +87,7 @@ class AIHealthCheck {
     }
 
     isHealthy() {
-        return this.healthStatus.anthropic && this.healthStatus.chat;
+        return this.healthStatus.openai && this.healthStatus.chat;
     }
 
     showStatusNotification() {

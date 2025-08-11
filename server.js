@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 // Import PDFProcessor lazily to avoid Vercel deployment issues
 // import { PDFProcessor } from './utils/pdfExtractor.js';
@@ -22,16 +22,16 @@ const app = express();
 const REBUILD_TIMESTAMP = process.env.REBUILD_TIMESTAMP || Date.now();
 console.log(`Server starting with rebuild timestamp: ${REBUILD_TIMESTAMP}`);
 
-// Initialize Claude lazily to avoid startup crashes
-let anthropic = null;
-function getClaude() {
-    if (!anthropic) {
-        if (!process.env.ANTHROPIC_API_KEY) {
-            throw new Error('ANTHROPIC_API_KEY environment variable is required');
+// Initialize OpenAI lazily to avoid startup crashes
+let openaiClient = null;
+function getOpenAI() {
+    if (!openaiClient) {
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error('OPENAI_API_KEY environment variable is required');
         }
-        anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+        openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     }
-    return anthropic;
+    return openaiClient;
 }
 
 // Initialize Supabase lazily to avoid startup crashes
@@ -86,7 +86,7 @@ app.use(express.static(path.join(__dirname)));
 
 // API Key middleware
 app.use('/api', (req, res, next) => {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENAI_API_KEY) {
     return res.status(500).json({ error: 'Server misconfigured' });
   }
   next();
@@ -400,22 +400,17 @@ Use natural language without any formatting or special characters.`;
       content: msg.content
     }));
 
-    const completion = await getClaude().messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: claudeMessages,
-      temperature: 0.7
+    const ai = getOpenAI();
+    const chat = await ai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      temperature: 0.7,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...claudeMessages.map(m => ({ role: m.role, content: m.content }))
+      ]
     });
 
-    const response = completion.content[0].text;
-
-    // Log usage for cost monitoring
-    console.log('Claude Usage:', {
-      input_tokens: completion.usage.input_tokens,
-      output_tokens: completion.usage.output_tokens,
-      estimated_cost: (completion.usage.input_tokens * 0.000003) + (completion.usage.output_tokens * 0.000015)
-    });
+    const response = chat.choices[0]?.message?.content || '';
 
     res.json({
       response: response,
@@ -690,10 +685,10 @@ app.post('/api/enhanced-chat', async (req, res) => {
         const { message, subject, grade, action, examMonth, weekNumber, month } = req.body;
         
         // Check if required environment variables are set
-        if (!process.env.ANTHROPIC_API_KEY) {
+        if (!process.env.OPENAI_API_KEY) {
             return res.status(500).json({ 
-                error: 'Claude API key not configured',
-                details: 'ANTHROPIC_API_KEY environment variable is required'
+                error: 'OpenAI API key not configured',
+                details: 'OPENAI_API_KEY environment variable is required'
             });
         }
         

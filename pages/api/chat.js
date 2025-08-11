@@ -1,8 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import OpenAI from 'openai';
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export default async function handler(req, res) {
   // Add CORS headers
@@ -92,22 +89,22 @@ export default async function handler(req, res) {
     } else if (isHindiTeacher) {
       teacherPersona = {
         name: 'Miss Sapna',
-        style: 'Hindi/Hinglish',
-        personality: 'nurturing and culturally aware',
-        language: 'Mix Hindi and English (Hinglish) naturally. Use simple Hindi words like "samjha", "achha", "bilkul", etc.',
+      style: 'Hindi/Hinglish',
+      personality: 'nurturing and culturally aware',
+      language: 'Mix Hindi and English (Hinglish) naturally. Use simple Hindi words like "samjha", "achha", "bilkul", etc.',
         greeting: 'Namaste! Main Miss Sapna hun.',
-        cultural: 'Reference Indian festivals, traditions, and relatable examples from Indian daily life.'
+      cultural: 'Reference Indian festivals, traditions, and relatable examples from Indian daily life.'
       };
       console.log('✅ Selected Miss Sapna persona');
     } else {
       teacherPersona = {
-        name: 'Roy Sir',
-        style: 'English',
-        personality: 'professional and structured',
+      name: 'Roy Sir',
+      style: 'English',
+      personality: 'professional and structured',
         language: 'ALWAYS respond in English only, regardless of the language of the question. If the student asks a question in Hindi, respond in English and politely suggest they switch to Miss Sapna in settings for Hindi comfort.',
-        greeting: 'Hello! I am Roy Sir.',
-        cultural: 'Use international examples but keep Indian context in mind.'
-      };
+      greeting: 'Hello! I am Roy Sir.',
+      cultural: 'Use international examples but keep Indian context in mind.'
+    };
       console.log('✅ Selected Roy Sir persona');
     }
     
@@ -179,23 +176,21 @@ ${teacherPersona.name === 'Baruah Sir' ? `SPECIAL INSTRUCTION FOR BARUAH SIR:
 - Use CBSE syllabus in Assamese language
 - Mix Assamese and English naturally for better communication` : ''}`;
 
-    const completion = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: messages,
-      temperature: 0.7
+    const chat = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      temperature: 0.7,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({ role: m.role, content: m.content }))
+      ]
     });
 
-    const response = completion.content[0].text;
+    const response = chat.choices[0]?.message?.content || '';
 
     res.status(200).json({ 
       success: true, 
       response: response,
-      usage: {
-        input_tokens: completion.usage.input_tokens,
-        output_tokens: completion.usage.output_tokens
-      }
+      usage: chat.usage || {}
     });
 
   } catch (error) {
@@ -283,22 +278,22 @@ export async function POST(request) {
     } else if (isHindiTeacher) {
       teacherPersona = {
         name: 'Miss Sapna',
-        style: 'Hindi/Hinglish',
-        personality: 'nurturing and culturally aware',
-        language: 'Mix Hindi and English (Hinglish) naturally. Use simple Hindi words like "samjha", "achha", "bilkul", etc.',
+      style: 'Hindi/Hinglish',
+      personality: 'nurturing and culturally aware',
+      language: 'Mix Hindi and English (Hinglish) naturally. Use simple Hindi words like "samjha", "achha", "bilkul", etc.',
         greeting: 'Namaste! Main Miss Sapna hun.',
-        cultural: 'Reference Indian festivals, traditions, and relatable examples from Indian daily life.'
+      cultural: 'Reference Indian festivals, traditions, and relatable examples from Indian daily life.'
       };
       console.log('✅ Selected Miss Sapna persona');
     } else {
       teacherPersona = {
-        name: 'Roy Sir',
-        style: 'English',
-        personality: 'professional and structured',
+      name: 'Roy Sir',
+      style: 'English',
+      personality: 'professional and structured',
         language: 'ALWAYS respond in English only, regardless of the language of the question. If the student asks a question in Hindi, respond in English and politely suggest they switch to Miss Sapna in settings for Hindi comfort.',
-        greeting: 'Hello! I am Roy Sir.',
-        cultural: 'Use international examples but keep Indian context in mind.'
-      };
+      greeting: 'Hello! I am Roy Sir.',
+      cultural: 'Use international examples but keep Indian context in mind.'
+    };
       console.log('✅ Selected Roy Sir persona');
     }
     
@@ -370,22 +365,16 @@ ${teacherPersona.name === 'Baruah Sir' ? `SPECIAL INSTRUCTION FOR BARUAH SIR:
 - Use CBSE syllabus in Assamese language
 - Mix Assamese and English naturally for better communication` : ''}`;
 
-    const completion = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: messages,
-      temperature: 0.7
+    const chat2 = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      temperature: 0.7,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({ role: m.role, content: m.content }))
+      ]
     });
 
-    return Response.json({ 
-      success: true, 
-      response: completion.content[0].text,
-      usage: {
-        input_tokens: completion.usage.input_tokens,
-        output_tokens: completion.usage.output_tokens
-      }
-    });
+    return Response.json({ success: true, response: chat2.choices[0]?.message?.content || '', usage: chat2.usage || {} });
 
   } catch (error) {
     console.error('Chat API Error:', error);

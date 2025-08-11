@@ -3,7 +3,7 @@ export default function handler(req, res) {
     status: 'ok',
     timestamp: new Date().toISOString(),
     services: {
-      anthropic: !!process.env.ANTHROPIC_API_KEY,
+      openai: !!process.env.OPENAI_API_KEY,
       supabase: !!process.env.SUPABASE_SERVICE_KEY,
       supabase_url: !!process.env.SUPABASE_URL
     },
