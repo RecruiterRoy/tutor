@@ -22,7 +22,8 @@ class PaymentSystem {
         try {
             console.log('Creating payment for plan:', planType);
             
-            const response = await fetch('/api/create-payment', {
+            const apiBase = (window.location.protocol === 'file:') ? 'https://tution.app' : '';
+            const response = await fetch(apiBase + '/api/create-payment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -97,7 +98,8 @@ class PaymentSystem {
             console.log('Payment success response:', response);
 
             // Verify payment on server
-            const verifyResponse = await fetch('/api/verify-payment', {
+            const apiBase = (window.location.protocol === 'file:') ? 'https://tution.app' : '';
+            const verifyResponse = await fetch(apiBase + '/api/verify-payment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

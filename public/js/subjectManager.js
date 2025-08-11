@@ -336,7 +336,8 @@ class SubjectManager {
             const contextSummary = recentMessages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
 
             // Generate interactive recall and next topic using AI
-            const response = await fetch('/api/enhanced-chat', {
+            const apiBase = (window.location.protocol === 'file:') ? 'https://tution.app' : '';
+            const response = await fetch(apiBase + '/api/enhanced-chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

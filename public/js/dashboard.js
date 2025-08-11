@@ -4171,7 +4171,8 @@ async function sendChatMessage() {
         }
     
         // Send to AI backend with complete user profile and chat history
-        const response = await fetch('/api/enhanced-chat', {
+        const apiBase = (window.location.protocol === 'file:') ? 'https://tution.app' : '';
+        const response = await fetch(apiBase + '/api/enhanced-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 

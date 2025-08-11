@@ -485,7 +485,11 @@
                             console.log('✅ Email confirmed successfully');
                             showSuccess('Email confirmed! Redirecting to dashboard...');
                             setTimeout(() => {
-                                window.location.href = '/dashboard';
+                                if (window.location.protocol === 'file:') {
+                                    window.location.href = 'dashboard.html';
+                                } else {
+                                    window.location.href = '/dashboard';
+                                }
                             }, 2000);
                         }
                     } catch (error) {
@@ -511,7 +515,11 @@
                             console.log('✅ Password reset successful');
                             showSuccess('Password reset successful! Redirecting to dashboard...');
                             setTimeout(() => {
-                                window.location.href = '/dashboard';
+                                if (window.location.protocol === 'file:') {
+                                    window.location.href = 'dashboard.html';
+                                } else {
+                                    window.location.href = '/dashboard';
+                                }
                             }, 2000);
                         }
                     } catch (error) {
@@ -525,7 +533,11 @@
                 const isLoggedIn = await checkIfLoggedIn();
                 if (isLoggedIn) {
                     console.log('✅ User already logged in, redirecting to dashboard');
-                    window.location.href = '/dashboard';
+                    if (window.location.protocol === 'file:') {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        window.location.href = '/dashboard';
+                    }
                     return;
                 } else {
                     // Clear any stale session data to prevent loops
