@@ -3769,44 +3769,28 @@ function closeMobileSidebar() {
 
 function toggleMobileSidebar() {
     console.log('🔧 Toggle mobile sidebar called');
-    
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
-    
-    if (!sidebar || !overlay) {
-        console.log('❌ Mobile sidebar elements not found');
-        console.log('🔍 Available elements:', {
-            sidebar: !!sidebar,
-            overlay: !!overlay
-        });
-        return;
-    }
-    
-    // Prevent multiple rapid clicks
-    if (sidebar.dataset.transitioning === 'true') {
-        console.log('⚠️ Sidebar transition in progress, ignoring click');
-        return;
-    }
-    
-    console.log('🔧 Mobile sidebar elements found, toggling...');
-    
-    // Always open on toggle (menu button), closing is handled by overlay/close button only
-    console.log('🔧 Forcing sidebar OPEN');
-    sidebar.dataset.transitioning = 'true';
-    sidebar.style.display = 'block';
-    sidebar.style.visibility = 'visible';
-    sidebar.style.zIndex = '50';
-    overlay.style.display = 'block';
-    overlay.style.visibility = 'visible';
-    overlay.style.zIndex = '40';
-    setTimeout(() => {
+    if (!sidebar || !overlay) return;
+    if (sidebar.dataset.transitioning === 'true') return;
+    const isOpen = sidebar.classList.contains('translate-x-0') && !sidebar.classList.contains('-translate-x-full');
+    if (isOpen) {
+        closeMobileSidebar();
+    } else {
+        // Open
+        sidebar.dataset.transitioning = 'true';
+        sidebar.style.removeProperty('display');
+        sidebar.style.removeProperty('visibility');
+        overlay.style.removeProperty('display');
+        overlay.style.removeProperty('visibility');
         sidebar.classList.remove('-translate-x-full');
-        sidebar.classList.add('translate-x-0');
         overlay.classList.remove('opacity-0', 'pointer-events-none');
+        sidebar.classList.add('translate-x-0');
         overlay.classList.add('opacity-100', 'pointer-events-auto');
+        if (window.isMobile) document.body.style.overflow = 'hidden';
+        setTimeout(() => { sidebar.dataset.transitioning = 'false'; }, 200);
         console.log('✅ Mobile sidebar opened');
-        sidebar.dataset.transitioning = 'false';
-    }, 10);
+    }
 }
 
 // Close sidebar when clicking overlay
@@ -6188,7 +6172,8 @@ function setupDashboardEventListeners() {
             const rawText = item.textContent.trim().toLowerCase();
             const section = ds || (rawText.includes('classroom') ? 'chat' : rawText.includes('study') ? 'materials' : rawText.includes('progress') ? 'progress' : rawText.includes('settings') ? 'settings' : 'chat');
             showSection(section);
-            closeMobileSidebar();
+            // Always close after navigating from sidebar
+            setTimeout(() => closeMobileSidebar(), 0);
         });
     });
     
@@ -6352,6 +6337,8 @@ let micSystem = {
             console.log('🎤 Recording started');
             this.isRecording = true;
             this.updateMicButton(true);
+            // Stop any ongoing TTS so mic doesn't capture it
+            try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
         };
         
         this.recognition.onresult = (event) => {
@@ -6431,6 +6418,8 @@ let micSystem = {
         
         try {
             this.currentTranscript = '';
+            // Ensure we don't have TTS speaking over the mic
+            try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
             this.recognition.start();
         } catch (error) {
             console.error('🎤 Error starting recording:', error);
@@ -6542,8 +6531,11 @@ let micSystem = {
             pressTimer = setTimeout(() => {
                 isLongPress = true;
                 console.log('🎤 Long press detected - starting continuous recording');
+                // For long-press, switch to continuous mode while pressed
+                if (this.recognition) this.recognition.continuous = true;
+                try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
                 this.startRecording();
-            }, 500); // 500ms for long press
+            }, 3000); // 3s for long press (hold-to-talk)
         };
         
         const handleRelease = (e) => {
@@ -6557,9 +6549,13 @@ let micSystem = {
                 // Long press release - stop recording and send
                 console.log('🎤 Long press release - stopping recording');
                 this.stopRecording();
+                // Restore non-continuous mode after release
+                if (this.recognition) this.recognition.continuous = false;
             } else {
                 // Short press - start recording (will auto-stop on speech end)
                 console.log('🎤 Short press - starting recording');
+                if (this.recognition) this.recognition.continuous = false;
+                try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
                 this.startRecording();
             }
         };
