@@ -5,6 +5,15 @@ function goToDashboard() {
     window.location.replace('/dashboard');
   }
 }
+
+// Unified home navigation to avoid accidental index bounces
+window.goHome = function() {
+  if (window.location.protocol === 'file:') {
+    window.location.replace('index.html');
+  } else {
+    window.location.replace('/');
+  }
+};
 // public/js/auth.js
 // Simplified Authentication for Mobile App
 
