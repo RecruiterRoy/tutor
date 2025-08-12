@@ -2907,6 +2907,10 @@ function populateAvatarGrid() {
 async function selectAvatar(avatarId, event) {
     selectedAvatar = avatarId;
     window.selectedAvatar = avatarId; // Set global variable
+    try { localStorage.setItem('ai_avatar', avatarId); } catch (_) {}
+    if (window.userData) {
+        window.userData.ai_avatar = avatarId;
+    }
     
     // Update visual selection
     document.querySelectorAll('.avatar-option').forEach(option => {
@@ -2931,7 +2935,7 @@ async function selectAvatar(avatarId, event) {
     }
     
     // Save avatar preference to Supabase immediately
-    if (currentUser && currentUser.id) {
+    if (currentUser && currentUser.id && window.supabaseClient) {
         try {
             await window.supabaseClient.from('user_profiles').upsert({ 
                 id: currentUser.id, 
@@ -2942,6 +2946,14 @@ async function selectAvatar(avatarId, event) {
             console.error('Error saving avatar preference:', error);
         }
     }
+
+    // Refresh TTS voice and UI to reflect avatar
+    try {
+        if (window.textToSpeech && typeof window.textToSpeech.forceVoiceUpdate === 'function') {
+            window.textToSpeech.forceVoiceUpdate();
+        }
+    } catch (_) {}
+    try { if (typeof updateAvatarDisplay === 'function') updateAvatarDisplay(); } catch (_) {}
 }
 
 async function updateContext() {
