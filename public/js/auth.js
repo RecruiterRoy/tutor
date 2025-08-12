@@ -1,3 +1,10 @@
+function goToDashboard() {
+  if (window.location.protocol === 'file:') {
+    window.location.replace('dashboard.html');
+  } else {
+    window.location.replace('/dashboard');
+  }
+}
 // public/js/auth.js
 // Simplified Authentication for Mobile App
 
@@ -205,8 +212,8 @@ function onAuthSuccess(session) {
   }
   
   // Redirect to dashboard if on login page
-  if (window.location.pathname === '/login.html' || window.location.pathname === '/register.html') {
-    window.location.href = '/dashboard.html';
+  if (window.location.pathname.endsWith('login.html') || window.location.pathname.endsWith('register.html')) {
+    goToDashboard();
   }
   
   // Dispatch custom event for other components
