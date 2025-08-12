@@ -1234,6 +1234,12 @@ function getCurrentAvatarId() {
         console.log('✅ Returning avatar ID:', window.userData.ai_avatar);
         return window.userData.ai_avatar;
     }
+    // Fallback to localStorage for small devices/APK if profile not yet loaded
+    const stored = localStorage.getItem('ai_avatar');
+    if (stored) {
+        console.log('✅ Returning avatar ID from localStorage:', stored);
+        return stored;
+    }
     console.log('✅ Using default avatar ID: miss-sapna');
     return 'miss-sapna'; // Default to Miss Sapna
 }
@@ -5016,6 +5022,8 @@ async function saveAvatarSelection() {
             console.log('🔧 Updating local userData.ai_avatar from:', window.userData.ai_avatar, 'to:', selectedAvatarOption);
             window.userData.ai_avatar = selectedAvatarOption;
         }
+        // Persist locally for small devices/APK
+        try { localStorage.setItem('ai_avatar', selectedAvatarOption); } catch(_) {}
         
         // Update global selected avatar
         console.log('🔧 Updating window.selectedAvatar from:', window.selectedAvatar, 'to:', selectedAvatarOption);

@@ -1,0 +1,171 @@
+{
+    "class": 8,
+    "board": "ICSE",
+    "session": "2025-26",
+    "subjects": {
+      "English": {
+        "books": ["English Language", "English Literature"],
+        "units": [
+          {
+            "unit": 1,
+            "chapters": [
+              "The Ant-lion",
+              "Where the Mind is Without Fear (Rabindranath Tagore)",
+              "The Silver Lining",
+              "Classic Prose and Poetry Selections"
+            ]
+          },
+          {
+            "unit": 2,
+            "chapters": [
+              "Summary and Comprehension",
+              "Letter Writing (Formal and Informal)",
+              "Precis Writing",
+              "Grammar Practice (Tenses, Voice, Speech)"
+            ]
+          }
+        ],
+        "grammar_topics": [
+          "Tenses",
+          "Direct and Indirect Speech",
+          "Sentence Transformation",
+          "Active and Passive Voice",
+          "Parts of Speech",
+          "Synthesis",
+          "Determiners",
+          "Prepositions",
+          "Vocabulary Building",
+          "Comprehension & Composition"
+        ]
+      },
+      "Hindi": {
+        "book": "Vasant",
+        "chapters": [
+          "सिर्फ़ एक सवाल",
+          "कविता: नया भोजन",
+          "संवाद लेखन",
+          "पत्र लेखन",
+          "सारे जहाँ का सपना",
+          "रचनात्मक लेखन"
+        ],
+        "grammar_topics": [
+          "संज्ञा, सर्वनाम",
+          "विशेषण, क्रिया",
+          "काल",
+          "समास",
+          "मुहावरे और लोकोक्तियाँ",
+          "वाक्य रचना",
+          "विराम चिह्न"
+        ]
+      },
+      "Mathematics": {
+        "chapters": [
+          "Real Numbers",
+          "Linear Equations in One Variable",
+          "Understanding Quadrilaterals",
+          "Practical Geometry",
+          "Data Handling",
+          "Squares and Square Roots",
+          "Cubes and Cube Roots",
+          "Comparing Quantities",
+          "Algebraic Expressions and Factorisation",
+          "Equations and Inequations",
+          "Quadratic Equations",
+          "Lines and Angles",
+          "Triangles",
+          "Parallelograms",
+          "Constructions",
+          "Circumference and Area of a Circle",
+          "Representing 3D Shapes in 2D",
+          "Probability",
+          "Volume and Surface Area of Solids",
+          "Perimeter and Area of Plane Figures",
+          "Graphs",
+          "Symmetry: Reflection and Rotation"
+        ]
+      },
+      "Science": {
+        "Physics": [
+          "Roadmap",
+          "Matter: Kinetic Theory of Matter",
+          "Physical Quantities and Measurement",
+          "Force and Pressure",
+          "Energy",
+          "Light Energy",
+          "Heat Transfer",
+          "Sound",
+          "Electricity"
+        ],
+        "Chemistry": [
+          "Matter",
+          "Physical and Chemical Changes",
+          "Elements, Compounds and Mixtures",
+          "Atomic Structure",
+          "Language of Chemistry",
+          "Chemical Reactions",
+          "Carbon and its Compounds",
+          "Water",
+          "Hydrogen"
+        ],
+        "Biology": [
+          "Transport of Food and Minerals in Plants",
+          "Reproduction in Plants",
+          "Reproduction in Animals",
+          "Ecosystem",
+          "Endocrine System",
+          "Adolescence",
+          "Circulatory System",
+          "Nervous System",
+          "Diseases and First Aid",
+          "Food Production and Management"
+        ]
+      },
+      "History, Civics and Geography": {
+        "History": [
+          "The Revolt of 1857 and After",
+          "Socialism in Europe and the Russian Revolution",
+          "Nazism and the Rise of Hitler",
+          "Forest Society and Colonialism",
+          "Work, Life and Culture"
+        ],
+        "Geography": [
+          "Resources and Development",
+          "Forest and Wildlife Resources",
+          "Water Resources",
+          "Agriculture",
+          "Industries",
+          "Human Resources"
+        ],
+        "Civics": [
+          "The Making of the Constitution",
+          "Rural Administration",
+          "Urban Administration",
+          "Law and Social Justice",
+          "Understanding Media"
+        ]
+      },
+      "Computer Studies": {
+        "chapters": [
+          "Basics of Computers and Its Components",
+          "Operating System and GUI",
+          "MS Office Suite (Word, Excel, PowerPoint Basics)",
+          "Internet and Web Browsing",
+          "Programming Basics (Scratch or Python Introduction)",
+          "Data Management",
+          "Cyber Safety and Ethics"
+        ]
+      },
+      "Arts Education": {
+        "topics": [
+          "Drawing and Painting Techniques",
+          "Use of Colours and Textures",
+          "Traditional and Modern Indian Art Forms",
+          "Paper Craft and Collage Making",
+          "Clay Modeling and Pottery",
+          "Art from Natural Materials",
+          "Creative Projects Based on Festivals"
+        ]
+      }
+    }
+  }
+  

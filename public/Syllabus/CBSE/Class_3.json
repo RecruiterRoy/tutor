@@ -1,0 +1,198 @@
+{
+  "class": 3,
+  "board": "CBSE",
+  "session": "2025-26",
+  "subjects": {
+    "English": {
+      "book": "Marigold",
+      "units": [
+        {
+          "unit": 1,
+          "chapters": ["Good Morning (Poem)", "The Magic Garden (Story)"]
+        },
+        {
+          "unit": 2,
+          "chapters": ["Bird Talk (Poem)", "Nina and the Baby Sparrows (Story)"]
+        },
+        {
+          "unit": 3,
+          "chapters": ["Little By Little (Poem)", "The Enormous Turnip (Story)"]
+        },
+        {
+          "unit": 4,
+          "chapters": ["Sea Song (Poem)", "A Little Fish Story (Story)"]
+        },
+        {
+          "unit": 5,
+          "chapters": ["The Balloon Man (Poem)", "The Yellow Butterfly (Story)"]
+        },
+        {
+          "unit": 6,
+          "chapters": ["Trains (Poem)", "The Story of the Road (Story)"]
+        },
+        {
+          "unit": 7,
+          "chapters": ["Puppy and I (Poem)", "Little Tiger, Big Tiger (Story)"]
+        },
+        {
+          "unit": 8,
+          "chapters": ["What's in the Mailbox? (Poem)", "My Silly Sister (Story)"]
+        },
+        {
+          "unit": 9,
+          "chapters": ["Don't Tell (Poem)", "He is My Brother (Story)"]
+        },
+        {
+          "unit": 10,
+          "chapters": ["How Creatures Move (Poem)", "The Ship of the Desert (Story)"]
+        }
+      ],
+      "grammar_topics": [
+        "Nouns",
+        "Pronouns",
+        "Verbs",
+        "Adjectives",
+        "Prepositions",
+        "Conjunctions",
+        "Sentence Construction",
+        "Vocabulary Building",
+        "Punctuation",
+        "Reading Comprehension",
+        "Creative Writing: Essays, Paragraphs, Letters"
+      ]
+    },
+    "Hindi": {
+      "book": "रिमझिम",
+      "chapters": [
+        "कच्चा आम",
+        "बंकिम चाचा",
+        "चावल की रोटियाँ",
+        "समझदार लड़का",
+        "अक्कड़ बक्कड़",
+        "नन्हा फनकार",
+        "चाँद वाली अम्मा",
+        "सबसे अच्छा पेड़",
+        "पड़ोस में पेड़",
+        "एक बुढ़िया",
+        "दीवार"
+      ],
+      "grammar_topics": [
+        "संज्ञा",
+        "सर्वनाम",
+        "क्रिया",
+        "विशेषण",
+        "वाक्य रचना",
+        "विराम चिह्न",
+        "शब्द भंडार",
+        "अपठित गद्यांश",
+        "चित्र वर्णन",
+        "संवाद लेखन",
+        "कविता और कहानी लेखन"
+      ]
+    },
+    "Mathematics": {
+      "book": "Math-Magic",
+      "chapters": [
+        "Where to Look From",
+        "Fun With Numbers",
+        "Give and Take",
+        "Long and Short",
+        "Shapes and Designs",
+        "Fun With Give and Take (Revision)",
+        "Time Goes On",
+        "Who is Heavier?",
+        "How Many Times?",
+        "Play With Patterns",
+        "Jugs and Mugs",
+        "Can We Share?",
+        "Smart Charts!",
+        "Rupees and Paise"
+      ],
+      "topics": [
+        "Mental Arithmetic",
+        "Addition",
+        "Subtraction",
+        "Multiplication",
+        "Division",
+        "Measurement (Length, Weight, Capacity)",
+        "Time Reading",
+        "Money Calculations",
+        "Patterns and Symmetry",
+        "Data Handling and Graphs",
+        "Word Problems",
+        "Geometrical Shapes and Properties"
+      ]
+    },
+    "Environmental Studies": {
+      "book": "Looking Around",
+      "chapters": [
+        "Poonam's Day Out",
+        "The Plant Fairy",
+        "Water O' Water!",
+        "Our First School",
+        "Chhotu's House",
+        "Foods We Eat",
+        "Saying Without Speaking",
+        "Flying High",
+        "It's Raining",
+        "What is Cooking",
+        "From Here to There",
+        "Work We Do",
+        "Sharing Our Feelings",
+        "The Story of Food",
+        "Making Pots",
+        "Games We Play",
+        "Here Comes A Letter",
+        "A House Like This",
+        "Our Friends - Animals",
+        "Drop by Drop"
+      ],
+      "topics": [
+        "Family and Relationships",
+        "Plants and Trees",
+        "Animals and Birds",
+        "Food and Cooking",
+        "Water Sources and Conservation",
+        "Shelter and Houses",
+        "Transport and Travel",
+        "Work and Occupations",
+        "Games and Recreation",
+        "Communication",
+        "Natural Environment",
+        "Seasonal Changes",
+        "Health and Cleanliness"
+      ]
+    },
+    "Computer Science": {
+      "chapters": [
+        "Introduction to Computers",
+        "Parts of a Computer",
+        "Input and Output Devices",
+        "Types of Computers",
+        "Care and Maintenance of Computers",
+        "Introduction to MS Paint",
+        "Drawing and Colouring in Paint"
+      ]
+    },
+    "General Knowledge": {
+      "topics": [
+        "India – States and Capitals",
+        "National Symbols",
+        "Festivals of India",
+        "Famous Scientists",
+        "World Landmarks",
+        "Basic Science Facts"
+      ]
+    },
+    "Art & Craft": {
+      "activities": [
+        "Basic Drawing and Sketching",
+        "Colouring with Crayons and Watercolours",
+        "Paper Folding (Origami)",
+        "Creating Patterns and Designs",
+        "Nature Sketches",
+        "Collage Making"
+      ]
+    }
+  }
+}

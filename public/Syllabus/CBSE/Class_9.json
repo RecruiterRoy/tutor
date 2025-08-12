@@ -1,0 +1,217 @@
+{
+  "class": 9,
+  "board": "CBSE",
+  "session": "2025-26",
+  "subjects": {
+    "English": {
+      "books": ["Beehive", "Moments"],
+      "units": [
+        {
+          "unit": 1,
+          "chapters": [
+            "Two Stories About Flying",
+            "The Trees",
+            "The Sparrow and The Crow",
+            "From the Diary of Anne Frank"
+          ]
+        },
+        {
+          "unit": 2,
+          "chapters": [
+            "The Bond of Love",
+            "Glimpses of the Past",
+            "The Adventurous Elephant",
+            "The Dump"
+          ]
+        },
+        {
+          "unit": 3,
+          "chapters": [
+            "A Different Kind of School",
+            "Fire: Friend and Foe",
+            "The Fun They Had",
+            "The Road Not Taken"
+          ]
+        },
+        {
+          "unit": 4,
+          "chapters": [
+            "The Open Window",
+            "The Incredible History of the Human Eye",
+            "The Snake and the Mirror",
+            "The Necklace"
+          ]
+        }
+      ],
+      "grammar_topics": [
+        "Tenses",
+        "Modals",
+        "Subject-Verb Agreement",
+        "Conjunctions",
+        "Prepositions",
+        "Reported Speech",
+        "Active and Passive Voice",
+        "Punctuation and Capitals",
+        "Vocabulary Building",
+        "Writing Skills (Letters, Essays, Notices)"
+      ]
+    },
+    "Hindi": {
+      "books": ["Kritika", "Sanchayan"],
+      "chapters": [
+        "झरना",
+        "बुद्ध और उनके किस्से",
+        "नदी के द्वीप",
+        "यहाँ तो बसती थी",
+        "सूनापन",
+        "चाँद का जादू",
+        "अनमोल रतन",
+        "आत्मा की आवाज़",
+        "मेरे साथी",
+        "चिट्ठी का सफर"
+      ],
+      "grammar_topics": [
+        "संधि",
+        "समास",
+        "काल",
+        "क्रिया",
+        "विभक्ति",
+        "संज्ञा",
+        "विशेषण",
+        "अव्यय",
+        "वाक्य रचना",
+        "पत्र लेखन",
+        "निबंध लेखन"
+      ]
+    },
+    "Mathematics": {
+      "units": [
+        {
+          "unit": "Number Systems",
+          "topics": [
+            "Rational and Irrational Numbers",
+            "Operations with Real Numbers",
+            "Decimal Representations"
+          ]
+        },
+        {
+          "unit": "Algebra",
+          "topics": [
+            "Polynomials: Degree, Addition, Subtraction, Multiplication",
+            "Linear Equations in Two Variables"
+          ]
+        },
+        {
+          "unit": "Coordinate Geometry",
+          "topics": [
+            "Cartesian Plane",
+            "Plotting Points",
+            "Distance between Points"
+          ]
+        },
+        {
+          "unit": "Geometry",
+          "topics": [
+            "Lines and Angles",
+            "Triangles and their Properties",
+            "Quadrilaterals",
+            "Circles: Properties and Theorems",
+            "Construction of Geometric Figures"
+          ]
+        },
+        {
+          "unit": "Mensuration",
+          "topics": [
+            "Surface Areas and Volumes of Cubes, Cuboids, Cylinders, Cones and Spheres"
+          ]
+        },
+        {
+          "unit": "Statistics & Probability",
+          "topics": [
+            "Collection and Organization of Data",
+            "Mean, Median and Mode",
+            "Probability Basics"
+          ]
+        }
+      ]
+    },
+    "Science": {
+      "units": [
+        {
+          "unit": "Matter - Its Nature and Behaviour",
+          "topics": [
+            "States of Matter",
+            "Properties of Liquids and Solids",
+            "Atoms and Molecules",
+            "Physical and Chemical Changes"
+          ]
+        },
+        {
+          "unit": "Organization in the Living World",
+          "topics": [
+            "Cell Structure and Functions",
+            "Tissues",
+            "Diversity in Living Organisms",
+            "Food and Nutrition"
+          ]
+        },
+        {
+          "unit": "Motion, Force and Work",
+          "topics": [
+            "Laws of Motion",
+            "Gravitation",
+            "Work and Energy",
+            "Sound"
+          ]
+        },
+        {
+          "unit": "Food; Food Production",
+          "topics": [
+            "Crop Production and Management",
+            "Microorganisms and their Role"
+          ]
+        }
+      ]
+    },
+    "Social Science": {
+      "History": [
+        "The French Revolution",
+        "Nazism and the Rise of Hitler",
+        "Forest Society and Colonialism",
+        "India After Independence"
+      ],
+      "Geography": [
+        "India: Size and Location",
+        "Physical Features of India",
+        "Drainage System",
+        "Climate",
+        "Natural Vegetation",
+        "Population"
+      ],
+      "Political Science": [
+        "Democracy: What, Why and How",
+        "Constitutional Design",
+        "Electoral Politics",
+        "Working of Institutions"
+      ],
+      "Economics": [
+        "The Story of Village Palampur",
+        "People as Resource",
+        "Poverty as a Challenge"
+      ]
+    },
+    "Computer Applications": {
+      "topics": [
+        "Basics of Computers",
+        "Operating System Fundamentals",
+        "Introduction to Programming (Python Basics)",
+        "Internet and its Applications",
+        "Cyber Security and Safety"
+      ]
+    },
+    "Additional Subjects": {
+      "Languages": ["Sanskrit", "French", "German", "Spanish"], 
+      "Others": ["Art Education", "Physical Education", "Work Education"]
+    }
+  }
+}

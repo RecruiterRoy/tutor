@@ -1,0 +1,133 @@
+{
+    "class": 5,
+    "board": "ICSE",
+    "session": "2025-26",
+    "subjects": {
+      "English": {
+        "book": "Climb with Cornerstone Grade 5",
+        "language_topics": [
+          "The Sentence",
+          "Types of Sentences",
+          "Subject and Predicate",
+          "Articles",
+          "Kinds of Nouns (Proper, Common, Abstract, Collective)",
+          "Noun: Number and Gender",
+          "Pronouns (Personal, Reflexive, Possessive)",
+          "Kinds of Adjectives and their Comparison",
+          "Verbs (Transitive and Intransitive)",
+          "Tenses (Simple, Continuous, Perfect)",
+          "Prepositions",
+          "Kinds of Adverbs and their Comparison",
+          "Conjunctions",
+          "Direct and Indirect Speech",
+          "Active and Passive Voice",
+          "Kinds of Sentences and Sentence Construction",
+          "Comprehension and Vocabulary Building",
+          "Formal and Informal Letter Writing",
+          "Essay Writing and Paragraph Writing"
+        ],
+        "literature_units": [
+          "The River Bank",
+          "Cloud Picture (Poem)",
+          "The Poet and the Jester",
+          "Contentment (Poem)",
+          "A Debt Made Profit",
+          "Leisure (Poem)",
+          "The Winged Monkeys",
+          "Two Little Drops of Rain (Poem)",
+          "Shakespeare Tales: The Merchant of Venice, Julius Caesar, The Tempest, Macbeth"
+        ]
+      },
+      "Mathematics": {
+        "book": "Be a Maths Star (Ratna Sagar Publications)",
+        "chapters_term_1": [
+          "Large Numbers",
+          "Addition and Subtraction",
+          "Multiplication and Division",
+          "Fractions",
+          "Decimals",
+          "Data Handling"
+        ],
+        "chapters_term_2": [
+          "Multiples and Factors",
+          "Introduction to Negative Numbers",
+          "Geometry: Lines and Angles",
+          "Perimeter and Area",
+          "Percentage",
+          "Patterns (Aptitude and Reasoning)",
+          "Algebra basics (Simple expressions)",
+          "Symmetry"
+        ]
+      },
+      "Science": {
+        "book": "Our Universe",
+        "chapters_term_1": [
+          "Food and Health",
+          "Plant Reproduction",
+          "Nervous System",
+          "Force, Energy and Simple Machines"
+        ],
+        "chapters_term_2": [
+          "Skeletal System",
+          "Physical and Chemical Changes",
+          "The Moon and the Eclipse",
+          "Air and Water"
+        ]
+      },
+      "Social Studies": {
+        "book": "Timelines (Primary History and Civics)",
+        "history_term_1": [
+          "The Industrial Revolution",
+          "Our Material Heritage",
+          "From Traders to Rulers",
+          "Governing Our Nation"
+        ],
+        "history_term_2": [
+          "India Under The British",
+          "The World Wars",
+          "Towards Independence",
+          "An Agency Of Peace"
+        ]
+      },
+      "Hindi": {
+        "book": "Rimjhim or Equivalent",
+        "topics": [
+          "मोरिका की कहानी",
+          "झरना",
+          "बचपन",
+          "पढ़ो और बढ़ो",
+          "फसलों का त्योहार",
+          "मिलना जुलना",
+          "बच्चों की बातें",
+          "पतंग",
+          "बहादुर गधा",
+          "खेल और क्रीड़ा",
+          "कहानी लेखन",
+          "पत्र लेखन",
+          "विराम चिन्ह",
+          "मुहावरे और लोकोक्तियाँ"
+        ]
+      },
+      "Computer Studies": {
+        "topics": [
+          "Introduction to Computers",
+          "Parts of a Computer",
+          "Input and Output Devices",
+          "Using MS Paint and Basic Drawing",
+          "Introduction to Internet and Safety",
+          "Basic HTML and Presentation Skills"
+        ]
+      },
+      "Art Education": {
+        "activities": [
+          "Drawing and Sketching",
+          "Colouring and Shading Techniques",
+          "Paper Crafts and Origami",
+          "Crafts Based on Indian Festivals",
+          "Clay Modeling",
+          "Poster Making"
+        ]
+      }
+    }
+  }
+  

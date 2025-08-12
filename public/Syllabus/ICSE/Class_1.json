@@ -1,0 +1,116 @@
+{
+    "class": 1,
+    "board": "ICSE",
+    "session": "2025-26",
+    "subjects": {
+      "English": {
+        "book": "Climb with Cornerstone",
+        "grammar_and_composition_terms": {
+          "Term 1": [
+            "The Sentence",
+            "Noun – Kinds",
+            "Pronoun – Kinds",
+            "Adjectives - Kinds / Degree of comparison",
+            "Verbs – Kinds",
+            "Subject Verb Agreement, Modals and Auxiliaries",
+            "Tenses – Simple, Continuous and Perfect",
+            "Prepositions",
+            "Articles",
+            "Comprehension",
+            "Composition",
+            "Letter Writing",
+            "Notice Writing"
+          ],
+          "Term 2": [
+            "Adverbs",
+            "Conjunctions",
+            "Voice (Active and Passive)",
+            "Reported Speech",
+            "Phrases",
+            "Transformation of Sentences",
+            "Similes",
+            "Antonyms / Synonyms",
+            "Homophones / Homonyms",
+            "Comprehension",
+            "Composition",
+            "Letter Writing",
+            "Notice Writing"
+          ]
+        }
+      },
+      "Mathematics": {
+        "Term 1": [
+          "Numbers up to 100",
+          "Addition and Subtraction",
+          "Multiplication and Division",
+          "Shape Recognition",
+          "Basic Patterns"
+        ],
+        "Term 2": [
+          "Time: Understanding Clock",
+          "Money: Currency Recognition",
+          "Data Handling: Sorting and Grouping",
+          "Symmetry in Shapes",
+          "Basic Geometrical Shapes"
+        ]
+      },
+      "Physics": {
+        "topics": [
+          "Light and Shadows",
+          "Force and Motion",
+          "Heat and Temperature"
+        ]
+      },
+      "Chemistry": {
+        "topics": [
+          "Materials Around Us",
+          "Properties of Materials",
+          "Changes Around Us"
+        ]
+      },
+      "Biology": {
+        "topics": [
+          "Plants and Animals Around Us",
+          "Our Body and Health",
+          "Food and Nutrition"
+        ]
+      },
+      "History and Civics": {
+        "topics": [
+          "Family and Friends",
+          "Community Helpers",
+          "Rules and Responsibilities"
+        ]
+      },
+      "Geography": {
+        "topics": [
+          "The Earth and Its Features",
+          "Weather and Seasons",
+          "Maps and Directions"
+        ]
+      },
+      "Computer Applications": {
+        "topics": [
+          "Introduction to Computers",
+          "Basic Computer Parts",
+          "Using Paint and Drawing Tools"
+        ]
+      },
+      "Environmental Studies": {
+        "topics": [
+          "My Environment",
+          "Plants and Animals",
+          "Water and Air",
+          "Safety and Cleanliness"
+        ]
+      },
+      "Arts Education": {
+        "activities": [
+          "Drawing and Coloring",
+          "Crafts and Clay Modeling",
+          "Pattern Making"
+        ]
+      }
+    }
+  }
+  

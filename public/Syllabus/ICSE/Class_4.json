@@ -1,0 +1,196 @@
+{
+    "class": 4,
+    "board": "ICSE",
+    "session": "2025-26",
+    "subjects": {
+      "English": {
+        "books": ["English Language", "English Literature"],
+        "units": [
+          {
+            "unit": 1,
+            "chapters": [
+              "Sorry Wrong Number",
+              "The Story of Ekalavya",
+              "Unlucky Thirteen",
+              "Missing",
+              "Variety Entertainment",
+              "Crafts",
+              "The Story of Dr Dolittle",
+              "Ravi and the Weeping Princess – I & II",
+              "Haircut"
+            ]
+          },
+          {
+            "unit": 2,
+            "chapters": [
+              "A Night in June",
+              "Leisure",
+              "The Snare",
+              "Limericks",
+              "The Moon"
+            ]
+          },
+          {
+            "unit": 3,
+            "chapters": [
+              "Grammar: Countable and Uncountable Nouns",
+              "Simple Tense (Past, Present, Future)",
+              "Singular and Plural",
+              "Continuous Tense",
+              "Adverbs & Adjective",
+              "Subject and Predicate",
+              "Punctuation",
+              "Preposition",
+              "Direct and Indirect Speech"
+            ]
+          }
+        ],
+        "grammar_topics": [
+          "Vocabulary Building",
+          "Sentence Construction",
+          "Reading Comprehension",
+          "Creative Writing: Paragraphs, Letters, Essays",
+          "Listening and Speaking Skills"
+        ]
+      },
+      "Hindi": {
+        "book": "Vasant",
+        "chapters": [
+          "मन के भोले-भाले बादल",
+          "पार नज़र के",
+          "गधा और सियार",
+          "चन",
+          "चूहे की शादी"
+        ],
+        "grammar_topics": [
+          "संज्ञा",
+          "सर्वनाम",
+          "क्रिया",
+          "विशेषण",
+          "काल",
+          "वाक्य रचना",
+          "विराम चिह्न",
+          "मुहावरे",
+          "लोकोक्तियाँ"
+        ],
+        "writing_skills": [
+          "कथा लेखन",
+          "पत्र लेखन",
+          "चित्र वर्णन",
+          "संवाद लेखन"
+        ]
+      },
+      "Mathematics": {
+        "book": "Math-Magic",
+        "chapters": [
+          "Building with Bricks",
+          "Long and Short",
+          "Tick-Tick-Tick (Patterns)",
+          "Measurement (Length, Capacity, Weight)",
+          "Division",
+          "Multiplication",
+          "Fractions",
+          "Data Handling",
+          "Money",
+          "Time",
+          "Geometry (Basic Shapes and Properties)"
+        ],
+        "competencies": [
+          "Number representation and place value",
+          "Operations on numbers: Addition, Subtraction, Multiplication, Division",
+          "Understanding and working with fractions",
+          "Measuring length, capacity, and weight",
+          "Reading time and money calculations",
+          "Handling data via charts and graphs",
+          "Identifying and drawing geometric shapes"
+        ]
+      },
+      "Environmental Studies": {
+        "book": "Looking Around",
+        "chapters": [
+          "Our Body",
+          "Teeth and Eating",
+          "Adaptations",
+          "Plants",
+          "Water",
+          "Air",
+          "Cleanliness and Hygiene",
+          "Our Neighbourhood",
+          "Community Helpers",
+          "Festivals and Customs",
+          "Transport",
+          "Natural Resources",
+          "Pollution"
+        ],
+        "competencies": [
+          "Understanding human body and health",
+          "Recognizing plant and animal adaptations",
+          "Identifying natural resources and their conservation",
+          "Knowing the role of community helpers",
+          "Awareness of pollution and preventive measures",
+          "Understanding cultural practices and festivals"
+        ]
+      },
+      "Art Education": {
+        "topics": [
+          "Basic drawing and coloring techniques",
+          "Use of shapes and lines",
+          "Colour mixing and shading",
+          "Clay modeling",
+          "Poster making",
+          "Pattern design",
+          "Drawing landscapes and nature"
+        ],
+        "activities": [
+          "Creative art projects",
+          "Colour theory exercises",
+          "Festival-themed crafts"
+        ]
+      },
+      "Physical & Health Education": {
+        "topics": [
+          "Warm-up exercises and movement to rhythm",
+          "Basic physical fitness routines",
+          "Yoga postures (Taadasan, Vriksh Asana)",
+          "Team games (Kho-Kho)",
+          "Personal hygiene and healthy habits"
+        ],
+        "competencies": [
+          "Demonstrate basic exercise and stretching techniques",
+          "Participate in team games with cooperation",
+          "Practice simple yoga asanas",
+          "Understand importance of cleanliness and health"
+        ]
+      },
+      "Computer Science": {
+        "topics": [
+          "Introduction to Computers",
+          "Parts of a Computer",
+          "Input and Output Devices",
+          "Types of Computers",
+          "Basics of MS Paint",
+          "Drawing in Paint",
+          "Computer Care and Safety"
+        ],
+        "activities": [
+          "Drawing exercises with Paint",
+          "Basic computer handling tasks"
+        ]
+      },
+      "General Knowledge": {
+        "topics": [
+          "India’s States and Capitals",
+          "National Symbols of India",
+          "Festivals of India",
+          "Famous Personalities",
+          "Important National Days",
+          "Basic Science Facts"
+        ],
+        "activities": [
+          "Quiz games",
+          "Poster presentations"
+        ]
+      }
+    }
+  }
+  

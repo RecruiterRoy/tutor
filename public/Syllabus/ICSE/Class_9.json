@@ -1,0 +1,209 @@
+{
+    "class": 9,
+    "board": "ICSE",
+    "session": "2025-26",
+    "subjects": {
+      "English": {
+        "literature": {
+          "drama": ["Julius Caesar by William Shakespeare (Acts 1 & 2 for internal assessment)"],
+          "prose_and_poetry": [
+            "Bonku Babu’s Friend by Satyajit Ray",
+            "Oliver Asks for More by Charles Dickens",
+            "The Model Millionaire by Oscar Wilde",
+            "The Night Mail by W H Auden",
+            "Skimbleshanks - The Railway Cat by T. S. Eliot",
+            "I Remember, I Remember by Thomas Hood",
+            "The Home-coming by Rabindranath Tagore",
+            "The Boy Who Broke the Bank by Ruskin Bond",
+            "A Doctor’s Journal Entry for August 6, 1945 by Vikram Seth",
+            "A Work of Artifice by Marge Piercy"
+          ]
+        },
+        "grammar": {
+          "1st_term": [
+            "Articles",
+            "Agreement of the Verb with the Subject",
+            "Time and Tense I & II",
+            "Sequence of Tenses",
+            "Prepositions"
+          ],
+          "2nd_term": [
+            "Direct and Indirect Speech",
+            "Active and Passive Voice",
+            "Transformation of Sentences I & II",
+            "Conditional Sentences",
+            "Word Order",
+            "Synthesis of Sentences",
+            "Comparison of Adjectives"
+          ],
+          "composition_and_writing": [
+            "Letter Writing",
+            "Comprehension",
+            "Notice Writing and Email Writing (same content as notice)"
+          ],
+          "prescribed_books": [
+            "Total English 9 by Pamela Pinto (Morning Star publication)",
+            "A Comprehensive Grammar of Current English by E.G. Myall (recommended)"
+          ]
+        }
+      },
+      "Hindi": {
+        "literature": {
+          "stories_1st_term": [
+            "Baat Athanni Ki",
+            "Kaki",
+            "Mahayagya Ka Puruskar"
+          ],
+          "poems_1st_term": [
+            "Sakhi",
+            "Giridhar Ki Kundaliyan",
+            "Swarg Bana Sakte Hain"
+          ],
+          "stories_2nd_term": [
+            "Neta Ji Ka Chashma",
+            "Apna - Apna Bhagya",
+            "Bade Ghar Ki Beti",
+            "Sandeh"
+          ],
+          "poems_2nd_term": [
+            "Wah Janmbhoomi Meri",
+            "Megh Aaye",
+            "Sur Ke Pad",
+            "Vinay Ke Pad"
+          ]
+        },
+        "grammar": {
+          "topics": [
+            "Prastav / Nibandh Lekhan",
+            "Patra Lekhan",
+            "Apatith Gadyansh",
+            "Vyavharik Vyakaran"
+          ]
+        }
+      },
+      "Mathematics": {
+        "chapters_1st_term": [
+          "Compound Interest",
+          "Expansions (squares and cubes, factors)",
+          "Factorisation (middle term break, taking common)",
+          "Rational and Irrational Numbers",
+          "Simultaneous Linear Equations",
+          "Rectilinear Figures (construction of polygons)",
+          "Statistics",
+          "Indices",
+          "Mensuration (formulae and simple calculations)",
+          "Quadratic Equations",
+          "Triangles",
+          "Pythagoras Theorem",
+          "Circles",
+          "Coordinate Geometry"
+        ],
+        "chapters_2nd_term": [
+          "Expansions (continued)",
+          "Rational and Irrational Numbers (continued)",
+          "Rectilinear Figures (continued)",
+          "Mensuration (continued)"
+        ]
+      },
+      "Physics": {
+        "topics": [
+          "Physical World and Measurement",
+          "Motion in One Dimension",
+          "Laws of Motion",
+          "Gravitation",
+          "Work, Energy and Power",
+          "Sound",
+          "Light",
+          "Electricity and Magnetism"
+        ]
+      },
+      "Chemistry": {
+        "topics": [
+          "Matter and Its Composition",
+          "Atomic Structure and Classification of Elements",
+          "Chemical Reactions and Equations",
+          "Acids, Bases and Salts",
+          "Metals and Non-metals",
+          "Carbon and Its Compounds"
+        ]
+      },
+      "Biology": {
+        "topics": [
+          "Cell Structure and Functions",
+          "Tissues",
+          "Diversity of Living Organisms",
+          "Life Processes in Animals and Plants",
+          "Human Physiology",
+          "Ecology and Environment"
+        ]
+      },
+      "History": {
+        "topics": [
+          "The French Revolution",
+          "Nazism and the Rise of Hitler",
+          "Forest Society and Colonialism",
+          "India After Independence"
+        ]
+      },
+      "Civics": {
+        "topics": [
+          "Indian Government and Politics",
+          "Democratic Rights and Responsibilities"
+        ]
+      },
+      "Geography": {
+        "topics": [
+          "India: Size and Location",
+          "Physical Features of India",
+          "Drainage System",
+          "Climate",
+          "Natural Vegetation and Wildlife",
+          "Population"
+        ]
+      },
+      "Economics": {
+        "topics": [
+          "Factors of Production",
+          "Demand and Supply",
+          "Market Structures",
+          "Banking and Financial Institutions",
+          "Inflation",
+          "Consumer Awareness"
+        ]
+      },
+      "Commercial Studies": {
+        "topics": [
+          "Business Environment",
+          "Forms of Business",
+          "Trade and Commerce",
+          "Entrepreneurship"
+        ]
+      },
+      "Environmental Science": {
+        "topics": [
+          "Ecosystems",
+          "Biodiversity",
+          "Pollution and Its Control",
+          "Conservation of Resources"
+        ]
+      },
+      "Computer Applications": {
+        "topics": [
+          "Basics of Computer Systems",
+          "Programming Fundamentals",
+          "Database Concepts",
+          "Internet and Web Technologies",
+          "Cyber Safety"
+        ]
+      },
+      "Additional Subjects": {
+        "options": [
+          "Home Science",
+          "Physical Education",
+          "Modern Foreign Languages",
+          "Technical and Vocational Subjects"
+        ]
+      }
+    }
+  }
+  

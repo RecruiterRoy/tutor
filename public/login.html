@@ -488,7 +488,7 @@
                                 if (window.location.protocol === 'file:') {
                                     window.location.href = 'dashboard.html';
                                 } else {
-                                    window.location.href = '/dashboard';
+                                window.location.href = (window.location.protocol === 'file:' ? 'dashboard.html' : '/dashboard');
                                 }
                             }, 2000);
                         }
@@ -518,7 +518,7 @@
                                 if (window.location.protocol === 'file:') {
                             window.location.href = 'dashboard.html';
                                 } else {
-                                    window.location.href = '/dashboard';
+                                window.location.href = (window.location.protocol === 'file:' ? 'dashboard.html' : '/dashboard');
                                 }
                             }, 2000);
                         }
@@ -536,7 +536,7 @@
                     if (window.location.protocol === 'file:') {
                         window.location.href = 'dashboard.html';
                     } else {
-                        window.location.href = '/dashboard';
+                    window.location.href = (window.location.protocol === 'file:' ? 'dashboard.html' : '/dashboard');
                     }
                     return;
                 } else {
@@ -605,8 +605,15 @@
                     // Continue with login even if profile check fails
                 }
                 
-                // Simple redirect for all devices
-                window.location.href = '/dashboard';
+                // Ensure session is set, then redirect (APK-safe)
+                try { await window.supabaseClient.auth.getSession(); } catch(_) {}
+                setTimeout(() => {
+                    if (window.location.protocol === 'file:') {
+                        window.location.replace('dashboard.html');
+                    } else {
+                        window.location.replace('/dashboard');
+                    }
+                }, 50);
                 
             } catch (error) {
                 console.error('❌ Login failed:', error);
@@ -756,7 +763,7 @@
                         if (window.location.protocol === 'file:') {
                             window.location.href = 'dashboard.html';
                         } else {
-                            window.location.href = '/dashboard';
+                            window.location.href = (window.location.protocol === 'file:' ? 'dashboard.html' : '/dashboard');
                         }
                     }
                 }).catch(error => {

@@ -1,0 +1,109 @@
+{
+  "class": 4,
+  "board": "CBSE",
+  "session": "2025-26",
+  "subjects": {
+    "English": {
+      "books": ["Marigold", "Radiant Reader"],
+      "literature_units": [
+        ["How Old Is Muttaji?", "The Turkish Cap (Activity)"],
+        ["Poem: Going Downhill (Comprehension)"],
+        ["The Magic Wardrobe", "The Trumpet of the Swans", "The Mark of a Champion"]
+      ],
+      "poems": ["Colours (Recitation)"],
+      "grammar": [
+        "Common and Proper Noun", "Singular and Plural", "Countable and Uncountable Nouns", "Collective Nouns", "Nouns and Gender",
+        "Adjectives - Kinds and Degrees", "Verbs", "Tenses", "Adverbs", "Prepositions", "Conjunctions", "Active and Passive Voice",
+        "Direct and Indirect Speech", "Sentence Types", "Synonyms", "Antonyms", "Homophones"
+      ],
+      "writing_skills": ["Creative Writing: 'The person who inspires me the most'", "Composition", "Letter Writing", "Comprehension", "Recitation"],
+      "competencies": [
+        "Summarise core ideas from reading material",
+        "Understand main ideas and draw conclusions",
+        "Use appropriate grammar and structure in writing",
+        "Develop vocabulary through listening and reading"
+      ],
+      "activities": ["Turkish Cap Making", "Singular-Plural Bingo", "Worksheet and Creative Writing"]
+    },
+    "Hindi": {
+      "book": "रिमझिम",
+      "chapters": [
+        "मन के भोले-भाले बादल", "पार नज़र के", "गधा और सियार", "चन", "चूहे की शादी"
+      ],
+      "grammar_topics": [
+        "संज्ञा", "सर्वनाम", "क्रिया", "विशेषण", "काल", "वाक्य रचना", "विराम चिह्न", "मुहावरे", "लोकोक्तियाँ"
+      ],
+      "writing_skills": ["कथा लेखन", "पत्र लेखन", "चित्र वर्णन", "संवाद लेखन"]
+    },
+    "Mathematics": {
+      "book": "Math-Magic",
+      "chapters": [
+        "Building with Bricks", "Long and Short", "Tick-Tick-Tick (Patterns)", "Measurement (Length, Capacity, Weight)", "Division", 
+        "Multiplication", "Fractions", "Data Handling", "Money", "Time", "Geometry (Basic Shapes and Properties)"
+      ],
+      "competencies": [
+        "Represent numbers using the place value system",
+        "Perform addition, subtraction, multiplication, and division with larger numbers",
+        "Understand fractions and their basic operations",
+        "Use measurement tools for length, capacity, and weight",
+        "Interpret data using tables and bar graphs",
+        "Calculate with money and time",
+        "Identify geometrical shapes and their properties"
+      ],
+      "activities": ["Magic square creation", "Story sums", "Worksheets", "Classroom quizzes"]
+    },
+    "Environmental Studies": {
+      "book": "Looking Around",
+      "chapters": [
+        "Our Body", "Teeth and Eating", "Adaptations", "Plants", "Water", "Air", "Cleanliness and Hygiene", 
+        "Our Neighborhood", "Community Helpers", "Festivals and Customs", "Transport", "Natural Resources", "Pollution"
+      ],
+      "competencies": [
+        "Identify and describe parts of the human body and health habits",
+        "Understand plant and animal adaptations",
+        "Explain sources and uses of water and air",
+        "Recognize importance of cleanliness and hygiene",
+        "Describe local community helpers and their roles",
+        "Identify cultural festivals and practices",
+        "Understand different means of transport",
+        "Explain natural resources and conservation concepts",
+        "Recognize pollution and ways to prevent it"
+      ],
+      "activities": ["Community mapping", "Environmental conservation projects", "Seasonal celebrations"]
+    },
+    "Art Education": {
+      "topics": [
+        "Basic drawing and colouring techniques", "Use of shapes and lines", "Colour mixing and shading", 
+        "Clay modeling", "Poster making", "Pattern design", "Drawing landscapes and nature"
+      ],
+      "activities": ["Creative art projects", "Colour theory exercises", "Festival-themed crafts"]
+    },
+    "Physical & Health Education": {
+      "topics": [
+        "Warm-up exercises and movement to rhythm", "Basic physical fitness routines",
+        "Yoga postures (Taadasan, Vriksh Asana)", "Team games (Kho-Kho)",
+        "Personal hygiene and healthy habits"
+      ],
+      "competencies": [
+        "Demonstrate basic exercise and stretching techniques",
+        "Participate in team games with cooperation",
+        "Practice simple yoga asanas",
+        "Understand importance of cleanliness and health"
+      ]
+    },
+    "Computer Science": {
+      "topics": [
+        "Introduction to Computers", "Parts of a Computer", "Input and Output Devices", "Types of Computers", 
+        "Basics of MS Paint", "Drawing in Paint", "Computer Care and Safety"
+      ],
+      "activities": ["Drawing exercises with Paint", "Basic computer handling tasks"]
+    },
+    "General Knowledge": {
+      "topics": [
+        "India’s States and Capitals", "National Symbols of India", "Festivals of India", 
+        "Famous Personalities", "Important National Days", "Basic Science Facts"
+      ],
+      "activities": ["Quiz games", "Poster presentations"]
+    }
+  }
+}

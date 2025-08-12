@@ -1,0 +1,212 @@
+{
+  "class": 7,
+  "board": "CBSE",
+  "session": "2025-26",
+  "subjects": {
+    "English": {
+      "books": ["Honeycomb", "An Alien Hand"],
+      "literature_units": [
+        {
+          "unit": 1,
+          "chapters": [
+            "Three Questions (Poem)",
+            "A Gift of Chappals (Story)"
+          ]
+        },
+        {
+          "unit": 2,
+          "chapters": [
+            "Gopal and the Hilsa Fish (Story)",
+            "The Invention of Vita-Wonk (Story)"
+          ]
+        },
+        {
+          "unit": 3,
+          "chapters": [
+            "The Rebel (Story)",
+            "For Anne Gregory (Poem)"
+          ]
+        },
+        {
+          "unit": 4,
+          "chapters": [
+            "The Tiny Teacher (Story)",
+            "Bringing up Kari (Story)"
+          ]
+        },
+        {
+          "unit": 5,
+          "chapters": [
+            "The Shed (Story)",
+            "Theme for English B (Poem)"
+          ]
+        },
+        {
+          "unit": 6,
+          "chapters": [
+            "Quality (Poem)",
+            "Expert Detectives (Story)"
+          ]
+        },
+        {
+          "unit": 7,
+          "chapters": [
+            "The Duck and the Kangaroo (Poem)",
+            "Bepin Choudhury’s Lapse of Memory (Story)"
+          ]
+        },
+        {
+          "unit": 8,
+          "chapters": [
+            "The Beggar (Story)",
+            "The Trees (Poem)"
+          ]
+        }
+      ],
+      "grammar_topics": [
+        "Sentence Types",
+        "Nouns (Common, Proper, Collective)",
+        "Pronouns",
+        "Verbs and Tenses",
+        "Adjectives and Degree of Comparison",
+        "Adverbs",
+        "Prepositions",
+        "Conjunctions",
+        "Active and Passive Voice",
+        "Direct and Indirect Speech",
+        "Punctuation",
+        "Vocabulary Building",
+        "Comprehension and Creative Writing (Paragraphs, Letters, Essays)"
+      ]
+    },
+    "Hindi": {
+      "book": "Vasant",
+      "chapters": [
+        "आओ घर चलें",
+        "पढ़ो और बढ़ो",
+        "सपनों के रंग",
+        "चंद्रमा",
+        "इंद्रधनुष",
+        "पंचतंत्र की कहानियाँ",
+        "बच्चों की दुनिया",
+        "परंपराएँ और त्योहार"
+      ],
+      "grammar_topics": [
+        "संज्ञा, सर्वनाम",
+        "क्रिया, क्रिया विशेषण",
+        "विशेषण, समास",
+        "वाक्य रचना",
+        "मुहावरे और लोकोक्तियाँ",
+        "पत्र लेखन",
+        "निबंध लेखन",
+        "अपठित गद्यांश"
+      ]
+    },
+    "Mathematics": {
+      "book": "Math-Magic",
+      "chapters": [
+        "Integers",
+        "Fractions and Decimals",
+        "Data Handling",
+        "Simple Equations",
+        "Lines and Angles",
+        "The Triangle and its Properties",
+        "Congruence of Triangles",
+        "Comparing Quantities",
+        "Rational Numbers",
+        "Perimeter and Area",
+        "Algebraic Expressions",
+        "Exponents and Powers",
+        "Symmetry",
+        "Visualising Solid Shapes"
+      ],
+      "topics": [
+        "Number operations",
+        "Algebra basics",
+        "Geometry concepts",
+        "Data interpretation",
+        "Measurement and properties of shapes"
+      ]
+    },
+    "Science": {
+      "book": "Science Textbook for Class 7 CBSE",
+      "chapters": [
+        "Nutrition in Animals",
+        "Nutrition in Plants",
+        "Fibre to Fabric",
+        "Heat",
+        "Acids, Bases and Salts",
+        "Physical and Chemical Changes",
+        "Weather, Climate and Adaptations of Animals to Climate",
+        "Winds, Storms and Cyclones",
+        "Soil",
+        "Wastewater Story",
+        "Transportation in Animals and Plants",
+        "Respiration in Organisms",
+        "Reproduction in Animals",
+        "Motion and Time",
+        "Water: A Precious Resource",
+        "Electric Current and Its Effects",
+        "Light",
+        "Forest: Our Lifeline"
+      ],
+      "topics": [
+        "Animal and plant biology",
+        "Physics fundamentals",
+        "Environmental science",
+        "Basic chemistry concepts"
+      ]
+    },
+    "Social Science": {
+      "History": [
+        "Tribal, Nomadic, and Settled Communities",
+        "New Kings and Kingdoms",
+        "The Delhi Sultans",
+        "The Mughal Empire"
+      ],
+      "Geography": [
+        "Environment",
+        "Inside Our Earth",
+        "Our Changing Earth",
+        "Air",
+        "Water"
+      ],
+      "Civics": [
+        "On Equality",
+        "Role of Government in Health",
+        "Growing Up as Boys and Girls"
+      ]
+    },
+    "Computer Science": {
+      "topics": [
+        "Introduction to Computers",
+        "Operating Systems",
+        "Spreadsheet Applications",
+        "Networking Basics",
+        "Programming Basics",
+        "Internet and Web Technology",
+        "Cyber Safety"
+      ]
+    },
+    "Art & Craft": {
+      "activities": [
+        "Drawing and Painting Techniques",
+        "Crafts Using Paper and Clay",
+        "Traditional Indian Art Forms",
+        "Colour Theory and Mixing",
+        "Poster Making",
+        "Creative Projects Based on Festivals and Nature"
+      ]
+    },
+    "General Knowledge": {
+      "topics": [
+        "India: States and Capitals",
+        "National Symbols and Leaders",
+        "Important Historical Events",
+        "World Geography and Culture",
+        "Basic Science and Technology Facts",
+        "Environmental Awareness"
+      ]
+    }
+  }
+}

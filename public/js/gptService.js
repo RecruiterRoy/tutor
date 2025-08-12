@@ -35,12 +35,16 @@ class GPTService {
             const teacherName = this.getTeacherNameFromAvatar(currentAvatar);
             
             // Format request for the enhanced chat API
+            // Prepare last 5 messages for conversation continuity
+            const recentHistory = this.chatHistory.slice(-5);
+
             const requestBody = {
                 message: userMessage,
                 grade: this.currentGrade || '6',
                 subject: this.currentSubject || 'General',
                 teacher: teacherName,
                 avatar: currentAvatar,
+                chatHistory: recentHistory,
                 userProfile: userProfile || {
                     full_name: 'Student',
                     class: this.currentGrade || '6',

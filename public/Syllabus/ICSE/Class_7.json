@@ -1,0 +1,156 @@
+{
+    "class": 7,
+    "board": "ICSE",
+    "session": "2025-26",
+    "subjects": {
+      "English": {
+        "books": ["Climb with Cornerstone"],
+        "grammar_and_composition_terms": {
+          "Term 1": [
+            "The Sentence",
+            "Noun – Kinds",
+            "Pronoun – Kinds",
+            "Adjectives - Kinds / Degree of comparison",
+            "Verbs – Kinds",
+            "Subject Verb Agreement, Modals and Auxiliaries",
+            "Tenses – Simple, Continuous and Perfect",
+            "Prepositions",
+            "Articles",
+            "Comprehension",
+            "Composition",
+            "Letter Writing",
+            "Notice Writing"
+          ],
+          "Term 2": [
+            "Adverbs",
+            "Conjunctions",
+            "Voice (Active and Passive)",
+            "Reported Speech",
+            "Phrases",
+            "Transformation of Sentences",
+            "Similes",
+            "Antonyms / Synonyms",
+            "Homophones / Homonyms",
+            "Comprehension",
+            "Composition",
+            "Letter Writing",
+            "Notice Writing"
+          ]
+        }
+      },
+      "Mathematics": {
+        "Term 1": [
+          "Integers",
+          "Algebraic Expressions",
+          "Linear Equations in One Variable",
+          "Lines and Angles",
+          "Practical Geometry",
+          "Perimeter and Area of Rectilinear Figures",
+          "Fractions",
+          "Decimals",
+          "Rational Numbers"
+        ],
+        "Term 2": [
+          "Exponents and Powers",
+          "Ratio, Proportion and Unitary Method",
+          "Percentage and Applications",
+          "Properties of Triangles",
+          "Congruency",
+          "Circumference and Area of a Circle",
+          "Data Handling",
+          "Symmetry",
+          "Visualising Solid Shapes"
+        ]
+      },
+      "Physics": {
+        "Term 1": [
+          "Physical Quantities and Measurement",
+          "Force and Pressure",
+          "Energy",
+          "Sound"
+        ],
+        "Term 2": [
+          "Light Energy",
+          "Heat",
+          "Electricity and Magnetism"
+        ]
+      },
+      "Chemistry": {
+        "Term 1": [
+          "Physical and Chemical Changes",
+          "Matter"
+        ],
+        "Term 2": [
+          "Atomic Structure",
+          "Language of Chemistry",
+          "Elements, Compounds and Mixtures",
+          "Metals and Non-metals",
+          "Air, Oxygen and Oxides"
+        ]
+      },
+      "Biology": {
+        "Term 1": [
+          "Plant and Animal Tissues",
+          "Classification of Plants",
+          "Classification of Animals",
+          "Photosynthesis and Respiration"
+        ],
+        "Term 2": [
+          "Allergy",
+          "Excretory System",
+          "Nervous System"
+        ]
+      },
+      "History": {
+        "Term 1": [
+          "The Medieval Europe: Rise and Spread of Christianity",
+          "Rise and Spread of Islam: Its Impact",
+          "The Turkish Invasions",
+          "The Delhi Sultanate: The Mamluk Dynasty",
+          "Government, Society and Culture under the Delhi Sultanate"
+        ],
+        "Term 2": [
+          "The Early Mughals",
+          "Jahangir, Shahjahan, Aurangzeb and Later Mughals",
+          "The Vijaynagar and Bahamani Kingdoms",
+          "Fundamental Rights and Duties",
+          "The Constitution of India",
+          "Directive Principles of the State Policies"
+        ]
+      },
+      "Civics": {
+        "Term 1": [
+          "The Constitution of India",
+          "Fundamental Rights and Duties"
+        ],
+        "Term 2": [
+          "Directive Principles of State Policy",
+          "The Functioning of the Government"
+        ]
+      },
+      "Geography": {
+        "topics": [
+          "Physical Features of India",
+          "Soil and Agriculture",
+          "Climate",
+          "Natural Vegetation",
+          "Water Resources",
+          "Industries",
+          "Transport and Communication"
+        ]
+      },
+      "Computer Studies": {
+        "Term 1": [
+          "Introduction to MS Excel",
+          "Working in Excel"
+        ],
+        "Term 2": [
+          "Introduction to Python Programming",
+          "HTML Basics",
+          "Artificial Intelligence",
+          "Computer Viruses"
+        ]
+      }
+    }
+  }
+  

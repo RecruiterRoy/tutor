@@ -1,0 +1,227 @@
+{
+  "class": 6,
+  "board": "CBSE",
+  "session": "2025-26",
+  "subjects": {
+    "English": {
+      "books": ["Honeysuckle", "A Pact with the Sun"],
+      "units": [
+        {
+          "unit": 1,
+          "chapters": [
+            "A Tale of Two Birds",
+            "The Friendly Mongoose",
+            "Town Mouse and the Country Mouse",
+            "The Jackal and the Drum"
+          ]
+        },
+        {
+          "unit": 2,
+          "chapters": [
+            "The She Goat",
+            "The Wonderful Words",
+            "Jataka Tales",
+            "What Happened to the Reindeer"
+          ]
+        },
+        {
+          "unit": 3,
+          "chapters": [
+            "The Bubble Trouble",
+            "Luka and the Fire of Life",
+            "Golu Grows a Nose",
+            "The Quarrel"
+          ]
+        },
+        {
+          "unit": 4,
+          "chapters": [
+            "Iswaran the Storyteller",
+            "The Blue Umbrella",
+            "What Happened to the Camel",
+            "Fairy Tales"
+          ]
+        },
+        {
+          "unit": 5,
+          "chapters": [
+            "The Story of Bamboo",
+            "How the Dog Found Himself",
+            "The Deserts of India",
+            "The Little Bully"
+          ]
+        }
+      ],
+      "grammar_topics": [
+        "Parts of Speech",
+        "Tenses",
+        "Active and Passive Voice",
+        "Direct and Indirect Speech",
+        "Prepositions",
+        "Conjunctions",
+        "Sentence Transformation",
+        "Punctuation",
+        "Vocabulary Building",
+        "Comprehension and Writing Skills"
+      ]
+    },
+    "Hindi": {
+      "book": "Malhar",
+      "units": [
+        {
+          "unit": 1,
+          "chapters": ["माँ", "साँप"]
+        },
+        {
+          "unit": 2,
+          "chapters": ["बीज", "सूरज की सल्तनत"]
+        },
+        {
+          "unit": 3,
+          "chapters": ["सड़क", "सप्तमी का दिन"]
+        },
+        {
+          "unit": 4,
+          "chapters": ["मुनिया की चिड़िया", "पानी में रंग"]
+        }
+      ],
+      "grammar_topics": [
+        "संज्ञा, सर्वनाम",
+        "वर्ण-विचार",
+        "क्रिया, कर्ता-कर्ता",
+        "वाक्य रचना",
+        "याचना-प्रश्न, वाक्यांश",
+        "चिन्ह-चिन्ह, मुहावरे"
+      ]
+    },
+    "Mathematics": {
+      "book": "Ganita Prakash",
+      "chapters": [
+        "Knowing Our Numbers",
+        "Whole Numbers",
+        "Playing With Numbers",
+        "Basic Geometrical Ideas",
+        "Understanding Elementary Shapes",
+        "Integers",
+        "Fractions",
+        "Decimals",
+        "Data Handling",
+        "Mensuration",
+        "Algebra",
+        "Ratio and Proportion",
+        "Symmetry"
+      ],
+      "topics": [
+        "Number system and place value",
+        "Operations on numbers",
+        "Introduction to geometry and shapes",
+        "Fractions, decimals and their operations",
+        "Data recording and interpretation",
+        "Measurement of area and volume",
+        "Introduction to algebraic expressions",
+        "Concept of ratio and proportion",
+        "Symmetry in shapes"
+      ]
+    },
+    "Science": {
+      "book": "Curiosity",
+      "chapters": [
+        "Food – Where Does It Come From?",
+        "Components of Food",
+        "Fibre and Fabric",
+        "Sorting Materials into Groups",
+        "Separation of Substances",
+        "Changes Around Us",
+        "Getting to Know Plants",
+        "Body Movements",
+        "The Living Organisms and Their Surroundings",
+        "Motion and Measurement of Distances",
+        "Light, Shadows and Reflections",
+        "Electricity and Circuits",
+        "Fun with Magnets",
+        "Water",
+        "Air Around Us",
+        "Garbage In, Garbage Out"
+      ],
+      "topics": [
+        "Sources and types of food",
+        "Nutrition and digestion",
+        "Materials and their properties: fabrics, fibres",
+        "Classification and sorting of materials",
+        "Physical and chemical changes",
+        "Plant and animal life",
+        "Human body and movement",
+        "Measurement and motion",
+        "Light and shadows",
+        "Electricity basics",
+        "Magnets and magnetism",
+        "Water and air",
+        "Waste management and environmental awareness"
+      ]
+    },
+    "Social Science": {
+      "History": [
+        "What, Where, How and When?",
+        "On the Trail of the Earliest People",
+        "From Gathering to Growing Food",
+        "In the Earliest Cities",
+        "What Books and Burials Tell Us",
+        "Kingdoms, Kings and an Early Republic",
+        "New Questions and Ideas",
+        "Ashoka, the Emperor Who Gave Up War",
+        "New Empires and Kingdoms",
+        "Life in Towns and Villages"
+      ],
+      "Geography": [
+        "The Earth in the Solar System",
+        "Globe: Latitudes and Longitudes",
+        "Motions of the Earth",
+        "Maps",
+        "Major Domains of the Earth",
+        "Major Landforms of the Earth",
+        "Our Country India",
+        "Indian Climate, Wildlife and Vegetation"
+      ],
+      "Civics": [
+        "Understanding Diversity",
+        "Diversity and Discrimination",
+        "What is Government?",
+        "Key Elements of a Democratic Government",
+        "Local Government",
+        "Rural Administration",
+        "Urban Administration"
+      ]
+    },
+    "Computer Science": {
+      "topics": [
+        "Introduction to Computers",
+        "Basic Computer Terms",
+        "Hardware and Software",
+        "Input and Output Devices",
+        "Using Paint and Drawing Tools",
+        "Introduction to Keyboard and Mouse",
+        "Computer Safety and Maintenance"
+      ]
+    },
+    "General Knowledge": {
+      "topics": [
+        "Indian States and Capitals",
+        "National Symbols of India",
+        "Famous Indian Personalities",
+        "Basic Science Facts",
+        "Important Days and Holidays",
+        "World Geography: Continents and Oceans"
+      ]
+    },
+    "Art & Craft": {
+      "activities": [
+        "Basic Drawing and Sketching",
+        "Colour Mixing and Painting",
+        "Paper Craft and Origami",
+        "Clay Modelling",
+        "Crafts for Festivals",
+        "Pattern Making and Rangoli"
+      ]
+    }
+  }
+}

@@ -1,0 +1,106 @@
+{
+    "class": 6,
+    "board": "ICSE",
+    "session": "2025-26",
+    "subjects": {
+      "English": {
+        "book": "Old Tirumala and English Grammar",
+        "units": [
+          "Listening and Speaking Skills",
+          "Reading Comprehension and Vocabulary",
+          "Grammar: Parts of Speech, Tenses, Sentence Structure",
+          "Composition: Paragraph Writing, Letter Writing, Story Writing"
+        ]
+      },
+      "Mathematics": {
+        "topics": [
+          "Number System: Natural Numbers, Whole Numbers, Integers",
+          "Sets and Venn Diagrams",
+          "Fractions and Decimals",
+          "Ratio and Proportion",
+          "Basic Algebra including Linear Equations",
+          "Geometry: Lines, Angles, Triangles, Polygons",
+          "Mensuration: Area, Perimeter, Volume",
+          "Data Handling and Statistics",
+          "Coordinate Geometry: Points and Lines on Cartesian Plane"
+        ]
+      },
+      "Physics": {
+        "topics": [
+          "Force and Motion",
+          "Energy and its Forms",
+          "Light and Shadows",
+          "Magnetism and Magnets",
+          "Measurement and Experimentation"
+        ]
+      },
+      "Chemistry": {
+        "topics": [
+          "Introduction to Chemistry",
+          "Elements, Compounds and Mixtures",
+          "Physical and Chemical Changes",
+          "Properties of Air, Water and Soil"
+        ]
+      },
+      "Biology": {
+        "topics": [
+          "Introduction to Biology",
+          "Plant Life: Leaf, Stem, Root",
+          "Classification of Plants and Animals",
+          "Human Body Systems: Digestive, Respiratory, Circulatory",
+          "Health, Hygiene and Diseases",
+          "Adaptations and Environment"
+        ]
+      },
+      "History and Civics": {
+        "topics": [
+          "How Do We Learn History?",
+          "Man: Early Phase of His Life",
+          "Significant Developments in Early Man’s Life",
+          "Jainism, Buddhism and Confucianism",
+          "Development of Empires, Asoka the Great",
+          "Municipalities and Corporations",
+          "Greek and Roman Civilizations",
+          "Village and Kingdom Administration"
+        ]
+      },
+      "Geography": {
+        "topics": [
+          "Introduction to Geography",
+          "Representation of Geographical Features",
+          "Major Landforms of the Earth",
+          "Major Water Bodies of the Earth",
+          "Agriculture and Minerals",
+          "Study of Continents: North America, Africa, Australia"
+        ]
+      },
+      "Computer Applications": {
+        "topics": [
+          "Basics of Computers: Hardware and Software",
+          "Input and Output Devices",
+          "Binary Number System",
+          "Introduction to Programming (QBASIC/Basics)",
+          "Word Processing and File Management",
+          "Internet Basics"
+        ]
+      },
+      "Second Language (Hindi/Other)": {
+        "focus_areas": [
+          "Grammar: Nouns, Pronouns, Verbs, Adjectives",
+          "Composition: Letter Writing, Essay Writing",
+          "Comprehension and Vocabulary",
+          "Literature: Poetry and Prose from prescribed books"
+        ]
+      },
+      "Arts Education": {
+        "topics": [
+          "Basic Drawing and Colouring",
+          "Clay Modelling",
+          "Paper Craft",
+          "Indian and Folk Art Studies",
+          "Creative Expression through Arts"
+        ]
+      }
+    }
+  }
+  

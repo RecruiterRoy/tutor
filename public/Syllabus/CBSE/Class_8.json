@@ -1,0 +1,199 @@
+{
+  "class": 8,
+  "board": "CBSE",
+  "session": "2025-26",
+  "subjects": {
+    "English": {
+      "books": ["Honeydew", "It So Happened"],
+      "literature_units": [
+        {
+          "unit": 1,
+          "chapters": [
+            "The Best Christmas Present in the World",
+            "The Tsunami"
+          ]
+        },
+        {
+          "unit": 2,
+          "chapters": [
+            "Glimpses of the Past",
+            "Bepin Choudhury’s Lapse of Memory"
+          ]
+        },
+        {
+          "unit": 3,
+          "chapters": [
+            "The Last Leaf",
+            "The Accidental Tourist"
+          ]
+        },
+        {
+          "unit": 4,
+          "chapters": [
+            "A House is Not a Home",
+            "The Beggar"
+          ]
+        },
+        {
+          "unit": 5,
+          "chapters": [
+            "What Happened",
+            "The Invisible Man"
+          ]
+        }
+      ],
+      "grammar_topics": [
+        "Sentence Types and Transformation",
+        "Active and Passive Voice",
+        "Direct and Indirect Speech",
+        "Modals",
+        "Prepositions",
+        "Conjunctions",
+        "Punctuation and Capitalization",
+        "Vocabulary Building",
+        "Comprehension and Creative Writing (Paragraphs, Letters, Essays)"
+      ]
+    },
+    "Hindi": {
+      "book": "Vasant",
+      "chapters": [
+        "सिर्फ़ एक सवाल",
+        "कविता: नया भोजन",
+        "संवाद लेखन",
+        "पत्र लेखन",
+        "सारे जहाँ का सपना",
+        "रचनात्मक लेखन"
+      ],
+      "grammar_topics": [
+        "संज्ञा, सर्वनाम",
+        "विशेषण, क्रिया",
+        "काल",
+        "समास",
+        "मुहावरे और लोकोक्तियाँ",
+        "वाक्य रचना",
+        "विराम चिह्न"
+      ]
+    },
+    "Mathematics": {
+      "book": "Math-Magic",
+      "chapters": [
+        "Rational Numbers",
+        "Linear Equations in One Variable",
+        "Understanding Quadrilaterals",
+        "Practical Geometry",
+        "Data Handling",
+        "Squares and Square Roots",
+        "Cubes and Cube Roots",
+        "Comparing Quantities",
+        "Algebraic Expressions and Identities",
+        "Visualising Solid Shapes",
+        "Mensuration",
+        "Exponents and Powers",
+        "Direct and Inverse Proportions",
+        "Factorisation",
+        "Introduction to Graphs",
+        "Playing with Numbers"
+      ],
+      "topics": [
+        "Operations on rational numbers",
+        "Solving linear equations",
+        "Properties of quadrilaterals and geometry",
+        "Graphs and data interpretation",
+        "Mensuration and volume calculations",
+        "Basic algebraic identities",
+        "Exponents and powers",
+        "Graphs and number theory"
+      ]
+    },
+    "Science": {
+      "book": "Science Textbook for Class 8 CBSE",
+      "chapters": [
+        "Crop Production and Management",
+        "Microorganisms: Friend and Foe",
+        "Synthetic Fibres and Plastics",
+        "Materials: Metals and Non-metals",
+        "Coal and Petroleum",
+        "Combustion and Flame",
+        "Conservation of Plants and Animals",
+        "Cell Structure and Functions",
+        "Reproduction in Animals",
+        "Force and Pressure",
+        "Friction",
+        "Sound",
+        "Chemical Effects of Electric Current",
+        "Some Natural Phenomena",
+        "Light",
+        "Stars and the Solar System",
+        "Pollution of Air and Water"
+      ],
+      "topics": [
+        "Plant biology and crop management",
+        "Microbiology basics",
+        "Materials science: fibres and plastics",
+        "Metals and their properties",
+        "Energy and combustion",
+        "Conservation efforts",
+        "Cell biology and reproduction",
+        "Physics fundamentals: force, sound, light",
+        "Electricity and magnetism",
+        "Environmental science and pollution"
+      ]
+    },
+    "Social Science": {
+      "History": [
+        "Our Pasts III: The 1857 Revolt and After",
+        "Socialism in Europe and the Russian Revolution",
+        "Nazism and the Rise of Hitler",
+        "Forest Society and Colonialism",
+        "Work, Life and Culture"
+      ],
+      "Geography": [
+        "Resources and Development",
+        "Forest and Wildlife Resources",
+        "Water Resources",
+        "Agriculture",
+        "Industries",
+        "Human Resources"
+      ],
+      "Civics": [
+        "The Making of the Constitution",
+        "Rural Administration",
+        "Urban Administration",
+        "Law and Social Justice",
+        "Understanding Media"
+      ]
+    },
+    "Computer Science": {
+      "chapters": [
+        "Basics of Computers and Its Components",
+        "Operating System and GUI",
+        "MS Office Suite (Word, Excel, PowerPoint basics)",
+        "Internet and Web Browsing",
+        "Programming Basics (Scratch or Python Introduction)",
+        "Data Management",
+        "Cyber Safety and Ethics"
+      ]
+    },
+    "Art & Craft": {
+      "topics": [
+        "Drawing and Painting Techniques",
+        "Use of Colours and Textures",
+        "Traditional and Modern Indian Art Forms",
+        "Paper Craft and Collage Making",
+        "Clay Modeling and Pottery",
+        "Art from Natural Materials",
+        "Creative Projects based on Festivals"
+      ]
+    },
+    "General Knowledge": {
+      "topics": [
+        "Current Affairs (National and International)",
+        "Indian Culture and Heritage",
+        "Basic Science and Technology Updates",
+        "Environmental Awareness and Conservation",
+        "World Geography and Important Landmarks",
+        "Famous Personalities and Achievements"
+      ]
+    }
+  }
+}

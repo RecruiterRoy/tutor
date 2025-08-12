@@ -1,0 +1,187 @@
+{
+    "class": 12,
+    "board": "ISC",
+    "session": "2025-26",
+    "streams": {
+      "Science": {
+        "English": {
+          "books": ["English Language", "English Literature"],
+          "units": [
+            "Reading Comprehension through Unseen Passages",
+            "Writing Skills: Notice, Invitation, Letter, Article, Report, Story, Essay",
+            "Literature: Prose, Poetry, Drama Analysis",
+            "Grammar: Tenses, Modals, Subject-Verb Agreement, Voice, Speech, Prepositions, Conjunctions, Punctuation, Vocabulary"
+          ]
+        },
+        "Physics": {
+          "units": [
+            "Electric Charges and Fields",
+            "Current Electricity",
+            "Magnetic Effects of Current and Magnetism",
+            "Electromagnetic Induction and Alternating Currents",
+            "Electromagnetic Waves",
+            "Optics",
+            "Dual Nature of Radiation and Matter",
+            "Atoms and Nuclei",
+            "Semiconductor Electronics and Communication Systems"
+          ]
+        },
+        "Chemistry": {
+          "units": [
+            "Solid State",
+            "Solutions",
+            "Electrochemistry",
+            "Chemical Kinetics",
+            "Surface Chemistry",
+            "General Principles and Processes of Isolation of Elements",
+            "p-Block Elements",
+            "d- and f-Block Elements",
+            "Coordination Compounds",
+            "Haloalkanes and Haloarenes",
+            "Alcohols, Phenols and Ethers",
+            "Aldehydes, Ketones and Carboxylic Acids",
+            "Amines",
+            "Biomolecules",
+            "Polymers",
+            "Chemistry in Everyday Life"
+          ]
+        },
+        "Mathematics": {
+          "units": [
+            "Relations and Functions",
+            "Inverse Trigonometric Functions",
+            "Matrices",
+            "Determinants",
+            "Continuity and Differentiability",
+            "Applications of Derivatives",
+            "Integrals",
+            "Applications of Integrals",
+            "Differential Equations",
+            "Vectors",
+            "Three-Dimensional Geometry",
+            "Linear Programming",
+            "Probability"
+          ]
+        },
+        "Biology": {
+          "units": [
+            "Reproduction",
+            "Genetics and Evolution",
+            "Biology and Human Welfare",
+            "Biotechnology and Its Applications",
+            "Ecology and Environment"
+          ]
+        },
+        "Computer Science": {
+          "units": [
+            "Advanced Programming Concepts",
+            "Data Structures",
+            "Boolean Algebra",
+            "Database Management",
+            "Networking Concepts",
+            "Cyber Safety and Ethics"
+          ]
+        }
+      },
+      "Commerce": {
+        "English": {
+          "books": ["English Language", "English Literature"],
+          "units": [
+            "Reading Comprehension and Literary Texts",
+            "Writing Skills and Grammar"
+          ]
+        },
+        "Accountancy": {
+          "units": [
+            "Partnership Accounts",
+            "Company Accounts",
+            "Financial Statement Analysis",
+            "Accounting Ratios"
+          ]
+        },
+        "Business Studies": {
+          "units": [
+            "Principles and Functions of Management",
+            "Business Environment",
+            "Planning, Organising, Staffing",
+            "Marketing and Consumer Protection"
+          ]
+        },
+        "Economics": {
+          "units": [
+            "Microeconomics and Macroeconomics",
+            "Indian Economic Development",
+            "Statistics for Economics"
+          ]
+        },
+        "Mathematics": {
+          "optional_units": [
+            "Relations and Functions",
+            "Algebra",
+            "Calculus",
+            "Probability",
+            "Vectors",
+            "Linear Programming"
+          ]
+        },
+        "Informatics Practices": {
+          "units": [
+            "Computer Networks",
+            "Data Handling using Python",
+            "Database Concepts",
+            "Cyber Security"
+          ]
+        }
+      },
+      "Humanities": {
+        "English": {
+          "books": ["English Language", "English Literature"],
+          "units": [
+            "Reading and Writing Skills",
+            "Grammar and Vocabulary",
+            "Literature Analysis"
+          ]
+        },
+        "History": {
+          "units": [
+            "Themes in Indian History Part I: First Cities, Inscriptions, Mahabharata, Buddhism",
+            "Themes in Indian History Part II: Medieval Society, Architecture, Agrarian Relations",
+            "Themes in Indian History Part III: Colonialism, Nationalism, Making of Constitution"
+          ]
+        },
+        "Political Science": {
+          "units": [
+            "Power Sharing",
+            "Federalism",
+            "Democracy and Diversity",
+            "Gender, Religion and Caste",
+            "Popular Struggles and Movements",
+            "Political Parties",
+            "Outcomes and Challenges of Democracy"
+          ]
+        },
+        "Psychology": {
+          "units": [
+            "Intelligence and Aptitude",
+            "Personality",
+            "Mental Disorders and Therapies"
+          ]
+        },
+        "Geography": {
+          "units": [
+            "Human Geography",
+            "Regional Geography",
+            "Practical Work"
+          ]
+        },
+        "Sociology": {
+          "units": [
+            "Indian Society",
+            "Social Institutions",
+            "Social Change and Development"
+          ]
+        }
+      }
+    }
+  }
+  

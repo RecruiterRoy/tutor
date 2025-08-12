@@ -1,0 +1,128 @@
+{
+  "class": 5,
+  "board": "CBSE",
+  "session": "2025-26",
+  "subjects": {
+    "English": {
+      "book": "Marigold",
+      "units": [
+        {
+          "unit": 1,
+          "chapters": ["Ice-cream Man (Poem)", "Wonderful Waste! (Story)"]
+        },
+        {
+          "unit": 2,
+          "chapters": ["Teamwork (Poem)", "Flying Together (Story)"]
+        },
+        {
+          "unit": 3,
+          "chapters": ["My Shadow (Poem)", "Robinson Crusoe Discovers a Footprint (Story)"]
+        },
+        {
+          "unit": 4,
+          "chapters": ["Crying (Poem)", "My Elder Brother (Story)"]
+        },
+        {
+          "unit": 5,
+          "chapters": ["The Lazy Frog (Poem)", "Rip Van Winkle (Story)"]
+        },
+        {
+          "unit": 6,
+          "chapters": ["Class Discussion (Poem)", "The Talkative Barber (Story)"]
+        },
+        {
+          "unit": 7,
+          "chapters": ["Topsy-turvy Land (Poem)", "Gulliver’s Travels (Story)"]
+        },
+        {
+          "unit": 8,
+          "chapters": ["Nobody’s Friend (Poem)", "The Little Bully (Story)"]
+        },
+        {
+          "unit": 9,
+          "chapters": ["Sing a Song of People (Poem)", "Around the World (Story)"]
+        },
+        {
+          "unit": 10,
+          "chapters": ["Malu Bhalu (Poem)", "Who Will Be Ningthou (Story)"]
+        }
+      ],
+      "grammar_topics": [
+        "Nouns", "Pronouns", "Adjectives", "Verbs", "Tenses",
+        "Adverbs", "Prepositions", "Conjunctions", "Sentence Formation",
+        "Punctuation", "Vocabulary Building", "Creative Writing (Paragraphs, Letters, Stories)",
+        "Reading Comprehension"
+      ]
+    },
+    "Hindi": {
+      "book": "Rimjhim",
+      "chapters": [
+        "रखा की रस्सी", "फसलों का त्योहार", "खिलौनेवाला", "नन्हा फनकार",
+        "जहाँ चाह वहाँ राह", "चिट्ठी का सफर", "डाकिए की कहानी", "वे दिन भी क्या दिन थे",
+        "एक माँ की बेबसी", "एक दिन की बादशाहत", "चावल की रोटियाँ",
+        "गुरु और चेला", "स्वामी की दादी", "बाघ आया उस रात", "बिशन की दिलेरी",
+        "पानी रे पानी", "छोटी-सी हमारी नदी", "चुनौती हिमालय की"
+      ],
+      "grammar_topics": [
+        "संज्ञा", "सर्वनाम", "विशेषण", "क्रिया", "काल",
+        "वाक्य रचना", "विराम चिह्न", "मुहावरे और लोकोक्तियाँ",
+        "पत्र लेखन", "कहानी लेखन", "अपठित गद्यांश"
+      ]
+    },
+    "Mathematics": {
+      "book": "Math-Magic",
+      "chapters": [
+        "The Fish Tale", "Shapes and Angles", "How Many Squares?",
+        "Parts and Wholes", "Does It Look the Same?", "Be My Multiple, I’ll Be Your Factor",
+        "Can You See the Pattern?", "Mapping Your Way", "Boxes and Sketches",
+        "Tenths and Hundredths", "Area and Its Boundary", "Smart Charts",
+        "Ways to Multiply and Divide", "How Big? How Heavy?"
+      ],
+      "topics": [
+        "Place Value and Number Systems", "Addition, Subtraction, Multiplication, Division",
+        "Fractions", "Decimals", "Patterns and Symmetry", "Geometry: Shapes and Angles",
+        "Measurement: Length, Area, Volume, Weight", "Data Handling: Graphs and Charts",
+        "Problem Solving using BODMAS", "Maps and Spatial Understanding"
+      ]
+    },
+    "Environmental Studies": {
+      "book": "EVS Class 5 NCERT",
+      "chapters": [
+        "Super Senses", "A Snake Charmer's Story", "From Tasting to Digesting",
+        "Mangoes Round the Year", "Seeds and Seeds", "Every Drop Counts",
+        "Experiments With Water", "A Treat for Mosquitoes", "Up You Go!",
+        "Walls Tell Stories", "Sunita In Space", "What If It Finishes?",
+        "A Shelter So High", "When The Earth Shook", "Blow Hot Blow Cold",
+        "Who Will Do This Work", "Across The Wall", "No Place for Us",
+        "A Seed Tells a Farmer's Story", "Whose Forests?", "Like Father Like Daughter",
+        "On The Move Again"
+      ],
+      "topics": [
+        "Human Senses", "Food and Digestion", "Water Conservation",
+        "Plants and Seeds", "Mosquito Control", "Earthquakes and Natural Disasters",
+        "Shelters and Homes", "Air and Climate", "Work and Human Life",
+        "Environment and Forests", "Migration and Transport"
+      ]
+    },
+    "General Knowledge": {
+      "topics": [
+        "India: States and Capitals", "National Symbols", "Famous Personalities",
+        "Important Indian Festivals", "Basic Science Facts", "World Geography",
+        "Current Events Overview"
+      ]
+    },
+    "Computer Science": {
+      "topics": [
+        "Introduction to Computers", "Parts of a Computer", "Input and Output Devices",
+        "Using MS Paint", "Basic Drawing and Colouring", "Safe Use of Computers",
+        "Introduction to Internet and Digital Literacy"
+      ]
+    },
+    "Art & Craft": {
+      "activities": [
+        "Basic Drawing and Sketching", "Colouring Techniques", "Paper Craft and Origami",
+        "Pattern Making", "Clay Modelling", "Poster Making", "Nature and Festival Art"
+      ]
+    }
+  }
+}

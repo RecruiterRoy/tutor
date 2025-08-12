@@ -1,0 +1,41 @@
+{
+  "class": 1,
+  "subjects": {
+    "English": {
+      "Marigold": [
+        "A Happy Child", "Three Little Pigs", "After a Bath", "The Bubble, the Straw and the Shoe",
+        "One Little Kitten", "Lalu and Peelu", "Once I Saw a Little Bird", "Mittu and the Yellow Mango",
+        "Merry-Go-Round", "Circle", "If I Were an Apple", "Our Tree", "A Kite", "Sundari",
+        "A Little Turtle", "The Tiger and the Mosquito", "Clouds", "Anandi’s Rainbow", "Flying Man", "The Tailor and His Friend"
+      ],
+      "Raindrops": [
+        "Clap, Clap, Clap", "One, Two", "The Little Bird", "Bubbles", "Chhotu", "Animals and Birds",
+        "Fruits and Vegetables", "Who Am I?", "Hide and Seek"
+      ]
+    },
+    "Hindi": [
+      "झूला", "आम की कहानी", "पत्ते ही पत्ते", "पकौड़ी", "छुक-छुक गाड़ी", "रसोईघर",
+      "चूहो! म्याऊँ सो रही है", "बंदर और गिलहरी", "पगड़ी", "पतंग", "गेंद-बल्ला",
+      "बंदर गया खेत में भाग", "एक बुढ़िया", "मैं भी", "लालू और पीलू", "चकई के चकदुम",
+      "छोटी का कमाल", "चार चने", "भगदड़"
+    ],
+    "Mathematics": [
+      "Shapes and Space", "Numbers from One to Nine", "Addition", "Subtraction",
+      "Numbers from Ten to Twenty", "Time", "Measurement", "Numbers from Twenty-one to Fifty",
+      "Data Handling", "Patterns", "Numbers", "Money", "How Many"
+    ],
+    "Environmental Studies": [
+      "My Family", "My School", "Food", "Safety and First Aid", "Seasons", "Clothes",
+      "Plants and Animals", "Our Body", "Good Habits"
+    ],
+    "Art & Craft": [
+      "Basic Drawing and Colouring", "Cutting and Pasting", "Shapes", "Nature Drawing"
+    ],
+    "General Knowledge": [
+      "Our Country", "Festivals", "Famous Personalities", "Transport", "Animals"
+    ],
+    "Physical & Health Education": [
+      "Body Awareness", "Food and Nutrition", "Simple Exercises"
+    ]
+  }
+}

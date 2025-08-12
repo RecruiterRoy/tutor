@@ -1,0 +1,185 @@
+{
+  "class": 11,
+  "board": "CBSE",
+  "session": "2025-26",
+  "streams": {
+    "Science": {
+      "English": {
+        "books": ["Flamingo", "Vistas"],
+        "units": [
+          "Reading Comprehension and Literary Texts",
+          "Grammar and Creative Writing Skills",
+          "Listening and Speaking Skills"
+        ]
+      },
+      "Physics": {
+        "units": [
+          "Physical World and Measurement",
+          "Kinematics",
+          "Laws of Motion",
+          "Work, Energy and Power",
+          "Motion of System of Particles and Rigid Body",
+          "Gravitation",
+          "Mechanical Properties of Solids and Fluids",
+          "Thermodynamics",
+          "Behaviour of Perfect Gases and Kinetic Theory",
+          "Oscillations and Waves"
+        ]
+      },
+      "Chemistry": {
+        "units": [
+          "Some Basic Concepts of Chemistry",
+          "Structure of Atom",
+          "Classification of Elements and Periodicity in Properties",
+          "Chemical Bonding and Molecular Structure",
+          "Chemical Thermodynamics",
+          "Equilibrium",
+          "Redox Reactions",
+          "Organic Chemistry: Some Basic Principles and Techniques",
+          "Hydrocarbons"
+        ]
+      },
+      "Mathematics": {
+        "units": [
+          "Sets and Functions",
+          "Algebra",
+          "Coordinate Geometry",
+          "Calculus",
+          "Statistics and Probability"
+        ]
+      },
+      "Biology": {
+        "units": [
+          "Diversity of Living Organisms",
+          "Structural Organisation in Plants and Animals",
+          "Cell Structure and Function",
+          "Plant Physiology",
+          "Human Physiology"
+        ]
+      },
+      "Computer Science": {
+        "units": [
+          "Introduction to Programming Concepts",
+          "Algorithms and Flowcharts",
+          "Data Structures",
+          "Boolean Algebra",
+          "Database Concepts"
+        ]
+      }
+    },
+    "Commerce": {
+      "English": {
+        "books": ["Flamingo", "Vistas"],
+        "units": [
+          "Reading Comprehension and Literary Texts",
+          "Grammar and Creative Writing Skills",
+          "Listening and Speaking Skills"
+        ]
+      },
+      "Accountancy": {
+        "units": [
+          "Introduction to Accountancy",
+          "Theory Base of Accounting",
+          "Basis of Accounting",
+          "Journal, Cash Book",
+          "Ledger",
+          "Trial Balance",
+          "Bank Reconciliation",
+          "Depreciation"
+        ]
+      },
+      "Business Studies": {
+        "units": [
+          "Nature and Purpose of Business",
+          "Forms of Business Organisations",
+          "Public, Private and Global Enterprises",
+          "Business Services",
+          "Emerging Modes of Business",
+          "Social Responsibility of Business and Business Ethics",
+          "Sources of Business Finance",
+          "Small Business and Entrepreneurship Development",
+          "Internal Trade",
+          "International Business"
+        ]
+      },
+      "Economics": {
+        "statics": [
+          "Introduction",
+          "Collection, Organisation and Presentation of Data",
+          "Statistical Tools and Interpretation"
+        ],
+        "introductory_microeconomics": [
+          "Introduction",
+          "Consumer's Equilibrium and Demand",
+          "Producer Behaviour and Supply",
+          "Forms of Market and Price Determination under Perfect Competition with Simple Applications"
+        ]
+      },
+      "Mathematics": {
+        "optional_units": [
+          "Sets and Functions",
+          "Algebra",
+          "Coordinate Geometry",
+          "Calculus",
+          "Statistics and Probability"
+        ]
+      },
+      "Computer Science": {
+        "units": [
+          "Introduction to Computer System",
+          "Basics of Python Programming",
+          "Data Handling and Visualization",
+          "Database Concepts",
+          "Emerging Trends",
+          "Practical Work"
+        ]
+      }
+    },
+    "Humanities": {
+      "English": {
+        "books": ["Flamingo", "Vistas"],
+        "units": [
+          "Reading Comprehension and Literary Texts",
+          "Grammar and Creative Writing Skills",
+          "Listening and Speaking Skills"
+        ]
+      },
+      "History": {
+        "units": [
+          "Early Societies",
+          "Ancient Civilisations",
+          "Medieval Societies",
+          "Modern Transformation"
+        ]
+      },
+      "Political Science": {
+        "units": [
+          "Constitution and Government Structure",
+          "Political Ideologies",
+          "International Relations"
+        ]
+      },
+      "Psychology": {
+        "units": [
+          "Foundations and Research Methods",
+          "Human Development",
+          "Sensory Processes and Perception"
+        ]
+      },
+      "Geography": {
+        "units": [
+          "Physical Geography",
+          "Economic Geography",
+          "Environmental Geography"
+        ]
+      },
+      "Sociology": {
+        "units": [
+          "Nature of Sociology",
+          "Social Institutions",
+          "Social Change and Social Problems"
+        ]
+      }
+    }
+  }
+}

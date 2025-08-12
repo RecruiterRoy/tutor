@@ -1,0 +1,112 @@
+{
+    "class": 10,
+    "board": "ISC",
+    "session": "2025-26",
+    "subjects": {
+      "English": {
+        "books": ["English Language", "English Literature"],
+        "units": [
+          "Reading Comprehension through Unseen Passages",
+          "Writing Skills: Notice, Invitation, Letter, Article, Report, Story, Essay",
+          "Literature: Prose, Poetry, Drama Analysis",
+          "Grammar: Tenses, Modals, Subject-Verb Agreement, Voice, Speech, Prepositions, Conjunctions, Punctuation, Vocabulary"
+        ]
+      },
+      "Mathematics": {
+        "units": [
+          "Commercial Mathematics (GST, Banking)",
+          "Algebra (Linear Inequations, Quadratic Equations in one variable, Ratio and Proportion, Factorization of Polynomials, Matrices, Arithmetic Progression, Coordinate Geometry)",
+          "Geometry (Similarity, Circles)",
+          "Mensuration",
+          "Trigonometry",
+          "Statistics and Probability"
+        ]
+      },
+      "Physics": {
+        "units": [
+          "Measurement and Experimental Skills",
+          "Motion in One and Two Dimensions",
+          "Laws of Motion",
+          "Work, Energy and Power",
+          "Sound",
+          "Light",
+          "Electricity and Magnetism"
+        ]
+      },
+      "Chemistry": {
+        "units": [
+          "Chemical Reactions and Equations",
+          "Acids, Bases and Salts",
+          "Metals and Non-metals",
+          "Carbon and its Compounds",
+          "Periodic Classification of Elements"
+        ]
+      },
+      "Biology": {
+        "units": [
+          "Basic Biology and Plant Physiology",
+          "Human Anatomy and Physiology",
+          "Population and Pollution"
+        ]
+      },
+      "History, Civics and Geography": {
+        "history_units": [
+          "The French Revolution",
+          "Nazism and the Rise of Hitler",
+          "Forest Society and Colonialism",
+          "India After Independence"
+        ],
+        "civics_units": [
+          "Indian Government and Politics",
+          "Democratic Rights and Responsibilities"
+        ],
+        "geography_units": [
+          "India: Size and Location",
+          "Physical Features",
+          "Drainage System and Climate",
+          "Natural Vegetation and Wildlife",
+          "Population"
+        ]
+      },
+      "Economics": {
+        "units": [
+          "The Productive Mechanism: Land, Labour, Capital, Entrepreneur",
+          "Theory of Demand and Supply",
+          "Market Types",
+          "Banking in India",
+          "Inflation and Consumer Awareness"
+        ]
+      },
+      "Computer Applications": {
+        "units": [
+          "Basics of Computer Systems",
+          "Internet and Web Technologies",
+          "Programming Fundamentals",
+          "Database Concepts",
+          "Cyber Security"
+        ]
+      },
+      "Additional Subjects": {
+        "Home Science": "Nutrition, Hygiene, Family Resources, Health and Care",
+        "Physical Education": "Yoga, Physical Fitness Activities, Team Games",
+        "Art": "Drawing, Painting, Sculpture, Traditional and Modern Art Forms",
+        "Modern Foreign Languages": ["French", "German", "Spanish"],
+        "Technical and Vocational Subjects": [
+          "Fashion Designing", "Cookery", "Physical Education", "Environmental Applications", 
+          "Commercial Applications", "Economic Applications", "Robotics and AI"
+        ]
+      }
+    },
+    "exam_pattern": {
+      "main_subjects": {
+        "theory": 80,
+        "internal_assessment": 20
+      },
+      "skill_subjects": {
+        "external_exam": 50,
+        "internal_exam": 50
+      },
+      "exam_duration": "2 to 2.5 hours depending on subject"
+    }
+  }
+  

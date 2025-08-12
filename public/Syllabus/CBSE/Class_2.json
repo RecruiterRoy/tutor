@@ -1,0 +1,27 @@
+{
+  "class": 2,
+  "subjects": {
+    "English": {
+      "Marigold": [
+        "First Day at School", "Haldi's Adventure", "The Paddling Pool", "I Am Lucky", "I Want", "A Smile",
+        "The Wind and the Sun", "Rain", "Storm in the Garden", "Zoo Manners", "Funny Bunny", "Mr. Nobody",
+        "Curlylocks and the Three Bears", "On My Blackboard I Can Draw", "Make it Shorter"
+      ]
+    },
+    "Hindi": [
+      "बचपन", "मेरी किताब", "खेल खेल में", "हमारा घर", "रसोईघर", "पतंग",
+      "गेंद-बल्ला", "चूहे", "रंग-बिरंगी पखियाँ", "बंदर गया खेत में भाग", "एक बुढ़िया", "मैं भी"
+    ],
+    "Mathematics": [
+      "What is Long? What is Round?", "Counting in Groups", "How Much Can You Carry?", "Counting in Tens",
+      "Patterns", "Footprints", "Jugs and Mugs", "Tens and Ones", "My Funday", "Add Our Points",
+      "Lines and Lines", "Give and Take", "The Longest Step", "Birds Come, Birds Go", "How Many Ponytails"
+    ],
+    "Environmental Studies": [
+      "My Environment", "Plants and Animals", "Health and Hygiene", "Safety Rules", "Seasons and Festivals"
+    ],
+    "General Knowledge": [
+      "World Around Us", "India’s Neighbours", "Sports", "Important Dates"
+    ]
+  }
+}

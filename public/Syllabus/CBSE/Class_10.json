@@ -1,0 +1,307 @@
+{
+  "class": 10,
+  "board": "CBSE",
+  "session": "2025-26",
+  "subjects": {
+    "English": {
+      "books": ["First Flight", "Footprints Without Feet"],
+      "literature_units": [
+        {
+          "unit": 1,
+          "chapters": [
+            "A Letter to God",
+            "Nelson Mandela: Long Walk to Freedom",
+            "Two Stories About Flying",
+            "From the Diary of Anne Frank",
+            "The Hundred Dresses - I",
+            "The Hundred Dresses - II"
+          ]
+        },
+        {
+          "unit": 2,
+          "chapters": [
+            "The Trees",
+            "Fog",
+            "A Triumph of Surgery",
+            "A Legend of the Northland",
+            "The Proposal"
+          ]
+        },
+        {
+          "unit": 3,
+          "chapters": [
+            "The Summit Within",
+            "Glimpses of India",
+            "Madam Rides the Bus",
+            "The Tale of Custard the Dragon"
+          ]
+        },
+        {
+          "unit": 4,
+          "chapters": [
+            "The Making of a Scientist",
+            "The Necklace",
+            "The Hack Driver",
+            "The Ball Poem"
+          ]
+        }
+      ],
+      "grammar_topics": [
+        "Tenses",
+        "Modals",
+        "Subject-Verb Agreement",
+        "Active and Passive Voice",
+        "Direct and Indirect Speech",
+        "Prepositions",
+        "Conjunctions",
+        "Punctuation",
+        "Vocabulary Building",
+        "Writing Skills: Letter, Notice, Article, Report, Story, Essay",
+        "Comprehension (Unseen Passages)"
+      ]
+    },
+    "Hindi": {
+      "books": ["Kritika", "Sanchayan"],
+      "chapters": [
+        "आकाश का डाकिया",
+        "सत्य के लिए",
+        "दोस्ती",
+        "महात्मा गाँधी",
+        "तुम नहले पे जल्ले",
+        "आज्ञा की प्रतिक्षा",
+        "कविता महिमा",
+        "सूरज का सातवाँ घोड़ा",
+        "प्रेरणा स्रोत",
+        "एक छात्र की कहानी"
+      ],
+      "grammar_topics": [
+        "संधि",
+        "समास",
+        "काल",
+        "अवधारणाएँ: संज्ञा, सर्वनाम, क्रिया, विशेषण",
+        "वाक्य रचना और प्रकार",
+        "मुहावरे और लोकोक्तियाँ",
+        "पत्र लेखन",
+        "निबंध लेखन",
+        "अपठित गद्यांश"
+      ]
+    },
+    "Mathematics": {
+      "units": [
+        {
+          "unit": "Real Numbers",
+          "topics": [
+            "Review of Number Systems",
+            "Euclid’s Division Algorithm",
+            "Fundamental Theorem of Arithmetic"
+          ]
+        },
+        {
+          "unit": "Polynomials",
+          "topics": [
+            "Degree of a Polynomial",
+            "Zeroes of Polynomials",
+            "Relationship between Zeroes and Coefficients"
+          ]
+        },
+        {
+          "unit": "Pair of Linear Equations in Two Variables",
+          "topics": [
+            "Graphical Method of Solution",
+            "Algebraic Methods of Solution"
+          ]
+        },
+        {
+          "unit": "Quadratic Equations",
+          "topics": [
+            "Standard Form",
+            "Solution of Quadratic Equations by Factorisation and Quadratic Formula"
+          ]
+        },
+        {
+          "unit": "Arithmetic Progressions",
+          "topics": [
+            "Definition and Examples",
+            "nth Term and Sum of n Terms of an AP"
+          ]
+        },
+        {
+          "unit": "Triangles",
+          "topics": [
+            "Similarity of Triangles",
+            "Criteria for Similarity",
+            "Areas of Similar Triangles",
+            "Pythagoras Theorem"
+          ]
+        },
+        {
+          "unit": "Coordinate Geometry",
+          "topics": [
+            "Cartesian Plane",
+            "Plotting Points",
+            "Coordinates of a Point"
+          ]
+        },
+        {
+          "unit": "Introduction to Trigonometry",
+          "topics": [
+            "Trigonometric Ratios",
+            "Trigonometric Identities",
+            "Heights and Distances"
+          ]
+        },
+        {
+          "unit": "Circles",
+          "topics": [
+            "Tangent to a Circle",
+            "Number of Tangents to a Circle"
+          ]
+        },
+        {
+          "unit": "Constructions",
+          "topics": [
+            "Division of a Line Segment",
+            "Construction of Tangents to a Circle"
+          ]
+        },
+        {
+          "unit": "Areas Related to Circles",
+          "topics": [
+            "Area of Sector and Segment of a Circle",
+            "Problems based on Areas and Perimeters"
+          ]
+        },
+        {
+          "unit": "Surface Areas and Volumes",
+          "topics": [
+            "Surface Areas and Volumes of Cubes, Cuboids, Cylinders, Cones, and Spheres"
+          ]
+        },
+        {
+          "unit": "Statistics",
+          "topics": [
+            "Mean, Median, Mode",
+            "Graphs and Data Interpretation"
+          ]
+        },
+        {
+          "unit": "Probability",
+          "topics": [
+            "Introduction to Probability",
+            "Simple Experiments"
+          ]
+        }
+      ]
+    },
+    "Science": {
+      "units": [
+        {
+          "unit": "Chemical Substances - Nature and Behaviour",
+          "topics": [
+            "Chemical Reactions and Equations",
+            "Acids, Bases and Salts",
+            "Metals and Non-metals",
+            "Carbon and its Compounds",
+            "Periodic Classification of Elements"
+          ]
+        },
+        {
+          "unit": "World of Living",
+          "topics": [
+            "Life Processes",
+            "Control and Coordination in Animals and Plants",
+            "How do Organisms Reproduce?",
+            "Heredity and Evolution",
+            "Our Environment"
+          ]
+        },
+        {
+          "unit": "Natural Phenomena",
+          "topics": [
+            "Light – Reflection and Refraction",
+            "The Human Eye and the Colourful World",
+            "Electricity and Circuits",
+            "Magnetic Effects of Electric Current"
+          ]
+        },
+        {
+          "unit": "Effects of Current",
+          "topics": [
+            "Electricity as a form of Energy",
+            "Heating Effect of Electric Current",
+            "Electric Power and Heating Effect"
+          ]
+        },
+        {
+          "unit": "Natural Resources",
+          "topics": [
+            "Sources of Energy",
+            "Conservation of Natural Resources",
+            "Pollution and its Effects"
+          ]
+        }
+      ]
+    },
+    "Social Science": {
+      "History": [
+        "The Rise of Nationalism in Europe",
+        "Nationalism in India",
+        "The Making of a Global World"
+      ],
+      "Geography": [
+        "Resources and Development",
+        "Forest and Wildlife Resources",
+        "Water Resources",
+        "Agriculture",
+        "Industries",
+        "Human Resources"
+      ],
+      "Political Science": [
+        "Power Sharing",
+        "Federalism",
+        "Democracy and Diversity",
+        "Gender, Religion and Caste",
+        "Popular Struggles and Movements",
+        "Political Parties",
+        "Outcomes of Democracy",
+        "Challenges to Democracy"
+      ],
+      "Economics": [
+        "Development",
+        "Sectors of the Indian Economy",
+        "Money and Credit",
+        "Globalisation and the Indian Economy",
+        "Consumer Rights"
+      ]
+    },
+    "Computer Applications": {
+      "chapters": [
+        "Basics of Computer System",
+        "Operating System Concepts",
+        "Word Processing and Presentation Software",
+        "Internet and Cyber Safety",
+        "Programming Basics (Python)",
+        "Networking Fundamentals",
+        "Database Management Basics"
+      ]
+    },
+    "Health and Physical Education": {
+      "topics": [
+        "Physical Fitness and Wellness",
+        "Sports and Games",
+        "Yoga and Meditation",
+        "Health and Hygiene",
+        "Mental and Emotional Health",
+        "Balanced Diet and Nutrition"
+      ]
+    },
+    "Skill-based Subjects": {
+      "options": [
+        "Artificial Intelligence",
+        "Information Technology",
+        "Financial Literacy",
+        "Yoga and Physical Education"
+      ]
+    }
+  }
+}
