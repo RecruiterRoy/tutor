@@ -2178,6 +2178,17 @@ async function initializeDashboard() {
     
     // currentUser is already set from authentication
     await loadUserData();
+    // Ensure avatar persists across devices: prefer saved localStorage if profile not yet set
+    try {
+        const storedAvatar = localStorage.getItem('ai_avatar');
+        if (storedAvatar && (!window.userData || !window.userData.ai_avatar)) {
+            window.userData = window.userData || {};
+            window.userData.ai_avatar = storedAvatar;
+            window.selectedAvatar = storedAvatar;
+            console.log('✅ Applied stored avatar from localStorage:', storedAvatar);
+            if (typeof updateAvatarDisplay === 'function') updateAvatarDisplay();
+        }
+    } catch (_) {}
     
     // Force refresh user data to ensure APK gets latest data from Supabase
     console.log('🔄 Force refreshing user data for APK...');
