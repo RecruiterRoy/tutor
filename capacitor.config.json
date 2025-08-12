@@ -1,9 +1,11 @@
 {
   "appId": "com.tution.app",
   "appName": "tution.app",
-  "webDir": "dist",
+  "webDir": "public",
+  "bundledWebRuntime": false,
   "server": {
-    "androidScheme": "https",
+    "androidScheme": "file",
+    "allowNavigation": ["*"],
     "cleartext": true
   },
   "plugins": {
@@ -20,4 +22,4 @@
       "splashImmersive": true
     }
   }
-} 
+}
