@@ -1,8 +1,8 @@
 // public/sw.js
 // Service Worker for TUTOR.AI - Basic offline support
 
-const CACHE_NAME = 'tutorai-v1.0.0';
-const CACHE_VERSION = '1.0.0';
+const CACHE_NAME = 'tutorai-v1.0.4';
+const CACHE_VERSION = '1.0.4';
 
 // Essential assets to cache for offline functionality
 const ESSENTIAL_ASSETS = [
@@ -125,14 +125,19 @@ function getCacheStrategy(request) {
   const url = new URL(request.url);
   const pathname = url.pathname;
   
-  // Cache first for static assets
-  if (pathname.match(/\.(css|js|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf)$/)) {
+  // Network first for JS to avoid stale app code
+  if (pathname.startsWith('/public/js/') || pathname.endsWith('.js')) {
+    return CACHE_STRATEGIES.NETWORK_FIRST;
+  }
+
+  // Cache first for static assets (images, fonts, css)
+  if (pathname.match(/\.(css|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf)$/)) {
     return CACHE_STRATEGIES.CACHE_FIRST;
   }
   
-  // Cache first for HTML pages (for offline support)
+  // Network first for HTML to always fetch latest
   if (pathname.match(/\.(html)$/) || pathname === '/') {
-    return CACHE_STRATEGIES.CACHE_FIRST;
+    return CACHE_STRATEGIES.NETWORK_FIRST;
   }
   
   // Network first for API calls and dynamic content

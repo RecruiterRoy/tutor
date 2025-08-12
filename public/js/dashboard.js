@@ -15,6 +15,8 @@ window.isRecording = false;
 window.currentUser = null;
 window.selectedAvatar = 'miss-sapna'; // Default to Miss Sapna
 window.userData = null;
+// PWA install prompt placeholder
+window.deferredPrompt = null;
 // Do not override the TTS instance created by textToSpeech.js
 if (typeof window.textToSpeech === 'undefined') {
     window.textToSpeech = null;
@@ -6408,7 +6410,43 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setupDashboardEventListeners();
     setupMicLongPress();
+
+    // PWA: capture install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+        try { e.preventDefault(); } catch(_) {}
+        window.deferredPrompt = e;
+        console.log('🛠️ PWA install prompt captured');
+        // Optionally show your own UI/button; expose a global trigger
+    });
+
+    // PWA: SW update message handler
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event && event.data && event.data.type === 'UPDATED') {
+                console.log('🔄 Update available from Service Worker');
+                try { showSuccess('App updated. Reloading...'); } catch(_) {}
+                setTimeout(() => { window.location.reload(); }, 300);
+            }
+        });
+    }
 });
+
+// Expose install function for any button to call
+window.installPWA = async function() {
+    try {
+        if (!window.deferredPrompt) {
+            console.log('No install prompt available');
+            return;
+        }
+        const promptEvent = window.deferredPrompt;
+        window.deferredPrompt = null;
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        console.log('PWA install choice:', choice.outcome);
+    } catch (err) {
+        console.log('PWA install error:', err);
+    }
+};
 
 // Enhanced voice recognition variables are already declared globally
 
