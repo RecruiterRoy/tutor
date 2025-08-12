@@ -17,9 +17,6 @@
   "dependencies": {
     "openai": "^4.52.0",
     "@anthropic-ai/sdk": "^0.18.0",
-    "@capacitor/android": "^6.1.2",
-    "@capacitor/cli": "^6.1.2",
-    "@capacitor/core": "^6.1.2",
     "@supabase/supabase-js": "^2.39.3",
     "canvas": "^3.1.2",
     "cors": "^2.8.5",
