@@ -1931,9 +1931,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: { user }, error } = await window.supabaseClient.auth.getUser();
     
         if (error || !user) {
-            console.log('No authenticated user, redirecting to login');
-            window.location.href = '/login';
-            return;
+            console.log('No authenticated user. For APK, stay; for web, redirect to login.');
+            if (window.isAPK) {
+                return;
+            } else {
+                window.location.href = '/login';
+                return;
+            }
         }
     
         // Set current user globally
