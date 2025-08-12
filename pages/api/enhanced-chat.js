@@ -598,11 +598,35 @@ ${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR:
           content: message
         });
 
+        // Load syllabus guidelines for user's board/class (broad guidance only)
+        let syllabusGuidelines = '';
+        try {
+          const origin = (req.headers.origin) || (req.headers.host ? `https://${req.headers.host}` : 'https://tution.app');
+          const userBoard = (userProfile?.board || '').toString().toUpperCase();
+          const preferredBoard = userBoard.includes('CBSE') ? 'CBSE' : userBoard.includes('ICSE') ? 'ICSE' : '';
+          const classNum = parseInt((grade || '').toString().replace(/\D/g, '')) || null;
+          const classFile = classNum ? `Class_${classNum}.json` : '';
+          const boardsToTry = preferredBoard ? [preferredBoard] : ['ICSE', 'CBSE'];
+          for (const b of boardsToTry) {
+            if (!classFile) break;
+            const url = `${origin}/Syllabus/${b}/${classFile}`;
+            try {
+              const resSyl = await fetch(url);
+              if (resSyl.ok) {
+                const jsonSyl = await resSyl.json();
+                syllabusGuidelines += `${b} ${classFile} (broad guidelines): ${JSON.stringify(jsonSyl).slice(0, 2500)}...\n`;
+                break; // use first matching board
+              }
+            } catch (_) { /* continue */ }
+          }
+        } catch (_) { /* ignore */ }
+
         let chat = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           temperature: 0.7,
           messages: [
-            { role: 'system', content: systemPrompt },
+            { role: 'system', content: `${systemPrompt}\n\nUse syllabus files under /public/Syllabus/{BOARD}/Class_{N}.json as broad guidance only. Be flexible: chapter names/content may differ across schools. If unsure (especially literature), ask the student to take pictures of the relevant pages to understand context.` },
+            ...(syllabusGuidelines ? [{ role: 'system', content: syllabusGuidelines }] : []),
             ...messages.map(m => ({ role: m.role, content: m.content }))
           ]
         });
