@@ -15,6 +15,7 @@ class TextToSpeech {
         this.volume = 1.0;
         this.currentAIResponse = ''; // Track the current AI response text
         this.lastSpokenResponse = ''; // Track the last response that was spoken
+        this._queuedSpeakText = null; // Queue text if voices not ready
         
         this.initializeVoices();
         this.setupControls();
@@ -234,6 +235,27 @@ class TextToSpeech {
         // Stop any ongoing speech immediately
         this.stop();
 
+        // Ensure voices are loaded; if not, queue and retry when available
+        if (!this.voices || this.voices.length === 0) {
+            console.log('🔧 TTS: Voices not ready, queuing speak and retrying...');
+            this._queuedSpeakText = { text, options };
+            const retry = () => {
+                try { this.loadVoices(); } catch (_) {}
+                const q = this._queuedSpeakText; this._queuedSpeakText = null;
+                if (q) {
+                    this.speak(q.text, q.options);
+                }
+            };
+            if (typeof this.synth.onvoiceschanged !== 'function' || this.synth.onvoiceschanged === null) {
+                this.synth.onvoiceschanged = retry;
+            }
+            // Fallback timeout in case onvoiceschanged doesn't fire
+            setTimeout(() => {
+                if (this.voices.length === 0) retry();
+            }, 700);
+            return;
+        }
+
         // Update current AI response tracking
         if (options.role === 'ai') {
             this.currentAIResponse = text;
@@ -286,6 +308,8 @@ class TextToSpeech {
             this.updateControls();
         };
 
+        // Some devices require resume before speak
+        try { if (this.synth.paused) this.synth.resume(); } catch (_) {}
         // Start speaking immediately
         this.synth.speak(this.currentUtterance);
         this.showControls();

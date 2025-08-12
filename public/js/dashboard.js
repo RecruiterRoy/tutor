@@ -6223,15 +6223,16 @@ function setupDashboardEventListeners() {
     }
     
     // Manage subjects button
-    const manageSubjectsBtn = document.getElementById('manageSubjectsBtn');
-    if (manageSubjectsBtn) {
-        manageSubjectsBtn.addEventListener('click', () => {
-            showSection('progress');
-            if (typeof window.showSubjectManager === 'function') {
-                setTimeout(() => window.showSubjectManager(), 50);
-            }
-        });
-    }
+    // Always bind Manage button via delegation to survive re-renders
+    const chatBox = document.getElementById('chatBox') || document;
+    chatBox.addEventListener('click', (e) => {
+        const target = e.target.closest('#manageSubjectsBtn');
+        if (!target) return;
+        showSection('progress');
+        if (typeof window.showSubjectManager === 'function') {
+            setTimeout(() => window.showSubjectManager(), 50);
+        }
+    });
     
     // Mobile sidebar navigation items
     const navItems = document.querySelectorAll('.nav-item[data-section], .sidebar-modern .nav-item');
