@@ -746,7 +746,7 @@
                         console.log('✅ User already logged in, redirecting to dashboard');
                         if (window.location.protocol === 'file:') {
                             window.location.href = 'dashboard.html';
-                        } else {
+                } else {
                             window.location.href = (window.location.protocol === 'file:' ? 'dashboard.html' : '/dashboard');
                         }
                     }

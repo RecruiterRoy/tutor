@@ -378,18 +378,18 @@ export default async function handler(req, res) {
         console.log('⚠️ Knowledge bank search failed, continuing without it:', error.message);
     }
 
-            // Build user context from profile - FIXED: Use actual user data
-        const userContext = userProfile ? {
-          name: userProfile.full_name || userProfile.name || 'Student',
-          class: userProfile.class || grade,
-          board: userProfile.board || 'CBSE',
-          subject: userProfile.subject || subject
-        } : {
-          name: 'Student',
-          class: grade,
-          board: 'CBSE',
-          subject: subject
-        };
+    // Build user context from profile - FIXED: Use actual user data
+    const userContext = userProfile ? {
+      name: userProfile.full_name || userProfile.name || 'Student',
+      class: userProfile.class || grade,
+      board: userProfile.board || 'CBSE',
+      subject: userProfile.subject || subject
+    } : {
+      name: 'Student',
+      class: grade,
+      board: 'CBSE',
+      subject: subject
+    };
         
         // Detect user's input language to determine response language
         const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
@@ -416,16 +416,16 @@ export default async function handler(req, res) {
             responseLanguage = 'Respond primarily in Hindi with English terms for technical concepts. Use Hinglish naturally.';
           }
           
-          return {
+        return {
             name: 'Miss Sapna',
-            style: 'Hindi/Hinglish',
-            personality: 'nurturing and culturally aware',
+          style: 'Hindi/Hinglish',
+          personality: 'nurturing and culturally aware',
             language: responseLanguage,
             greeting: 'Namaste! Main Miss Sapna hun, aapki shiksha mein help karungi.',
-            cultural: 'Share stories from Hindu mythology (Ramayan, Mahabharat, Panchtantra) when relevant to lessons. Maximum 1 story per hour, 3 per day. Never repeat stories unless specifically asked. Story maturity should match student\'s class level.',
-            specialFeatures: 'Focus on helping students who are not comfortable with English. Use Hindi as primary language with English terms for academic concepts.',
-            teachingStyle: 'Use Socratic method with gentle questioning. Ask "Kya aap samajhte hain?" or "Aap kya sochte hain?" to encourage thinking. Provide scaffolded explanations breaking complex topics into simple steps. Create personalized quizzes based on student\'s learning pace. Use real-life examples from Indian context. Make learning feel like a conversation with a caring teacher.'
-          };
+          cultural: 'Share stories from Hindu mythology (Ramayan, Mahabharat, Panchtantra) when relevant to lessons. Maximum 1 story per hour, 3 per day. Never repeat stories unless specifically asked. Story maturity should match student\'s class level.',
+          specialFeatures: 'Focus on helping students who are not comfortable with English. Use Hindi as primary language with English terms for academic concepts.',
+          teachingStyle: 'Use Socratic method with gentle questioning. Ask "Kya aap samajhte hain?" or "Aap kya sochte hain?" to encourage thinking. Provide scaffolded explanations breaking complex topics into simple steps. Create personalized quizzes based on student\'s learning pace. Use real-life examples from Indian context. Make learning feel like a conversation with a caring teacher.'
+        };
       } else {
         console.log('✅ Selected Roy Sir persona');
         return {
