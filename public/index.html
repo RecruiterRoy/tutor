@@ -23,6 +23,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="tution.app">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
     
     <!-- Favicon and App Icons -->
@@ -2140,6 +2141,14 @@
             // Clear cache on mobile devices immediately when page loads
             deleteCacheOnMobile();
             setupEventListeners();
+            // Register Service Worker for PWA installability on landing page as well
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    console.log('Service Worker (index) registered:', reg.scope);
+                }).catch(function(err) {
+                    console.error('Service Worker (index) registration failed:', err);
+                });
+            }
         });
     </script>
 </body>

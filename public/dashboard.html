@@ -1206,6 +1206,16 @@
     </style>
 </head>
 <body class="min-h-screen overflow-x-hidden">
+    <script>
+        // Ensure Service Worker is registered on dashboard for standalone mode
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                console.log('Service Worker (dashboard) registered:', reg.scope);
+            }).catch(function(err) {
+                console.error('Service Worker (dashboard) registration failed:', err);
+            });
+        }
+    </script>
             <!-- Mobile Sidebar -->
         <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
         <div class="flex flex-col h-full">
