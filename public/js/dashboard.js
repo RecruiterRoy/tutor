@@ -6234,30 +6234,54 @@ function setupDashboardEventListeners() {
         bindSubjectManager();
     });
     
-    // Avatar selection button
-    const bindAvatarBtn = () => {
+    // Avatar interactions (robust rebinding)
+    const bindAvatarInteractions = () => {
+        // Change Avatar button
         const btn = document.getElementById('avatarSelectionBtn');
-        if (!btn) return;
-        const clone = btn.cloneNode(true);
-        btn.parentNode.replaceChild(clone, btn);
-        clone.addEventListener('click', showAvatarSelectionModal, { once: false });
+        if (btn) {
+            const clone = btn.cloneNode(true);
+            btn.parentNode.replaceChild(clone, btn);
+            clone.addEventListener('click', showAvatarSelectionModal);
+        }
+
+        // Quick avatar tiles in settings
+        const quickRoy = document.getElementById('quickAvatarRoy');
+        if (quickRoy) {
+            quickRoy.replaceWith(quickRoy.cloneNode(true));
+            const freshRoy = document.getElementById('quickAvatarRoy');
+            freshRoy.addEventListener('click', async () => {
+                await selectAvatar('roy-sir');
+                updateAvatarDisplay();
+                try { showSuccess('Avatar changed to Roy Sir'); } catch(_) {}
+            });
+        }
+        const quickSapna = document.getElementById('quickAvatarSapna');
+        if (quickSapna) {
+            quickSapna.replaceWith(quickSapna.cloneNode(true));
+            const freshSapna = document.getElementById('quickAvatarSapna');
+            freshSapna.addEventListener('click', async () => {
+                await selectAvatar('miss-sapna');
+                updateAvatarDisplay();
+                try { showSuccess('Avatar changed to Miss Sapna'); } catch(_) {}
+            });
+        }
+
+        // Allow tapping the header avatar to toggle avatar quickly
+        const welcomeAvatarImg = document.getElementById('welcomeTeacherAvatar');
+        if (welcomeAvatarImg) {
+            welcomeAvatarImg.replaceWith(welcomeAvatarImg.cloneNode(true));
+            const freshImg = document.getElementById('welcomeTeacherAvatar');
+            freshImg.style.cursor = 'pointer';
+            freshImg.title = 'Tap to switch teacher';
+            freshImg.addEventListener('click', async () => {
+                const current = getCurrentAvatarId();
+                const next = current === 'miss-sapna' ? 'roy-sir' : 'miss-sapna';
+                await selectAvatar(next);
+                updateAvatarDisplay();
+            });
+        }
     };
-    bindAvatarBtn();
-    // Quick avatar taps in settings
-    const quickRoy = document.getElementById('quickAvatarRoy');
-    if (quickRoy) {
-        quickRoy.addEventListener('click', async () => {
-            await selectAvatar('roy-sir');
-            showSuccess('Avatar changed to Roy Sir');
-        });
-    }
-    const quickSapna = document.getElementById('quickAvatarSapna');
-    if (quickSapna) {
-        quickSapna.addEventListener('click', async () => {
-            await selectAvatar('miss-sapna');
-            showSuccess('Avatar changed to Miss Sapna');
-        });
-    }
+    bindAvatarInteractions();
     
     // Manage subjects button
     // Always bind Manage button via delegation to survive re-renders
@@ -6387,8 +6411,8 @@ function setupDashboardEventListeners() {
         }
     });
 
-    // Also rebind avatar button on section show
-    document.addEventListener('section:shown', () => bindAvatarBtn());
+    // Also rebind avatar interactions on section show
+    document.addEventListener('section:shown', () => bindAvatarInteractions());
     
     // Handle modal outside clicks
     const modals = document.querySelectorAll('[onclick*="closeSubjectManagerOnOutsideClick"], [onclick*="closeAvatarSelectionOnOutsideClick"]');
