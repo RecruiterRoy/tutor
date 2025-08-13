@@ -1207,6 +1207,25 @@
 </head>
 <body class="min-h-screen overflow-x-hidden">
     <script>
+        // PWA install capture (dashboard)
+        let __dashDeferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            __dashDeferredPrompt = e;
+            console.log('PWA: beforeinstallprompt captured (dashboard)');
+            window.installPWA = function() {
+                if (__dashDeferredPrompt && typeof __dashDeferredPrompt.prompt === 'function') {
+                    __dashDeferredPrompt.prompt();
+                    __dashDeferredPrompt.userChoice.finally(function(){ __dashDeferredPrompt = null; });
+                } else {
+                    var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                    var msg = isIOS ? 'Open in Safari → Share → Add to Home Screen' : 'Open Chrome menu (⋮) → Install app';
+                    alert(msg);
+                }
+            };
+        });
+    </script>
+    <script>
         // Ensure Service Worker is registered on dashboard for standalone mode
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').then(function(reg) {
@@ -1669,7 +1688,7 @@
 
                             <!-- Download App Button -->
                             <div class="card-modern">
-                                <button id="downloadAppBtn" class="btn-modern w-full">
+                                <button id="downloadAppBtn" class="btn-modern w-full" onclick="window.installPWA && window.installPWA()">
                                     <span>📱</span>
                                     <span>Download App</span>
                                 </button>

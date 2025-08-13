@@ -1486,19 +1486,37 @@
     </footer>
 
     <script>
-        // Download App functionality
-        function handleDownloadApp() {
-            // Check if user is logged in by looking for auth token
-            const authToken = localStorage.getItem('supabase.auth.token');
-            const userEmail = localStorage.getItem('userEmail');
-            
-            if (!authToken || !userEmail) {
-                // User is not logged in, redirect to registration
-                showDownloadModal();
-            } else {
-                // User is logged in, proceed to download
-                downloadAPK();
+        // PWA install capture
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('PWA: beforeinstallprompt captured');
+        });
+
+        function triggerPWAInstall() {
+            if (deferredPrompt && typeof deferredPrompt.prompt === 'function') {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    console.log('PWA install choice:', choiceResult.outcome);
+                    deferredPrompt = null;
+                }).catch(function() { deferredPrompt = null; });
+                return;
             }
+            showInstallInstructions();
+        }
+
+        function showInstallInstructions() {
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const msg = isIOS
+                ? 'To install: Tap the Share icon in Safari, then "Add to Home Screen".'
+                : 'To install: Open Chrome menu (⋮) and tap "Install app" or "Add to Home screen".';
+            alert(msg);
+        }
+
+        // Download App functionality now triggers PWA install
+        function handleDownloadApp() {
+            triggerPWAInstall();
         }
 
         function showDownloadModal() {
@@ -1878,8 +1896,8 @@
             
             startDemo();
             
-            // Check if user should be redirected to download after registration
-            checkDownloadAfterRegister();
+            // Check if user should be redirected to download after registration (legacy)
+            // checkDownloadAfterRegister();
             
             // Initialize feedback form
             const feedbackForm = document.getElementById('feedbackForm');
@@ -2066,11 +2084,14 @@
                 });
             }
             
-            // Download app button
-            const downloadAppBtn = document.getElementById('downloadAppBtn');
-            if (downloadAppBtn) {
-                downloadAppBtn.addEventListener('click', handleDownloadApp);
-            }
+            // Download app buttons (desktop + mobile menu)
+            const downloadButtons = [];
+            var btn = document.getElementById('downloadAppBtn');
+            if (btn) downloadButtons.push(btn);
+            document.querySelectorAll('.download-app-btn').forEach(function(el){ downloadButtons.push(el); });
+            downloadButtons.forEach(function(el){
+                el.addEventListener('click', function(e){ e.preventDefault(); handleDownloadApp(); });
+            });
             
             // Mobile menu toggle
             const mobileMenuToggle = document.getElementById('mobileMenuToggle');
