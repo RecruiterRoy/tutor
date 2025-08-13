@@ -2045,6 +2045,27 @@ function ensureTTSReady() {
   });
 }
 
+// Ensure user data exists before proceeding (mobile-safe)
+async function ensureUserDataLoaded(maxAttempts = 5, delayMs = 500) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      if (!window.userData) {
+        await loadUserData();
+      }
+      if (window.userData && window.userData.id) {
+        return window.userData;
+      }
+    } catch (e) {
+      console.warn(`⚠️ ensureUserDataLoaded attempt ${attempt} failed`, e);
+    }
+    await new Promise(r => setTimeout(r, delayMs));
+  }
+  if (!window.userData) {
+    throw new Error('Failed to load user profile. Please log in again.');
+  }
+  return window.userData;
+}
+
 async function initializeDashboard() {
   console.log('🔧 Initializing dashboard...');
   
@@ -2082,8 +2103,9 @@ async function initializeDashboard() {
     // Initialize mobile sidebar first
     initializeMobileSidebar();
     
-    // Initialize Supabase
+    // Initialize Supabase and ensure it's ready before proceeding
     await initializeSupabase();
+    try { await ensureSupabaseReady(); } catch (_) {}
     
         // Request permissions immediately for all mobile devices
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -2178,8 +2200,8 @@ async function initializeDashboard() {
     currentUser = user; // Set local variable too
     console.log('✅ User authenticated:', user.id);
     
-    // currentUser is already set from authentication
-    await loadUserData();
+    // Ensure user data is loaded (robust on mobile)
+    await ensureUserDataLoaded(5, 600);
     // Ensure avatar persists across devices: prefer saved localStorage if profile not yet set
     try {
         const storedAvatar = localStorage.getItem('ai_avatar');
@@ -2237,11 +2259,21 @@ async function initializeDashboard() {
     // Initialize subject manager if available
     if (window.subjectManager) {
         console.log('🔧 Initializing subject manager...');
-        try {
-            await window.subjectManager.initialize(window.userData, window.userData?.class, window.userData?.board);
-            console.log('✅ Subject manager initialized');
-        } catch (error) {
-            console.error('❌ Subject manager initialization error:', error);
+        let smError = null;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                await window.subjectManager.initialize(window.userData, window.userData?.class, window.userData?.board);
+                console.log('✅ Subject manager initialized');
+                smError = null;
+                break;
+            } catch (error) {
+                smError = error;
+                console.warn(`⚠️ Subject manager init attempt ${attempt} failed, retrying...`, error);
+                await new Promise(r => setTimeout(r, 500));
+            }
+        }
+        if (smError) {
+            console.error('❌ Subject manager initialization error (final):', smError);
         }
     } else {
         console.warn('⚠️ Subject manager not available');
@@ -2302,7 +2334,8 @@ async function initializeDashboard() {
         
     } catch (error) {
         console.error('❌ Dashboard initialization failed:', error);
-    showError('Initialization failed. Please refresh the page.');
+        const msg = (error && (error.message || error.toString())) || 'Initialization failed. Please refresh the page.';
+        showError(msg);
   } finally {
     isInitializing = false;
   }
