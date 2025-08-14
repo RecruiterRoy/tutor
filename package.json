@@ -15,9 +15,10 @@
     "node": ">=18"
   },
   "dependencies": {
-    "openai": "^4.52.0",
     "@anthropic-ai/sdk": "^0.18.0",
     "@supabase/supabase-js": "^2.39.3",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
     "canvas": "^3.1.2",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
@@ -25,10 +26,11 @@
     "express-rate-limit": "^7.5.1",
     "marked": "^16.0.0",
     "mermaid": "^11.8.0",
+    "node-fetch": "^2.7.0",
+    "openai": "^4.52.0",
     "pdfjs-dist": "^5.3.93",
     "razorpay": "^2.9.2",
-    "tailwindcss": "^3.4.1",
-    "node-fetch": "^2.7.0"
+    "tailwindcss": "^3.4.1"
   },
   "optionalDependencies": {
     "pdf2pic": "^3.2.0"

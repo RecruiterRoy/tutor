@@ -65,6 +65,15 @@ class TextToSpeech {
             console.log('🔧 TTS: Loaded voices:', this.voices.length);
             console.log('🔧 TTS: Available voices:', this.voices.map(v => `${v.name} (${v.lang})`));
             
+            // Log all Indian English male voices for Roy Sir
+            const indianEnglishMaleVoices = this.voices.filter(voice => 
+                voice.lang.includes('en-IN') && 
+                (voice.name.toLowerCase().includes('male') || 
+                 voice.name.toLowerCase().includes('google') ||
+                 voice.name.toLowerCase().includes('natural'))
+            );
+            console.log('🔧 TTS: Indian English Male voices for Roy Sir:', indianEnglishMaleVoices.map(v => `${v.name} (${v.lang})`));
+            
             // If no voices available, try alternative method
             if (this.voices.length === 0) {
                 console.log('🔧 TTS: No voices found, trying alternative method...');
@@ -440,9 +449,12 @@ class TextToSpeech {
                 return fallbackVoice?.lang || 'en-US';
             }
         } else {
-            // Fast English voice selection for Roy Sir
+            // Fast English voice selection for Roy Sir - prioritize Microsoft Ravi (male)
             let englishVoice = this.voices.find(voice =>
                 voice.name.toLowerCase().includes('ravi') && 
+                voice.lang.includes('en-IN')
+            ) || this.voices.find(voice =>
+                voice.name.toLowerCase().includes('heera') && 
                 voice.lang.includes('en-IN')
             ) || this.voices.find(voice =>
                 voice.lang.includes('en-IN')
@@ -480,7 +492,11 @@ class TextToSpeech {
                 { lang: 'IN', gender: 'any' }
             ],
             'english': [
+                // Try Google's natural-sounding Indian English voices first
+                { lang: 'en-IN', gender: 'male', priority: 'google' },
                 { lang: 'en-IN', gender: 'male' },
+                { lang: 'en-IN', gender: 'any' },
+                // Fallback to other English voices
                 { lang: 'en-US', gender: 'male' },
                 { lang: 'en-GB', gender: 'male' },
                 { lang: 'en', gender: 'male' },
@@ -494,14 +510,45 @@ class TextToSpeech {
             const matchingVoices = this.voices.filter(voice => {
                 const langMatch = voice.lang.includes(priority.lang);
                 const genderMatch = priority.gender === 'any' || 
-                    (priority.gender === 'male' && voice.name.toLowerCase().includes('male')) ||
-                    (priority.gender === 'female' && voice.name.toLowerCase().includes('female'));
+                    (priority.gender === 'male' && (voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('ravi') || voice.name.toLowerCase().includes('david') || voice.name.toLowerCase().includes('james'))) ||
+                    (priority.gender === 'female' && (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('heera') || voice.name.toLowerCase().includes('zira') || voice.name.toLowerCase().includes('sarah')));
                 
                 return langMatch && genderMatch;
             });
             
             if (matchingVoices.length > 0) {
                 console.log(`✅ Found ${matchingVoices.length} voices for ${language} (${priority.lang}, ${priority.gender})`);
+                
+                // For English male voices, prioritize Google's natural-sounding voices
+                if (language === 'english' && priority.gender === 'male') {
+                    // Look for Google's natural-sounding Indian English voices
+                    const googleVoice = matchingVoices.find(voice => 
+                        voice.name.toLowerCase().includes('google') || 
+                        voice.name.toLowerCase().includes('natural') ||
+                        voice.name.toLowerCase().includes('premium') ||
+                        voice.name.toLowerCase().includes('enhanced')
+                    );
+                    
+                    if (googleVoice) {
+                        console.log(`🎯 Found Google natural voice: ${googleVoice.name}`);
+                        return googleVoice;
+                    }
+                    
+                    // Look for voices that don't sound mechanical (avoid Microsoft Ravi)
+                    const naturalVoice = matchingVoices.find(voice => 
+                        !voice.name.toLowerCase().includes('microsoft') &&
+                        !voice.name.toLowerCase().includes('ravi') &&
+                        (voice.name.toLowerCase().includes('google') || 
+                         voice.name.toLowerCase().includes('natural') ||
+                         voice.name.toLowerCase().includes('premium'))
+                    );
+                    
+                    if (naturalVoice) {
+                        console.log(`🎯 Found natural-sounding voice: ${naturalVoice.name}`);
+                        return naturalVoice;
+                    }
+                }
+                
                 return matchingVoices[0]; // Return the first matching voice
             }
         }
@@ -558,6 +605,42 @@ class TextToSpeech {
         
         // Force voice change
         this.detectLanguageAndSetVoice('');
+        
+        // Special handling for Roy Sir to ensure male voice
+        if (currentAvatar === 'roy-sir' && this.currentVoice) {
+            // Check if current voice is female, if so, try to find a male voice
+            if (this.currentVoice.name.toLowerCase().includes('female') || 
+                this.currentVoice.name.toLowerCase().includes('heera') ||
+                this.currentVoice.name.toLowerCase().includes('zira')) {
+                
+                console.log('🔧 Roy Sir detected female voice, searching for male voice...');
+                
+                // Try to find Microsoft Ravi specifically
+                const raviVoice = this.voices.find(voice =>
+                    voice.name.toLowerCase().includes('ravi') && 
+                    voice.lang.includes('en-IN')
+                );
+                
+                if (raviVoice) {
+                    this.currentVoice = raviVoice;
+                    console.log('✅ Found and set Microsoft Ravi for Roy Sir');
+                } else {
+                    // Fallback to any male English voice
+                    const maleVoice = this.voices.find(voice =>
+                        voice.lang.includes('en-IN') && 
+                        (voice.name.toLowerCase().includes('ravi') || 
+                         voice.name.toLowerCase().includes('david') ||
+                         voice.name.toLowerCase().includes('james'))
+                    );
+                    
+                    if (maleVoice) {
+                        this.currentVoice = maleVoice;
+                        console.log('✅ Found and set male voice for Roy Sir:', maleVoice.name);
+                    }
+                }
+            }
+        }
+        
         console.log('Voice updated to:', this.currentVoice?.name || 'No voice selected');
         
         // Log the voice details for debugging
@@ -701,14 +784,18 @@ class TextToSpeech {
     getVoiceRecommendations() {
         const recommendations = {
             missSapna: this.findBestVoiceForLanguage('hindi', 'female'),
-            baruahSir: this.findBestVoiceForLanguage('assamese', 'male'),
             roySir: this.findBestVoiceForLanguage('english', 'male')
         };
         
         console.log('🔧 Voice recommendations:');
         console.log('   - Miss Sapna:', recommendations.missSapna?.name || 'Using fallback');
-        console.log('   - Baruah Sir:', recommendations.baruahSir?.name || 'Using fallback');
         console.log('   - Roy Sir:', recommendations.roySir?.name || 'Using fallback');
+        
+        // Debug: Show all available English voices
+        const englishVoices = this.voices.filter(voice => 
+            voice.lang.includes('en-IN') || voice.lang.includes('en-US') || voice.lang.includes('en-GB')
+        );
+        console.log('🔧 Available English voices:', englishVoices.map(v => `${v.name} (${v.lang})`));
         
         return recommendations;
     }
@@ -737,6 +824,87 @@ setTimeout(() => {
 setTimeout(() => {
     if (window.textToSpeech) {
         window.textToSpeech.forceVoiceUpdate();
+        
+        // Automatically check for better Roy Sir voices
+        console.log('🔍 Automatically checking for better Roy Sir voices...');
+        const voices = window.textToSpeech.voices;
+        
+        // Find all Indian English male voices
+        const indianEnglishMaleVoices = voices.filter(voice => 
+            voice.lang.includes('en-IN') && 
+            (voice.name.toLowerCase().includes('male') || 
+             voice.name.toLowerCase().includes('google') ||
+             voice.name.toLowerCase().includes('natural') ||
+             voice.name.toLowerCase().includes('premium'))
+        );
+        
+        console.log('🎯 Available Indian English Male voices for Roy Sir:');
+        indianEnglishMaleVoices.forEach((voice, index) => {
+            console.log(`${index + 1}. ${voice.name} (${voice.lang})`);
+        });
+        
+        // Show current voice being used
+        const currentVoice = window.textToSpeech.currentVoice;
+        console.log('🎤 Current voice for Roy Sir:', currentVoice?.name || 'None selected');
+        
+        // Suggest better alternatives if Microsoft Ravi is being used
+        if (currentVoice && currentVoice.name.toLowerCase().includes('microsoft') && currentVoice.name.toLowerCase().includes('ravi')) {
+            console.log('⚠️ Microsoft Ravi detected - this voice sounds mechanical');
+            const betterVoices = indianEnglishMaleVoices.filter(voice => 
+                !voice.name.toLowerCase().includes('microsoft') && 
+                !voice.name.toLowerCase().includes('ravi')
+            );
+            if (betterVoices.length > 0) {
+                console.log('💡 Better alternatives available:');
+                betterVoices.slice(0, 3).forEach((voice, index) => {
+                    console.log(`   ${index + 1}. ${voice.name} (${voice.lang})`);
+                });
+            }
+        }
     }
-}, 2000); 
+}, 2000);
+
+// Function to find and test better voices for Roy Sir
+function findBetterRoySirVoice() {
+    console.log('🔍 Finding better voices for Roy Sir...');
+    
+    if (!window.textToSpeech || !window.textToSpeech.voices) {
+        console.log('❌ TTS not initialized');
+        return;
+    }
+    
+    const voices = window.textToSpeech.voices;
+    
+    // Find all Indian English male voices
+    const indianEnglishMaleVoices = voices.filter(voice => 
+        voice.lang.includes('en-IN') && 
+        (voice.name.toLowerCase().includes('male') || 
+         voice.name.toLowerCase().includes('google') ||
+         voice.name.toLowerCase().includes('natural') ||
+         voice.name.toLowerCase().includes('premium'))
+    );
+    
+    console.log('🎯 Available Indian English Male voices:');
+    indianEnglishMaleVoices.forEach((voice, index) => {
+        console.log(`${index + 1}. ${voice.name} (${voice.lang})`);
+    });
+    
+    // Test the first few voices
+    const testVoices = indianEnglishMaleVoices.slice(0, 3);
+    testVoices.forEach((voice, index) => {
+        setTimeout(() => {
+            console.log(`🎤 Testing voice ${index + 1}: ${voice.name}`);
+            const utterance = new SpeechSynthesisUtterance("Hello, I am Roy Sir. How can I help you today?");
+            utterance.voice = voice;
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            speechSynthesis.speak(utterance);
+        }, (index + 1) * 3000); // Test each voice 3 seconds apart
+    });
+    
+    return indianEnglishMaleVoices;
+}
+
+// Make the function globally available
+window.findBetterRoySirVoice = findBetterRoySirVoice; 
 

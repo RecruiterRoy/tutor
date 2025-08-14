@@ -1,75 +1,89 @@
 // Syllabus Search and Integration System
-// This module handles searching through CBSE syllabus PDF files and integrating them with AI responses
+// This module handles searching through CBSE and ICSE syllabus PDF files and integrating them with AI responses
 
 class SyllabusSearch {
     constructor() {
         this.baseUrl = 'https://tution-app.vercel.app'; // Your deployed site URL
+        
+        // Syllabus files organized by board
         this.syllabusFiles = {
-            'class1': {
-                'english': `${this.baseUrl}/CBSE Syllabus/Class 1/CBSE Class 1 English Syllabus 2024-25 - Revised PDF Download.pdf`,
-                'maths': `${this.baseUrl}/CBSE Syllabus/Class 1/CBSE Class 1 Maths Syllabus 2024-25 - Revised PDF Download.pdf`,
-                'hindi': `${this.baseUrl}/CBSE Syllabus/Class 1/CBSE Hindi Syllabus for Class 1 2024-25 - Revised PDF Download.pdf`
+            'CBSE': {
+                'class1': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/Class 1/CBSE Class 1 English Syllabus 2024-25 - Revised PDF Download.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/Class 1/CBSE Class 1 Maths Syllabus 2024-25 - Revised PDF Download.pdf`,
+                    'hindi': `${this.baseUrl}/CBSE Syllabus/Class 1/CBSE Hindi Syllabus for Class 1 2024-25 - Revised PDF Download.pdf`
+                },
+                'class2': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/Class 2/Class 2 Syllabus English 2024-25 - Revised PDF Download.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/Class 2/CBSE Class 2 Maths Syllabus 2024-25 - Revised PDF Download.pdf`,
+                    'hindi': `${this.baseUrl}/CBSE Syllabus/Class 2/CBSE Class 2 Hindi Syllabus 2024-25 - Revised PDF Download.pdf`
+                },
+                'class3': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/Class 3/CBSE Class 3 English Syllabus 2024-25_ Revised PDF Download.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/Class 3/CBSE Class 3 Maths Syllabus 2024-25 - Revised PDF Download.pdf`,
+                    'hindi': `${this.baseUrl}/CBSE Syllabus/Class 3/CBSE Class 3 Hindi Syllabus  - Revised PDF Download.pdf`,
+                    'evs': `${this.baseUrl}/CBSE Syllabus/Class 3/CBSE Syllabus for Class 3 EVS 2024-25.pdf`
+                },
+                'class4': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/Class 4/CBSE Class 4 English Syllabus 2024-25 Revised PDF Download.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/Class 4/CBSE Class 4 Maths Syllabus 2024-25_ Revised PDF Download.pdf`,
+                    'hindi': `${this.baseUrl}/CBSE Syllabus/Class 4/Class 4 Hindi Syllabus 2024-25 Revised PDF Download.pdf`,
+                    'evs': `${this.baseUrl}/CBSE Syllabus/Class 4/CBSE Class 4 EVS Syllabus 2024-25 Revised PDF Download.pdf`
+                },
+                'class5': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/Class 5/CBSE Class 5 English Syllabus 2024-25 - Revised PDF Download.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/Class 5/CBSE Class 5 Maths Syllabus 2024-25 - Revised PDF Download.pdf`,
+                    'evs': `${this.baseUrl}/CBSE Syllabus/Class 5/CBSE Class 5 EVS Syllabus 2024-25 - Revised PDF Download.pdf`
+                },
+                'class9': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/English_Communicative_Sec_2025-26.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Maths_Sec_2025-26.pdf`,
+                    'science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Science_Sec_2025-26.pdf`,
+                    'social_science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Social_Science_Sec_2025-26.pdf`,
+                    'hindi': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Hindi_A_Sec_2025-26.pdf`,
+                    'computer': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Computer_Applications_Sec_2025-26.pdf`
+                },
+                'class10': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/English_Communicative_Sec_2025-26.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Maths_Sec_2025-26.pdf`,
+                    'science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Science_Sec_2025-26.pdf`,
+                    'social_science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Social_Science_Sec_2025-26.pdf`,
+                    'hindi': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Hindi_A_Sec_2025-26.pdf`,
+                    'computer': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Computer_Applications_Sec_2025-26.pdf`
+                },
+                'class11': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/English_core_SrSec_2025-26.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Maths_SrSec_2025-26.pdf`,
+                    'physics': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Physics_SrSec_2025-26.pdf`,
+                    'chemistry': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Chemistry_SrSec_2025-26.pdf`,
+                    'biology': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Biology_SrSec_2025-26.pdf`,
+                    'computer_science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Computer_Science_SrSec_2025-26.pdf`,
+                    'economics': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Economics_SrSec_2025-26.pdf`,
+                    'business_studies': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/BusinessStudies_SrSec_2025-26.pdf`,
+                    'accountancy': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Accountancy_SrSec_2025-26.pdf`
+                },
+                'class12': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/English_core_SrSec_2025-26.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Maths_SrSec_2025-26.pdf`,
+                    'physics': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Physics_SrSec_2025-26.pdf`,
+                    'chemistry': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Chemistry_SrSec_2025-26.pdf`,
+                    'biology': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Biology_SrSec_2025-26.pdf`,
+                    'computer_science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Computer_Science_SrSec_2025-26.pdf`,
+                    'economics': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Economics_SrSec_2025-26.pdf`,
+                    'business_studies': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/BusinessStudies_SrSec_2025-26.pdf`,
+                    'accountancy': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Accountancy_SrSec_2025-26.pdf`
+                }
             },
-            'class2': {
-                'english': `${this.baseUrl}/CBSE Syllabus/Class 2/Class 2 Syllabus English 2024-25 - Revised PDF Download.pdf`,
-                'maths': `${this.baseUrl}/CBSE Syllabus/Class 2/CBSE Class 2 Maths Syllabus 2024-25 - Revised PDF Download.pdf`,
-                'hindi': `${this.baseUrl}/CBSE Syllabus/Class 2/CBSE Class 2 Hindi Syllabus 2024-25 - Revised PDF Download.pdf`
-            },
-            'class3': {
-                'english': `${this.baseUrl}/CBSE Syllabus/Class 3/CBSE Class 3 English Syllabus 2024-25_ Revised PDF Download.pdf`,
-                'maths': `${this.baseUrl}/CBSE Syllabus/Class 3/CBSE Class 3 Maths Syllabus 2024-25 - Revised PDF Download.pdf`,
-                'hindi': `${this.baseUrl}/CBSE Syllabus/Class 3/CBSE Class 3 Hindi Syllabus  - Revised PDF Download.pdf`,
-                'evs': `${this.baseUrl}/CBSE Syllabus/Class 3/CBSE Syllabus for Class 3 EVS 2024-25.pdf`
-            },
-            'class4': {
-                'english': `${this.baseUrl}/CBSE Syllabus/Class 4/CBSE Class 4 English Syllabus 2024-25 Revised PDF Download.pdf`,
-                'maths': `${this.baseUrl}/CBSE Syllabus/Class 4/CBSE Class 4 Maths Syllabus 2024-25_ Revised PDF Download.pdf`,
-                'hindi': `${this.baseUrl}/CBSE Syllabus/Class 4/Class 4 Hindi Syllabus 2024-25 Revised PDF Download.pdf`,
-                'evs': `${this.baseUrl}/CBSE Syllabus/Class 4/CBSE Class 4 EVS Syllabus 2024-25 Revised PDF Download.pdf`
-            },
-            'class5': {
-                'english': `${this.baseUrl}/CBSE Syllabus/Class 5/CBSE Class 5 English Syllabus 2024-25 - Revised PDF Download.pdf`,
-                'maths': `${this.baseUrl}/CBSE Syllabus/Class 5/CBSE Class 5 Maths Syllabus 2024-25 - Revised PDF Download.pdf`,
-                'evs': `${this.baseUrl}/CBSE Syllabus/Class 5/CBSE Class 5 EVS Syllabus 2024-25 - Revised PDF Download.pdf`
-            },
-            'class9': {
-                'english': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/English_Communicative_Sec_2025-26.pdf`,
-                'maths': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Maths_Sec_2025-26.pdf`,
-                'science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Science_Sec_2025-26.pdf`,
-                'social_science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Social_Science_Sec_2025-26.pdf`,
-                'hindi': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Hindi_A_Sec_2025-26.pdf`,
-                'computer': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Computer_Applications_Sec_2025-26.pdf`
-            },
-            'class10': {
-                'english': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/English_Communicative_Sec_2025-26.pdf`,
-                'maths': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Maths_Sec_2025-26.pdf`,
-                'science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Science_Sec_2025-26.pdf`,
-                'social_science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Social_Science_Sec_2025-26.pdf`,
-                'hindi': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Hindi_A_Sec_2025-26.pdf`,
-                'computer': `${this.baseUrl}/CBSE Syllabus/CBSE Class 9 & 10/Computer_Applications_Sec_2025-26.pdf`
-            },
-            'class11': {
-                'english': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/English_core_SrSec_2025-26.pdf`,
-                'maths': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Maths_SrSec_2025-26.pdf`,
-                'physics': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Physics_SrSec_2025-26.pdf`,
-                'chemistry': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Chemistry_SrSec_2025-26.pdf`,
-                'biology': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Biology_SrSec_2025-26.pdf`,
-                'computer_science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Computer_Science_SrSec_2025-26.pdf`,
-                'economics': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Economics_SrSec_2025-26.pdf`,
-                'business_studies': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/BusinessStudies_SrSec_2025-26.pdf`,
-                'accountancy': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Accountancy_SrSec_2025-26.pdf`
-            },
-            'class12': {
-                'english': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/English_core_SrSec_2025-26.pdf`,
-                'maths': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Maths_SrSec_2025-26.pdf`,
-                'physics': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Physics_SrSec_2025-26.pdf`,
-                'chemistry': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Chemistry_SrSec_2025-26.pdf`,
-                'biology': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Biology_SrSec_2025-26.pdf`,
-                'computer_science': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Computer_Science_SrSec_2025-26.pdf`,
-                'economics': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Economics_SrSec_2025-26.pdf`,
-                'business_studies': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/BusinessStudies_SrSec_2025-26.pdf`,
-                'accountancy': `${this.baseUrl}/CBSE Syllabus/CBSE Class 11 & 12/Accountancy_SrSec_2025-26.pdf`
-            }
+            'ICSE': {
+                // ICSE syllabus files will be added here when available
+                // For now, we'll use CBSE as fallback for ICSE students
+                'class1': {
+                    'english': `${this.baseUrl}/CBSE Syllabus/Class 1/CBSE Class 1 English Syllabus 2024-25 - Revised PDF Download.pdf`,
+                    'maths': `${this.baseUrl}/CBSE Syllabus/Class 1/CBSE Class 1 Maths Syllabus 2024-25 - Revised PDF Download.pdf`,
+                    'hindi': `${this.baseUrl}/CBSE Syllabus/Class 1/CBSE Hindi Syllabus for Class 1 2024-25 - Revised PDF Download.pdf`
+                }
+                // Add more ICSE classes as they become available
+                        }
         };
         
         this.cachedSyllabusData = new Map();
@@ -101,16 +115,37 @@ class SyllabusSearch {
         };
     }
 
-    // Get syllabus file path for a given class and subject
-    getSyllabusFilePath(className, subject) {
-        const classKey = className.toLowerCase().replace(' ', '');
-        const subjectKey = subject.toLowerCase().replace(' ', '_');
+    // Get syllabus file path for a given class, subject, and board
+    getSyllabusFilePath(className, subject, board = 'CBSE') {
+        const classKey = `class${className}`;
+        const subjectKey = this.mapSubjectToKey(subject);
+        const boardKey = board.toUpperCase();
         
-        if (this.syllabusFiles[classKey] && this.syllabusFiles[classKey][subjectKey]) {
-            return this.syllabusFiles[classKey][subjectKey];
+        // Try the specified board first
+        if (this.syllabusFiles[boardKey] && 
+            this.syllabusFiles[boardKey][classKey] && 
+            this.syllabusFiles[boardKey][classKey][subjectKey]) {
+            return this.syllabusFiles[boardKey][classKey][subjectKey];
         }
         
-        // Try alternative subject names
+        // Fallback to CBSE if the specified board doesn't have the file
+        if (boardKey !== 'CBSE' && 
+            this.syllabusFiles['CBSE'] && 
+            this.syllabusFiles['CBSE'][classKey] && 
+            this.syllabusFiles['CBSE'][classKey][subjectKey]) {
+            console.log(`Using CBSE syllabus as fallback for ${boardKey} ${className} ${subject}`);
+            return this.syllabusFiles['CBSE'][classKey][subjectKey];
+        }
+        
+        console.warn(`No syllabus file found for ${boardKey} ${className} ${subject}`);
+        return null;
+    }
+
+    // Map subject names to keys
+    mapSubjectToKey(subject) {
+        const subjectKey = subject.toLowerCase().replace(' ', '_');
+        
+        // Subject name mappings
         const subjectMappings = {
             'mathematics': 'maths',
             'math': 'maths',
@@ -123,8 +158,7 @@ class SyllabusSearch {
             'environmental science': 'evs'
         };
         
-        const mappedSubject = subjectMappings[subjectKey] || subjectKey;
-        return this.syllabusFiles[classKey]?.[mappedSubject] || null;
+        return subjectMappings[subjectKey] || subjectKey;
     }
 
     // Extract text from PDF using browser's PDF.js or similar
@@ -188,11 +222,11 @@ class SyllabusSearch {
     }
 
     // Search syllabus for relevant content
-    async searchSyllabus(query, className, subject) {
+    async searchSyllabus(query, className, subject, board = 'CBSE') {
         try {
-            console.log('🔍 Searching syllabus for:', { query, className, subject });
+            console.log('🔍 Searching syllabus for:', { query, className, subject, board });
             
-            const pdfPath = this.getSyllabusFilePath(className, subject);
+            const pdfPath = this.getSyllabusFilePath(className, subject, board);
             if (!pdfPath) {
                 console.warn('⚠️ No syllabus file found for:', { className, subject });
                 return {
@@ -271,8 +305,8 @@ class SyllabusSearch {
     }
 
     // Generate syllabus-aware context for AI
-    generateSyllabusContext(className, subject, query) {
-        const pdfPath = this.getSyllabusFilePath(className, subject);
+    generateSyllabusContext(className, subject, query, board = 'CBSE') {
+        const pdfPath = this.getSyllabusFilePath(className, subject, board);
         const topics = this.getDefaultTopics(pdfPath);
         
         let context = `**CBSE Syllabus Context for ${className} ${subject}:**\n`;
@@ -292,8 +326,8 @@ class SyllabusSearch {
     }
 
     // Get syllabus summary for a class and subject
-    getSyllabusSummary(className, subject) {
-        const topics = this.getDefaultTopics(this.getSyllabusFilePath(className, subject));
+    getSyllabusSummary(className, subject, board = 'CBSE') {
+        const topics = this.getDefaultTopics(this.getSyllabusFilePath(className, subject, board));
         
         return {
             class: className,
@@ -306,7 +340,7 @@ class SyllabusSearch {
     }
 
     // NEW: Create lesson plan based on months remaining for exams
-    createExamPreparationPlan(className, subject, examMonth = 'March', currentMonth = null) {
+    createExamPreparationPlan(className, subject, examMonth = 'March', currentMonth = null, board = 'CBSE') {
         try {
             console.log('📚 Creating exam preparation plan for:', { className, subject, examMonth, currentMonth });
             
@@ -342,7 +376,7 @@ class SyllabusSearch {
             }
             
             // Get syllabus topics
-            const topics = this.getDefaultTopics(this.getSyllabusFilePath(className, subject));
+            const topics = this.getDefaultTopics(this.getSyllabusFilePath(className, subject, board));
             
             // Create monthly breakdown
             const monthlyPlan = [];

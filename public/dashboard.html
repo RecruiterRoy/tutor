@@ -45,6 +45,70 @@
     <!-- Load Tailwind CSS production version -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     
+    <!-- Mobile Performance CSS -->
+    <style>
+        html, body { 
+            overflow-x: hidden !important; 
+            max-width: 100% !important; 
+        }
+        * { 
+            box-sizing: border-box; 
+        }
+
+        /* Mobile chat fix */
+        @media (max-width: 768px) {
+            .mobile-chat-input .flex,
+            .mobile-chat-input .flex-nowrap {
+                display: flex; 
+                flex-wrap: nowrap; 
+                width: 100% !important; 
+                overflow: hidden;
+            }
+            #cameraButtonMobile {
+                flex: 0 0 25% !important;
+                max-width: 25% !important;
+            }
+            #voiceButtonMobile {
+                flex: 0 0 25% !important;
+                max-width: 25% !important;
+            }
+            #sendButtonMobile {
+                flex: 0 0 50% !important;
+                max-width: 50% !important;
+            }
+            #cameraButtonMobile, #voiceButtonMobile, #sendButtonMobile {
+                padding: 0.75rem !important;
+                font-size: clamp(12px, 3vw, 16px) !important;
+            }
+            .mobile-chat-input button {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .chat-container {
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+            }
+        }
+        img, video, canvas {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+        
+        /* Fix logo overflow issues */
+        .h-4, .h-6, .h-8, .h-9 {
+            max-height: 1.5rem !important;
+            width: auto !important;
+        }
+        
+        /* Ensure logos don't overflow on mobile */
+        @media (max-width: 768px) {
+            .h-4, .h-6, .h-8, .h-9 {
+                max-height: 1rem !important;
+            }
+        }
+    </style>
+    
     <!-- Load essential scripts with proper order -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="js/config.js" defer></script>
@@ -74,19 +138,19 @@
         });
     </script>
     
+    <!-- Load services BEFORE dashboard.js for proper initialization -->
+    <script src="js/gptService.js?v=1.0.2" defer></script>
+    <script src="js/enhancedAIService.js?v=1.0.2" defer></script>
     <script src="js/supabaseClient.js?v=1.0.2" defer></script>
     <script src="js/textToSpeech.js?v=1.0.2" defer></script>
     <script src="js/subjectManager.js?v=1.0.2" defer></script>
     <script src="js/dashboard.js?v=1.0.2" defer></script>
     
     <!-- Load other essential scripts -->
-    <script src="js/gptService.js?v=1.0.2" defer></script>
-
     <script src="js/learningProgress.js?v=1.0.2" defer></script>
     <script src="js/classBookManager.js?v=1.0.2" defer></script>
     <script src="js/groupLearning.js?v=1.0.2" defer></script>
     <script src="js/imageSearch.js?v=1.0.2" defer></script>
-    <script src="js/enhancedAIService.js?v=1.0.2" defer></script>
     <script src="js/claudeChat.js?v=1.0.2" defer></script>
     <script src="js/aiHealthCheck.js?v=1.0.2" defer></script>
     <script src="js/syllabusSearch.js?v=1.0.2" defer></script>
@@ -1206,6 +1270,8 @@
     </style>
 </head>
 <body class="min-h-screen overflow-x-hidden">
+
+
     <script>
         // PWA install capture (dashboard)
         let __dashDeferredPrompt = null;
@@ -1242,7 +1308,7 @@
             <div class="flex items-center justify-between p-6 border-b border-gray-700">
                 <div class="flex items-center space-x-3">
                     <img src="images/tution.app_logo.jpg" alt="tution.app Logo" class="h-8 cursor-pointer" id="sidebarLogo">
-                    <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="h-9 cursor-pointer" id="sidebarEmblem">
+                                            <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="h-4 cursor-pointer" id="sidebarEmblem">
                 </div>
                 <button id="closeSidebarBtn" class="text-gray-300 hover:text-white text-2xl transition-colors">×</button>
             </div>
@@ -1303,7 +1369,7 @@
             <div class="flex items-center justify-between p-6 border-b border-white/20">
                 <div class="flex items-center space-x-3">
                                     <img src="images/tution.app_logo.jpg" alt="tution.app Logo" class="h-8 cursor-pointer" id="mainLogo">
-                <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="h-9 cursor-pointer" id="mainEmblem">
+                                        <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="h-4 cursor-pointer" id="mainEmblem">
                 </div>
             </div>
             
@@ -1361,7 +1427,7 @@
                     
                     <!-- Logo (Mobile) -->
                     <div class="lg:hidden flex items-center">
-                        <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="h-8 cursor-pointer hover:opacity-80 transition-opacity" onclick="window.goHome && window.goHome()">
+                        <img src="images/tution.app_emblem.jpg" alt="tution.app Emblem" class="h-4 cursor-pointer hover:opacity-80 transition-opacity" onclick="window.goHome && window.goHome()">
                     </div>
                     
                     <!-- Desktop Header Content -->
@@ -1448,7 +1514,7 @@
                                     <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 mb-3">
                                     
                                     <!-- Camera, Mic, Send Buttons in One Row -->
-                                    <div class="flex space-x-2 flex-nowrap w-full">
+                                    <div class="flex space-x-2 flex-nowrap w-full mobile-chat-input">
                                         <!-- Camera Button (25%) -->
                                         <button id="cameraButtonMobile" class="w-1/4 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0">
                                             📷
@@ -1458,7 +1524,7 @@
                                             <span id="voiceIconMobile">🎤</span>
                                         </button>
                                         <!-- Send Button (50%) -->
-                                        <button id="sendButtonMobile" onclick="sendMessage()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0">
+                                        <button id="sendButtonMobile" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0">
                                             Send
                                         </button>
                                     </div>
@@ -1653,9 +1719,19 @@
                                 </div>
                             </div>
                             
-                            <!-- Voice Settings -->
+                                                        <!-- Voice Settings -->
                             <div class="card-modern">
                                 <h3 class="text-white text-lg font-semibold mb-4">Voice Settings</h3>
+                                
+                                <!-- System Check Button -->
+                                <div class="mb-4">
+                                    <button onclick="ensureButtonFunctionality()" class="btn-modern w-full mb-3">
+                                        <span>🔧</span>
+                                        <span>Check & Fix Buttons</span>
+                                    </button>
+                                    <p class="text-yellow-200 text-xs">Click if buttons aren't working properly</p>
+                                </div>
+                                
                                 <div class="space-y-4">
                                     <label class="flex items-center space-x-3">
                                         <input type="checkbox" id="ttsEnabled" checked class="rounded" onchange="handleTTSToggle()">

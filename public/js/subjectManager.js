@@ -827,8 +827,6 @@ Make it conversational and encouraging, like a real teacher would. Keep it conci
         switch (avatarId) {
             case 'miss-sapna':
                 return 'Miss Sapna';
-            case 'baruah-sir':
-                return 'Baruah Sir';
             case 'roy-sir':
             default:
                 return 'Roy Sir';

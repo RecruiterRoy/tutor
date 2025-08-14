@@ -15,6 +15,9 @@ window.isRecording = false;
 window.currentUser = null;
 window.selectedAvatar = 'miss-sapna'; // Default to Miss Sapna
 window.userData = null;
+
+// Enhanced AI Service instance
+window.enhancedAI = null;
 // PWA install prompt placeholder
 window.deferredPrompt = null;
 // Do not override the TTS instance created by textToSpeech.js
@@ -1226,25 +1229,7 @@ function getCurrentAvatarName() {
     return 'Miss Sapna'; // Default to Miss Sapna
 }
 
-// Function to get current avatar ID dynamically
-function getCurrentAvatarId() {
-    console.log('🔧 getCurrentAvatarId called');
-    console.log('🔧 window.userData:', window.userData);
-    console.log('🔧 window.userData?.ai_avatar:', window.userData?.ai_avatar);
-    
-    if (window.userData && window.userData.ai_avatar) {
-        console.log('✅ Returning avatar ID:', window.userData.ai_avatar);
-        return window.userData.ai_avatar;
-    }
-    // Fallback to localStorage for small devices/APK if profile not yet loaded
-    const stored = localStorage.getItem('ai_avatar');
-    if (stored) {
-        console.log('✅ Returning avatar ID from localStorage:', stored);
-        return stored;
-    }
-    console.log('✅ Using default avatar ID: miss-sapna');
-    return 'miss-sapna'; // Default to Miss Sapna
-}
+// Function to get current avatar ID dynamically - REMOVED DUPLICATE (using the one below)
 
 // Function to get avatar gender
 function getCurrentAvatarGender() {
@@ -1396,6 +1381,9 @@ let preWarmedRecognition = null;
 let voicesLoaded = false;
 let lastResponseDate = null; // Track the date of last AI response
 
+// Chat history management
+let chatHistoryLoaded = false;
+
 // Performance optimization: Add caching
 let userDataCache = null;
 let cacheTimestamp = null;
@@ -1406,13 +1394,26 @@ window.currentUser = currentUser;
 window.isRecording = isRecording;
 window.selectedAvatar = selectedAvatar;
 
+// Single source of truth for avatar management
+function getCurrentAvatarId() {
+    return window.userData?.ai_avatar || window.selectedAvatar || 'miss-sapna';
+}
+
+function getCurrentAvatarName() {
+    const avatarId = getCurrentAvatarId();
+    switch (avatarId) {
+        case 'miss-sapna': return 'Miss Sapna';
+        case 'roy-sir': return 'Roy Sir';
+        default: return 'Roy Sir';
+    }
+}
+
 // Functions are already defined above
 
 // Indian Regional Avatars
 const regionalAvatars = [
     { id: 'roy-sir', name: 'Roy Sir', region: 'English', gender: 'male', image: '👨‍🏫', language: 'english' },
-    { id: 'miss-sapna', name: 'Miss Sapna', region: 'Hindi/Hinglish', gender: 'female', image: '👩‍🏫', language: 'hindi' },
-    { id: 'baruah-sir', name: 'Baruah Sir', region: 'Assamese', gender: 'male', image: '👨‍🏫', language: 'assamese' }
+    { id: 'miss-sapna', name: 'Miss Sapna', region: 'Hindi/Hinglish', gender: 'female', image: '👩‍🏫', language: 'hindi' }
 ];
 
 // Mobile detection and optimization
@@ -1897,6 +1898,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Initialize avatar selection system
         initializeAvatarSelection();
         
+        // Initialize Enhanced AI Service
+        await initializeEnhancedAIService();
+        
         // Initialize Mermaid
         mermaid.initialize({
             startOnLoad: false,
@@ -1914,7 +1918,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            initSpeechRecognition();
+            // initSpeechRecognition(); // DISABLED - Using new micSystem instead
             
             // Setup long press for mobile
             if (window.isMobile || window.isAPK) {
@@ -1949,7 +1953,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
         // currentUser is already set from authentication
         await loadUserData();
-        setupEventListeners();
+        // Event listeners will be set up in loadUserData() - no duplicate calls
         populateAvatarGrid();
         initializeVoiceFeatures();
         populateVoices();
@@ -1974,7 +1978,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             setupSmallTTSControls();
         }, 1000);
         
-        initSpeechRecognition();
+        // initSpeechRecognition(); // DISABLED - Using new micSystem instead
         
         // Show welcome message only once
         if (!window.welcomeMessageShown) {
@@ -2136,7 +2140,7 @@ async function initializeDashboard() {
     }
 
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        initSpeechRecognition();
+        // initSpeechRecognition(); // DISABLED - Using new micSystem instead
         
         // Setup long press for mobile
         if (window.isMobile || window.isAPK) {
@@ -2219,7 +2223,10 @@ async function initializeDashboard() {
         }
     }
     
+    // Set up event listeners
     setupEventListeners();
+    
+    // Initialize other components
     populateAvatarGrid();
     initializeVoiceFeatures();
     populateVoices();
@@ -2246,6 +2253,12 @@ async function initializeDashboard() {
     } else {
         console.warn('⚠️ Subject manager not available');
     }
+    
+    // Initialize Enhanced AI Service
+    await initializeEnhancedAIService();
+    
+    // Load chat history from Supabase
+    await loadChatHistoryFromSupabase();
         
     // Load voice settings and setup TTS controls immediately
     loadVoiceSettings();
@@ -2457,7 +2470,7 @@ async function loadUserData() {
     }
     
     // Update avatar display
-            updateAvatarDisplay();
+    updateAvatarDisplay();
             
     // Update TTS voice to match current avatar
     if (window.textToSpeech) {
@@ -2474,6 +2487,12 @@ async function loadUserData() {
     
     // Set current user profile for voice message
     window.currentUserProfile = profile;
+    
+    // Load chat history from Supabase
+    await loadChatHistoryFromSupabase();
+    
+    // Initialize Enhanced AI Service
+    await initializeEnhancedAIService();
     
     // Read welcome message at login
     setTimeout(() => {
@@ -2540,6 +2559,16 @@ function showWelcomeMessage() {
     // Mark as shown to prevent duplication
     window.welcomeMessageShown = true;
     console.log('✅ Welcome message flag set');
+    
+    // Speak the welcome message with TTS
+    setTimeout(() => {
+        if (window.textToSpeech && typeof window.textToSpeech.speak === 'function') {
+            console.log('🔧 Speaking welcome message');
+            window.textToSpeech.speak(welcomeText, { role: 'ai' });
+        } else {
+            console.log('🔧 TTS not ready for welcome message');
+        }
+    }, 1000);
 }
 
 async function loadBooks() {
@@ -2605,6 +2634,12 @@ function openBook(bookId, bookName) {
 }
 
 function setupEventListeners() {
+    // Prevent duplicate initialization
+    if (window.eventListenersSetup) {
+        console.log('🔧 Event listeners already set up, skipping...');
+        return;
+    }
+    
     console.log('🔧 Setting up event listeners...');
     
     // Debug: Check if functions are available
@@ -2638,7 +2673,7 @@ function setupEventListeners() {
     const chatInput = document.getElementById('chatInput');
     if (chatInput) {
         chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 console.log('🔧 Enter pressed, calling sendMessage');
                 sendMessage();
@@ -2894,6 +2929,9 @@ function setupEventListeners() {
     });
     
     console.log('✅ Event listeners setup complete');
+    
+    // Mark as initialized to prevent duplicates
+    window.eventListenersSetup = true;
 }
 
 function populateAvatarGrid() {
@@ -2918,12 +2956,14 @@ function populateAvatarGrid() {
 }
 
 async function selectAvatar(avatarId, event) {
+    // Update all avatar variables consistently
     selectedAvatar = avatarId;
-    window.selectedAvatar = avatarId; // Set global variable
-    try { localStorage.setItem('ai_avatar', avatarId); } catch (_) {}
+    window.selectedAvatar = avatarId;
     if (window.userData) {
         window.userData.ai_avatar = avatarId;
     }
+    
+    try { localStorage.setItem('ai_avatar', avatarId); } catch (_) {}
     
     // Update visual selection
     document.querySelectorAll('.avatar-option').forEach(option => {
@@ -2952,12 +2992,19 @@ async function selectAvatar(avatarId, event) {
         try {
             await window.supabaseClient.from('user_profiles').upsert({ 
                 id: currentUser.id, 
-                ai_avatar: selectedAvatar 
+                ai_avatar: avatarId,
+                updated_at: new Date().toISOString()
             });
-            console.log('Avatar preference saved:', selectedAvatar);
+            console.log('✅ Avatar preference saved to Supabase:', avatarId);
         } catch (error) {
-            console.error('Error saving avatar preference:', error);
+            console.error('❌ Error saving avatar preference:', error);
         }
+    }
+
+    // Update GPTService with new avatar
+    if (window.gptService) {
+        window.gptService.setTeacher(getCurrentAvatarName());
+        console.log('✅ GPTService updated with new teacher:', getCurrentAvatarName());
     }
 
     // Refresh TTS voice and UI to reflect avatar
@@ -2966,12 +3013,58 @@ async function selectAvatar(avatarId, event) {
             window.textToSpeech.forceVoiceUpdate();
         }
     } catch (_) {}
-    try { if (typeof updateAvatarDisplay === 'function') updateAvatarDisplay(); } catch (_) {}
+    
+    // Update STT language based on avatar
+    if (micSystem && micSystem.recognition) {
+        if (avatarId === 'miss-sapna') {
+            micSystem.recognition.lang = 'hi-IN,en-IN'; // Prioritize Hindi for Miss Sapna
+            console.log('🔤 STT language updated to Hindi priority for Miss Sapna');
+        } else {
+            micSystem.recognition.lang = 'en-IN,hi-IN'; // Prioritize English for Roy Sir
+            console.log('🔤 STT language updated to English priority for Roy Sir');
+        }
+        
+        // Reinitialize mic system to ensure language settings take effect
+        try {
+            micSystem.init();
+            console.log('🔤 Mic system reinitialized with new language settings');
+        } catch (error) {
+            console.warn('⚠️ Could not reinitialize mic system:', error);
+        }
+    }
+    
+    // Force update avatar display immediately
+    updateAvatarDisplay();
+    
+    console.log('✅ Avatar changed to:', avatarId, 'Teacher:', getCurrentAvatarName());
 }
 
 async function updateContext() {
     currentGrade = document.getElementById('gradeSelect').value;
     currentSubject = document.getElementById('subjectSelect').value;
+    
+    // Update global variables
+    window.currentGrade = currentGrade;
+    window.currentSubject = currentSubject;
+    
+    // Update GPTService context
+    if (window.gptService) {
+        window.gptService.setContext(currentGrade, currentSubject);
+        console.log('✅ GPTService context updated:', currentGrade, currentSubject);
+    }
+    
+    // Update Enhanced AI Service context
+    if (window.enhancedAI) {
+        try {
+            await window.enhancedAI.initialize(currentGrade, currentSubject);
+            console.log('✅ Enhanced AI Service context updated:', currentGrade, currentSubject);
+        } catch (error) {
+            console.error('❌ Error updating Enhanced AI Service context:', error);
+        }
+    }
+    
+            // Load subject-specific chat history - DISABLED to prevent duplicates
+        // await loadSubjectChatToUI(currentSubject, []);
     
     // Update user preferences
     if (currentUser) {
@@ -2987,6 +3080,8 @@ async function updateContext() {
             preference_value: currentSubject
         });
     }
+    
+    console.log('✅ Context updated - Grade:', currentGrade, 'Subject:', currentSubject);
 }
 
 async function sendMessage() {
@@ -2995,7 +3090,14 @@ async function sendMessage() {
         return;
     }
     
+    // Additional protection against duplicate calls
+    if (window.lastMessageTime && (Date.now() - window.lastMessageTime) < 1000) {
+        console.log('🔧 sendMessage called too quickly, ignoring duplicate call');
+        return;
+    }
+    
     window.isSendingMessage = true;
+    window.lastMessageTime = Date.now();
     console.log('🔧 sendMessage function called - SINGLE CALL');
     
     try {
@@ -3029,8 +3131,8 @@ async function sendMessage() {
         // Clear the input field
         activeInput.value = '';
         
-        // Add user message to chat
-        await addMessage('user', message);
+        // Add user message to chat using enhanced function
+        appendUserMessage(message);
         
         // Show typing indicator
         showTypingIndicator();
@@ -3041,17 +3143,23 @@ async function sendMessage() {
         // Add user profile to context
         context.userProfile = window.userData;
         
-        // Set up GPTService context
+        // Set up GPTService context with proper avatar
         if (window.gptService) {
+            const currentAvatarId = getCurrentAvatarId();
+            const currentSubject = window.currentSubject || 'General';
+            
             window.gptService.setContext(
                 window.userData?.class?.replace('Class ', '') || '5',
-                'General'
+                currentSubject
             );
             window.gptService.setTeacher(getCurrentAvatarName());
         }
         
         console.log('🔧 Using GPTService to send message');
+        console.log('🔧 Current avatar:', getCurrentAvatarId());
+        console.log('🔧 Current teacher:', getCurrentAvatarName());
         console.log('🔧 User profile being sent:', context.userProfile);
+        console.log('🔧 Avatar check - Roy Sir should speak English, Miss Sapna should speak Hindi');
         
         // Use GPTService instead of direct API call
         let aiResponse;
@@ -3068,7 +3176,10 @@ async function sendMessage() {
         
         // Add AI response to chat
         if (aiResponse) {
-            await addMessage('assistant', aiResponse);
+            appendAssistantMessage(aiResponse);
+            
+            // Save chat messages to Supabase for cross-device sync
+            await saveChatMessageToSupabase(message, aiResponse, window.currentSubject || 'General');
             
             // Speak the response if TTS is enabled
             if (window.ttsEnabled && !micSystem.isRecording) {
@@ -3086,8 +3197,8 @@ async function sendMessage() {
             }
         }
         
-        // Save study session
-        await saveStudySession(message, aiResponse || 'No response received');
+        // Save study session - DISABLED due to API errors
+        // await saveStudySession(message, aiResponse || 'No response received');
         
     } catch (error) {
         console.error('❌ Error in sendMessage:', error);
@@ -3157,7 +3268,7 @@ function initializeVoiceFeatures() {
     }
 
     // Initialize speech recognition
-    initSpeechRecognition();
+    // initSpeechRecognition(); // DISABLED - Using new micSystem instead
     
     // Load saved settings
     loadVoiceSettings();
@@ -3310,37 +3421,16 @@ function setupVoiceSettingsListeners() {
         console.log('✅ Mobile voice button listener added (consolidated)');
     }
     
-    const sendButtonMobile = document.getElementById('sendButtonMobile');
-    if (sendButtonMobile) {
-        // Remove ALL existing listeners by cloning
-        const newSendButtonMobile = sendButtonMobile.cloneNode(true);
-        sendButtonMobile.parentNode.replaceChild(newSendButtonMobile, sendButtonMobile);
-        
-        // Add single event listener
-        newSendButtonMobile.addEventListener('click', () => {
-            console.log('🔧 Mobile send button clicked, calling sendMessage');
-            sendMessage();
-        });
-        console.log('✅ Mobile send button listener added (cleaned)');
-    } else {
-        console.log('❌ Mobile send button not found');
-    }
-    
-    const chatInputMobile = document.getElementById('chatInputMobile');
-    if (chatInputMobile) {
-        chatInputMobile.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-        console.log('✅ Mobile chat input listener added');
-    }
+    // Send button and chat input listeners are handled in setupEventListeners() to prevent duplicates
+    console.log('✅ Voice settings listeners set up - send button listeners handled separately');
 }
 
 // Global variables for voice recognition
 // Note: isRecording is already declared at the top of the file
 
 function initSpeechRecognition() {
+    console.log('🎤 OLD SPEECH RECOGNITION DISABLED - Using new micSystem instead');
+    return; // DISABLED - Using new micSystem
     try {
         console.log('🔧 Initializing speech recognition...');
         const voiceButton = document.getElementById('voiceButton');
@@ -3500,6 +3590,8 @@ function initSpeechRecognition() {
 }
 
 function stopRecording() {
+    console.log('🎤 OLD stopRecording DISABLED - Using new micSystem instead');
+    return; // DISABLED - Using new micSystem
     isRecording = false;
     const voiceButton = document.getElementById('voiceButton');
     const voiceIcon = document.getElementById('voiceIcon');
@@ -3512,6 +3604,8 @@ function stopRecording() {
 }
 
 async function toggleVoiceRecording() {
+    console.log('🎤 OLD toggleVoiceRecording DISABLED - Using new micSystem instead');
+    return; // DISABLED - Using new micSystem
     console.log('🎤 toggleVoiceRecording called - using micSystem');
     
     // Use the new micSystem instead of old functions
@@ -4050,7 +4144,7 @@ function updateAvatarDisplay() {
     if (currentAvatarId === 'miss-sapna') {
         avatarIcon = '👩‍🏫';
     } else {
-        avatarIcon = '👨‍🏫';
+        avatarIcon = '👨‍🏫'; // Roy Sir
     }
 
     avatarDisplay.innerHTML = `
@@ -4082,7 +4176,7 @@ function updateAvatarDisplay() {
         welcomeTeacherName.textContent = avatarName;
     }
 
-    console.log('✅ Avatar display updated:', avatarName);
+    console.log('✅ Avatar display updated:', avatarName, 'ID:', currentAvatarId);
 }
 
 // Setup avatar selection
@@ -4093,21 +4187,21 @@ function setupAvatarSelection() {
             avatarCards.forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
             
-            // Determine which avatar was selected based on the image alt text
-            const img = card.querySelector('img');
-            if (img && img.alt === 'Miss Sapna') {
-                selectedAvatar = 'miss-sapna';
-                window.selectedAvatar = 'miss-sapna';
-            } else if (img && img.alt === 'Baruah Sir') {
-                selectedAvatar = 'baruah-sir';
-                window.selectedAvatar = 'baruah-sir';
-            } else if (img && img.alt === 'Roy Sir') {
-                selectedAvatar = 'roy-sir';
-                window.selectedAvatar = 'roy-sir';
-            }
+                    // Determine which avatar was selected based on the image alt text
+        const img = card.querySelector('img');
+        let avatarId;
+        if (img && img.alt === 'Miss Sapna') {
+            avatarId = 'miss-sapna';
+        } else if (img && img.alt === 'Roy Sir') {
+            avatarId = 'roy-sir';
+        }
             
-            updateAvatarDisplay();
-            saveAvatarPreference();
+            // Use the consolidated avatar selection function
+            if (avatarId) {
+                selectAvatar(avatarId);
+                updateAvatarDisplay();
+                saveAvatarPreference();
+            }
         });
     });
     updateAvatarDisplay();
@@ -4164,97 +4258,7 @@ async function saveAvatarPreference() {
     }
 }
 
-// Chat
-async function sendChatMessage() {
-    const chatInput = document.getElementById('chatInput');
-    const chatMessages = document.getElementById('chatMessages');
-    const message = chatInput.value.trim();
-    if (!message) return;
-    clearDashboardError();
-    await addMessage('user', message);
-    chatInput.value = '';
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    showTypingIndicator();
-    // Check if user is asking for a diagram or image
-    const diagramKeywords = ['diagram', 'image', 'picture', 'flowchart', 'figure', 'graph', 'chart'];
-    const isDiagramRequest = diagramKeywords.some(word => message.toLowerCase().includes(word));
-    if (isDiagramRequest) {
-        // Try to find a relevant book image first
-        try {
-            const imgRes = await fetch(`${window.TUTOR_CONFIG?.apiBaseUrl || ''}/api/book-images?keyword=${encodeURIComponent(message)}`);
-            const imgData = await imgRes.json();
-            if (imgData.images && imgData.images.length > 0) {
-                removeTypingIndicator();
-                const img = imgData.images[0];
-                await addMessage('ai', `<img src='${img.imgPath.replace(/\\/g, '/')}' alt='Book Diagram' class='max-w-full max-h-80 rounded shadow mb-2'><div class='text-xs text-gray-300'>From book: <b>${img.file}</b>, page ${img.page}</div>`);
-                return;
-            }
-        } catch (e) {
-            // If image search fails, fallback to GPT
-        }
-    }
-    // Get AI response as before
-    try {
-        // Get the current avatar from user profile or global variable
-        const currentAvatar = userProfile?.ai_avatar || getCurrentAvatarId();
-        
-        // Get recent chat history for context
-        let chatHistory = [];
-        if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
-            const subjectHistory = window.subjectManager.subjectChatHistory[window.subjectManager.getCurrentSubject()] || [];
-            chatHistory = subjectHistory.slice(-10); // Last 10 messages for context
-        }
-    
-        // Send to AI backend with complete user profile and chat history
-        const apiBase = (window.location.protocol === 'file:') ? 'https://tution.app' : '';
-        const response = await fetch(apiBase + '/api/enhanced-chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                message: text,
-                grade: userClass.replace(/[^0-9]/g, ''), // Extract number from class
-                subject: userSubject,
-                userProfile: userProfile,
-                avatar: getCurrentAvatarId(), // Send avatar ID instead of teacher name
-                teacher: getCurrentAvatarName(), // Keep teacher name for compatibility
-                userGender: userGender,
-                avatarGender: avatarGender,
-                isFirstResponseOfDay: isFirstResponseOfDay,
-                chatHistory: chatHistory,
-                teacherPersonality: getTeacherPersonality(),
-                shortWelcomeMessage: getShortWelcomeMessage()
-            })
-        });
-        
-        console.log('🔧 Response received:', response.status);
-        const data = await response.json();
-        removeTypingIndicator();
-        
-        if (data.success && data.response) {
-            console.log('✅ AI response received');
-        await addMessage('ai', data.response);
-            
-            // Save message to subject history if subject manager is active
-            if (window.subjectManager && window.subjectManager.getCurrentSubject()) {
-                await window.subjectManager.saveChatMessage(
-                    window.subjectManager.getCurrentSubject(),
-                    text,
-                    data.response
-                );
-            }
-            
-            // Update the last response date after successful response
-            lastResponseDate = today;
-        } else {
-            console.error('❌ AI response error:', data);
-            await addMessage('ai', 'Sorry, I could not get a response from the AI.');
-        }
-    } catch (err) {
-        console.error('❌ Send message error:', err);
-        removeTypingIndicator();
-        await addMessage('ai', 'Error connecting to AI server.');
-    }
-}
+// Chat - REMOVED DUPLICATE FUNCTION (using sendMessage instead)
 
 function handleQuickAction(event) {
     const button = event.currentTarget;
@@ -4262,7 +4266,7 @@ function handleQuickAction(event) {
     const chatInput = document.getElementById('chatInput');
     if (chatInput) {
         chatInput.value = text;
-        sendChatMessage();
+        sendMessage(); // Use the main sendMessage function instead of sendChatMessage
     }
 }
 
@@ -4568,16 +4572,17 @@ window.handleAvatarSelection = function(language) {
     assameseCard?.classList.remove('selected');
     
     // Add selected class to chosen language
+    let avatarId;
     if (language === 'english') {
         englishCard?.classList.add('selected');
-        selectedAvatar = 'roy-sir';
+        avatarId = 'roy-sir';
     } else if (language === 'hindi') {
         hindiCard?.classList.add('selected');
-        selectedAvatar = 'miss-sapna';
-    } else if (language === 'assamese') {
-        assameseCard?.classList.add('selected');
-        selectedAvatar = 'baruah-sir';
+        avatarId = 'miss-sapna';
     }
+    
+    // Use the consolidated avatar selection function
+    selectAvatar(avatarId);
     
     // Update avatar display
     updateAvatarDisplay();
@@ -4824,8 +4829,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         try {
             console.log('🔄 Attempting fallback initialization...');
             
-            // Set up basic event listeners
-            setupEventListeners();
+            // Event listeners already set up - no duplicate calls
             
             // Show basic welcome message only once
             if (!window.welcomeMessageShown) {
@@ -4836,7 +4840,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             try {
                 initializeVoiceFeatures();
                 populateVoices();
-                initSpeechRecognition();
+                // initSpeechRecognition(); // DISABLED - Using new micSystem instead
             } catch (voiceError) {
                 console.warn('⚠️ Voice features failed to initialize:', voiceError);
             }
@@ -4912,9 +4916,70 @@ window.testSubjectManager = function() {
     showSuccess('Subject manager test completed! Check console for details.');
 };
 
+// Security and reliability functions
+window.ensureButtonFunctionality = function() {
+    console.log('🔧 Ensuring button functionality...');
+    
+    // Check and reinitialize critical systems
+    const checks = {
+        tts: !!window.textToSpeech,
+        mic: !!micSystem,
+        supabase: !!window.supabase,
+        gptService: !!window.gptService,
+        enhancedAI: !!window.enhancedAI
+    };
+    
+    console.log('🔧 System checks:', checks);
+    
+    // Reinitialize TTS if needed
+    if (!checks.tts && typeof TextToSpeech !== 'undefined') {
+        console.log('🔧 Reinitializing TTS...');
+        window.textToSpeech = new TextToSpeech();
+    }
+    
+    // Reinitialize mic system if needed
+    if (!checks.mic) {
+        console.log('🔧 Reinitializing mic system...');
+        micSystem.init();
+    }
+    
+    // Rebind event listeners
+    setupEventListeners();
+    
+    showSuccess('Button functionality check completed!');
+};
+
+// Auto-recovery system
+setInterval(() => {
+    // Check if critical systems are working
+    if (!window.textToSpeech && typeof TextToSpeech !== 'undefined') {
+        console.log('🔧 Auto-recovery: Reinitializing TTS');
+        window.textToSpeech = new TextToSpeech();
+    }
+    
+    if (!micSystem.recognition && micSystem.init) {
+        console.log('🔧 Auto-recovery: Reinitializing mic system');
+        micSystem.init();
+    }
+}, 30000); // Check every 30 seconds
+
+// Debug function to check avatar selection
+window.debugAvatarSelection = function() {
+    console.log('🔧 Avatar Selection Debug:');
+    console.log('  - getCurrentAvatarId():', getCurrentAvatarId());
+    console.log('  - getCurrentAvatarName():', getCurrentAvatarName());
+    console.log('  - window.selectedAvatar:', window.selectedAvatar);
+    console.log('  - window.userData?.ai_avatar:', window.userData?.ai_avatar);
+    console.log('  - Expected behavior:');
+    console.log('    * Roy Sir should speak English only');
+    console.log('    * Miss Sapna should speak Hindi/Hinglish');
+};
+
+
+
 console.log('✅ All functions assigned to window object');
 
-async function addMessage(role, content) {
+async function addMessage(role, content, saveToDB = true) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     // Restore legacy classes so messages stack vertically
@@ -5000,24 +5065,7 @@ function closeAvatarSelectionModal() {
     }
 }
 
-// Select avatar option
-function selectAvatarOption(avatarId, avatarName, event) {
-    console.log('🔧 Selecting avatar:', avatarId, avatarName);
-    
-    // Remove previous selection
-    document.querySelectorAll('.avatar-option').forEach(option => {
-        option.classList.remove('ring-4', 'ring-yellow-400');
-    });
-    
-    // Highlight selected option
-    if (event && event.currentTarget) {
-        const selectedOption = event.currentTarget;
-        selectedOption.classList.add('ring-4', 'ring-yellow-400');
-    }
-    
-    selectedAvatarOption = avatarId;
-    console.log('✅ Avatar selected:', selectedAvatarOption);
-}
+
 
 // Save avatar selection
 async function saveAvatarSelection() {
@@ -5051,12 +5099,16 @@ async function saveAvatarSelection() {
             console.log('🔧 Updating local userData.ai_avatar from:', window.userData.ai_avatar, 'to:', selectedAvatarOption);
             window.userData.ai_avatar = selectedAvatarOption;
         }
-        // Persist locally for small devices/APK
-        try { localStorage.setItem('ai_avatar', selectedAvatarOption); } catch(_) {}
         
         // Update global selected avatar
         console.log('🔧 Updating window.selectedAvatar from:', window.selectedAvatar, 'to:', selectedAvatarOption);
         window.selectedAvatar = selectedAvatarOption;
+        
+        // Update local selectedAvatar variable
+        selectedAvatar = selectedAvatarOption;
+        
+        // Persist locally for small devices/APK
+        try { localStorage.setItem('ai_avatar', selectedAvatarOption); } catch(_) {}
         
         console.log('✅ Avatar saved successfully:', selectedAvatarOption);
         console.log('🔧 Current window.userData.ai_avatar:', window.userData?.ai_avatar);
@@ -5066,6 +5118,12 @@ async function saveAvatarSelection() {
         // Reload user data to ensure AI gets the updated avatar
         console.log('🔧 Reloading user data...');
         await reloadUserData();
+        
+        // Update GPTService with new avatar
+        if (window.gptService) {
+            window.gptService.setTeacher(getCurrentAvatarName());
+            console.log('✅ GPTService updated with new teacher:', getCurrentAvatarName());
+        }
         
         // Update TTS voice to match new avatar
         console.log('🔧 Updating TTS voice...');
@@ -5156,7 +5214,7 @@ function initializeUI() {
   }, 1000);
   
   // Initialize speech recognition
-  initSpeechRecognition();
+          // initSpeechRecognition(); // DISABLED - Using new micSystem instead
   
   // Show welcome message only once
   if (!window.welcomeMessageShown) {
@@ -5422,14 +5480,360 @@ function getCurrentUserGender() {
     return 'male'; // Default fallback
 }
 
+// Load chat history from Supabase
+async function loadChatHistoryFromSupabase() {
+    if (!window.currentUser || chatHistoryLoaded) return;
+    
+    try {
+        console.log('📚 Loading chat history from Supabase...');
+        
+        const { data, error } = await window.supabaseClient
+            .from('subject_chat_history')
+            .select('*')
+            .eq('user_id', window.currentUser.id)
+            .order('created_at', { ascending: true });
+        
+        if (error) {
+            console.error('❌ Error loading chat history:', error);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            console.log(`✅ Loaded ${data.length} chat messages from Supabase`);
+            
+            // Organize chat history by subject
+            const organizedHistory = {};
+            data.forEach(message => {
+                const subject = message.subject || 'General';
+                if (!organizedHistory[subject]) {
+                    organizedHistory[subject] = [];
+                }
+                organizedHistory[subject].push(message);
+            });
+            
+            // Update subject manager with loaded history
+            if (window.subjectManager) {
+                window.subjectManager.subjectChatHistory = organizedHistory;
+                console.log('✅ Chat history loaded into subject manager');
+            }
+            
+            // Load current subject chat into UI if available - DISABLED to prevent duplicate messages
+            // const currentSubject = window.currentSubject || 'General';
+            // if (organizedHistory[currentSubject]) {
+            //     await loadSubjectChatToUI(currentSubject, organizedHistory[currentSubject]);
+            // }
+        }
+        
+        chatHistoryLoaded = true;
+        
+    } catch (error) {
+        console.error('❌ Error in loadChatHistoryFromSupabase:', error);
+    }
+}
+
+// Load subject chat to UI
+async function loadSubjectChatToUI(subject, messages) {
+    try {
+        const chatMessages = document.getElementById('chatMessages');
+        if (!chatMessages) return;
+        
+        // Clear existing messages
+        chatMessages.innerHTML = '';
+        
+        // Add messages to UI
+        for (const message of messages) {
+            await addMessage(message.role, message.content, false); // false = don't save to DB
+        }
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        console.log(`✅ Loaded ${messages.length} messages for ${subject} to UI`);
+        
+    } catch (error) {
+        console.error('❌ Error loading subject chat to UI:', error);
+    }
+}
+
+// Initialize Enhanced AI Service
+async function initializeEnhancedAIService() {
+    try {
+        if (typeof EnhancedAIService !== 'undefined' && !window.enhancedAI) {
+            console.log('🔧 Initializing Enhanced AI Service...');
+            
+            window.enhancedAI = new EnhancedAIService();
+            
+            // Add error handling for initialization
+            try {
+                await window.enhancedAI.initialize(
+                    window.userData?.class?.replace('Class ', '') || '5',
+                    'General'
+                );
+                
+                // Set up event hooks
+                window.enhancedAI.onLessonPlanCreated = (lessonPlan) => {
+                    console.log('📚 Lesson plan created:', lessonPlan);
+                    showSuccess('Your personalized lesson plan has been created!');
+                };
+                
+                window.enhancedAI.onWeeklyReminderShown = (revision) => {
+                    console.log('📅 Weekly reminder shown:', revision);
+                };
+                
+                window.enhancedAI.onMonthlyTestReminderShown = (test) => {
+                    console.log('📝 Monthly test reminder shown:', test);
+                };
+                
+                // Show proactive reminders with error handling
+                setTimeout(() => {
+                    try {
+                        window.enhancedAI.showProactiveReminders();
+                    } catch (reminderError) {
+                        console.warn('⚠️ Error showing proactive reminders:', reminderError);
+                    }
+                }, 2000);
+                
+                console.log('✅ Enhanced AI Service initialized');
+            } catch (initError) {
+                console.warn('⚠️ Enhanced AI Service initialization failed, continuing without it:', initError);
+                // Don't throw error, just log warning and continue
+            }
+        }
+    } catch (error) {
+        console.warn('⚠️ Error initializing Enhanced AI Service:', error);
+        // Don't throw error, just log warning and continue
+    }
+}
+
+// Save chat message to Supabase with cross-device sync
+async function saveChatMessageToSupabase(message, response, subject = 'General') {
+    if (!window.currentUser) return;
+    
+    try {
+        const chatData = {
+            user_id: window.currentUser.id,
+            subject: subject,
+            role: 'user',
+            content: message,
+            created_at: new Date().toISOString()
+        };
+        
+        const aiData = {
+            user_id: window.currentUser.id,
+            subject: subject,
+            role: 'ai',
+            content: response,
+            created_at: new Date().toISOString()
+        };
+        
+        // Save both messages
+        const { error: userError } = await window.supabaseClient
+            .from('subject_chat_history')
+            .insert(chatData);
+            
+        const { error: aiError } = await window.supabaseClient
+            .from('subject_chat_history')
+            .insert(aiData);
+        
+        if (userError || aiError) {
+            console.error('❌ Error saving chat to Supabase:', userError || aiError);
+        } else {
+            console.log('✅ Chat messages saved to Supabase for cross-device sync');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error in saveChatMessageToSupabase:', error);
+    }
+}
+
 // Global flag to prevent repeated welcome messages
 window.welcomeMessageShown = false;
+
+// Make the new functions globally accessible
+window.getCurrentAvatarId = getCurrentAvatarId;
+window.getCurrentAvatarName = getCurrentAvatarName;
+window.loadChatHistoryFromSupabase = loadChatHistoryFromSupabase;
+window.initializeEnhancedAIService = initializeEnhancedAIService;
+window.saveChatMessageToSupabase = saveChatMessageToSupabase;
+
+// Enhanced message handling functions
+function appendUserMessage(message) {
+  const container = document.getElementById('chatMessages');
+  if (!container) return;
+  
+  const msgEl = document.createElement('div');
+  msgEl.className = 'message message-user';
+  msgEl.innerHTML = `<div class="message-bubble">${DOMPurify ? DOMPurify.sanitize(message) : message}</div>`;
+  container.appendChild(msgEl);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendAssistantMessage(message) {
+  const container = document.getElementById('chatMessages');
+  if (!container) return;
+  
+  const msgEl = document.createElement('div');
+  msgEl.className = 'message message-ai';
+  
+  // Use Markdown parser + sanitizer for better formatting but safe HTML
+  let safeHTML = message;
+  if (typeof marked !== 'undefined') {
+    safeHTML = marked.parse(message);
+  }
+  if (typeof DOMPurify !== 'undefined') {
+    safeHTML = DOMPurify.sanitize(safeHTML);
+  }
+  
+  msgEl.innerHTML = `<div class="message-bubble">${safeHTML}</div>`;
+  container.appendChild(msgEl);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showErrorToast(message) {
+  console.error('❌ Error:', message);
+  if (typeof showError === 'function') {
+    showError(message);
+  } else {
+    alert(`⚠️ ${message}`);
+  }
+}
+
+// Hook GPTService events - DISABLED to prevent duplicate messages
+// if (window.gptService) {
+//   window.gptService.onMessageReceived = appendAssistantMessage;
+//   window.gptService.onError = (err) => showErrorToast(err.message);
+// }
 
 // Function to reset welcome message flag (for testing or fresh start)
 function resetWelcomeMessage() {
     window.welcomeMessageShown = false;
     console.log('🔧 Welcome message flag reset');
 }
+
+// ---- Enhanced Avatar Selection Handling ----
+function selectAvatarOption(avatarId, displayName) {
+    console.log('🔧 selectAvatarOption called:', avatarId, displayName);
+    
+    // Update all avatar variables consistently
+    window.selectedAvatar = avatarId;
+    selectedAvatar = avatarId;
+    
+    if (window.userData) {
+        window.userData.ai_avatar = avatarId;
+    }
+
+    // Update GPTService immediately
+    if (window.gptService) {
+        window.gptService.setTeacher(displayName);
+        console.log('✅ GPTService updated with teacher:', displayName);
+    }
+
+    // Update avatar display
+    const currentAvatarDisplay = document.getElementById('currentAvatarDisplay');
+    if (currentAvatarDisplay) {
+        const avatarIcon = avatarId === 'miss-sapna' ? '👩‍🏫' : '👨‍🏫';
+        currentAvatarDisplay.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <div class="text-2xl">${avatarIcon}</div>
+                <div>
+                    <div class="text-white font-semibold">${displayName}</div>
+                    <div class="text-gray-300 text-sm">AI Teacher</div>
+                </div>
+            </div>`;
+    }
+
+    // Save to Supabase if user is logged in
+    if (window.supabaseClient && window.currentUser) {
+        window.supabaseClient.from('user_profiles')
+            .update({ 
+                ai_avatar: avatarId,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', window.currentUser.id)
+            .then(() => {
+                console.log('✅ Avatar preference saved to Supabase:', avatarId);
+            })
+            .catch(error => {
+                console.error('❌ Error saving avatar preference:', error);
+            });
+    }
+    
+    // Update TTS voice to match new avatar
+    if (window.textToSpeech) {
+        window.textToSpeech.forceVoiceUpdate();
+    }
+    
+    console.log(`✅ Avatar changed to ${avatarId} (${displayName})`);
+    
+    // Show success message
+    if (typeof showSuccess === 'function') {
+        showSuccess(`Avatar changed to ${displayName}`);
+    }
+    
+    // Close the modal after selection
+    closeAvatarSelectionModal();
+}
+
+// Expose for modal buttons and HTML onclick
+window.selectAvatarOption = selectAvatarOption;
+
+// Modal functions for avatar selection
+function closeAvatarSelectionModal() {
+    const modal = document.getElementById('avatarSelectionModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function closeAvatarSelectionOnOutsideClick(event) {
+    if (event.target.id === 'avatarSelectionModal') {
+        closeAvatarSelectionModal();
+    }
+}
+
+// Expose modal functions globally
+window.closeAvatarSelectionModal = closeAvatarSelectionModal;
+window.closeAvatarSelectionOnOutsideClick = closeAvatarSelectionOnOutsideClick;
+
+// Function to open avatar selection modal
+function openAvatarSelectionModal() {
+    const modal = document.getElementById('avatarSelectionModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+// Add click handler for the Change Avatar button
+document.addEventListener('DOMContentLoaded', () => {
+    const avatarSelectionBtn = document.getElementById('avatarSelectionBtn');
+    if (avatarSelectionBtn) {
+        avatarSelectionBtn.addEventListener('click', () => {
+            console.log('🔧 Change Avatar button clicked');
+            openAvatarSelectionModal();
+        });
+    }
+    
+    // Also add click handlers for the quick avatar cards
+    const quickAvatarRoy = document.getElementById('quickAvatarRoy');
+    const quickAvatarSapna = document.getElementById('quickAvatarSapna');
+    
+    if (quickAvatarRoy) {
+        quickAvatarRoy.addEventListener('click', () => {
+            console.log('🔧 Quick Avatar Roy clicked');
+            selectAvatarOption('roy-sir', 'Roy Sir');
+            updateAvatarDisplay(); // Force update display
+        });
+    }
+    if (quickAvatarSapna) {
+        quickAvatarSapna.addEventListener('click', () => {
+            console.log('🔧 Quick Avatar Sapna clicked');
+            selectAvatarOption('miss-sapna', 'Miss Sapna');
+            updateAvatarDisplay(); // Force update display
+        });
+    }
+});
+
+window.openAvatarSelectionModal = openAvatarSelectionModal;
 
 // Check subscription expiry and show reminder
 function checkSubscriptionExpiry(expiryDate) {
@@ -6123,16 +6527,8 @@ function setupDashboardEventListeners() {
         console.warn('⚠️ Mobile voice button not found');
     }
     
-    // Mobile send button
-    const sendButtonMobile = document.getElementById('sendButtonMobile');
-    if (sendButtonMobile) {
-        sendButtonMobile.addEventListener('click', () => {
-            console.log('🔧 Mobile send button clicked');
-            sendMessage();
-        });
-    } else {
-        console.warn('⚠️ Mobile send button not found');
-    }
+    // Mobile send button - REMOVED DUPLICATE LISTENER (handled in initializeEventListeners)
+    console.log('✅ Mobile send button listener handled in initializeEventListeners');
     
     // Trial info button
     const trialInfoBtn = document.getElementById('trialInfoBtn');
@@ -6225,6 +6621,8 @@ function setupDashboardEventListeners() {
         });
     };
     bindSubjectManager();
+    
+
 
     // Re-bind on section changes (DOM may re-render parts)
     document.addEventListener('section:shown', () => {
@@ -6431,8 +6829,8 @@ function setupDashboardEventListeners() {
 
 // Initialize page with all event listeners
 document.addEventListener('DOMContentLoaded', function() {
-    setupEventListeners();
-    setupDashboardEventListeners();
+    // Event listeners are set up in initializeDashboard() - no duplicate calls
+    // setupDashboardEventListeners(); // REMOVED to prevent duplicate event listeners
     setupMicLongPress();
 
     // PWA: capture install prompt
@@ -6481,6 +6879,9 @@ let micSystem = {
     currentTranscript: '',
     isLongPressActive: false,
     longPressTimer: null,
+    shortPressMode: false,
+    silenceTimer: null,
+    lastSpeechTime: 0,
     
     init() {
         console.log('🎤 Initializing new mic system...');
@@ -6496,8 +6897,16 @@ let micSystem = {
         this.recognition.continuous = false;
         this.recognition.interimResults = true;
         this.recognition.maxAlternatives = 1;
-        // Set language to support both Hindi and English
-        this.recognition.lang = 'hi-IN,en-IN'; // Support both Hindi and English
+        // Set language to prioritize English, then Hindi
+                    // Set language based on current avatar
+            const currentAvatar = getCurrentAvatarId();
+            if (currentAvatar === 'miss-sapna') {
+                this.recognition.lang = 'hi-IN,en-IN'; // Prioritize Hindi for Miss Sapna
+                console.log('🔤 STT set to Hindi priority for Miss Sapna');
+            } else {
+                this.recognition.lang = 'en-IN,hi-IN'; // Prioritize English for Roy Sir
+                console.log('🔤 STT set to English priority for Roy Sir');
+            }
         
         // Event handlers
         this.recognition.onstart = () => {
@@ -6524,20 +6933,101 @@ let micSystem = {
             // Process transcript based on detected language
             let processedTranscript = finalTranscript + interimTranscript;
             
-            // Detect if user is speaking English or Hindi
-            const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
-            const englishPattern = /[A-Za-z]/; // any English letters anywhere
+            // Update last speech time for silence detection
+            this.lastSpeechTime = Date.now();
             
-            if (englishPattern.test(processedTranscript) && !hindiPattern.test(processedTranscript)) {
-                // User is speaking English - keep in English script
-                console.log('🔤 Enhanced STT: Detected English speech, keeping in English script');
-            } else if (hindiPattern.test(processedTranscript)) {
+            // Clear any existing silence timer
+            if (this.silenceTimer) {
+                clearTimeout(this.silenceTimer);
+                this.silenceTimer = null;
+            }
+            
+            // Intelligent language detection - detect both Hindi and English properly
+            const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
+            const englishPattern = /[A-Za-z]/; // English letters
+            
+                            // Common English words that might be transcribed in Devanagari
+                const englishWordsInDevanagari = /(व्हाई|आर|यू|राइटिंग|योर|आंसर्स|टॉयज|हाउ|आर|यू|व्हाट|इज़|योर|नेम|हेलो|रोशन|कैन|प्लीज|प्रिपेयर|क्वेश्चन|पेपर|फॉर|मी|इंग्लिश|ग्रामर|टेस्ट|इन|व्हिच|द|टॉपिक|नाउन|प्रोनाउन|वर्ब|एडवर्ब|एंड|एडजेक्टिव्स|आई|एम|स्पीकिंग)/;
+            
+            // Common Hindi words to detect Hindi speech - expanded list
+            const hindiWords = /(नमस्ते|कैसे|हैं|मैं|आप|क्या|कहाँ|कब|कौन|कैसा|है|हूँ|कर|रहा|गया|आया|जाएगा|होगा|करेंगे|पढ़|लिख|बोल|सुन|देख|समझ|जान|आना|जाना|खाना|पीना|सोना|उठना|बैठना|चलना|दौड़ना|हंसना|रोना|गाना|नाचना|खेलना|पढ़ना|लिखना|बोलना|सुनना|देखना|समझना|जानना|हाँ|नहीं|ठीक|अच्छा|बहुत|बहुत|देखो|सुनो|समझो|जानो|करो|बोलो|सोचो|पढ़ो|लिखो|खेलो|गाओ|नाचो|हँसो|रोओ|उठो|बैठो|चलो|दौड़ो|खाओ|पीओ|सोओ|आओ|जाओ|देखो|सुनो|समझो|जानो)/;
+            
+            // Count characters to determine dominant language
+            const hindiChars = (processedTranscript.match(hindiPattern) || []).length;
+            const englishChars = (processedTranscript.match(englishPattern) || []).length;
+            
+            console.log(`🔤 Language analysis: Hindi chars: ${hindiChars}, English chars: ${englishChars}`);
+            
+            // Check current avatar to determine language preference
+            const currentAvatar = getCurrentAvatarId();
+            const isMissSapna = currentAvatar === 'miss-sapna';
+            
+                            if (englishWordsInDevanagari.test(processedTranscript) && hindiChars > englishChars && !isMissSapna) {
+                    // This is English transcribed in Devanagari - convert to English (only for Roy Sir)
+                    console.log('🔤 Enhanced STT: Detected English words in Devanagari, converting to English');
+                    processedTranscript = processedTranscript
+                        .replace(/व्हाई/g, 'Why')
+                        .replace(/आर/g, 'are')
+                        .replace(/यू/g, 'you')
+                        .replace(/राइटिंग/g, 'writing')
+                        .replace(/योर/g, 'your')
+                        .replace(/आंसर्स/g, 'answers')
+                        .replace(/टॉयज/g, 'today')
+                        .replace(/हाउ/g, 'How')
+                        .replace(/व्हाट/g, 'What')
+                        .replace(/इज़/g, 'is')
+                        .replace(/नेम/g, 'name')
+                        .replace(/हेलो/g, 'Hello')
+                        .replace(/रोशन/g, 'Rohan')
+                        .replace(/कैन/g, 'can')
+                        .replace(/प्लीज/g, 'please')
+                        .replace(/प्रिपेयर/g, 'prepare')
+                        .replace(/क्वेश्चन/g, 'question')
+                        .replace(/पेपर/g, 'paper')
+                        .replace(/फॉर/g, 'for')
+                        .replace(/मी/g, 'me')
+                        .replace(/इंग्लिश/g, 'English')
+                        .replace(/ग्रामर/g, 'grammar')
+                        .replace(/टेस्ट/g, 'test')
+                        .replace(/इन/g, 'in')
+                        .replace(/व्हिच/g, 'which')
+                        .replace(/द/g, 'the')
+                        .replace(/टॉपिक/g, 'topics')
+                        .replace(/नाउन/g, 'noun')
+                        .replace(/प्रोनाउन/g, 'pronoun')
+                        .replace(/वर्ब/g, 'verb')
+                        .replace(/एडवर्ब/g, 'adverb')
+                        .replace(/एंड/g, 'and')
+                        .replace(/एडजेक्टिव्स/g, 'adjectives')
+                        .replace(/आई/g, 'I')
+                        .replace(/एम/g, 'am')
+                        .replace(/स्पीकिंग/g, 'speaking');
+            } else if (hindiWords.test(processedTranscript) || (hindiChars > englishChars && hindiChars > 1) || isMissSapna) {
                 // User is speaking Hindi - keep in Devanagari script
+                // Also prioritize Hindi if Miss Sapna is selected
                 console.log('🔤 Enhanced STT: Detected Hindi speech, keeping in Devanagari script');
+            } else if (englishChars > hindiChars && !isMissSapna) {
+                // User is speaking English - keep in English script (only for Roy Sir)
+                console.log('🔤 Enhanced STT: Detected English speech, keeping in English script');
+            } else {
+                // Default based on avatar preference
+                if (isMissSapna) {
+                    console.log('🔤 Enhanced STT: Defaulting to Hindi for Miss Sapna');
+                } else {
+                    console.log('🔤 Enhanced STT: Defaulting to English for Roy Sir');
+                }
             }
             
             this.currentTranscript = processedTranscript;
             this.displayTranscript(this.currentTranscript);
+            
+            // For short press mode, set up silence detection
+            if (this.shortPressMode && processedTranscript.trim()) {
+                this.silenceTimer = setTimeout(() => {
+                    console.log('🎤 Silence detected in short press mode, stopping recording');
+                    this.stopRecording();
+                }, 2000); // Wait 2 seconds of silence before stopping (better for kids)
+            }
         };
         
         this.recognition.onend = () => {
@@ -6545,10 +7035,19 @@ let micSystem = {
             this.isRecording = false;
             this.updateMicButton(false);
             
+            // Clear silence timer
+            if (this.silenceTimer) {
+                clearTimeout(this.silenceTimer);
+                this.silenceTimer = null;
+            }
+            
             // Send transcript if we have one
             if (this.currentTranscript.trim()) {
                 this.sendTranscript();
             }
+            
+            // Reset mode
+            this.shortPressMode = false;
         };
         
         this.recognition.onerror = (event) => {
@@ -6565,13 +7064,13 @@ let micSystem = {
         return true;
     },
     
-    startRecording() {
+    startRecording(shortPressMode = false) {
         if (this.isRecording) {
             console.log('🎤 Already recording, stopping first...');
             this.stopRecording();
             // Wait a bit before starting new recording
             setTimeout(() => {
-                this.startRecording();
+                this.startRecording(shortPressMode);
             }, 100);
             return;
         }
@@ -6585,6 +7084,7 @@ let micSystem = {
         
         try {
             this.currentTranscript = '';
+            this.shortPressMode = shortPressMode;
             // Ensure we don't have TTS speaking over the mic
             try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
             this.recognition.start();
@@ -6596,7 +7096,7 @@ let micSystem = {
                 this.isRecording = false;
                 // Try again after a short delay
                 setTimeout(() => {
-                    this.startRecording();
+                    this.startRecording(shortPressMode);
                 }, 200);
             }
         }
@@ -6701,7 +7201,7 @@ let micSystem = {
                 // For long-press, switch to continuous mode while pressed
                 if (this.recognition) this.recognition.continuous = true;
                 try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
-                this.startRecording();
+                this.startRecording(false); // Long press mode - not short press
             }, 3000); // 3s for long press (hold-to-talk)
         };
         
@@ -6723,7 +7223,7 @@ let micSystem = {
                 console.log('🎤 Short press - starting recording');
                 if (this.recognition) this.recognition.continuous = false;
                 try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
-                this.startRecording();
+                this.startRecording(true); // Short press mode - will stop after 1 second of silence
             }
         };
         

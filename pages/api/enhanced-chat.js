@@ -403,17 +403,20 @@ export default async function handler(req, res) {
     const getTeacherPersona = (teacherName, avatarId) => {
       console.log('🔧 getTeacherPersona called with teacherName:', teacherName, 'avatarId:', avatarId);
       
-      // Check avatar first, then teacher name
-              if (avatarId === 'miss-sapna' || teacherName === 'Miss Sapna' || teacherName === 'Ms. Sapana') {
+      // PRIORITY: Avatar selection overrides language detection
+      // If user explicitly selected an avatar, use that regardless of input language
+      if (avatarId === 'miss-sapna' || teacherName === 'Miss Sapna' || teacherName === 'Ms. Sapana') {
           console.log('✅ Selected Miss Sapna persona');
           
           // Determine response language based on user input
           let responseLanguage = 'Mix Hindi and English (Hinglish) naturally. Use simple Hindi words like "samjha", "achha", "bilkul", "beta", "shiksha", etc. For technical terms, use English but explain in Hindi. Example: "Beta, yeh \'verb\' hota hai, jo action dikhata hai."';
           
-          if (userInputLanguage === 'english') {
-            responseLanguage = 'Respond in English only. Use clear, simple English explanations. If the student asks in English, respond in English.';
-          } else if (userInputLanguage === 'hindi') {
-            responseLanguage = 'Respond primarily in Hindi with English terms for technical concepts. Use Hinglish naturally.';
+          // For Miss Sapna, always respond in Hindi/Hinglish regardless of input language
+          // Only switch to English if user explicitly asks for English
+          if (userInputLanguage === 'english' && message.toLowerCase().includes('english') && message.toLowerCase().includes('only')) {
+            responseLanguage = 'Respond in English only as requested by the student.';
+          } else {
+            responseLanguage = 'ALWAYS respond primarily in Hindi with English terms for technical concepts. Use Hinglish naturally. If the student asks in Hindi, respond in Hindi. If they ask in English, still respond in Hindi/Hinglish unless they specifically ask for English only. IMPORTANT: Always answer the student\'s question first, then if they asked in English, end your response with: "अगर आप अंग्रेजी में पढ़ना चाहते हैं तो कृपया सेटिंग्स में जाकर Roy Sir को चुनें।"';
           }
           
         return {
@@ -432,11 +435,11 @@ export default async function handler(req, res) {
           name: 'Roy Sir',
           style: 'English',
           personality: 'professional and structured',
-          language: 'ALWAYS respond in English only, regardless of the language of the question. If the student asks a question in Hindi, respond in English and politely suggest they switch to Miss Sapana in settings for Hindi comfort.',
+          language: 'ALWAYS respond in English only, regardless of the language of the question. If the student asks a question in Hindi, respond in English and politely suggest they switch to Miss Sapana in settings for Hindi comfort. Avatar selection takes priority over language detection. IMPORTANT: Always answer the student\'s question first, then if they asked in Hindi, end your response with: "If you would prefer to learn in Hindi, please go to settings and select Miss Sapna who will teach you in Hindi."',
           greeting: 'Hello! I am Roy Sir, your academic guide.',
           cultural: 'Provide health tips and wellness advice when relevant. Maximum 1 health tip per hour, 3 per day. Focus on student wellness, study habits, and healthy lifestyle.',
           specialFeatures: 'Emphasize structured learning and academic excellence. Use international examples while keeping Indian context in mind. ALWAYS respond in English and suggest Miss Sapana for Hindi questions.',
-          teachingStyle: 'Use Socratic method with thoughtful questions like "What do you think?" or "How would you approach this?" Provide scaffolded explanations with step-by-step guidance. Create personalized quizzes to assess understanding. Use real-world examples and analogies. Make learning engaging and interactive, like a conversation with an experienced mentor. If student asks in Hindi, respond in English and suggest: "If you are more comfortable in Hindi, please select Miss Sapana in the settings for a better experience."'
+          teachingStyle: 'Use Socratic method with thoughtful questions like "What do you think?" or "How would you approach this?" Provide scaffolded explanations with step-by-step guidance. Create personalized quizzes to assess understanding. Use real-world examples and analogies. Make learning engaging and interactive, like a conversation with an experienced mentor. IMPORTANT: Always answer the student\'s question first, then if they asked in Hindi, suggest: "If you would prefer to learn in Hindi, please go to settings and select Miss Sapna who will teach you in Hindi."'
         };
       }
     };
@@ -455,10 +458,12 @@ export default async function handler(req, res) {
 - Mix Hindi and English naturally but ensure Hindi is in Devanagari script` :
       `LANGUAGE SCRIPT RULES:
 - ALWAYS respond in English only, regardless of the question language
+- NEVER use Hindi or Devanagari script under any circumstances
 - Use clear, proper English with structured explanations
 - Maintain professional tone throughout
 - Use international examples while keeping Indian context in mind
-- If student asks in Hindi, respond in English and suggest: "If you are more comfortable in Hindi, please select Miss Sapana in the settings for a better experience."`;
+- If student asks in Hindi, respond in English and suggest: "If you would prefer to learn in Hindi, please go to settings and select Miss Sapna who will teach you in Hindi."
+- CRITICAL: You are Roy Sir - you ONLY speak English, never Hindi`;
 
     // Only include teacher name in first response of the day
     const teacherIntroduction = isFirstResponseOfDay ? 
@@ -486,13 +491,31 @@ STUDENT INFORMATION (DO NOT ASK FOR THIS - USE WHAT'S PROVIDED):
 CRITICAL RULES:
 - NEVER ask for student's name, class, or board - you already have this information
 - NEVER ask "What is your name?" or similar questions
+- NEVER ask about yesterday's study, previous sessions, or what they studied before
+- NEVER ask "Did you study yesterday?" or "What did you learn yesterday?"
+- Focus only on the current question and topic
 - Use the provided student information in your responses
 - Address the student by their name: ${userContext.name}
 - Reference their class and board when relevant
 - NEVER mention images, pictures, or visual resources
 - RESPOND IN PLAIN TEXT ONLY - no markdown, no formatting, no special characters
 - Stay in character as ${teacherPersona.name} at all times
+- ${teacherPersona.name === 'Roy Sir' ? 'NEVER use Hindi or Devanagari script. ALWAYS respond in English only.' : 'Use Hindi/Hinglish naturally with English terms for technical concepts.'}
 - ${isFirstResponseOfDay ? `This is the first response of the day, so you may introduce yourself as ${teacherPersona.name}.` : 'Do not introduce yourself by name in this response.'}
+
+ACADEMIC FOCUS RULES:
+- ONLY answer academic questions related to the student's class and subjects
+- For non-academic questions, politely redirect: "Let's focus on your studies. Is there something from your ${subject} syllabus you'd like to learn?"
+- If student seems bored, offer: "Would you like me to tell you an educational story? I can share stories from Panchatantra (for classes 1-3), Ramayan, or Mahabharat that teach important lessons."
+- For classes 1-3: Offer Panchatantra stories with moral lessons
+- For all classes: Offer stories from Hindu mythology that teach values and life lessons
+
+EXAM PAPER GENERATION:
+- If student asks for practice questions or exam papers, ask: "Which chapters would you like the questions from?"
+- Generate exam papers with: 10 objective questions (5 fill-in-blanks, 5 True/False), 5 short answer questions, 5 long answer questions
+- Use chat history and student's topics to create relevant questions
+- Always align questions with ${userContext.board} syllabus standards for their class
+- Follow ${userContext.board} curriculum structure and difficulty level
 
 Key Guidelines for ${teacherPersona.name}:
 - ALWAYS search the provided educational resources FIRST before using web information
@@ -575,6 +598,16 @@ ${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR:
           const test = await enhancedTutor.generateMonthlyTest(`class${grade}`, subject, month);
           additionalData.test = test;
           response = `Here's your Month ${month} test for ${subject}, ${userContext.name}.`;
+        }
+        break;
+
+      case 'generateExamPaper':
+        if (!chapters || chapters.length === 0) {
+          response = "Please specify which chapters you'd like the exam paper for.";
+        } else {
+          const examPaper = await generateExamPaper(grade, subject, chapters, userContext, chatHistory);
+          additionalData.examPaper = examPaper;
+          response = `Here's your practice exam paper for chapters: ${chapters.join(', ')}`;
         }
         break;
 
@@ -679,5 +712,58 @@ ${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR:
       error: 'Failed to get response from AI',
       details: error.message 
     });
+  }
+}
+
+// Function to generate exam papers
+async function generateExamPaper(grade, subject, chapters, userContext, chatHistory) {
+  try {
+    const systemPrompt = `You are an expert teacher creating a practice exam paper for ${userContext.name} (Class ${userContext.class}, ${userContext.board}).
+
+EXAM PAPER REQUIREMENTS:
+- Generate a complete practice exam paper for chapters: ${chapters.join(', ')}
+- Subject: ${subject}
+- Class: ${userContext.class}
+- Board: ${userContext.board}
+
+QUESTION FORMAT:
+1. OBJECTIVE QUESTIONS (10 total):
+   - 5 Fill in the blanks questions
+   - 5 True or False questions
+
+2. SHORT ANSWER QUESTIONS (5 total):
+   - 2-3 sentences each
+   - Test understanding of key concepts
+
+3. LONG ANSWER QUESTIONS (5 total):
+   - Detailed explanations required
+   - Test comprehensive understanding
+
+INSTRUCTIONS:
+- Use chat history to understand student's learning level
+- Align with ${userContext.board} syllabus standards for their class
+- Follow ${userContext.board} curriculum structure and difficulty level
+- Make questions age-appropriate and difficulty-appropriate
+- Include answer key at the end
+- Format clearly with sections and numbering
+
+CHAT HISTORY CONTEXT:
+${chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
+
+Generate a complete exam paper following these specifications.`;
+
+    const chat = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      temperature: 0.7,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Generate a practice exam paper for ${subject} covering chapters: ${chapters.join(', ')}` }
+      ]
+    });
+
+    return chat.choices[0]?.message?.content || 'Failed to generate exam paper';
+  } catch (error) {
+    console.error('Error generating exam paper:', error);
+    return 'Error generating exam paper. Please try again.';
   }
 } 
