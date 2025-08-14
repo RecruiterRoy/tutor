@@ -3014,24 +3014,9 @@ async function selectAvatar(avatarId, event) {
         }
     } catch (_) {}
     
-    // Update STT language based on avatar
-    if (micSystem && micSystem.recognition) {
-        if (avatarId === 'miss-sapna') {
-            micSystem.recognition.lang = 'hi-IN,en-IN'; // Prioritize Hindi for Miss Sapna
-            console.log('🔤 STT language updated to Hindi priority for Miss Sapna');
-        } else {
-            micSystem.recognition.lang = 'en-IN,hi-IN'; // Prioritize English for Roy Sir
-            console.log('🔤 STT language updated to English priority for Roy Sir');
-        }
-        
-        // Reinitialize mic system to ensure language settings take effect
-        try {
-            micSystem.init();
-            console.log('🔤 Mic system reinitialized with new language settings');
-        } catch (error) {
-            console.warn('⚠️ Could not reinitialize mic system:', error);
-        }
-    }
+                  // Keep STT in English for better reliability (Hinglish mode)
+              // Miss Sapna will handle Hindi responses in the backend
+              console.log('🔤 STT kept in English for better reliability');
     
     // Force update avatar display immediately
     updateAvatarDisplay();
@@ -6894,19 +6879,12 @@ let micSystem = {
         }
         
         this.recognition = new SpeechRecognition();
-        this.recognition.continuous = false;
+        this.recognition.continuous = true;
         this.recognition.interimResults = true;
-        this.recognition.maxAlternatives = 1;
-        // Set language to prioritize English, then Hindi
-                    // Set language based on current avatar
-            const currentAvatar = getCurrentAvatarId();
-            if (currentAvatar === 'miss-sapna') {
-                this.recognition.lang = 'hi-IN,en-IN'; // Prioritize Hindi for Miss Sapna
-                console.log('🔤 STT set to Hindi priority for Miss Sapna');
-            } else {
-                this.recognition.lang = 'en-IN,hi-IN'; // Prioritize English for Roy Sir
-                console.log('🔤 STT set to English priority for Roy Sir');
-            }
+        this.recognition.maxAlternatives = 3; // Get multiple guesses for better accuracy
+        // Set language to English for better reliability (Hinglish mode)
+        this.recognition.lang = 'en-US'; // Use en-US for better recognition
+        console.log('🔤 STT set to English (en-US) for better reliability (Hinglish mode)');
         
         // Event handlers
         this.recognition.onstart = () => {
@@ -6918,20 +6896,12 @@ let micSystem = {
         };
         
         this.recognition.onresult = (event) => {
-            let finalTranscript = '';
-            let interimTranscript = '';
+            let transcript = '';
             
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const transcript = event.results[i][0].transcript;
-                if (event.results[i].isFinal) {
-                    finalTranscript += transcript;
-                } else {
-                    interimTranscript += transcript;
-                }
+            // Simple transcript collection like your reference code
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                transcript += event.results[i][0].transcript;
             }
-            
-            // Process transcript based on detected language
-            let processedTranscript = finalTranscript + interimTranscript;
             
             // Update last speech time for silence detection
             this.lastSpeechTime = Date.now();
@@ -6942,91 +6912,18 @@ let micSystem = {
                 this.silenceTimer = null;
             }
             
-            // Intelligent language detection - detect both Hindi and English properly
-            const hindiPattern = /[\u0900-\u097F]/; // Devanagari script
-            const englishPattern = /[A-Za-z]/; // English letters
+            // Display transcript or process further
+            console.log('Live transcript:', transcript);
             
-                            // Common English words that might be transcribed in Devanagari
-                const englishWordsInDevanagari = /(व्हाई|आर|यू|राइटिंग|योर|आंसर्स|टॉयज|हाउ|आर|यू|व्हाट|इज़|योर|नेम|हेलो|रोशन|कैन|प्लीज|प्रिपेयर|क्वेश्चन|पेपर|फॉर|मी|इंग्लिश|ग्रामर|टेस्ट|इन|व्हिच|द|टॉपिक|नाउन|प्रोनाउन|वर्ब|एडवर्ब|एंड|एडजेक्टिव्स|आई|एम|स्पीकिंग)/;
-            
-            // Common Hindi words to detect Hindi speech - expanded list
-            const hindiWords = /(नमस्ते|कैसे|हैं|मैं|आप|क्या|कहाँ|कब|कौन|कैसा|है|हूँ|कर|रहा|गया|आया|जाएगा|होगा|करेंगे|पढ़|लिख|बोल|सुन|देख|समझ|जान|आना|जाना|खाना|पीना|सोना|उठना|बैठना|चलना|दौड़ना|हंसना|रोना|गाना|नाचना|खेलना|पढ़ना|लिखना|बोलना|सुनना|देखना|समझना|जानना|हाँ|नहीं|ठीक|अच्छा|बहुत|बहुत|देखो|सुनो|समझो|जानो|करो|बोलो|सोचो|पढ़ो|लिखो|खेलो|गाओ|नाचो|हँसो|रोओ|उठो|बैठो|चलो|दौड़ो|खाओ|पीओ|सोओ|आओ|जाओ|देखो|सुनो|समझो|जानो)/;
-            
-            // Count characters to determine dominant language
-            const hindiChars = (processedTranscript.match(hindiPattern) || []).length;
-            const englishChars = (processedTranscript.match(englishPattern) || []).length;
-            
-            console.log(`🔤 Language analysis: Hindi chars: ${hindiChars}, English chars: ${englishChars}`);
-            
-            // Check current avatar to determine language preference
-            const currentAvatar = getCurrentAvatarId();
-            const isMissSapna = currentAvatar === 'miss-sapna';
-            
-                            if (englishWordsInDevanagari.test(processedTranscript) && hindiChars > englishChars && !isMissSapna) {
-                    // This is English transcribed in Devanagari - convert to English (only for Roy Sir)
-                    console.log('🔤 Enhanced STT: Detected English words in Devanagari, converting to English');
-                    processedTranscript = processedTranscript
-                        .replace(/व्हाई/g, 'Why')
-                        .replace(/आर/g, 'are')
-                        .replace(/यू/g, 'you')
-                        .replace(/राइटिंग/g, 'writing')
-                        .replace(/योर/g, 'your')
-                        .replace(/आंसर्स/g, 'answers')
-                        .replace(/टॉयज/g, 'today')
-                        .replace(/हाउ/g, 'How')
-                        .replace(/व्हाट/g, 'What')
-                        .replace(/इज़/g, 'is')
-                        .replace(/नेम/g, 'name')
-                        .replace(/हेलो/g, 'Hello')
-                        .replace(/रोशन/g, 'Rohan')
-                        .replace(/कैन/g, 'can')
-                        .replace(/प्लीज/g, 'please')
-                        .replace(/प्रिपेयर/g, 'prepare')
-                        .replace(/क्वेश्चन/g, 'question')
-                        .replace(/पेपर/g, 'paper')
-                        .replace(/फॉर/g, 'for')
-                        .replace(/मी/g, 'me')
-                        .replace(/इंग्लिश/g, 'English')
-                        .replace(/ग्रामर/g, 'grammar')
-                        .replace(/टेस्ट/g, 'test')
-                        .replace(/इन/g, 'in')
-                        .replace(/व्हिच/g, 'which')
-                        .replace(/द/g, 'the')
-                        .replace(/टॉपिक/g, 'topics')
-                        .replace(/नाउन/g, 'noun')
-                        .replace(/प्रोनाउन/g, 'pronoun')
-                        .replace(/वर्ब/g, 'verb')
-                        .replace(/एडवर्ब/g, 'adverb')
-                        .replace(/एंड/g, 'and')
-                        .replace(/एडजेक्टिव्स/g, 'adjectives')
-                        .replace(/आई/g, 'I')
-                        .replace(/एम/g, 'am')
-                        .replace(/स्पीकिंग/g, 'speaking');
-            } else if (hindiWords.test(processedTranscript) || (hindiChars > englishChars && hindiChars > 1) || isMissSapna) {
-                // User is speaking Hindi - keep in Devanagari script
-                // Also prioritize Hindi if Miss Sapna is selected
-                console.log('🔤 Enhanced STT: Detected Hindi speech, keeping in Devanagari script');
-            } else if (englishChars > hindiChars && !isMissSapna) {
-                // User is speaking English - keep in English script (only for Roy Sir)
-                console.log('🔤 Enhanced STT: Detected English speech, keeping in English script');
-            } else {
-                // Default based on avatar preference
-                if (isMissSapna) {
-                    console.log('🔤 Enhanced STT: Defaulting to Hindi for Miss Sapna');
-                } else {
-                    console.log('🔤 Enhanced STT: Defaulting to English for Roy Sir');
-                }
-            }
-            
-            this.currentTranscript = processedTranscript;
+            this.currentTranscript = transcript;
             this.displayTranscript(this.currentTranscript);
             
             // For short press mode, set up silence detection
-            if (this.shortPressMode && processedTranscript.trim()) {
+            if (this.shortPressMode && transcript.trim()) {
                 this.silenceTimer = setTimeout(() => {
                     console.log('🎤 Silence detected in short press mode, stopping recording');
                     this.stopRecording();
-                }, 2000); // Wait 2 seconds of silence before stopping (better for kids)
+                }, 4000); // Wait 4 seconds of silence before stopping (better for kids)
             }
         };
         
@@ -7048,16 +6945,17 @@ let micSystem = {
             
             // Reset mode
             this.shortPressMode = false;
+            
+            // Optionally restart recognition on end to improve continuous capture
+            if (this.recognition && this.recognition.state === 'inactive') {
+                this.recognition.start();
+            }
         };
         
         this.recognition.onerror = (event) => {
-            console.error('🎤 Recording error:', event.error);
+            console.error('Speech recognition error:', event.error);
             this.isRecording = false;
             this.updateMicButton(false);
-            
-            if (event.error === 'no-speech') {
-                showError('No speech detected. Please try again.');
-            }
         };
         
         console.log('✅ Mic system initialized');
@@ -7065,19 +6963,9 @@ let micSystem = {
     },
     
     startRecording(shortPressMode = false) {
-        if (this.isRecording) {
-            console.log('🎤 Already recording, stopping first...');
-            this.stopRecording();
-            // Wait a bit before starting new recording
-            setTimeout(() => {
-                this.startRecording(shortPressMode);
-            }, 100);
-            return;
-        }
-        
         if (!this.recognition) {
             if (!this.init()) {
-                showError('Voice recognition not supported');
+                console.error('Voice recognition not supported');
                 return;
             }
         }
@@ -7085,27 +6973,35 @@ let micSystem = {
         try {
             this.currentTranscript = '';
             this.shortPressMode = shortPressMode;
+            this.lastSpeechTime = Date.now();
+            
             // Ensure we don't have TTS speaking over the mic
             try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
+            
+            // Start recognition
             this.recognition.start();
+            console.log(`🎤 Started recording (${shortPressMode ? 'short press' : 'long press'} mode)`);
         } catch (error) {
             console.error('🎤 Error starting recording:', error);
-            // Don't show error to user, just log it
-            if (error.name === 'InvalidStateError') {
-                console.log('🎤 Recognition already started, resetting...');
-                this.isRecording = false;
-                // Try again after a short delay
-                setTimeout(() => {
-                    this.startRecording(shortPressMode);
-                }, 200);
-            }
         }
     },
     
     stopRecording() {
         if (this.recognition && this.isRecording) {
-            this.recognition.stop();
+            try {
+                this.recognition.stop();
+                console.log('🎤 Stopping recording');
+            } catch (error) {
+                console.error('🎤 Error stopping recording:', error);
+                // Force stop by aborting
+                try {
+                    this.recognition.abort();
+                } catch (abortError) {
+                    console.error('🎤 Error aborting recording:', abortError);
+                }
+            }
         }
+        this.isRecording = false;
     },
     
     updateMicButton(isRecording) {
@@ -7191,39 +7087,40 @@ let micSystem = {
     setupLongPress(micButton) {
         let pressTimer = null;
         let isLongPress = false;
+        let recordingStarted = false;
         
         const handlePress = (e) => {
             e.preventDefault();
             isLongPress = false;
+            recordingStarted = false;
+            
+            // Start recording immediately
+            console.log('🎤 Press detected - starting recording immediately');
+            this.startRecording(false); // Start in long press mode
+            recordingStarted = true;
+            
             pressTimer = setTimeout(() => {
                 isLongPress = true;
-                console.log('🎤 Long press detected - starting continuous recording');
-                // For long-press, switch to continuous mode while pressed
-                if (this.recognition) this.recognition.continuous = true;
-                try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
-                this.startRecording(false); // Long press mode - not short press
-            }, 3000); // 3s for long press (hold-to-talk)
+                console.log('🎤 Long press confirmed');
+            }, 800); // 800ms to confirm long press
         };
         
         const handleRelease = (e) => {
             e.preventDefault();
+            
             if (pressTimer) {
                 clearTimeout(pressTimer);
                 pressTimer = null;
             }
             
-            if (isLongPress) {
+            if (isLongPress && recordingStarted) {
                 // Long press release - stop recording and send
                 console.log('🎤 Long press release - stopping recording');
                 this.stopRecording();
-                // Restore non-continuous mode after release
-                if (this.recognition) this.recognition.continuous = false;
-            } else {
-                // Short press - start recording (will auto-stop on speech end)
-                console.log('🎤 Short press - starting recording');
-                if (this.recognition) this.recognition.continuous = false;
-                try { if (window.textToSpeech) window.textToSpeech.stop(); } catch (_) {}
-                this.startRecording(true); // Short press mode - will stop after 1 second of silence
+            } else if (recordingStarted) {
+                // Short press - switch to short press mode (will auto-stop on silence)
+                console.log('🎤 Short press - switching to short press mode');
+                this.shortPressMode = true; // Switch to short press mode
             }
         };
         
