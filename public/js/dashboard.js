@@ -4960,9 +4960,26 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Apply mobile optimizations
         if (window.isMobile) {
-            applyMobileOptimizations();
-            setupMobileEventListeners();
-            enableMobileFeatures();
+            try {
+                applyMobileOptimizations();
+                console.log('✅ Mobile optimizations applied');
+            } catch (error) {
+                console.warn('⚠️ Mobile optimizations failed:', error);
+            }
+            
+            try {
+                setupMobileEventListeners();
+                console.log('✅ Mobile event listeners set up');
+            } catch (error) {
+                console.warn('⚠️ Mobile event listeners failed:', error);
+            }
+            
+            try {
+                enableMobileFeatures();
+                console.log('✅ Mobile features enabled');
+            } catch (error) {
+                console.warn('⚠️ Mobile features failed:', error);
+            }
         }
         
         // Mark as initialized
@@ -4995,9 +5012,26 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             // Apply mobile optimizations
             if (window.isMobile) {
-                applyMobileOptimizations();
-                setupMobileEventListeners();
-                enableMobileFeatures();
+                try {
+                    applyMobileOptimizations();
+                    console.log('✅ Fallback: Mobile optimizations applied');
+                } catch (error) {
+                    console.warn('⚠️ Fallback: Mobile optimizations failed:', error);
+                }
+                
+                try {
+                    setupMobileEventListeners();
+                    console.log('✅ Fallback: Mobile event listeners set up');
+                } catch (error) {
+                    console.warn('⚠️ Fallback: Mobile event listeners failed:', error);
+                }
+                
+                try {
+                    enableMobileFeatures();
+                    console.log('✅ Fallback: Mobile features enabled');
+                } catch (error) {
+                    console.warn('⚠️ Fallback: Mobile features failed:', error);
+                }
             }
             
             // Mark as initialized
@@ -7334,6 +7368,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleBtn) toggleBtn.addEventListener('click', openMobileSidebar);
     if (closeBtn) closeBtn.addEventListener('click', closeMobileSidebar);
     if (overlay) overlay.addEventListener('click', closeMobileSidebar);
+
+    // Add navigation event listeners for mobile sidebar
+    const navItems = document.querySelectorAll('#mobileSidebar .nav-item[data-section]');
+    console.log('🔧 Setting up mobile sidebar navigation, found', navItems.length, 'nav items');
+    
+    navItems.forEach(item => {
+        const section = item.getAttribute('data-section');
+        console.log('🔧 Adding listener for section:', section);
+        
+        item.addEventListener('click', () => {
+            console.log('🔧 Mobile nav clicked:', section);
+            if (window.showSection) {
+                window.showSection(section);
+                closeMobileSidebar();
+            } else {
+                console.error('❌ showSection function not available');
+            }
+        });
+    });
 
     // Optional: close sidebar when resizing to desktop
     window.addEventListener('resize', () => {
