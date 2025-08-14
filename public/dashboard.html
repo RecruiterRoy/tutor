@@ -1108,11 +1108,17 @@
                 height: 36px;
             }
             
-            /* Ensure images load properly on mobile */
-            img {
-                max-width: 100%;
-                height: auto;
-            }
+                    /* Ensure images load properly on mobile */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Prevent horizontal scrolling on mobile */
+        html, body {
+            overflow-x: hidden !important;
+            max-width: 100% !important;
+        }
             
             /* Fix image loading issues */
             img[src*="images/"] {

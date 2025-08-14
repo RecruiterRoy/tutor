@@ -210,6 +210,106 @@ window.openMobileSidebar = function() {
     }
 };
 
+// Create mobile sidebar if it doesn't exist
+function createMobileSidebar() {
+    console.log('🔧 Creating mobile sidebar...');
+    
+    // Create sidebar HTML
+    const sidebarHTML = `
+        <div id="mobileSidebar" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: #1f2937;
+            z-index: 9999;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        ">
+            <div style="padding: 1rem; border-bottom: 1px solid #374151;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="color: white; margin: 0;">Menu</h3>
+                    <button onclick="closeMobileSidebar()" style="
+                        background: none;
+                        border: none;
+                        color: white;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                    ">×</button>
+                </div>
+            </div>
+            <div style="padding: 1rem;">
+                <div style="color: white; padding: 0.5rem; cursor: pointer; border-radius: 0.25rem; margin-bottom: 0.5rem;" onclick="showSection('chat'); closeMobileSidebar();">
+                    🏫 Classroom
+                </div>
+                <div style="color: white; padding: 0.5rem; cursor: pointer; border-radius: 0.25rem; margin-bottom: 0.5rem;" onclick="showSection('materials'); closeMobileSidebar();">
+                    📚 Study Materials
+                </div>
+                <div style="color: white; padding: 0.5rem; cursor: pointer; border-radius: 0.25rem; margin-bottom: 0.5rem;" onclick="showSection('settings'); closeMobileSidebar();">
+                    ⚙️ Settings
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Create overlay HTML
+    const overlayHTML = `
+        <div id="mobileSidebarOverlay" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            opacity: 1;
+            pointer-events: auto;
+        " onclick="closeMobileSidebar()"></div>
+    `;
+    
+    // Add to body
+    document.body.insertAdjacentHTML('beforeend', sidebarHTML);
+    document.body.insertAdjacentHTML('beforeend', overlayHTML);
+    
+    console.log('✅ Mobile sidebar created!');
+    alert('Mobile sidebar created and opened!');
+}
+
+// Create mobile menu button if it doesn't exist
+function createMobileMenuButton() {
+    console.log('🔧 Creating mobile menu button...');
+    
+    const menuButtonHTML = `
+        <button id="mobileMenuButton" style="
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 10000;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            padding: 0.5rem;
+            font-size: 1.25rem;
+            cursor: pointer;
+        ">☰</button>
+    `;
+    
+    document.body.insertAdjacentHTML('afterbegin', menuButtonHTML);
+    
+    // Add click handler
+    const newButton = document.getElementById('mobileMenuButton');
+    newButton.addEventListener('click', () => {
+        console.log('🔧 New menu button clicked!');
+        createMobileSidebar();
+    });
+    
+    console.log('✅ Mobile menu button created!');
+    alert('Mobile menu button created! Click it to open sidebar.');
+}
+
 // Test function for debugging mobile sidebar
 window.testMobileSidebar = function() {
     console.log('🧪 Testing mobile sidebar...');
@@ -2853,25 +2953,8 @@ function setupEventListeners() {
         mobileSidebarOverlay.addEventListener('click', closeMobileSidebar);
     }
     
-    // Mobile sidebar button - use explicit ID for reliability
-    const mobileSidebarButton = document.getElementById('mobileSidebarToggle');
-    if (mobileSidebarButton) {
-        // Remove any existing listeners to prevent conflicts
-        mobileSidebarButton.removeEventListener('click', openMobileSidebar);
-        mobileSidebarButton.removeEventListener('click', toggleMobileSidebar);
-        
-        mobileSidebarButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('🔧 Mobile sidebar button clicked, calling toggleMobileSidebar');
-            toggleMobileSidebar();
-        });
-        console.log('✅ Mobile sidebar button listener added');
-    } else {
-        console.log('❌ Mobile sidebar button not found');
-    }
-    
-    // Close mobile sidebar button - use explicit ID
+    // Mobile sidebar will be handled by the proper DOMContentLoaded listener at the bottom
+    console.log('✅ Mobile sidebar handling moved to DOMContentLoaded listener');
     const closeMobileSidebarButton = document.getElementById('closeSidebarBtn');
     if (closeMobileSidebarButton) {
         closeMobileSidebarButton.addEventListener('click', () => {
@@ -7224,5 +7307,40 @@ function setupMicLongPress(micButton) {
 // Remove all the old complex functions
 // initEnhancedSpeechRecognition, startContinuousRecording, stopContinuousRecording, startNormalRecording
 // are all replaced by the new micSystem
+
+// ---- Mobile Sidebar Toggle Handling ----
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    const toggleBtn = document.getElementById('mobileSidebarToggle');
+    const closeBtn = document.getElementById('closeSidebarBtn');
+
+    function openMobileSidebar() {
+        if (sidebar) sidebar.classList.remove('-translate-x-full');
+        if (overlay) {
+            overlay.classList.add('opacity-100', 'pointer-events-auto');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+        }
+    }
+
+    function closeMobileSidebar() {
+        if (sidebar) sidebar.classList.add('-translate-x-full');
+        if (overlay) {
+            overlay.classList.remove('opacity-100', 'pointer-events-auto');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+        }
+    }
+
+    if (toggleBtn) toggleBtn.addEventListener('click', openMobileSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeMobileSidebar);
+    if (overlay) overlay.addEventListener('click', closeMobileSidebar);
+
+    // Optional: close sidebar when resizing to desktop
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) {
+            closeMobileSidebar();
+        }
+    });
+});
 
 
