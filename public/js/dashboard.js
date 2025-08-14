@@ -184,6 +184,9 @@ window.openMobileSidebar = function() {
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
     
+    console.log('🔧 Sidebar element:', sidebar);
+    console.log('🔧 Overlay element:', overlay);
+    
     if (sidebar && overlay) {
         sidebar.classList.remove('-translate-x-full');
         sidebar.classList.add('translate-x-0');
@@ -201,8 +204,66 @@ window.openMobileSidebar = function() {
         // Allow repeated opens
         sidebar.dataset.transitioning = 'false';
         console.log('✅ Mobile sidebar opened');
+        console.log('🔧 Final sidebar classes:', sidebar.className);
     } else {
         console.log('❌ Mobile sidebar elements not found');
+    }
+};
+
+// Test function for debugging mobile sidebar
+window.testMobileSidebar = function() {
+    console.log('🧪 Testing mobile sidebar...');
+    
+    // Create a visual debug message
+    let debugMessage = '🧪 Mobile Sidebar Debug:\n\n';
+    
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('mobileSidebarOverlay');
+    const toggle = document.getElementById('mobileSidebarToggle');
+    
+    debugMessage += `Sidebar found: ${sidebar ? 'YES' : 'NO'}\n`;
+    debugMessage += `Overlay found: ${overlay ? 'YES' : 'NO'}\n`;
+    debugMessage += `Toggle button found: ${toggle ? 'YES' : 'NO'}\n\n`;
+    
+    if (sidebar) {
+        debugMessage += `Sidebar classes: ${sidebar.className}\n`;
+        debugMessage += `Sidebar visible: ${!sidebar.classList.contains('-translate-x-full')}\n`;
+    }
+    
+    if (toggle) {
+        debugMessage += `Toggle button classes: ${toggle.className}\n`;
+        debugMessage += `Toggle button visible: ${toggle.offsetParent !== null}\n`;
+    }
+    
+    // Show alert with debug info
+    alert(debugMessage);
+    
+    console.log('🧪 Sidebar:', sidebar);
+    console.log('🧪 Overlay:', overlay);
+    console.log('🧪 Toggle button:', toggle);
+    
+    if (sidebar) {
+        console.log('🧪 Sidebar classes:', sidebar.className);
+        console.log('🧪 Sidebar styles:', sidebar.style.cssText);
+    }
+    
+    if (toggle) {
+        console.log('🧪 Toggle button classes:', toggle.className);
+        console.log('🧪 Toggle button styles:', toggle.style.cssText);
+    }
+    
+    // Test if toggle button is clickable
+    if (toggle) {
+        console.log('🧪 Testing toggle button click...');
+        toggle.click();
+        
+        // Show result after a short delay
+        setTimeout(() => {
+            const isOpen = sidebar && sidebar.classList.contains('translate-x-0');
+            alert(`Sidebar click test: ${isOpen ? 'SUCCESS - Sidebar opened!' : 'FAILED - Sidebar did not open'}`);
+        }, 500);
+    } else {
+        alert('❌ Toggle button not found!');
     }
 };
 
@@ -2795,14 +2856,16 @@ function setupEventListeners() {
     // Mobile sidebar button - use explicit ID for reliability
     const mobileSidebarButton = document.getElementById('mobileSidebarToggle');
     if (mobileSidebarButton) {
-        mobileSidebarButton.addEventListener('click', () => {
-            console.log('🔧 Mobile sidebar button clicked, calling openMobileSidebar');
-            openMobileSidebar();
+        // Remove any existing listeners to prevent conflicts
+        mobileSidebarButton.removeEventListener('click', openMobileSidebar);
+        mobileSidebarButton.removeEventListener('click', toggleMobileSidebar);
+        
+        mobileSidebarButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔧 Mobile sidebar button clicked, calling toggleMobileSidebar');
+            toggleMobileSidebar();
         });
-        mobileSidebarButton.onclick = () => {
-            console.log('🔧 Mobile sidebar button onclick fallback');
-            openMobileSidebar();
-        };
         console.log('✅ Mobile sidebar button listener added');
     } else {
         console.log('❌ Mobile sidebar button not found');
@@ -3909,13 +3972,29 @@ function toggleMobileSidebar() {
     console.log('🔧 Toggle mobile sidebar called');
     const sidebar = document.getElementById('mobileSidebar');
     const overlay = document.getElementById('mobileSidebarOverlay');
-    if (!sidebar || !overlay) return;
-    if (sidebar.dataset.transitioning === 'true') return;
+    
+    console.log('🔧 Sidebar element:', sidebar);
+    console.log('🔧 Overlay element:', overlay);
+    
+    if (!sidebar || !overlay) {
+        console.error('❌ Mobile sidebar elements not found');
+        return;
+    }
+    
+    if (sidebar.dataset.transitioning === 'true') {
+        console.log('🔧 Sidebar is transitioning, ignoring click');
+        return;
+    }
+    
     const isOpen = sidebar.classList.contains('translate-x-0') && !sidebar.classList.contains('-translate-x-full');
+    console.log('🔧 Sidebar is open:', isOpen);
+    console.log('🔧 Current sidebar classes:', sidebar.className);
+    
     if (isOpen) {
         closeMobileSidebar();
     } else {
         // Open
+        console.log('🔧 Opening mobile sidebar...');
         sidebar.dataset.transitioning = 'true';
         sidebar.style.removeProperty('display');
         sidebar.style.removeProperty('visibility');
@@ -3929,6 +4008,7 @@ function toggleMobileSidebar() {
         if (window.isMobile) document.body.style.overflow = 'hidden';
         setTimeout(() => { sidebar.dataset.transitioning = 'false'; }, 200);
         console.log('✅ Mobile sidebar opened');
+        console.log('🔧 Final sidebar classes:', sidebar.className);
     }
 }
 
@@ -6464,18 +6544,8 @@ function setupDashboardEventListeners() {
         closeSidebarBtn.addEventListener('click', closeMobileSidebar);
     }
     
-    // Mobile sidebar toggle button
-    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
-    if (mobileSidebarToggle) {
-        // Remove existing listeners to prevent duplicates
-        mobileSidebarToggle.removeEventListener('click', toggleMobileSidebar);
-        mobileSidebarToggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('🔧 Mobile sidebar toggle clicked');
-            toggleMobileSidebar();
-        });
-    }
+    // Mobile sidebar toggle button - REMOVED DUPLICATE (handled above)
+    console.log('✅ Mobile sidebar toggle listener handled above');
     
     // Logout button
     const logoutBtn = document.getElementById('logoutBtn');
