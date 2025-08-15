@@ -41,6 +41,30 @@ class GPTService {
             }
 
             const trimmedMessage = userMessage.trim();
+            
+            // Analyze conversation relevance BEFORE adding to history
+            let contextualHistory = [];
+            let analysisResult = null;
+            
+            if (window.dynamicContextManager && this.chatHistory.length > 0) {
+                console.log('🧠 Analyzing conversation relevance...');
+                analysisResult = await window.dynamicContextManager.analyzeConversationRelevance(
+                    trimmedMessage, 
+                    this.chatHistory
+                );
+                
+                // Get contextual history based on analysis
+                contextualHistory = window.dynamicContextManager.getContextualHistory(this.chatHistory);
+                
+                console.log(`📊 Relevance Analysis: ${analysisResult.isRelevant ? 'RELEVANT' : 'NOT RELEVANT'} (confidence: ${analysisResult.confidence})`);
+                console.log(`📚 Using ${contextualHistory.length} messages for context`);
+            } else {
+                // Fallback to original behavior
+                contextualHistory = this.chatHistory.slice(-5);
+                console.log('📚 Using fallback: last 5 messages for context');
+            }
+
+            // Now add current message to history
             this.chatHistory.push({ role: 'user', content: trimmedMessage });
             this.onMessageSent(trimmedMessage);
 
@@ -55,16 +79,14 @@ class GPTService {
             console.log('  - Final currentAvatar:', currentAvatar);
             console.log('  - Teacher Name:', teacherName);
 
-            // Prepare last few messages for continuity
-            const recentHistory = this.chatHistory.slice(-5);
-
             const requestBody = {
                 message: trimmedMessage,
                 grade: this.currentGrade || '6',
                 subject: this.currentSubject || 'General',
                 teacher: teacherName,
                 avatar: currentAvatar,
-                chatHistory: recentHistory,
+                chatHistory: contextualHistory,
+                contextAnalysis: analysisResult, // Include analysis result for backend awareness
                 userProfile: userProfile || {
                     full_name: 'Student',
                     class: this.currentGrade || '6',

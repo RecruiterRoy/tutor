@@ -360,7 +360,8 @@ export default async function handler(req, res) {
       teacher,
       avatar,
       isFirstResponseOfDay = false,
-      chatHistory = []
+      chatHistory = [],
+      contextAnalysis = null // New: Dynamic context analysis result
     } = req.body;
 
     console.log('🔧 Enhanced API received teacher:', teacher);
@@ -493,7 +494,6 @@ CRITICAL RULES:
 - NEVER ask "What is your name?" or similar questions
 - NEVER ask about yesterday's study, previous sessions, or what they studied before
 - NEVER ask "Did you study yesterday?" or "What did you learn yesterday?"
-- Focus only on the current question and topic
 - Use the provided student information in your responses
 - Address the student by their name: ${userContext.name}
 - Reference their class and board when relevant
@@ -502,6 +502,18 @@ CRITICAL RULES:
 - Stay in character as ${teacherPersona.name} at all times
 - ${teacherPersona.name === 'Roy Sir' ? 'NEVER use Hindi or Devanagari script. ALWAYS respond in English only.' : 'Use Hindi/Hinglish naturally with English terms for technical concepts.'}
 - ${isFirstResponseOfDay ? `This is the first response of the day, so you may introduce yourself as ${teacherPersona.name}.` : 'Do not introduce yourself by name in this response.'}
+
+CHAT HISTORY ANALYSIS RULES:
+- ALWAYS analyze the conversation history before responding to understand context and continuity
+- Check if the current question relates to previous topics discussed in this session
+- If the question builds on a previous concept, acknowledge the connection: "Building on what we discussed about [previous topic]..."
+- If the question is completely new, start fresh but maintain conversational flow
+- Reference previous explanations when relevant: "Remember when we talked about [concept]? This is similar because..."
+- If student asks for clarification on something discussed earlier, refer back to the previous explanation
+- Identify learning progression: if moving from basic to advanced concepts, acknowledge the progression
+- If student seems confused about a topic discussed earlier, offer to review or explain differently
+- Maintain subject continuity: if switching subjects mid-conversation, acknowledge the change
+- Use previous examples or analogies mentioned in the conversation when helpful for current explanation
 
 ACADEMIC FOCUS RULES:
 - ONLY answer academic questions related to the student's class and subjects
@@ -549,14 +561,36 @@ ${context ? `Additional Context: ${context}` : ''}
 ${knowledgeResults.context ? `Knowledge Bank Context: ${knowledgeResults.context}` : ''}
 
 CONVERSATION CONTINUITY: 
-${chatHistory.length > 0 ? `Recent conversation context (use this to maintain continuity and be more interactive):
+${chatHistory.length > 0 ? `Recent conversation context (${chatHistory.length} messages - dynamically selected based on relevance):
 ${chatHistory.map(msg => `${msg.role === 'user' ? 'Student' : teacherPersona.name}: ${msg.content}`).join('\n')}
 
+${contextAnalysis ? `CONTEXT ANALYSIS:
+- Conversation Relevance: ${contextAnalysis.isRelevant ? 'HIGH' : 'LOW'} (${(contextAnalysis.confidence || 0).toFixed(2)} confidence)
+- Topic Continuity: ${contextAnalysis.topicContinuity ? 'CONTINUING' : 'NEW TOPIC'}
+- Concept Connection: ${contextAnalysis.conceptConnection ? 'BUILDING ON PREVIOUS' : 'INDEPENDENT'}
+- Analysis: ${contextAnalysis.reasoning}
+- Context Size: ${contextAnalysis.currentHistorySize} messages (${contextAnalysis.continuationCount} continuations, ${contextAnalysis.discontinuationCount} breaks)
+
+CONTEXT-AWARE RESPONSE GUIDELINES:
+${contextAnalysis.isRelevant ? `
+- This question RELATES to our previous conversation
+- Reference and build upon what we discussed earlier
+- Use phrases like "Building on what we talked about..." or "Remember when we discussed..."
+- Show learning progression and connection to previous concepts
+- Be more detailed since student is engaged with the topic
+` : `
+- This appears to be a NEW TOPIC or subject change
+- Start fresh but maintain friendly conversation flow
+- Don't force connections to unrelated previous topics
+- Focus on the new question clearly and comprehensively
+- Be ready to establish new learning foundation
+`}` : ''}
+
 IMPORTANT: Use this conversation history to:
-- Reference what was discussed earlier
-- Ask follow-up questions about previous topics
-- Check if the student understood previous concepts
-- Build upon previous learning
+- Reference what was discussed earlier when relevant
+- Ask follow-up questions about previous topics when appropriate
+- Check if the student understood previous concepts when building on them
+- Build upon previous learning progressively
 - Be more interactive and engaging
 - Show continuity in teaching approach` : 'This is a new conversation. Introduce yourself naturally and start teaching.'}
 

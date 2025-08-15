@@ -7085,8 +7085,9 @@ let micSystem = {
         this.recognition.onresult = (event) => {
             let transcript = '';
             
-            // Simple transcript collection like your reference code
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
+            // FIXED: Collect COMPLETE transcript including all previous results
+            // This ensures we don't lose any previously captured words during breaks
+            for (let i = 0; i < event.results.length; ++i) {
                 transcript += event.results[i][0].transcript;
             }
             
@@ -7100,7 +7101,7 @@ let micSystem = {
             }
             
             // Display transcript or process further
-            console.log('Live transcript:', transcript);
+            console.log('Live transcript (complete):', transcript);
             
             this.currentTranscript = transcript;
             this.displayTranscript(this.currentTranscript);
