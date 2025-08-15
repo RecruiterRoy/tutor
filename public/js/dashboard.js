@@ -4324,6 +4324,12 @@ function updateAvatarDisplay() {
         welcomeTeacherName.textContent = avatarName;
     }
 
+    // Update avatar name in daily challenge header
+    const challengeAvatarName = document.getElementById('avatarName');
+    if (challengeAvatarName) {
+        challengeAvatarName.textContent = avatarName;
+    }
+
     console.log('✅ Avatar display updated:', avatarName, 'ID:', currentAvatarId);
 }
 

@@ -25,18 +25,7 @@
     <link rel="apple-touch-icon" sizes="384x384" href="images/tution.app_emblem.jpg">
     <link rel="apple-touch-icon" sizes="512x512" href="images/tution.app_emblem.jpg">
     
-    <!-- Google Translate -->
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,hi,gu,ta,te,kn,ml,pa,bn,mr,or,as',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-    </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <!-- Google Translate removed to optimize layout -->
     
     <!-- Preload essential resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
@@ -157,6 +146,28 @@
         
         <!-- Dynamic Context Management System -->
         <script src="js/dynamicContextManager.js?v=1.0.2" defer></script>
+        
+        <!-- Daily Fun Challenge System -->
+        <script src="js/dailyChallenge.js?v=1.0.2" defer></script>
+        <script src="js/azureOCRService.js?v=1.0.1" defer></script>
+        
+        <!-- OCR Usage Display -->
+        <script src="js/ocrUsageDisplay.js?v=1.0.1" defer></script>
+        
+        <!-- Image Preprocessor -->
+        <script src="js/imagePreprocessor.js?v=1.0.1" defer></script>
+        
+        <!-- OCR.Space Service -->
+        <script src="js/ocrSpaceService.js?v=1.0.1" defer></script>
+        
+        <!-- Free OCR Service -->
+        <script src="js/freeOCRService.js?v=1.0.1" defer></script>
+        
+        <!-- OCR Upload Interface -->
+        <script src="js/ocrUploadInterface.js?v=1.0.1" defer></script>
+        
+        <!-- Balloon Animation System -->
+        <script src="js/balloonAnimation.js?v=1.0.2" defer></script>
         
         <script src="js/dashboard.js?v=1.0.2" defer></script>
     
@@ -763,76 +774,57 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Mobile Optimizations */
+        /* Mobile Optimizations - Flexible Layout */
         @media (max-width: 768px) {
-            .chat-container {
-                height: calc(100vh - 280px); /* Even more space for chat on mobile */
-                padding: 15px;
-            }
-            
-            .input-area {
-                margin: 15px;
-                padding: 15px;
-            }
-            
-            .message-bubble {
-                max-width: 90%;
-                padding: 14px 18px;
-            }
-            
-            .nav-item {
-                padding: 10px 15px;
-                font-size: 14px;
-            }
-            
-            .card-modern {
-                padding: 20px;
-            }
-            
-            .quick-actions {
-                grid-template-columns: repeat(2, 1fr);
+            /* Keep header flexible but stack challenge input on mobile */
+            .chat-header .flex.items-center {
+                flex-wrap: wrap;
                 gap: 8px;
             }
             
-            .quick-action-btn {
-                padding: 10px 6px;
-            }
-            
-            /* Mobile header adjustments */
-            header.nav-modern {
+            #dailyChallengeHeader {
+                margin-top: 8px;
                 padding: 12px;
-            }
-            
-            /* Mobile sidebar adjustments */
-            #mobileSidebar {
-                width: 280px;
-            }
-            
-            /* Input area adjustments */
-            .input-area .flex {
-                flex-direction: column;
-                gap: 12px;
-            }
-            
-            .input-area button {
                 width: 100%;
             }
             
-            /* Chat header adjustments */
-            .chat-header .flex {
+            #dailyChallengeHeader .challenge-input-row {
                 flex-direction: column;
-                align-items: flex-start;
                 gap: 8px;
             }
             
-            /* Settings content adjustments */
-            .settings-content {
+            #challengeAnswer {
+                margin-bottom: 0;
+                font-size: 14px;
+            }
+            
+            #submitChallengeBtn {
+                width: 100%;
+                justify-content: center;
+                padding: 8px 16px;
+            }
+            
+            .chat-header {
+                padding: 12px;
+            }
+            
+            .chat-container {
+                height: calc(100vh - 300px);
                 padding: 15px;
             }
             
-            /* Avatar selection grid */
-            .avatar-selection-grid {
-                grid-template-columns: 1fr;
+            #challengeStats {
+                margin-top: 8px;
+            }
+            
+            #challengeStats .grid {
+                gap: 2;
+            }
+            
+            /* Balloon animations scale properly on mobile */
+            .balloon-animation-container {
+                width: 100vw !important;
+                height: 100vh !important;
             }
         }
         
@@ -1370,9 +1362,9 @@
                     <span class="text-xl">🚪</span>
                     <span>Logout</span>
                 </button>
-                <button id="trialInfoBtn" class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 bg-gray-800">
-                    <span class="text-xl">⏰</span>
-                    <span>Test Trial</span>
+                <button id="upgradeButton" onclick="window.location.href='public/payment.html'" class="nav-item w-full text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 bg-gray-800">
+                    <span class="text-xl">🚀</span>
+                    <span>Upgrade</span>
                 </button>
             </div>
         </div>
@@ -1430,9 +1422,9 @@
                     <span class="text-xl">🚪</span>
                     <span>Logout</span>
                 </button>
-                <button class="nav-item w-full text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
-                    <span class="text-xl">⏰</span>
-                    <span>Test Trial</span>
+                <button onclick="window.location.href='public/payment.html'" class="nav-item w-full text-purple-400 hover:text-purple-300 hover:bg-purple-500/10">
+                    <span class="text-xl">🚀</span>
+                    <span>Upgrade</span>
                 </button>
             </div>
         </div>
@@ -1454,48 +1446,98 @@
                     
                     <!-- Desktop Header Content -->
                     <div class="hidden lg:flex lg:items-center lg:space-x-4">
-                        <div class="subscription-badge trial" id="subscriptionBadge">
-                            <span class="flex items-center space-x-1">
-                                <span>⭐</span>
-                                <span>Trial</span>
-                            </span>
-                        </div>
-                        <button id="upgradeButton" onclick="window.location.href='public/payment.html'" class="btn-modern text-sm">
-                            <span>🚀</span>
-                            <span>Upgrade</span>
-                        </button>
+                        <!-- Removed Trial and Upgrade buttons to save space -->
                     </div>
                     
-                    <!-- Google Translate - Extreme Right -->
-                    <div class="hidden lg:block">
-                        <div id="google_translate_element"></div>
-                    </div>
+                    <!-- Google Translate removed to free up space -->
                 </div>
             </header>
             
             <!-- Content Area -->
-            <main class="flex-1 p-4">
+            <main class="flex-1 p-2">
                 <!-- Chat Box Container - Fixed Size -->
-                <div class="chat-box-container bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl max-w-4xl mx-auto h-[600px] flex flex-col">
-                    <!-- Chat Header -->
+                <div class="chat-box-container bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl max-w-4xl mx-auto h-[650px] flex flex-col">
+                    <!-- Compact Chat Header with Avatar and Daily Challenge -->
                     <div class="chat-header p-4 border-b border-white/20 flex-shrink-0">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="teacher-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
-                                <div>
-                                    <div id="welcomeTeacherName" class="text-white font-semibold">Loading...</div>
-                                    <div class="text-white/70 text-sm">Your AI Tutor</div>
+                        <!-- Avatar with Controls Below, and Challenge in Single Row -->
+                        <div class="flex items-start gap-4 mb-3">
+                            <!-- Avatar with Controls Below -->
+                            <div class="flex-shrink-0 flex flex-col items-center gap-1">
+                                <!-- Avatar -->
+                                <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-12 h-12 rounded-full border-2 border-white/20" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSIxMiIgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xMiAxMmMyLjIxIDAgNC0xLjc5IDQtNCAwLTIuMjEtMS43OS00LTQtNC0yLjIxIDAtNCAxLjc5LTQgNCAwIDIuMjEgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+Cg=='">
+                                
+                                <!-- Avatar Name -->
+                                <div id="avatarName" class="text-xs text-white/80 font-medium text-center">Roy Sir</div>
+                                
+                                                    <!-- Play/Stop Controls Below Name -->
+                    <div class="flex gap-1">
+                        <button id="playButton" class="p-1 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors flex items-center justify-center text-xs" title="Play">
+                            ▶️
+                        </button>
+                        <button id="stopButton" class="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors flex items-center justify-center text-xs" title="Stop">
+                            ⏹️
+                        </button>
+                        <button id="ocrButton" class="p-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center text-xs" title="OCR Upload" onclick="window.ocrUploadInterface?.toggle()">
+                            🔍
+                        </button>
+                    </div>
                             </div>
+                            
+                            <!-- Daily Challenge Section -->
+                            <div id="dailyChallengeHeader" class="flex-1 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-3 border border-white/10">
+                                <!-- Challenge Header -->
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-lg">🎉</span>
+                                        <span class="text-white font-medium text-sm">Daily Challenge</span>
+                                        <div id="welcomeTeacherName" class="text-white/60 text-xs">by Loading...</div>
+                                    </div>
+                                    <div id="challengeStreak" class="text-yellow-300 font-semibold text-xs bg-yellow-300/10 px-2 py-1 rounded-full">
+                                        ⭐ Streak: 0 days
+                                    </div>
+                                </div>
+                                
+                                <!-- Challenge Question -->
+                                <div id="challengeQuestion" class="text-white/90 text-sm mb-2 leading-relaxed">
+                                    Loading today's challenge...
+                                </div>
+                                
+                                <!-- Challenge Input -->
+                                <div id="challengeInputSection" class="challenge-input-row flex gap-2">
+                                    <input id="challengeAnswer" 
+                                           type="text" 
+                                           class="flex-1 bg-white/10 text-white rounded-lg px-3 py-2 text-sm border border-white/20 focus:border-purple-400 focus:outline-none placeholder-white/50 transition-all duration-300"
+                                           placeholder="Your answer...">
+                                    <button id="submitChallengeBtn" 
+                                            class="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Submit
+                                    </button>
+                                </div>
+                                
+                                                            <!-- Challenge Stats (shown after completion) -->
+                            <div id="challengeStats" class="hidden bg-white/5 rounded-lg p-2 mt-2">
+                                <!-- Line 1: Streak and Points -->
+                                <div class="text-xs text-center text-white/70 mb-1">
+                                    ⭐ Daily Streak: <span id="challengeStreak" class="text-yellow-300 font-semibold">0 days</span> | 
+                                    🏆 Total Points: <span id="totalPoints" class="text-green-300 font-semibold">0 pts</span>
+                                </div>
+                                <!-- Line 2: Rankings -->
+                                <div class="text-xs text-center text-white/70">
+                                    🇮🇳 India Ranking: <span id="indiaRank" class="text-blue-300 font-semibold">00</span> | 
+                                    🏙️ City Ranking: <span id="cityRank" class="text-purple-300 font-semibold">00</span>
+                                </div>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <button id="playButton" class="btn-secondary">
-                                    <span>▶️</span>
-                                    <span>Play</span>
-                                </button>
-                                <button id="stopButton" class="btn-secondary">
-                                    <span>⏹️</span>
-                                    <span>Stop</span>
-                                </button>
+                                
+                                <!-- Challenge Feedback -->
+                                <div id="challengeFeedback" class="text-green-400 font-semibold text-xs bg-green-400/10 px-3 py-2 rounded-lg mt-2 hidden transform transition-all duration-500">
+                                    <!-- Feedback will appear here -->
+                                </div>
+                                
+                                <!-- Challenge Reward -->
+                                <div id="challengeReward" class="text-center mt-2 hidden">
+                                    <div class="text-2xl animate-bounce">🏆</div>
+                                    <div class="text-yellow-300 font-bold text-xs">Awesome! +10 points!</div>
+                                </div>
                             </div>
                         </div>
                     </div>
