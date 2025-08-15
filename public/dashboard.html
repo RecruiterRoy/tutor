@@ -96,6 +96,45 @@
                 max-height: 1rem !important;
             }
         }
+        
+        /* YouTube Video Container Styling */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #000;
+            margin-bottom: 8px;
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            border: none;
+        }
+        
+        /* Mobile video optimization */
+        @media (max-width: 768px) {
+            .video-container {
+                margin: 8px 0;
+                border-radius: 8px;
+            }
+            
+            .video-container iframe {
+                border-radius: 8px;
+            }
+            
+            .message-ai .message-bubble .video-container {
+                max-width: 100%;
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
     </style>
     
     <!-- Load essential scripts with proper order -->
@@ -988,9 +1027,42 @@
         @media (max-width: 400px) {
             /* Further reduce padding */
             .input-area {
-                padding: 10px;
-                margin: 10px;
-                    }
+                padding: 8px;
+                margin: 4px;
+            }
+            
+            /* Make chat container even more compact */
+            .chat-box-container {
+                height: calc(100vh - 100px) !important;
+            }
+            
+            /* Reduce avatar size further */
+            .teacher-avatar {
+                width: 28px !important;
+                height: 28px !important;
+            }
+            
+            /* Make challenge text smaller */
+            #challengeQuestion {
+                font-size: 12px !important;
+                line-height: 1.3 !important;
+            }
+            
+            /* Adjust challenge stats text */
+            #challengeStats {
+                font-size: 10px !important;
+            }
+            
+            /* Make input fields smaller */
+            #challengeAnswer {
+                font-size: 12px !important;
+                padding: 6px !important;
+            }
+            
+            #submitChallengeBtn {
+                font-size: 12px !important;
+                padding: 6px 12px !important;
+            }
         
         /* Mobile button layout - one line with specified proportions */
         .mobile-device .input-area .button-row {
@@ -1122,9 +1194,9 @@
             height: auto;
         }
 
-        /* Prevent horizontal scrolling on mobile */
+        /* Allow horizontal scrolling on mobile for better accessibility */
         html, body {
-            overflow-x: hidden !important;
+            overflow-x: auto !important;
             max-width: 100% !important;
         }
             
@@ -1139,8 +1211,73 @@
             }
         }
 
-        /* APK-specific fixes for side buttons */
+        /* Mobile-specific fixes */
         @media (max-width: 768px) {
+            /* Ensure full width on mobile */
+            .chat-box-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                height: calc(100vh - 120px) !important;
+            }
+            
+            /* Adjust main content padding */
+            main {
+                padding: 4px !important;
+            }
+            
+            /* Make chat header more compact */
+            .chat-header {
+                padding: 8px !important;
+            }
+            
+            /* Adjust daily challenge layout */
+            #dailyChallengeHeader {
+                padding: 8px !important;
+            }
+            
+            /* Make challenge input more compact */
+            .challenge-input-row {
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+            
+            #challengeAnswer {
+                font-size: 14px !important;
+                padding: 8px !important;
+            }
+            
+            #submitChallengeBtn {
+                font-size: 14px !important;
+                padding: 8px 16px !important;
+            }
+            
+            /* Adjust avatar and controls */
+            .teacher-avatar {
+                width: 32px !important;
+                height: 32px !important;
+            }
+            
+            /* Ensure proper text wrapping */
+            .message-bubble {
+                max-width: 95% !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+            
+            /* Adjust message padding */
+            .message {
+                margin-bottom: 12px !important;
+            }
+            
+            /* Make sure buttons are touch-friendly */
+            button {
+                min-height: 44px !important;
+                min-width: 44px !important;
+            }
+            
+            /* Sidebar fixes */
             .sidebar {
                 background: rgba(17, 24, 39, 0.95) !important;
                 backdrop-filter: blur(10px);
@@ -1457,8 +1594,8 @@
             
             <!-- Content Area -->
             <main class="flex-1 p-2">
-                <!-- Chat Box Container - Fixed Size -->
-                <div class="chat-box-container bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl max-w-4xl mx-auto h-[650px] flex flex-col">
+                <!-- Chat Box Container - Responsive Size -->
+                <div class="chat-box-container bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl w-full max-w-4xl mx-auto h-[650px] md:h-[650px] h-[500px] flex flex-col">
                     <!-- Compact Chat Header with Avatar and Daily Challenge -->
                     <div class="chat-header p-4 border-b border-white/20 flex-shrink-0">
                         <!-- Avatar with Controls Below, and Challenge in Single Row -->
@@ -1569,24 +1706,24 @@
                         <!-- Mobile Layout -->
                         <div class="md:hidden">
                             <!-- Mobile Chat Input -->
-                            <div class="mobile-chat-input p-4 bg-gray-800/50 border-t border-gray-700/50 flex-shrink-0">
+                            <div class="mobile-chat-input p-2 bg-gray-800/50 border-t border-gray-700/50 flex-shrink-0">
                                 <!-- Mobile Input Area -->
-                                <div class="mobile-input-area bg-gray-800 border-t border-gray-700 p-4">
+                                <div class="mobile-input-area bg-gray-800 border-t border-gray-700 p-2">
                                     <!-- Text Input (Full Width) -->
-                                    <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 mb-3">
+                                    <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 mb-2 text-sm">
                                     
                                     <!-- Camera, Mic, Send Buttons in One Row -->
                                     <div class="flex space-x-2 flex-nowrap w-full mobile-chat-input">
                                         <!-- Camera Button (25%) -->
-                                        <button id="cameraButtonMobile" class="w-1/4 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0">
+                                        <button id="cameraButtonMobile" class="w-1/4 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
                                             📷
                                         </button>
                                         <!-- Mic Button (25%) -->
-                                        <button id="voiceButtonMobile" class="w-1/4 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0">
+                                        <button id="voiceButtonMobile" class="w-1/4 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
                                             <span id="voiceIconMobile">🎤</span>
                                         </button>
                                         <!-- Send Button (50%) -->
-                                        <button id="sendButtonMobile" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-3 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0">
+                                        <button id="sendButtonMobile" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
                                             Send
                                         </button>
                                     </div>

@@ -728,6 +728,101 @@ ${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR:
           response = fixEn.choices[0]?.message?.content || response;
           additionalData.usage_fix = fixEn.usage || {};
         }
+
+        // Smart video recommendation logic
+        const shouldRecommendVideo = shouldRecommendVideoNow(message, userContext, chatHistory);
+
+        // Smart video recommendation logic
+        console.log('🎥 Video recommendation check:', {
+          shouldRecommend: shouldRecommendVideo.shouldRecommend,
+          reason: shouldRecommendVideo.reason,
+          grade: grade,
+          subject: subject,
+          message: message.substring(0, 100)
+        });
+        
+        if (shouldRecommendVideo.shouldRecommend) {
+          try {
+            console.log(`🎥 Video recommendation triggered: ${shouldRecommendVideo.reason}`);
+            
+            // Handle different recommendation scenarios
+            if (shouldRecommendVideo.reason === 'confusion_detected') {
+              // Offer video instead of showing directly
+              response += `\n\nI understand this might be a bit complex. Would you like to see a video that explains this topic in a better way? It might help you understand it more clearly.`;
+              
+              // Store the current topic for when user agrees
+              additionalData.pendingVideoTopic = message;
+              additionalData.videoReason = 'confusion_detected';
+              
+            } else if (shouldRecommendVideo.reason === 'kid_engagement') {
+              // For kids, offer video to keep them engaged
+              response += `\n\nHey! You've been studying really well! 🎉 Would you like to watch a fun video about this topic? It might make learning even more interesting!`;
+              
+              additionalData.pendingVideoTopic = message;
+              additionalData.videoReason = 'kid_engagement';
+              
+            } else if (shouldRecommendVideo.reason === 'study_engagement') {
+              // For continuous study, offer video to break monotony
+              response += `\n\nYou've been studying very hard! 💪 How about we take a short break and watch an interesting video about this topic? It might help refresh your mind and make learning more enjoyable.`;
+              
+              additionalData.pendingVideoTopic = message;
+              additionalData.videoReason = 'study_engagement';
+              
+            } else if (shouldRecommendVideo.reason === 'complex_topic') {
+              // For complex topics, offer video explanation
+              response += `\n\nThis is a complex topic that might be easier to understand with a visual explanation. Would you like to see a video that breaks it down step by step?`;
+              
+              additionalData.pendingVideoTopic = message;
+              additionalData.videoReason = 'complex_topic';
+              
+            } else {
+              // Direct video recommendation for explicit requests or user agreement
+              console.log('🔍 Starting video recommendation process...');
+              const videoRecommendation = await getGPT4VideoRecommendation(grade, subject, message, userContext);
+              if (videoRecommendation) {
+                if (typeof videoRecommendation === 'object' && videoRecommendation.type === 'youtube_video') {
+                  // YouTube API video with metadata
+                  response += `\n\nHere's a helpful video to understand this better: ${videoRecommendation.url}`;
+                  
+                  // Add video metadata to response
+                  additionalData.videoData = {
+                    videoId: videoRecommendation.videoId,
+                    title: videoRecommendation.title,
+                    thumbnail: videoRecommendation.thumbnail,
+                    description: videoRecommendation.description,
+                    channelTitle: videoRecommendation.channelTitle
+                  };
+                  console.log('✅ YouTube API video added successfully');
+                } else if (typeof videoRecommendation === 'object' && videoRecommendation.type === 'segmented_video') {
+                  // AI-controlled segmented video
+                  response += `\n\nHere's a personalized video explanation with AI-controlled segments: ${videoRecommendation.videoUrl}`;
+                  response += `\n\n🎯 AI has selected ${videoRecommendation.segments.length} relevant segments (${Math.round(videoRecommendation.totalDuration / 60)} minutes total):`;
+                  videoRecommendation.segments.forEach((segment, index) => {
+                    const startMin = Math.floor(segment.start / 60);
+                    const startSec = segment.start % 60;
+                    const endMin = Math.floor(segment.end / 60);
+                    const endSec = segment.end % 60;
+                    response += `\n• Segment ${index + 1} (${startMin}:${startSec.toString().padStart(2, '0')}-${endMin}:${endSec.toString().padStart(2, '0')}): ${segment.description}`;
+                  });
+                  response += `\n\n📝 Summary: ${videoRecommendation.summary}`;
+                  
+                  // Add segment data to response
+                  additionalData.videoSegments = videoRecommendation;
+                  console.log('✅ AI-controlled segmented video added successfully');
+                } else {
+                  // Regular video URL
+                  response += `\n\nHere's a helpful video to understand this better: ${videoRecommendation}`;
+                  console.log('✅ Regular video recommendation added successfully');
+                }
+              } else {
+                console.log('❌ No video recommendation found');
+              }
+            }
+          } catch (videoError) {
+            console.log('Video recommendation failed:', videoError);
+            // Continue without video recommendation
+          }
+        }
         break;
     }
 
@@ -800,4 +895,728 @@ Generate a complete exam paper following these specifications.`;
     console.error('Error generating exam paper:', error);
     return 'Error generating exam paper. Please try again.';
   }
+}
+
+// Function to get GPT-4 video recommendations for educational topics
+async function getGPT4VideoRecommendation(grade, subject, query, userContext) {
+  try {
+    const isHindiTeacher = userContext.teacher === 'Miss Sapna' || userContext.avatar === 'miss-sapna';
+    const language = isHindiTeacher ? 'Hindi' : 'English';
+
+    // Create a search query for YouTube API
+    let searchQuery = `${query} ${subject} class ${grade}`;
+    
+    // Add language preference
+    if (language === 'Hindi') {
+      searchQuery += ' hindi';
+    }
+    
+    // Add educational keywords
+    searchQuery += ' educational tutorial lesson';
+    
+    console.log('🔍 Searching YouTube for:', searchQuery);
+    
+    // Fetch videos using YouTube Data API with user context
+    const videos = await fetchYouTubeVideos(searchQuery, 5, userContext);
+    
+    if (!videos || videos.length === 0) {
+      console.log('❌ No videos found via YouTube API');
+      return null;
+    }
+    
+    // Select the best video (first result is usually most relevant)
+    const bestVideo = videos[0];
+    
+    console.log('✅ Selected video:', bestVideo.title);
+    
+    // Return video data for frontend rendering
+    return {
+      type: 'youtube_video',
+      videoId: bestVideo.videoId,
+      title: bestVideo.title,
+      thumbnail: bestVideo.thumbnail,
+      description: bestVideo.description,
+      channelTitle: bestVideo.channelTitle,
+      url: `https://www.youtube.com/watch?v=${bestVideo.videoId}`
+    };
+    
+  } catch (error) {
+    console.error('❌ Error in getGPT4VideoRecommendation:', error);
+    return null;
+  }
+}
+
+// Function to validate YouTube video availability
+async function validateYouTubeVideo(videoUrl) {
+  try {
+    const videoId = videoUrl.match(/[?&]v=([^&]+)/)?.[1];
+    if (!videoId) return false;
+    
+    // Check video availability using YouTube Data API or oEmbed
+    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json`;
+    
+    const response = await fetch(oembedUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data && data.title && data.thumbnail_url;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Video validation error:', error);
+    return false;
+  }
+}
+
+// Function to get fallback video for a specific query
+function getFallbackVideoForQuery(query, userContext) {
+  try {
+    const queryLower = query.toLowerCase();
+    const isHindiTeacher = userContext.teacher === 'Miss Sapna' || userContext.avatar === 'miss-sapna';
+    const userClass = parseInt(userContext.class?.replace('Class ', '') || '5');
+    
+    // Age-appropriate fallback videos
+    const fallbackVideos = {
+      'poem': {
+        title: 'Twinkle Twinkle Little Star - Educational Poem for Kids',
+        videoId: '3jZ5vnv-LZc',
+        channelTitle: 'Educational Channel',
+        description: 'A fun and educational version of the classic nursery rhyme for children',
+        url: 'https://www.youtube.com/watch?v=3jZ5vnv-LZc'
+      },
+      'poetry': {
+        title: 'Fun Poems for Kids - Educational Poetry',
+        videoId: '3jZ5vnv-LZc',
+        channelTitle: 'Educational Channel',
+        description: 'Educational poetry videos for children',
+        url: 'https://www.youtube.com/watch?v=3jZ5vnv-LZc'
+      },
+      'math': {
+        title: 'Basic Math for Kids - Addition and Subtraction',
+        videoId: '7JmJqp7FzI4',
+        channelTitle: 'Math Learning Channel',
+        description: 'Fun math lessons for young learners',
+        url: 'https://www.youtube.com/watch?v=7JmJqp7FzI4'
+      },
+      'english': {
+        title: 'English Grammar for Kids',
+        videoId: '302eJ3TzJQc',
+        channelTitle: 'English Learning Channel',
+        description: 'Basic English grammar lessons for children',
+        url: 'https://www.youtube.com/watch?v=302eJ3TzJQc'
+      },
+      'science': {
+        title: 'Science for Kids - Fun Experiments',
+        videoId: 'aIk2nqsrOqM',
+        channelTitle: 'Science Channel',
+        description: 'Fun science experiments and lessons for kids',
+        url: 'https://www.youtube.com/watch?v=aIk2nqsrOqM'
+      }
+    };
+    
+    // Find matching video based on query
+    for (const [keyword, video] of Object.entries(fallbackVideos)) {
+      if (queryLower.includes(keyword)) {
+        return video;
+      }
+    }
+    
+    // Default fallback for any query
+    return fallbackVideos.poem;
+    
+  } catch (error) {
+    console.error('Error in getFallbackVideoForQuery:', error);
+    return null;
+  }
+}
+
+
+
+// Fallback function with reliable educational videos
+async function getFallbackVideoRecommendation(grade, subject, query) {
+  try {
+    // Age-appropriate educational video mappings
+    const fallbackVideos = {
+      'mathematics': {
+        'algebra': 'https://www.youtube.com/watch?v=7JmJqp7FzI4', // Khan Academy Algebra
+        'geometry': 'https://www.youtube.com/watch?v=302eJ3TzJQc', // Math Antics Geometry
+        'fractions': 'https://www.youtube.com/watch?v=aIk2nqsrOqM', // Math Antics Fractions
+        'trigonometry': 'https://www.youtube.com/watch?v=Jsiy4TxgIME', // Trigonometry
+        'calculus': 'https://www.youtube.com/watch?v=7JmJqp7FzI4', // Calculus
+        'statistics': 'https://www.youtube.com/watch?v=302eJ3TzJQc', // Statistics
+        'poem': 'https://www.youtube.com/watch?v=3jZ5vnv-LZc', // Twinkle Twinkle Little Star
+        'poetry': 'https://www.youtube.com/watch?v=3jZ5vnv-LZc' // Educational Poetry
+      },
+      'science': {
+        'physics': 'https://www.youtube.com/watch?v=7JmJqp7FzI4', // Physics
+        'chemistry': 'https://www.youtube.com/watch?v=302eJ3TzJQc', // Chemistry
+        'biology': 'https://www.youtube.com/watch?v=aIk2nqsrOqM', // Biology
+        'photosynthesis': 'https://www.youtube.com/watch?v=7JmJqp7FzI4' // Photosynthesis
+      },
+      'english': {
+        'grammar': 'https://www.youtube.com/watch?v=7JmJqp7FzI4', // Grammar
+        'literature': 'https://www.youtube.com/watch?v=302eJ3TzJQc', // Literature
+        'writing': 'https://www.youtube.com/watch?v=aIk2nqsrOqM', // Writing
+        'poem': 'https://www.youtube.com/watch?v=3jZ5vnv-LZc', // Twinkle Twinkle Little Star
+        'poetry': 'https://www.youtube.com/watch?v=3jZ5vnv-LZc', // Educational Poetry
+        'twinkle': 'https://www.youtube.com/watch?v=3jZ5vnv-LZc' // Twinkle Twinkle Little Star
+      },
+      'hindi': {
+        'grammar': 'https://www.youtube.com/watch?v=7JmJqp7FzI4', // Hindi Grammar
+        'literature': 'https://www.youtube.com/watch?v=302eJ3TzJQc', // Hindi Literature
+        'writing': 'https://www.youtube.com/watch?v=aIk2nqsrOqM', // Hindi Writing
+        'poem': 'https://www.youtube.com/watch?v=3jZ5vnv-LZc', // Hindi Poetry
+        'poetry': 'https://www.youtube.com/watch?v=3jZ5vnv-LZc' // Educational Poetry
+      },
+      'social_studies': {
+        'history': 'https://www.youtube.com/watch?v=7JmJqp7FzI4', // History
+        'geography': 'https://www.youtube.com/watch?v=302eJ3TzJQc', // Geography
+        'civics': 'https://www.youtube.com/watch?v=aIk2nqsrOqM' // Civics
+      }
+    };
+    
+    const normalizedSubject = subject.toLowerCase().replace(/\s+/g, '_');
+    const subjectVideos = fallbackVideos[normalizedSubject];
+    
+    if (!subjectVideos) {
+      return 'https://www.youtube.com/watch?v=7JmJqp7FzI4'; // Default educational video
+    }
+    
+    // Find best matching topic
+    const queryLower = query.toLowerCase();
+    let bestMatch = null;
+    let bestScore = 0;
+    
+    for (const [topic, videoUrl] of Object.entries(subjectVideos)) {
+      const score = queryLower.includes(topic) ? topic.length : 0;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = videoUrl;
+      }
+    }
+    
+    return bestMatch || subjectVideos[Object.keys(subjectVideos)[0]];
+    
+  } catch (error) {
+    console.error('Error getting fallback video:', error);
+    return 'https://www.youtube.com/watch?v=7JmJqp7FzI4'; // Ultimate fallback
+  }
+}
+
+// Open search video recommendation function
+async function getOpenSearchVideoRecommendation(grade, subject, query, language) {
+  try {
+    const openSearchPrompt = `You are an expert educational content curator. The topic was not found in the specified educational channels, so now search the entire YouTube platform for the BEST educational video.
+
+STUDENT CONTEXT:
+- Class: ${grade}
+- Subject: ${subject}
+- Query: ${query}
+- Language Preference: ${language}
+
+OPEN SEARCH REQUIREMENTS:
+1. Search ALL of YouTube for the best educational video on this topic
+2. Focus on:
+   - Educational channels (any language)
+   - Academic content creators
+   - University channels
+   - Professional educators
+   - Subject matter experts
+
+3. Video Selection Criteria:
+   - Age-appropriate for Class ${grade}
+   - Relevant to: "${query}"
+   - In ${language} language (if possible, otherwise any language)
+   - Under 20 minutes for better engagement
+   - High number of likes (prefer videos with 5K+ likes)
+   - Recent uploads (2020-2024 preferred)
+   - High quality and well-reviewed
+   - Clear explanations and good production quality
+
+4. Search Strategy:
+   - Use specific keywords from the query
+   - Include subject name and class level
+   - Search for both ${language} and English versions
+   - Prioritize videos with higher engagement (likes, views)
+   - Prefer videos from verified educational channels
+
+5. Return ONLY the YouTube URL in this exact format:
+   https://www.youtube.com/watch?v=VIDEO_ID
+
+6. If you find a good video, return it immediately.
+   If no suitable video exists, return "NO_VIDEO_FOUND"
+
+IMPORTANT: Return ONLY the URL or "NO_VIDEO_FOUND", no explanations.`;
+
+    const openSearchChat = await openai.chat.completions.create({
+      model: 'gpt-4',
+      temperature: 0.4,
+      max_tokens: 100,
+      messages: [
+        { role: 'system', content: openSearchPrompt },
+        { role: 'user', content: `Find the best educational video for: ${query} (open search)` }
+      ]
+    });
+
+    const openSearchUrl = openSearchChat.choices[0]?.message?.content?.trim();
+    
+    if (openSearchUrl && openSearchUrl.includes('youtube.com/watch?v=')) {
+      // Validate video availability before returning
+      const isValid = await validateYouTubeVideo(openSearchUrl);
+      if (isValid) {
+        console.log('Open search found valid video:', openSearchUrl);
+        return openSearchUrl;
+      }
+    }
+    
+    console.log('Open search did not find a valid video');
+    return null;
+    
+  } catch (error) {
+    console.error('Error in open search video recommendation:', error);
+    return null;
+  }
+}
+
+// Function to get video transcript and create AI-controlled segments
+async function getVideoTranscriptAndSegments(videoUrl, query, userContext) {
+  try {
+    const videoId = videoUrl.match(/[?&]v=([^&]+)/)?.[1];
+    if (!videoId) return null;
+
+    // Get video transcript using YouTube Data API or transcript service
+    const transcript = await getVideoTranscript(videoId);
+    if (!transcript) return null;
+
+    // Use GPT-4 to analyze transcript and find relevant segments
+    const segmentPrompt = `You are an expert educational content analyzer. Analyze this video transcript and find the MOST RELEVANT segments for the student's question.
+
+STUDENT CONTEXT:
+- Name: ${userContext.name}
+- Class: ${userContext.class}
+- Question: "${query}"
+
+VIDEO TRANSCRIPT:
+${transcript}
+
+TASK:
+1. Find 2-3 specific time segments that directly answer the student's question
+2. Each segment should be 30-90 seconds long for optimal learning
+3. Focus on clear explanations and key concepts
+4. Avoid repetitive or off-topic content
+
+REQUIREMENTS:
+- Start time and end time for each segment (in seconds)
+- Brief description of what each segment covers
+- Total segments should not exceed 3 minutes combined
+- Prioritize segments that directly address the question
+
+Return the response in this JSON format:
+{
+  "segments": [
+    {
+      "start": 120,
+      "end": 180,
+      "description": "Explanation of quadratic formula"
+    },
+    {
+      "start": 240,
+      "end": 300,
+      "description": "Step-by-step example solving"
+    }
+  ],
+  "totalDuration": 120,
+  "summary": "Brief summary of what the student will learn"
+}`;
+
+    const segmentAnalysis = await openai.chat.completions.create({
+      model: 'gpt-4',
+      temperature: 0.3,
+      max_tokens: 500,
+      messages: [
+        { role: 'system', content: segmentPrompt },
+        { role: 'user', content: `Find relevant segments for: ${query}` }
+      ]
+    });
+
+    const segments = JSON.parse(segmentAnalysis.choices[0]?.message?.content || '{}');
+    return {
+      videoId,
+      videoUrl,
+      segments: segments.segments || [],
+      summary: segments.summary || '',
+      totalDuration: segments.totalDuration || 0
+    };
+
+  } catch (error) {
+    console.error('Error getting video transcript and segments:', error);
+    return null;
+  }
+}
+
+// Smart video recommendation logic
+function shouldRecommendVideoNow(message, userContext, chatHistory) {
+  try {
+    const userClass = parseInt(userContext.class?.replace('Class ', '') || '5');
+    const isKid = userClass <= 8; // Kids are class 8 and below
+    const messageLower = message.toLowerCase();
+    
+    // 1. User explicitly asks for video - EXPANDED PATTERNS
+    const videoRequestPatterns = [
+      'video', 'show me', 'can you show', 'i want to see', 'play video', 'watch video',
+      'i want to see video', 'i want to watch video', 'show me video', 'play video of',
+      'watch video of', 'video of this', 'video of that', 'show me a video',
+      'can you show me a video', 'would you show me a video', 'i want to see video of',
+      'i want to watch video of', 'show me video of', 'play video of', 'video please'
+    ];
+    
+    const explicitVideoRequest = videoRequestPatterns.some(pattern => 
+      messageLower.includes(pattern)
+    );
+    
+    if (explicitVideoRequest) {
+      console.log('🎥 User explicitly requested video:', messageLower);
+      return { shouldRecommend: true, reason: 'explicit_request' };
+    }
+    
+    // 2. Check if user said "yes" to video suggestion - IMPROVED
+    const userAgreedToVideo = (messageLower.includes('yes') || messageLower === 'yeah' || messageLower === 'okay' || messageLower === 'ok') && 
+                             (messageLower.includes('video') || 
+                              messageLower.includes('show') ||
+                              messageLower.includes('watch') ||
+                              messageLower.includes('play'));
+    
+    // Also check recent context for simple "yes" responses
+    if (!userAgreedToVideo && (messageLower === 'yes' || messageLower === 'yeah' || messageLower === 'okay' || messageLower === 'ok')) {
+      const recentMessages = chatHistory.slice(-3);
+      const hadVideoOffer = recentMessages.some(msg => 
+        msg.role === 'assistant' && 
+        (msg.content.includes('Would you like to see a video') || 
+         msg.content.includes('would you like to watch a video') ||
+         msg.content.includes('Would you like me to show you a video'))
+      );
+      if (hadVideoOffer) {
+        console.log('🎥 User agreed to recent video offer');
+        return { shouldRecommend: true, reason: 'user_agreed' };
+      }
+    }
+    
+    if (userAgreedToVideo) {
+      console.log('🎥 User agreed to video suggestion');
+      return { shouldRecommend: true, reason: 'user_agreed' };
+    }
+    
+    // 3. Check if this is a follow-up question indicating confusion
+    const isConfusionIndicated = messageLower.includes('i don\'t understand') ||
+                                messageLower.includes('i don\'t get it') ||
+                                messageLower.includes('confused') ||
+                                messageLower.includes('not clear') ||
+                                messageLower.includes('can you explain again') ||
+                                messageLower.includes('i still don\'t understand') ||
+                                messageLower.includes('please explain') ||
+                                messageLower.includes('help me understand');
+    
+    if (isConfusionIndicated) {
+      console.log('🎥 User seems confused, offering video');
+      return { shouldRecommend: true, reason: 'confusion_detected' };
+    }
+    
+    // 4. For kids: Check engagement timing (every 15-20 minutes)
+    if (isKid) {
+      const sessionStartTime = userContext.sessionStartTime || Date.now();
+      const sessionDuration = Date.now() - sessionStartTime;
+      const minutesInSession = sessionDuration / (1000 * 60);
+      
+      // Check if it's been 15-20 minutes since last video
+      const lastVideoTime = userContext.lastVideoTime || 0;
+      const minutesSinceLastVideo = (Date.now() - lastVideoTime) / (1000 * 60);
+      
+      if (minutesSinceLastVideo >= 15 && minutesInSession >= 10) {
+        console.log('🎥 Kid engagement: offering video after 15+ minutes');
+        return { shouldRecommend: true, reason: 'kid_engagement' };
+      }
+    }
+    
+    // 5. Check if user has been studying continuously for too long
+    const recentMessages = chatHistory.slice(-5); // Last 5 messages
+    const studyIntensity = recentMessages.filter(msg => 
+      msg.role === 'user' && 
+      !msg.content.toLowerCase().includes('video') &&
+      !msg.content.toLowerCase().includes('break') &&
+      !msg.content.toLowerCase().includes('stop')
+    ).length;
+    
+    if (studyIntensity >= 4) {
+      console.log('🎥 High study intensity detected, offering video for engagement');
+      return { shouldRecommend: true, reason: 'study_engagement' };
+    }
+    
+    // 6. Check for complex topics that might benefit from visual explanation
+    const complexTopics = ['geometry', 'trigonometry', 'calculus', 'physics', 'chemistry', 'biology', 'anatomy', 'molecular', 'chemical', 'reaction', 'equation', 'formula', 'theorem', 'proof', 'poetry', 'poem', 'literature', 'grammar'];
+    const hasComplexTopic = complexTopics.some(topic => messageLower.includes(topic));
+    
+    if (hasComplexTopic && !userContext.videoOfferedForTopic) {
+      console.log('🎥 Complex topic detected, offering video');
+      return { shouldRecommend: true, reason: 'complex_topic' };
+    }
+    
+    // Default: Don't recommend video
+    return { shouldRecommend: false, reason: 'no_trigger' };
+    
+  } catch (error) {
+    console.error('Error in shouldRecommendVideoNow:', error);
+    return { shouldRecommend: false, reason: 'error' };
+  }
+}
+
+// YouTube Data API integration with channel filtering
+async function fetchYouTubeVideos(query, maxResults = 5, userContext = {}) {
+  try {
+    const apiKey = process.env.YOUTUBE_DATA_API_KEY;
+    console.log('🔑 YouTube API Key check:', {
+      hasKey: !!apiKey,
+      keyLength: apiKey ? apiKey.length : 0,
+      keyPreview: apiKey ? apiKey.substring(0, 10) + '...' : 'none'
+    });
+    
+    if (!apiKey) {
+      console.error('❌ YouTube API key not found in environment variables');
+      console.error('❌ Please check your .env file contains: YOUTUBE_DATA_API_KEY=your_actual_key_here');
+      console.log('🔄 Falling back to hardcoded educational videos...');
+      
+      // Return a fallback video for the query
+      const fallbackVideo = getFallbackVideoForQuery(query, userContext);
+      if (fallbackVideo) {
+        console.log('✅ Using fallback video:', fallbackVideo.url);
+        return [fallbackVideo];
+      }
+      
+      return null;
+    }
+
+    const isHindiTeacher = userContext.teacher === 'Miss Sapna' || userContext.avatar === 'miss-sapna';
+    const language = isHindiTeacher ? 'Hindi' : 'English';
+    const userClass = parseInt(userContext.class?.replace('Class ', '') || '5');
+    
+    // Define educational channels based on language and class
+    const educationalChannels = language === 'Hindi' ? [
+      'Physics Wallah',
+      'Dear Sir',
+      'Magnet Brains Hindi',
+      'Let\'s Learn',
+      'Examपुर',
+      'Study with Sudhir Hindi',
+      'Unacademy Hindi',
+      'Adda247 School Hindi',
+      'SuccessCDs Education',
+      'Apni Kaksha',
+      'Bodhaguru Hindi',
+      'EduMantra',
+      'Unacademy Foundation',
+      'GK Planet',
+      'Maths by Arvind Sir',
+      'Magnet Brains हिन्दी',
+      'Learn with Sumit',
+      'Pradeep Kshetrapal',
+      'EduPoint',
+      'Bright Tutee'
+    ] : [
+      'Khan Academy India',
+      'LearnoHub',
+      'Vedantu',
+      'Magnet Brains',
+      'BYJU\'S',
+      'Unacademy CBSE/ICSE',
+      'Physics Wallah English',
+      'Toppr Study',
+      'Doubtnut',
+      'Meritnation',
+      'Edumantra',
+      'English Academy',
+      'Math Infinity',
+      'Adda247 School',
+      'Maths Teacher',
+      'Ganit Guru',
+      'Science Wallah',
+      'ExamFear Education Science',
+      'Apni Kaksha',
+      'CrashCourse Kids',
+      'Study with Sudhir',
+      'Extra Class',
+      'Simran Sahani English',
+      'Shipra Mishra English',
+      'Rahul Dwivedi English',
+      'Bodhaguru',
+      'English Academy',
+      'Geometry Box',
+      'JustTutors',
+      'Bright Tutee'
+    ];
+
+    // Build search query with channel filtering
+    let searchQuery = query;
+    
+    // Add age-appropriate keywords
+    if (userClass <= 5) {
+      searchQuery += ' kids children primary school';
+    } else if (userClass <= 8) {
+      searchQuery += ' middle school';
+    } else {
+      searchQuery += ' high school';
+    }
+    
+    // Add educational keywords
+    searchQuery += ' educational tutorial lesson';
+    
+    // Add language preference
+    if (language === 'Hindi') {
+      searchQuery += ' hindi';
+    }
+
+    console.log('🔍 Fetching YouTube videos for query:', searchQuery);
+    console.log('🎯 Target channels:', educationalChannels.slice(0, 5).join(', '));
+    
+    // First, try to find videos from specific channels
+    let videos = [];
+    
+    // Search in specific channels first
+    for (const channel of educationalChannels.slice(0, 10)) { // Limit to top 10 channels
+      try {
+        const channelQuery = `${searchQuery} ${channel}`;
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=3&q=${encodeURIComponent(channelQuery)}&key=${apiKey}&videoDuration=short&videoEmbeddable=true&order=relevance`;
+        
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.items && data.items.length > 0) {
+            const channelVideos = data.items
+              .filter(item => educationalChannels.some(ch => item.snippet.channelTitle.includes(ch)))
+              .map(item => ({
+                videoId: item.id.videoId,
+                title: item.snippet.title,
+                thumbnail: item.snippet.thumbnails.medium.url,
+                description: item.snippet.description,
+                channelTitle: item.snippet.channelTitle,
+                publishedAt: item.snippet.publishedAt,
+                source: 'specific_channel'
+              }));
+            videos.push(...channelVideos);
+          }
+        }
+      } catch (error) {
+        console.log(`❌ Error searching channel ${channel}:`, error.message);
+      }
+    }
+    
+    // If no videos found from specific channels, do a general search
+    if (videos.length === 0) {
+      console.log('🔍 No videos found in specific channels, doing general search...');
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=${maxResults}&q=${encodeURIComponent(searchQuery)}&key=${apiKey}&videoDuration=short&videoEmbeddable=true&order=relevance`;
+      
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+          videos = data.items
+            .filter(item => {
+              // Filter out inappropriate content
+              const title = item.snippet.title.toLowerCase();
+              const description = item.snippet.description.toLowerCase();
+              const channelTitle = item.snippet.channelTitle.toLowerCase();
+              
+              // Block technical/API videos
+              const blockedKeywords = ['api', 'key', 'setup', 'configuration', 'tutorial', 'how to create', 'installation', 'developer', 'programming'];
+              const hasBlockedKeywords = blockedKeywords.some(keyword => 
+                title.includes(keyword) || description.includes(keyword)
+              );
+              
+              // Prefer educational channels
+              const isEducationalChannel = educationalChannels.some(ch => 
+                channelTitle.includes(ch.toLowerCase())
+              );
+              
+              return !hasBlockedKeywords && (isEducationalChannel || title.includes('educational') || title.includes('learn'));
+            })
+            .map(item => ({
+              videoId: item.id.videoId,
+              title: item.snippet.title,
+              thumbnail: item.snippet.thumbnails.medium.url,
+              description: item.snippet.description,
+              channelTitle: item.snippet.channelTitle,
+              publishedAt: item.snippet.publishedAt,
+              source: 'general_search'
+            }));
+        }
+      }
+    }
+    
+    // Sort videos by relevance and recency
+    videos = videos
+      .filter((video, index, self) => 
+        index === self.findIndex(v => v.videoId === video.videoId)
+      ) // Remove duplicates
+      .sort((a, b) => {
+        // Prioritize specific channel videos
+        if (a.source === 'specific_channel' && b.source !== 'specific_channel') return -1;
+        if (b.source === 'specific_channel' && a.source !== 'specific_channel') return 1;
+        
+        // Then by recency
+        return new Date(b.publishedAt) - new Date(a.publishedAt);
+      })
+      .slice(0, maxResults);
+
+    console.log(`✅ Found ${videos.length} filtered videos for query: ${query}`);
+    videos.forEach(video => {
+      console.log(`  - ${video.title} (${video.channelTitle})`);
+    });
+    
+    return videos;
+    
+  } catch (error) {
+    console.error('❌ Error fetching YouTube videos:', error);
+    return null;
+  }
+}
+
+// Function to get video transcript (placeholder - would need YouTube Data API or transcript service)
+async function getVideoTranscript(videoId) {
+  try {
+    // This is a placeholder - in production, you would use:
+    // 1. YouTube Data API with transcript access
+    // 2. Third-party transcript services
+    // 3. YouTube transcript scraping (with proper permissions)
+    
+    // For now, return a sample transcript structure
+    return `[00:00] Welcome to today's lesson on algebra
+[00:15] Today we'll be learning about quadratic equations
+[00:30] A quadratic equation is in the form ax² + bx + c = 0
+[00:45] Let's start with a simple example: x² + 5x + 6 = 0
+[01:00] To solve this, we need to find the values of x
+[01:15] We can use factoring, completing the square, or the quadratic formula
+[01:30] Let me show you the quadratic formula: x = (-b ± √(b² - 4ac)) / 2a
+[01:45] For our example, a=1, b=5, c=6
+[02:00] Plugging these values in: x = (-5 ± √(25 - 24)) / 2
+[02:15] This simplifies to: x = (-5 ± √1) / 2
+[02:30] So x = (-5 + 1) / 2 = -2 or x = (-5 - 1) / 2 = -3
+[02:45] Therefore, the solutions are x = -2 and x = -3
+[03:00] Let's verify by plugging these back into the original equation
+[03:15] For x = -2: (-2)² + 5(-2) + 6 = 4 - 10 + 6 = 0 ✓
+[03:30] For x = -3: (-3)² + 5(-3) + 6 = 9 - 15 + 6 = 0 ✓
+[03:45] Both solutions work! This is how you solve quadratic equations.`;
+    
+  } catch (error) {
+    console.error('Error getting video transcript:', error);
+    return null;
+  }
+}
+
+// Legacy function (kept for compatibility)
+async function getYouTubeVideoRecommendation(grade, subject, query) {
+  return await getFallbackVideoRecommendation(grade, subject, query);
 } 

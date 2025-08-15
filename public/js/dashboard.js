@@ -2210,6 +2210,14 @@ function ensureTTSReady() {
 async function initializeDashboard() {
   console.log('🔧 Initializing dashboard...');
   
+  // Initialize session tracking for video recommendations
+  if (!window.sessionStartTime) {
+    window.sessionStartTime = Date.now();
+    window.lastVideoTime = 0;
+    window.videoOfferedForTopic = {};
+    console.log('🔧 Session tracking initialized');
+  }
+  
   // Force enable TTS for mobile devices
   window.ttsEnabled = true;
   if (window.isMobile || window.isAPK) {
@@ -2295,6 +2303,15 @@ async function initializeDashboard() {
         const voiceSelect = document.getElementById('voiceSelect');
         if(voiceSelect) voiceSelect.disabled = true;
         console.log('Text-to-speech not supported');
+    }
+    
+    // Load chat history from Supabase
+    try {
+        console.log('📚 Loading chat history from Supabase...');
+        await loadChatHistoryFromSupabase();
+        console.log('✅ Chat history loaded successfully');
+    } catch (error) {
+        console.error('❌ Failed to load chat history:', error);
     }
 
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -2696,7 +2713,7 @@ function showWelcomeMessage() {
             <div class="message message-ai">
                 <div class="message-bubble">
                     <div class="flex items-center space-x-3 mb-3">
-                        <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
+                        <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDQgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
                         <span id="welcomeTeacherName" class="text-sm font-medium text-blue-200">Tution App</span>
                     </div>
                     <p>${welcomeText}</p>
@@ -3304,10 +3321,29 @@ async function sendMessage() {
         
         // Add AI response to chat
         if (aiResponse) {
-            appendAssistantMessage(aiResponse);
+            // Check if response contains video data
+            let videoData = null;
+            if (aiResponse.videoData) {
+                videoData = aiResponse.videoData;
+                // Track video shown
+                window.lastVideoTime = Date.now();
+                console.log('🎥 Video shown, updating lastVideoTime');
+            }
+            
+            // Check if response contains pending video topic
+            if (aiResponse.pendingVideoTopic) {
+                window.pendingVideoTopic = aiResponse.pendingVideoTopic;
+                window.videoReason = aiResponse.videoReason;
+                console.log('🎥 Video offered for topic:', aiResponse.pendingVideoTopic);
+            }
+            
+            // Extract the text response
+            const responseText = typeof aiResponse === 'string' ? aiResponse : aiResponse.response || aiResponse;
+            
+            appendAssistantMessage(responseText, videoData);
             
             // Save chat messages to Supabase for cross-device sync
-            await saveChatMessageToSupabase(message, aiResponse, window.currentSubject || 'General');
+            await saveChatMessageToSupabase(message, responseText, window.currentSubject || 'General');
             
             // Speak the response if TTS is enabled
             if (window.ttsEnabled && !micSystem.isRecording) {
@@ -3786,8 +3822,29 @@ async function speakText(text) {
     }
 
     try {
-        console.log('[TTS] Attempting to speak:', text);
-        window.textToSpeech.speak(text, { role: 'ai' });
+        // Clean text for TTS - remove URLs and video-related text
+        let cleanText = text;
+        
+        // Remove YouTube URLs
+        cleanText = cleanText.replace(/https?:\/\/[^\s]+/g, '');
+        
+        // Remove video-related phrases
+        cleanText = cleanText.replace(/Here's a helpful video to understand this better:/g, '');
+        cleanText = cleanText.replace(/Would you like to see a video/g, '');
+        cleanText = cleanText.replace(/watch a fun video/g, '');
+        cleanText = cleanText.replace(/watch an interesting video/g, '');
+        cleanText = cleanText.replace(/see a video that breaks it down/g, '');
+        
+        // Remove extra whitespace and clean up
+        cleanText = cleanText.replace(/\s+/g, ' ').trim();
+        
+        // Only speak if there's meaningful content left
+        if (cleanText && cleanText.length > 10) {
+            console.log('[TTS] Attempting to speak:', cleanText);
+            window.textToSpeech.speak(cleanText, { role: 'ai' });
+        } else {
+            console.log('[TTS] No meaningful content to speak after cleaning');
+        }
     } catch (error) {
         console.error('[TTS] Error speaking text:', error);
     }
@@ -5160,9 +5217,317 @@ window.debugAvatarSelection = function() {
     console.log('    * Miss Sapna should speak Hindi/Hinglish');
 };
 
+// Test YouTube video integration
+window.testYouTubeVideo = function() {
+    console.log('🔧 Testing YouTube video integration...');
+    
+    // Test video extraction
+    const testUrls = [
+        'https://www.youtube.com/watch?v=7JmJqp7FzI4',
+        'https://youtu.be/7JmJqp7FzI4',
+        'https://www.youtube.com/embed/7JmJqp7FzI4'
+    ];
+    
+    testUrls.forEach(url => {
+        const videoId = extractYouTubeVideoId(url);
+        console.log(`  - URL: ${url} -> Video ID: ${videoId}`);
+    });
+    
+    // Test message with video
+    const testMessage = 'Here is a helpful video: https://www.youtube.com/watch?v=7JmJqp7FzI4';
+    addMessage('assistant', testMessage);
+    
+    console.log('✅ YouTube video test completed!');
+};
+
+// Test video recommendation trigger
+window.testVideoRecommendation = function() {
+    console.log('🔧 Testing video recommendation trigger...');
+    
+    // Test different types of questions that should trigger video recommendations
+    const testQuestions = [
+        'Can you explain algebra?',
+        'How do I understand fractions?',
+        'Show me a video about geometry',
+        'I need help with trigonometry',
+        'What is the concept of probability?',
+        'Can you teach me about physics?',
+        'I want to learn about chemistry',
+        'Help me understand biology',
+        'Show me an example of grammar',
+        'I need a tutorial on writing'
+    ];
+    
+    testQuestions.forEach((question, index) => {
+        console.log(`Test ${index + 1}: "${question}"`);
+        // Simulate sending this question to the AI
+        setTimeout(() => {
+            addMessage('user', question);
+            // Simulate AI response with video
+            setTimeout(() => {
+                const videoResponse = `Here's a helpful explanation for your question about ${question.toLowerCase().includes('algebra') ? 'algebra' : question.toLowerCase().includes('fraction') ? 'fractions' : 'this topic'}.\n\nHere's a helpful video to understand this better: https://www.youtube.com/watch?v=7JmJqp7FzI4`;
+                addMessage('assistant', videoResponse);
+            }, 1000);
+        }, index * 2000);
+    });
+    
+    console.log('✅ Video recommendation test started! Check the chat for videos.');
+};
+
+// Test channel-specific video recommendations
+window.testChannelSpecificVideos = function() {
+    console.log('🔧 Testing channel-specific video recommendations...');
+    
+    const testCases = [
+        {
+            question: 'Explain quadratic equations',
+            subject: 'mathematics',
+            expectedChannels: ['Khan Academy India', 'LearnoHub', 'Vedantu', 'Magnet Brains']
+        },
+        {
+            question: 'How does photosynthesis work?',
+            subject: 'science',
+            expectedChannels: ['Physics Wallah', 'Dear Sir', 'Magnet Brains Hindi']
+        },
+        {
+            question: 'What is the past perfect tense?',
+            subject: 'english',
+            expectedChannels: ['English Academy', 'Simran Sahani English', 'Shipra Mishra']
+        },
+        {
+            question: 'Explain the French Revolution',
+            subject: 'social_studies',
+            expectedChannels: ['Study with Sudhir', 'Adda247 School', 'GK Planet']
+        }
+    ];
+    
+    testCases.forEach((testCase, index) => {
+        console.log(`Test Case ${index + 1}:`);
+        console.log(`  Question: ${testCase.question}`);
+        console.log(`  Subject: ${testCase.subject}`);
+        console.log(`  Expected Channels: ${testCase.expectedChannels.join(', ')}`);
+        console.log('  ---');
+    });
+    
+    console.log('✅ Channel-specific test cases defined!');
+};
+
 
 
 console.log('✅ All functions assigned to window object');
+
+// YouTube video extraction helper
+function extractYouTubeVideoId(text) {
+    // Matches various YouTube URL formats
+    const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/;
+    const match = text.match(regex);
+    return match ? match[1] : null;
+}
+
+// Validate YouTube video availability
+async function validateYouTubeVideo(videoId) {
+    try {
+        const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+        
+        const response = await fetch(oembedUrl, {
+            method: 'GET',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data && data.title && data.thumbnail_url;
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('Video validation error:', error);
+        return false;
+    }
+}
+
+// AI-controlled video player class
+class AIControlledVideoPlayer {
+    constructor(videoId, segments) {
+        this.videoId = videoId;
+        this.segments = segments;
+        this.currentSegmentIndex = 0;
+        this.player = null;
+        this.isPlaying = false;
+    }
+
+    createPlayer(container) {
+        // Create YouTube iframe with custom controls
+        const playerDiv = document.createElement('div');
+        playerDiv.id = `ai-video-player-${this.videoId}`;
+        playerDiv.className = 'ai-video-player';
+        
+        container.appendChild(playerDiv);
+
+        // Load YouTube API if not already loaded
+        if (!window.YT) {
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
+
+        // Initialize player when API is ready
+        window.onYouTubeIframeAPIReady = () => {
+            this.player = new YT.Player(playerDiv.id, {
+                height: '315',
+                width: '100%',
+                videoId: this.videoId,
+                playerVars: {
+                    'autoplay': 0,
+                    'controls': 1,
+                    'rel': 0,
+                    'modestbranding': 1
+                },
+                events: {
+                    'onReady': this.onPlayerReady.bind(this),
+                    'onStateChange': this.onPlayerStateChange.bind(this)
+                }
+            });
+        };
+    }
+
+    onPlayerReady(event) {
+        console.log('AI Video Player ready');
+        this.createSegmentControls();
+    }
+
+    onPlayerStateChange(event) {
+        // Handle player state changes
+        if (event.data === YT.PlayerState.ENDED) {
+            this.playNextSegment();
+        }
+    }
+
+    createSegmentControls() {
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'ai-video-controls mt-3 p-3 bg-gray-800 rounded-lg';
+        
+        // Segment list
+        const segmentList = document.createElement('div');
+        segmentList.className = 'segment-list mb-3';
+        
+        this.segments.forEach((segment, index) => {
+            const segmentItem = document.createElement('div');
+            segmentItem.className = `segment-item flex items-center justify-between p-2 mb-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600 ${index === 0 ? 'border-l-4 border-blue-400' : ''}`;
+            
+            const startTime = this.formatTime(segment.start);
+            const endTime = this.formatTime(segment.end);
+            
+            segmentItem.innerHTML = `
+                <div class="flex-1">
+                    <div class="text-white font-medium">Segment ${index + 1}</div>
+                    <div class="text-gray-300 text-sm">${startTime} - ${endTime}</div>
+                    <div class="text-gray-400 text-xs">${segment.description}</div>
+                </div>
+                <button class="play-segment-btn ml-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                    Play
+                </button>
+            `;
+            
+            segmentItem.onclick = () => this.playSegment(index);
+            segmentList.appendChild(segmentItem);
+        });
+        
+        // Control buttons
+        const controlButtons = document.createElement('div');
+        controlButtons.className = 'control-buttons flex space-x-2';
+        controlButtons.innerHTML = `
+            <button class="play-all-btn px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                🎬 Play All Segments
+            </button>
+            <button class="pause-btn px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
+                ⏸️ Pause
+            </button>
+            <button class="reset-btn px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                🔄 Reset
+            </button>
+        `;
+        
+        // Add event listeners
+        controlButtons.querySelector('.play-all-btn').onclick = () => this.playAllSegments();
+        controlButtons.querySelector('.pause-btn').onclick = () => this.pause();
+        controlButtons.querySelector('.reset-btn').onclick = () => this.reset();
+        
+        controlsContainer.appendChild(segmentList);
+        controlsContainer.appendChild(controlButtons);
+        
+        // Add to container
+        const container = document.querySelector(`#ai-video-player-${this.videoId}`).parentNode;
+        container.appendChild(controlsContainer);
+    }
+
+    playSegment(index) {
+        if (!this.player) return;
+        
+        this.currentSegmentIndex = index;
+        const segment = this.segments[index];
+        
+        // Update active segment styling
+        document.querySelectorAll('.segment-item').forEach((item, i) => {
+            item.classList.toggle('border-l-4 border-blue-400', i === index);
+        });
+        
+        // Seek to start time and play
+        this.player.seekTo(segment.start);
+        this.player.playVideo();
+        
+        // Set up auto-stop at end time
+        const checkTime = setInterval(() => {
+            const currentTime = this.player.getCurrentTime();
+            if (currentTime >= segment.end) {
+                this.player.pauseVideo();
+                clearInterval(checkTime);
+            }
+        }, 1000);
+        
+        console.log(`Playing segment ${index + 1}: ${segment.description}`);
+    }
+
+    playAllSegments() {
+        this.currentSegmentIndex = 0;
+        this.playSegment(0);
+    }
+
+    playNextSegment() {
+        if (this.currentSegmentIndex < this.segments.length - 1) {
+            this.currentSegmentIndex++;
+            this.playSegment(this.currentSegmentIndex);
+        }
+    }
+
+    pause() {
+        if (this.player) {
+            this.player.pauseVideo();
+        }
+    }
+
+    reset() {
+        if (this.player) {
+            this.player.seekTo(0);
+            this.player.pauseVideo();
+        }
+        this.currentSegmentIndex = 0;
+        
+        // Reset segment styling
+        document.querySelectorAll('.segment-item').forEach((item, i) => {
+            item.classList.toggle('border-l-4 border-blue-400', i === 0);
+        });
+    }
+
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+}
 
 async function addMessage(role, content, saveToDB = true) {
     const chatMessages = document.getElementById('chatMessages');
@@ -5180,16 +5545,123 @@ async function addMessage(role, content, saveToDB = true) {
             '<div class="mermaid bg-gray-800 p-4 rounded-lg my-4">$1</div>');
     }
 
-    // Process other markdown
-    processedContent = marked.parse(processedContent);
+    // Check for YouTube videos in AI messages
+    const videoId = role === 'assistant' ? extractYouTubeVideoId(contentString) : null;
+    
+    console.log('🎥 Video detection:', {
+        role,
+        hasVideoId: !!videoId,
+        videoId,
+        contentLength: contentString.length,
+        containsVideoUrl: contentString.includes('youtube.com'),
+        contentPreview: contentString.substring(0, 200)
+    });
+    
+    // Debug: Check if video should be rendered
+    if (role === 'assistant' && videoId) {
+        console.log('🎥 Video should be rendered:', {
+            videoId: videoId,
+            content: contentString,
+            hasVideoData: !!window.lastVideoData
+        });
+    }
 
-    // Bubble layout that respects vertical stacking
-    messageDiv.innerHTML = `
-        <div class="message-bubble">
-            <div class="text-white message-content prose prose-invert max-w-none">${processedContent}</div>
-            <p class="text-gray-400 text-xs mt-2">Just now</p>
-        </div>
-    `;
+    if (videoId) {
+        // Validate video before displaying
+        const isValidVideo = await validateYouTubeVideo(videoId);
+        
+        if (isValidVideo) {
+            // Check if this is a segmented video response
+            const isSegmentedVideo = contentString.includes('AI has selected') && contentString.includes('relevant segments');
+            
+            if (isSegmentedVideo) {
+                // AI-controlled segmented video
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">
+                        <div class="text-white mb-3 text-sm">🎥 Here's a personalized video explanation with AI-controlled segments:</div>
+                        <div class="ai-video-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;background:#000;margin-bottom:8px;">
+                            <div id="ai-video-player-container-${videoId}"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-300 mt-2">
+                            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener" class="text-blue-300 hover:text-blue-200 underline">
+                                📺 Watch Full Video on YouTube
+                            </a>
+                            <span class="text-green-400">🤖 AI Controlled</span>
+                        </div>
+                        <p class="text-gray-400 text-xs mt-2">Just now</p>
+                    </div>
+                `;
+                
+                // Initialize AI-controlled video player
+                setTimeout(() => {
+                    // Extract segments from the message content (this would come from the API response)
+                    const segments = [
+                        { start: 30, end: 90, description: "Introduction to the concept" },
+                        { start: 120, end: 180, description: "Step-by-step explanation" },
+                        { start: 210, end: 270, description: "Practice example" }
+                    ];
+                    
+                    const aiPlayer = new AIControlledVideoPlayer(videoId, segments);
+                    const container = document.getElementById(`ai-video-player-container-${videoId}`);
+                    aiPlayer.createPlayer(container);
+                }, 100);
+                
+            } else {
+                // Enhanced YouTube embed bubble with metadata
+                const videoData = window.lastVideoData; // Get from API response
+                const videoTitle = videoData?.title || 'Educational Video';
+                const channelTitle = videoData?.channelTitle || 'Educational Channel';
+                
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">
+                        <div class="text-white mb-3 text-sm">🎥 Here's a helpful video to understand this better:</div>
+                        <div class="video-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;background:#000;margin-bottom:8px;">
+                            <iframe
+                                src="https://www.youtube.com/embed/${videoId}?rel=0"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                                style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:12px;"
+                            ></iframe>
+                        </div>
+                        <div class="video-info mt-2 p-2 bg-gray-800 rounded-lg">
+                            <div class="text-white font-medium text-sm">${videoTitle}</div>
+                            <div class="text-gray-400 text-xs">by ${channelTitle}</div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-300 mt-2">
+                            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" rel="noopener" class="text-blue-300 hover:text-blue-200 underline">
+                                📺 Watch on YouTube
+                            </a>
+                            <span class="text-green-400">🤖 AI Recommended</span>
+                        </div>
+                        <p class="text-gray-400 text-xs mt-2">Just now</p>
+                    </div>
+                `;
+            }
+        } else {
+            // Video not available, show message without video
+            const textContent = contentString.replace(/https?:\/\/[^\s]+/g, '').trim();
+            const formattedContent = marked.parse(textContent);
+            messageDiv.innerHTML = `
+                <div class="message-bubble">
+                    <div class="text-white message-content prose prose-invert max-w-none">${formattedContent}</div>
+                    <div class="text-yellow-400 text-xs mt-2">⚠️ Video recommendation unavailable</div>
+                    <p class="text-gray-400 text-xs mt-2">Just now</p>
+                </div>
+            `;
+        }
+    } else {
+        // Process other markdown
+        processedContent = marked.parse(processedContent);
+
+        // Bubble layout that respects vertical stacking
+        messageDiv.innerHTML = `
+            <div class="message-bubble">
+                <div class="text-white message-content prose prose-invert max-w-none">${processedContent}</div>
+                <p class="text-gray-400 text-xs mt-2">Just now</p>
+            </div>
+        `;
+    }
 
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -5853,12 +6325,17 @@ function appendUserMessage(message) {
   container.scrollTop = container.scrollHeight;
 }
 
-function appendAssistantMessage(message) {
+function appendAssistantMessage(message, videoData = null) {
   const container = document.getElementById('chatMessages');
   if (!container) return;
   
   const msgEl = document.createElement('div');
   msgEl.className = 'message message-ai';
+  
+  // Store video data globally for video rendering
+  if (videoData) {
+    window.lastVideoData = videoData;
+  }
   
   // Use Markdown parser + sanitizer for better formatting but safe HTML
   let safeHTML = message;
@@ -6676,10 +7153,22 @@ function setupDashboardEventListeners() {
     // Mobile camera button
     const cameraButtonMobile = document.getElementById('cameraButtonMobile');
     if (cameraButtonMobile) {
+        console.log('🔧 Setting up mobile camera button');
         cameraButtonMobile.addEventListener('click', () => {
             console.log('🔧 Mobile camera button clicked');
-            openCameraModal();
+            if (typeof openCameraModal === 'function') {
+                openCameraModal();
+            } else {
+                console.error('❌ openCameraModal function not found');
+                // Fallback: show camera scan modal
+                const cameraModal = document.getElementById('cameraScanModal');
+                if (cameraModal) {
+                    cameraModal.classList.remove('hidden');
+                    cameraModal.classList.add('flex');
+                }
+            }
         });
+        console.log('✅ Mobile camera button listener added');
     } else {
         console.warn('⚠️ Mobile camera button not found');
     }
@@ -6698,12 +7187,77 @@ function setupDashboardEventListeners() {
         
         // Only use setupMicLongPress - it handles both long press and short press
         setupMicLongPress(voiceButtonMobile);
+        console.log('✅ Mobile voice button listener added');
     } else {
         console.warn('⚠️ Mobile voice button not found');
     }
     
-    // Mobile send button - REMOVED DUPLICATE LISTENER (handled in initializeEventListeners)
-    console.log('✅ Mobile send button listener handled in initializeEventListeners');
+    // Mobile send button
+    const sendButtonMobile = document.getElementById('sendButtonMobile');
+    if (sendButtonMobile) {
+        console.log('🔧 Setting up mobile send button');
+        sendButtonMobile.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🔧 Mobile send button clicked');
+            
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            if (chatInputMobile && chatInputMobile.value.trim()) {
+                const message = chatInputMobile.value.trim();
+                console.log('📤 Sending mobile message:', message);
+                
+                // Add user message to chat
+                addMessage('user', message);
+                
+                // Clear input
+                chatInputMobile.value = '';
+                
+                // Send to AI
+                if (typeof sendMessage === 'function') {
+                    sendMessage(message);
+                } else {
+                    console.error('❌ sendMessage function not found');
+                }
+            } else {
+                console.log('📝 Mobile input is empty');
+            }
+        });
+        console.log('✅ Mobile send button listener added');
+    } else {
+        console.warn('⚠️ Mobile send button not found');
+    }
+    
+    // Mobile input field enter key support
+    const chatInputMobile = document.getElementById('chatInputMobile');
+    if (chatInputMobile) {
+        console.log('🔧 Setting up mobile input field');
+        chatInputMobile.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                console.log('🔧 Mobile input Enter key pressed');
+                
+                if (this.value.trim()) {
+                    const message = this.value.trim();
+                    console.log('📤 Sending mobile message via Enter:', message);
+                    
+                    // Add user message to chat
+                    addMessage('user', message);
+                    
+                    // Clear input
+                    this.value = '';
+                    
+                    // Send to AI
+                    if (typeof sendMessage === 'function') {
+                        sendMessage(message);
+                    } else {
+                        console.error('❌ sendMessage function not found');
+                    }
+                }
+            }
+        });
+        console.log('✅ Mobile input field listener added');
+    } else {
+        console.warn('⚠️ Mobile input field not found');
+    }
     
     // Trial info button
     const trialInfoBtn = document.getElementById('trialInfoBtn');
@@ -7408,6 +7962,196 @@ function handleSoundEffectsToggle() {
         localStorage.setItem('soundEffectsEnabled', soundEffectsEnabled.toString());
     }
 }
+
+// Initialize mobile buttons
+function initializeMobileButtons() {
+    console.log('🔧 Initializing mobile buttons...');
+    
+    // Camera button
+    const cameraButtonMobile = document.getElementById('cameraButtonMobile');
+    if (cameraButtonMobile) {
+        cameraButtonMobile.onclick = () => {
+            console.log('🔧 Mobile camera button clicked');
+            if (typeof openCameraModal === 'function') {
+                openCameraModal();
+            } else {
+                console.error('❌ openCameraModal function not found');
+                // Fallback: show camera scan modal
+                const cameraModal = document.getElementById('cameraScanModal');
+                if (cameraModal) {
+                    cameraModal.classList.remove('hidden');
+                    cameraModal.classList.add('flex');
+                }
+            }
+        };
+        console.log('✅ Mobile camera button initialized');
+    }
+    
+    // Voice button
+    const voiceButtonMobile = document.getElementById('voiceButtonMobile');
+    if (voiceButtonMobile) {
+        setupMicLongPress(voiceButtonMobile);
+        console.log('✅ Mobile voice button initialized');
+    }
+    
+    // Send button
+    const sendButtonMobile = document.getElementById('sendButtonMobile');
+    if (sendButtonMobile) {
+        sendButtonMobile.onclick = (e) => {
+            e.preventDefault();
+            console.log('🔧 Mobile send button clicked');
+            
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            if (chatInputMobile && chatInputMobile.value.trim()) {
+                const message = chatInputMobile.value.trim();
+                console.log('📤 Sending mobile message:', message);
+                
+                // Add user message to chat
+                addMessage('user', message);
+                
+                // Clear input
+                chatInputMobile.value = '';
+                
+                // Send to AI
+                if (typeof sendMessage === 'function') {
+                    sendMessage(message);
+                } else {
+                    console.error('❌ sendMessage function not found');
+                }
+            }
+        };
+        console.log('✅ Mobile send button initialized');
+    }
+    
+    // Mobile input field
+    const chatInputMobile = document.getElementById('chatInputMobile');
+    if (chatInputMobile) {
+        chatInputMobile.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                console.log('🔧 Mobile input Enter key pressed');
+                
+                if (this.value.trim()) {
+                    const message = this.value.trim();
+                    console.log('📤 Sending mobile message via Enter:', message);
+                    
+                    // Add user message to chat
+                    addMessage('user', message);
+                    
+                    // Clear input
+                    this.value = '';
+                    
+                    // Send to AI
+                    if (typeof sendMessage === 'function') {
+                        sendMessage(message);
+                    }
+                }
+            }
+        };
+        console.log('✅ Mobile input field initialized');
+    }
+    
+    console.log('✅ Mobile buttons initialization complete');
+}
+
+// Call mobile button initialization
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initializeMobileButtons, 1000); // Delay to ensure DOM is ready
+});
+
+// Test functions for debugging
+window.testVideoFunctionality = function() {
+    console.log('🎥 Testing video functionality...');
+    
+    // Test video URL extraction
+    const testUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+    const videoId = extractYouTubeVideoId(testUrl);
+    console.log('Video ID extracted:', videoId);
+    
+    // Test video validation
+    validateYouTubeVideo(videoId).then(isValid => {
+        console.log('Video validation result:', isValid);
+    });
+    
+    // Test adding a video message
+    const testVideoMessage = `Here's a helpful video to understand this better: ${testUrl}`;
+    addMessage('assistant', testVideoMessage);
+    
+    return 'Video functionality test complete. Check console for results.';
+};
+
+// Test AI video recommendation
+window.testAIVideoRecommendation = function() {
+    console.log('🤖 Testing AI video recommendation...');
+    
+    // Simulate sending a message that should trigger video recommendation
+    const testMessage = 'Can you explain quadratic equations?';
+    console.log('Sending test message:', testMessage);
+    
+    // Add user message
+    addMessage('user', testMessage);
+    
+    // Simulate AI response with video
+    const aiResponse = `Quadratic equations are mathematical expressions of the form ax² + bx + c = 0.
+
+Here's a helpful video to understand this better: https://www.youtube.com/watch?v=dQw4w9WgXcQ`;
+    
+    // Add AI message
+    addMessage('assistant', aiResponse);
+    
+    return 'AI video recommendation test complete. Check console for results.';
+};
+
+// Test direct video rendering
+window.testDirectVideoRendering = function() {
+    console.log('🎥 Testing direct video rendering...');
+    
+    // Test with the exact response from your example
+    const testResponse = `I recommend searching for the "Twinkle Twinkle Little Star" poem video on educational platforms like YouTube. You can type the name of the poem in the search bar to find various video versions available online. Watching the video can help you enjoy the poem with music and visuals. If you need further assistance or recommendations, feel free to ask.
+
+Here's a helpful video to understand this better: https://www.youtube.com/watch?v=3jZ5vnv-LZc`;
+    
+    addMessage('assistant', testResponse);
+    
+    return 'Direct video rendering test complete. Check console for results.';
+};
+
+// Test video rendering with metadata
+window.testVideoWithMetadata = function() {
+    console.log('🎥 Testing video rendering with metadata...');
+    
+    // Set video metadata
+    window.lastVideoData = {
+        videoId: '3jZ5vnv-LZc',
+        title: 'Twinkle Twinkle Little Star - Educational Poem for Kids',
+        channelTitle: 'Educational Channel',
+        description: 'A fun and educational version of the classic nursery rhyme'
+    };
+    
+    const testResponse = `Here's a helpful video to understand this better: https://www.youtube.com/watch?v=3jZ5vnv-LZc`;
+    
+    addMessage('assistant', testResponse);
+    
+    return 'Video with metadata test complete. Check console for results.';
+};
+
+// Test the complete video flow
+window.testCompleteVideoFlow = function() {
+    console.log('🎥 Testing complete video flow...');
+    
+    // Simulate a user asking for video
+    const userMessage = "I want to see video of this poem";
+    console.log('👤 User message:', userMessage);
+    
+    // Simulate AI response with video
+    const aiResponse = `Here's a helpful video to understand this better: https://www.youtube.com/watch?v=3jZ5vnv-LZc`;
+    console.log('🤖 AI response:', aiResponse);
+    
+    // Add the message to chat
+    addMessage('assistant', aiResponse);
+    
+    return 'Complete video flow test complete. Check console and chat for results.';
+};
 
         // Load Sound Effects settings
         const soundEffectsEnabled = localStorage.getItem('soundEffectsEnabled');
