@@ -168,6 +168,8 @@
         
         <!-- Balloon Animation System -->
         <script src="js/balloonAnimation.js?v=1.0.2" defer></script>
+        <script src="js/soundEffects.js?v=1.0.1" defer></script>
+        <script src="js/idleStorySystem.js?v=1.0.1" defer></script>
         
         <script src="js/dashboard.js?v=1.0.2" defer></script>
     
@@ -1490,10 +1492,6 @@
                                     <div class="flex items-center gap-2">
                                         <span class="text-lg">🎉</span>
                                         <span class="text-white font-medium text-sm">Daily Challenge</span>
-                                        <div id="welcomeTeacherName" class="text-white/60 text-xs">by Loading...</div>
-                                    </div>
-                                    <div id="challengeStreak" class="text-yellow-300 font-semibold text-xs bg-yellow-300/10 px-2 py-1 rounded-full">
-                                        ⭐ Streak: 0 days
                                     </div>
                                 </div>
                                 
@@ -1804,6 +1802,10 @@
                                     <label class="flex items-center space-x-3">
                                         <input type="checkbox" id="voiceInputEnabled" checked class="rounded" onchange="handleVoiceInputToggle()">
                                         <span class="text-white">Enable Voice Input</span>
+                                    </label>
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="soundEffectsEnabled" checked class="rounded" onchange="handleSoundEffectsToggle()">
+                                        <span class="text-white">Enable Sound Effects</span>
                                     </label>
                                     
                                     <!-- Voice Rate -->

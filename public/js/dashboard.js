@@ -2141,18 +2141,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // initSpeechRecognition(); // DISABLED - Using new micSystem instead
         
-        // Show welcome message only once
-        if (!window.welcomeMessageShown) {
-            showWelcomeMessage();
-        }
+        // Welcome message removed to prevent system sound
         // --- End of existing logic ---
 
-        // Test voice services
+        // Test voice services (removed welcome message to prevent system sound)
         setTimeout(() => {
             if (speechSynthesis && speechSynthesis.getVoices().length > 0) {
-                speakText("Welcome to Tution App. Voice services are ready.");
+                console.log("Voice services are ready.");
             } else {
-                 console.log("Skipping welcome message as voices are not ready yet.");
+                 console.log("Skipping voice test as voices are not ready yet.");
             }
         }, 1500);
         
@@ -7402,5 +7399,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// Handle Sound Effects toggle
+function handleSoundEffectsToggle() {
+    const soundEffectsEnabled = document.getElementById('soundEffectsEnabled').checked;
+    if (window.soundEffects) {
+        window.soundEffects.isEnabled = soundEffectsEnabled;
+        localStorage.setItem('soundEffectsEnabled', soundEffectsEnabled.toString());
+    }
+}
+
+        // Load Sound Effects settings
+        const soundEffectsEnabled = localStorage.getItem('soundEffectsEnabled');
+        if (soundEffectsEnabled !== null) {
+            document.getElementById('soundEffectsEnabled').checked = soundEffectsEnabled === 'true';
+        }
 
 
