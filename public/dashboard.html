@@ -2551,8 +2551,58 @@
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 initializeMobileEnhancements();
+                setupServiceWorkerUpdates();
             }, 1000); // Wait for other scripts to load
         });
+        
+        // Service Worker Update Notification System
+        function setupServiceWorkerUpdates() {
+            if ('serviceWorker' in navigator) {
+                // Listen for service worker messages
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'SW_UPDATED') {
+                        showUpdateNotification(event.data.message);
+                    }
+                });
+                
+                // Check for updates on page load
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.update();
+                });
+            }
+        }
+        
+        function showUpdateNotification(message) {
+            // Create update notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-3';
+            notification.innerHTML = `
+                <div class="flex-1">
+                    <div class="font-semibold">🔄 App Updated!</div>
+                    <div class="text-sm">${message}</div>
+                </div>
+                <button onclick="refreshApp()" class="bg-white text-green-600 px-3 py-1 rounded text-sm font-semibold hover:bg-green-50">
+                    Refresh
+                </button>
+                <button onclick="this.parentElement.remove()" class="text-white hover:text-green-200">
+                    ✕
+                </button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 10000);
+        }
+        
+        function refreshApp() {
+            // Reload the page to get the latest version
+            window.location.reload();
+        }
     </script>
 </body>
 </html>
