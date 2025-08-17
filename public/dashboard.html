@@ -214,6 +214,11 @@
         <script src="js/mic-system.js?v=1.0.0" defer></script>
         <script src="js/daily-challenge.js?v=1.0.0" defer></script>
         
+        <!-- Mobile App Enhancements -->
+        <script src="js/smart-notifications.js?v=1.0.0" defer></script>
+        <script src="js/voice-commands.js?v=1.0.0" defer></script>
+        <script src="js/ar-learning.js?v=1.0.0" defer></script>
+        
         <script src="js/dashboard.js?v=1.0.2" defer></script>
     
     <!-- Load other essential scripts -->
@@ -1723,18 +1728,22 @@
                                     <!-- Text Input (Full Width) -->
                                     <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 mb-2 text-sm">
                                     
-                                    <!-- Camera, Mic, Send Buttons in One Row -->
+                                    <!-- Camera, Mic, Voice Commands, Send Buttons in One Row -->
                                     <div class="flex space-x-2 flex-nowrap w-full mobile-chat-input">
-                                        <!-- Camera Button (25%) -->
-                                        <button id="cameraButtonMobile" class="w-1/4 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
+                                        <!-- Camera Button (20%) -->
+                                        <button id="cameraButtonMobile" class="w-1/5 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
                                             📷
                                         </button>
-                                        <!-- Mic Button (25%) -->
-                                        <button id="voiceButtonMobile" class="w-1/4 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
+                                        <!-- Mic Button (20%) -->
+                                        <button id="voiceButtonMobile" class="w-1/5 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
                                             <span id="voiceIconMobile">🎤</span>
                                         </button>
-                                        <!-- Send Button (50%) -->
-                                        <button id="sendButtonMobile" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
+                                        <!-- Voice Commands Button (20%) -->
+                                        <button id="voiceCommandBtn" class="w-1/5 bg-green-600 hover:bg-green-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm" onclick="window.voiceCommands && window.voiceCommands.toggleListening()">
+                                            🎤
+                                        </button>
+                                        <!-- Send Button (40%) -->
+                                        <button id="sendButtonMobile" class="w-2/5 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
                                             Send
                                         </button>
                                     </div>
@@ -1929,7 +1938,84 @@
                                 </div>
                             </div>
                             
-                                                        <!-- Voice Settings -->
+                                                        <!-- Smart Notifications Settings -->
+                            <div class="card-modern">
+                                <h3 class="text-white text-lg font-semibold mb-4">📱 Smart Notifications</h3>
+                                
+                                <div class="space-y-4">
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="notificationsEnabled" checked class="rounded" onchange="toggleNotifications()">
+                                        <span class="text-white">Enable Smart Notifications</span>
+                                    </label>
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="studyRemindersEnabled" checked class="rounded" onchange="toggleStudyReminders()">
+                                        <span class="text-white">Study Session Reminders</span>
+                                    </label>
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="breakRemindersEnabled" checked class="rounded" onchange="toggleBreakReminders()">
+                                        <span class="text-white">Break Reminders</span>
+                                    </label>
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="progressCelebrationsEnabled" checked class="rounded" onchange="toggleProgressCelebrations()">
+                                        <span class="text-white">Progress Celebrations</span>
+                                    </label>
+                                    
+                                    <!-- Daily Study Goal -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Daily Study Goal: <span id="dailyGoalValue">60</span> minutes</label>
+                                        <input type="range" id="dailyGoalSlider" min="15" max="180" step="15" value="60" class="w-full" onchange="updateDailyGoal()">
+                                    </div>
+                                    
+                                    <!-- Study Schedule -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Study Schedule</label>
+                                        <button id="scheduleSettingsBtn" class="btn-modern text-sm w-full" onclick="showScheduleSettings()">
+                                            <span>📅</span>
+                                            <span>Set Study Times</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="notificationStatus" class="mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+                                    <p class="text-green-200 text-sm">✅ Notifications enabled and working</p>
+                                </div>
+                            </div>
+
+                            <!-- Voice Commands Settings -->
+                            <div class="card-modern">
+                                <h3 class="text-white text-lg font-semibold mb-4">🎤 Voice Commands</h3>
+                                
+                                <div class="space-y-4">
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="voiceCommandsEnabled" checked class="rounded" onchange="toggleVoiceCommands()">
+                                        <span class="text-white">Enable Voice Commands</span>
+                                    </label>
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="continuousListeningEnabled" class="rounded" onchange="toggleContinuousListening()">
+                                        <span class="text-white">Continuous Listening Mode</span>
+                                    </label>
+                                    
+                                    <!-- Wake Word -->
+                                    <div>
+                                        <label class="text-white text-sm font-medium mb-2 block">Wake Word</label>
+                                        <input type="text" id="wakeWordInput" value="hey tutor" class="w-full px-3 py-2 bg-purple-700 border border-purple-500 rounded-lg text-white focus:outline-none focus:border-purple-400" onchange="updateWakeWord()">
+                                    </div>
+                                    
+                                    <!-- Voice Commands Help -->
+                                    <div>
+                                        <button id="voiceCommandsHelpBtn" class="btn-modern text-sm w-full" onclick="showVoiceCommandsHelp()">
+                                            <span>❓</span>
+                                            <span>Voice Commands Help</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="voiceStatus" class="mt-4 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+                                    <p class="text-blue-200 text-sm">🎤 Say "Hey Tutor" to activate voice commands</p>
+                                </div>
+                            </div>
+
+                            <!-- Voice Settings -->
                             <div class="card-modern">
                                 <h3 class="text-white text-lg font-semibold mb-4">Voice Settings</h3>
                                 
@@ -2289,5 +2375,184 @@
     
     <!-- External Scripts - REMOVED DUPLICATES -->
     <!-- Scripts are already loaded in head with defer -->
+    
+    <script>
+        // Mobile App Enhancement Functions
+        function initializeMobileEnhancements() {
+            // Initialize notification settings
+            loadNotificationSettings();
+            loadVoiceCommandSettings();
+            
+            // Register service worker for offline functionality
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration);
+                    })
+                    .catch(error => {
+                        console.error('❌ Service Worker registration failed:', error);
+                    });
+            }
+        }
+        
+        // Notification Settings Functions
+        function toggleNotifications() {
+            const enabled = document.getElementById('notificationsEnabled').checked;
+            if (window.smartNotifications) {
+                if (enabled) {
+                    window.smartNotifications.requestPermission();
+                }
+            }
+            updateNotificationStatus();
+        }
+        
+        function toggleStudyReminders() {
+            const enabled = document.getElementById('studyRemindersEnabled').checked;
+            localStorage.setItem('studyRemindersEnabled', enabled.toString());
+        }
+        
+        function toggleBreakReminders() {
+            const enabled = document.getElementById('breakRemindersEnabled').checked;
+            localStorage.setItem('breakRemindersEnabled', enabled.toString());
+        }
+        
+        function toggleProgressCelebrations() {
+            const enabled = document.getElementById('progressCelebrationsEnabled').checked;
+            localStorage.setItem('progressCelebrationsEnabled', enabled.toString());
+        }
+        
+        function updateDailyGoal() {
+            const value = document.getElementById('dailyGoalSlider').value;
+            document.getElementById('dailyGoalValue').textContent = value;
+            
+            if (window.smartNotifications) {
+                window.smartNotifications.setDailyGoal(parseInt(value));
+            }
+        }
+        
+        function showScheduleSettings() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+                    <h3 class="text-lg font-semibold mb-4">Set Study Schedule</h3>
+                    <div class="space-y-3">
+                        ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, index) => `
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-700">${day}</span>
+                                <input type="time" id="schedule_${index}" class="px-2 py-1 border rounded" value="16:00">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex space-x-3 mt-4">
+                        <button onclick="saveStudySchedule()" class="flex-1 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+                            Save
+                        </button>
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function saveStudySchedule() {
+            const schedule = {};
+            for (let i = 0; i < 7; i++) {
+                const time = document.getElementById(`schedule_${i}`).value;
+                schedule[i] = time;
+            }
+            
+            if (window.smartNotifications) {
+                window.smartNotifications.setStudySchedule(schedule);
+            }
+            
+            document.querySelector('.fixed').remove();
+        }
+        
+        function loadNotificationSettings() {
+            const studyReminders = localStorage.getItem('studyRemindersEnabled') !== 'false';
+            const breakReminders = localStorage.getItem('breakRemindersEnabled') !== 'false';
+            const progressCelebrations = localStorage.getItem('progressCelebrationsEnabled') !== 'false';
+            
+            document.getElementById('studyRemindersEnabled').checked = studyReminders;
+            document.getElementById('breakRemindersEnabled').checked = breakReminders;
+            document.getElementById('progressCelebrationsEnabled').checked = progressCelebrations;
+        }
+        
+        function updateNotificationStatus() {
+            const statusElement = document.getElementById('notificationStatus');
+            if (Notification.permission === 'granted') {
+                statusElement.innerHTML = '<p class="text-green-200 text-sm">✅ Notifications enabled and working</p>';
+                statusElement.className = 'mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg';
+            } else if (Notification.permission === 'denied') {
+                statusElement.innerHTML = '<p class="text-red-200 text-sm">❌ Notifications blocked. Please enable in browser settings.</p>';
+                statusElement.className = 'mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg';
+            } else {
+                statusElement.innerHTML = '<p class="text-yellow-200 text-sm">⚠️ Notifications not enabled. Click to enable.</p>';
+                statusElement.className = 'mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg';
+            }
+        }
+        
+        // Voice Commands Settings Functions
+        function toggleVoiceCommands() {
+            const enabled = document.getElementById('voiceCommandsEnabled').checked;
+            if (window.voiceCommands) {
+                if (enabled) {
+                    window.voiceCommands.startListening();
+                } else {
+                    window.voiceCommands.stopListening();
+                }
+            }
+            updateVoiceStatus();
+        }
+        
+        function toggleContinuousListening() {
+            const enabled = document.getElementById('continuousListeningEnabled').checked;
+            if (window.voiceCommands) {
+                window.voiceCommands.toggleContinuousMode();
+            }
+        }
+        
+        function updateWakeWord() {
+            const wakeWord = document.getElementById('wakeWordInput').value;
+            if (window.voiceCommands) {
+                window.voiceCommands.setWakeWord(wakeWord);
+            }
+        }
+        
+        function showVoiceCommandsHelp() {
+            if (window.voiceCommands) {
+                window.voiceCommands.showHelp();
+            }
+        }
+        
+        function loadVoiceCommandSettings() {
+            const continuousMode = localStorage.getItem('voiceContinuousMode') === 'true';
+            const wakeWord = localStorage.getItem('voiceWakeWord') || 'hey tutor';
+            
+            document.getElementById('continuousListeningEnabled').checked = continuousMode;
+            document.getElementById('wakeWordInput').value = wakeWord;
+        }
+        
+        function updateVoiceStatus() {
+            const statusElement = document.getElementById('voiceStatus');
+            if (window.voiceCommands && window.voiceCommands.isListening) {
+                statusElement.innerHTML = '<p class="text-green-200 text-sm">🎤 Voice commands active - Say "Hey Tutor" to activate</p>';
+                statusElement.className = 'mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg';
+            } else {
+                statusElement.innerHTML = '<p class="text-blue-200 text-sm">🎤 Voice commands ready - Click to enable</p>';
+                statusElement.className = 'mt-4 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg';
+            }
+        }
+        
+        // Initialize mobile enhancements when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                initializeMobileEnhancements();
+            }, 1000); // Wait for other scripts to load
+        });
+    </script>
 </body>
 </html>
