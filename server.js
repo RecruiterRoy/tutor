@@ -55,8 +55,8 @@ let pdfProcessor = null;
 async function getPDFProcessor() {
     if (!pdfProcessor) {
         try {
-            const { PDFProcessor } = await import('./utils/pdfExtractor.js');
-            pdfProcessor = new PDFProcessor();
+                    const PDFProcessor = (await import('./utils/pdfExtractor.js')).default;
+        pdfProcessor = new PDFProcessor();
         } catch (error) {
             console.warn('PDF Processor initialization failed:', error.message);
             // Create a fallback processor that doesn't use PDF parsing
@@ -836,6 +836,304 @@ app.get('/admin', (req, res) => {
         res.sendFile(adminPath);
     } else {
         res.status(404).send('admin.html not found');
+    }
+});
+
+// Batch Video Processor API Endpoints
+app.post('/api/batch-video-processor', async (req, res) => {
+    try {
+        const { action, subject, classLevel, targetCount } = req.body;
+        
+        console.log('🚀 Batch Video Processor API called:', action);
+        
+        // Import the batch video fetcher functions
+        const { 
+            processAllBatches, 
+            processSpecificBatch, 
+            getBatchProgress, 
+            getDatabaseStats,
+            SUBJECT_COMBINATIONS 
+        } = await import('./pages/api/batch-video-fetcher.js');
+        
+        switch (action) {
+            case 'start_all_batches':
+                console.log('🎯 Starting all batch processing...');
+                
+                // Start the process in background (non-blocking)
+                processAllBatches().then(result => {
+                    console.log('✅ All batches completed:', result);
+                }).catch(error => {
+                    console.error('❌ All batches failed:', error);
+                });
+                
+                return res.status(200).json({
+                    success: true,
+                    message: 'Batch processing started in background',
+                    totalCombinations: SUBJECT_COMBINATIONS.length,
+                    combinations: SUBJECT_COMBINATIONS
+                });
+
+            case 'process_specific':
+                if (!subject) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        error: 'Missing subject' 
+                    });
+                }
+                
+                console.log(`🎯 Processing specific batch: ${subject}`);
+                const result = await processSpecificBatch(subject, targetCount || 100);
+                
+                return res.status(200).json({
+                    success: true,
+                    data: result
+                });
+
+            case 'get_progress':
+                const progress = getBatchProgress();
+                return res.status(200).json({
+                    success: true,
+                    data: progress
+                });
+
+            case 'get_stats':
+                const stats = await getDatabaseStats();
+                return res.status(200).json({
+                    success: true,
+                    data: stats
+                });
+
+                            case 'get_combinations':
+                    return res.status(200).json({
+                        success: true,
+                        data: {
+                            total: SUBJECT_COMBINATIONS.length,
+                            combinations: SUBJECT_COMBINATIONS,
+                            totalTargetVideos: SUBJECT_COMBINATIONS.reduce((sum, combo) => sum + combo.targetCount, 0)
+                        }
+                    });
+
+            case 'test_youtube_api':
+                try {
+                    // Test YouTube API with a simple search
+                    const { fetchEducationalVideos } = await import('./pages/api/youtube-video-fetcher.js');
+                    const testVideos = await fetchEducationalVideos('english', 'general', 5);
+                    
+                    return res.status(200).json({
+                        success: true,
+                        apiStatus: 'Working',
+                        videoCount: testVideos.length,
+                        sampleVideos: testVideos.slice(0, 3).map(v => ({ title: v.title, subject: v.subject }))
+                    });
+                } catch (error) {
+                    return res.status(200).json({
+                        success: false,
+                        error: error.message,
+                        apiStatus: 'Failed'
+                    });
+                }
+
+            case 'debug_youtube':
+                try {
+                    // Debug YouTube API by testing each channel individually
+                    const { google } = await import('googleapis');
+                    const API_KEY = process.env.YOUTUBE_DATA_API_KEY || 'AIzaSyAhklnWI1zQL-C271nsAwryAzGgjnfZtEQ';
+                    
+                    const youtube = google.youtube({
+                        version: 'v3',
+                        auth: API_KEY
+                    });
+                    
+                    // Test channels
+                    const testChannels = {
+                        'ChuChuTVNurseryRhymes': 'UCpOtjdJfn2E6R7ZYqCmbS2w',
+                        'Infobells': 'UC7sRIUah9kYkuIy9aV3tGoA',
+                        'KhanAcademyKids': 'UC4a-Gbdw7vOaccHmFo40b9g'
+                    };
+                    
+                    const channelResults = [];
+                    let totalVideos = 0;
+                    
+                    for (const [channelName, channelId] of Object.entries(testChannels)) {
+                        try {
+                            const response = await youtube.search.list({
+                                part: 'snippet',
+                                channelId: channelId,
+                                order: 'date',
+                                maxResults: 10,
+                                type: 'video'
+                            });
+                            
+                            const videoCount = response.data.items.length;
+                            channelResults.push({
+                                channel: channelName,
+                                videoCount: videoCount,
+                                status: 'Success'
+                            });
+                            totalVideos += videoCount;
+                            
+                        } catch (error) {
+                            channelResults.push({
+                                channel: channelName,
+                                videoCount: 0,
+                                status: 'Failed',
+                                error: error.message
+                            });
+                        }
+                    }
+                    
+                    return res.status(200).json({
+                        success: true,
+                        apiKeyValid: true,
+                        channelsTested: Object.keys(testChannels).length,
+                        totalVideos: totalVideos,
+                        channelResults: channelResults
+                    });
+                    
+                } catch (error) {
+                    return res.status(200).json({
+                        success: false,
+                        error: error.message,
+                        apiKeyValid: false
+                    });
+                }
+
+            case 'check_table':
+                try {
+                    // Check if videos table exists and get row count
+                    const { SupabaseVideoDatabase } = await import('./pages/api/supabase-video-database.js');
+                    const db = new SupabaseVideoDatabase();
+                    
+                    // Try to get stats to check if table exists
+                    const stats = await db.getStats();
+                    
+                    if (stats.success) {
+                        return res.status(200).json({
+                            success: true,
+                            tableExists: true,
+                            tableName: 'videos',
+                            rowCount: stats.data.totalVideos || 0
+                        });
+                    } else {
+                        return res.status(200).json({
+                            success: false,
+                            tableExists: false,
+                            tableName: 'videos',
+                            error: stats.error
+                        });
+                    }
+                    
+                } catch (error) {
+                    return res.status(200).json({
+                        success: false,
+                        tableExists: false,
+                        tableName: 'videos',
+                        error: error.message
+                    });
+                }
+
+            case 'add_video_url_column':
+                try {
+                    // Add video_url column to the videos table
+                    const { SupabaseVideoDatabase } = await import('./pages/api/supabase-video-database.js');
+                    const db = new SupabaseVideoDatabase();
+                    
+                    // Execute SQL to add the column
+                    const { error: alterError } = await db.supabase
+                        .rpc('exec_sql', { 
+                            sql: 'ALTER TABLE videos ADD COLUMN IF NOT EXISTS video_url TEXT;' 
+                        });
+                    
+                    if (alterError) {
+                        // Try alternative approach
+                        const { error: directError } = await db.supabase
+                            .from('videos')
+                            .select('video_id')
+                            .limit(1);
+                        
+                        if (directError && directError.message.includes('video_url')) {
+                            return res.status(200).json({
+                                success: false,
+                                error: 'Column video_url does not exist. Please add it manually in Supabase dashboard.'
+                            });
+                        }
+                    }
+                    
+                    return res.status(200).json({
+                        success: true,
+                        columnAdded: true,
+                        message: 'video_url column added successfully'
+                    });
+                    
+                } catch (error) {
+                    return res.status(200).json({
+                        success: false,
+                        error: error.message
+                    });
+                }
+
+            case 'fix_video_url':
+                try {
+                    // Update existing videos to add video_url
+                    const { SupabaseVideoDatabase } = await import('./pages/api/supabase-video-database.js');
+                    const db = new SupabaseVideoDatabase();
+                    
+                    // Update existing videos to add video_url
+                    const { data: videos, error: fetchError } = await db.supabase
+                        .from('videos')
+                        .select('video_id')
+                        .is('video_url', null);
+                    
+                    if (fetchError) {
+                        return res.status(200).json({
+                            success: false,
+                            error: fetchError.message
+                        });
+                    }
+                    
+                    let updatedCount = 0;
+                    if (videos && videos.length > 0) {
+                        for (const video of videos) {
+                            const { error: updateError } = await db.supabase
+                                .from('videos')
+                                .update({ 
+                                    video_url: `https://www.youtube.com/watch?v=${video.video_id}` 
+                                })
+                                .eq('video_id', video.video_id);
+                            
+                            if (!updateError) {
+                                updatedCount++;
+                            }
+                        }
+                    }
+                    
+                    return res.status(200).json({
+                        success: true,
+                        columnAdded: true,
+                        videosUpdated: updatedCount,
+                        message: `Updated ${updatedCount} videos with YouTube URLs`
+                    });
+                    
+                } catch (error) {
+                    return res.status(200).json({
+                        success: false,
+                        error: error.message
+                    });
+                }
+
+            default:
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Invalid action. Use: start_all_batches, process_specific, get_progress, get_stats, get_combinations, test_youtube_api, debug_youtube, or check_table' 
+                });
+        }
+        
+    } catch (error) {
+        console.error('❌ Error in batch video processor:', error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 });
 
