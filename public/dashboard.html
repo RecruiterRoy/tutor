@@ -210,6 +210,10 @@
         <script src="js/soundEffects.js?v=1.0.1" defer></script>
         <script src="js/idleStorySystem.js?v=1.0.1" defer></script>
         
+        <!-- Fixed Mic System and Daily Challenge -->
+        <script src="js/mic-system.js?v=1.0.0" defer></script>
+        <script src="js/daily-challenge.js?v=1.0.0" defer></script>
+        
         <script src="js/dashboard.js?v=1.0.2" defer></script>
     
     <!-- Load other essential scripts -->
@@ -837,6 +841,8 @@
             #challengeAnswer {
                 margin-bottom: 0;
                 font-size: 14px;
+                color: #000000 !important;
+                background-color: rgba(255, 255, 255, 0.9) !important;
             }
             
             #submitChallengeBtn {
@@ -1057,6 +1063,8 @@
             #challengeAnswer {
                 font-size: 12px !important;
                 padding: 6px !important;
+                color: #000000 !important;
+                background-color: rgba(255, 255, 255, 0.95) !important;
             }
             
             #submitChallengeBtn {
@@ -1246,6 +1254,8 @@
             #challengeAnswer {
                 font-size: 14px !important;
                 padding: 8px !important;
+                color: #000000 !important;
+                background-color: rgba(255, 255, 255, 0.9) !important;
             }
             
             #submitChallengeBtn {
@@ -1641,8 +1651,9 @@
                                 <div id="challengeInputSection" class="challenge-input-row flex gap-2">
                                     <input id="challengeAnswer" 
                                            type="text" 
-                                           class="flex-1 bg-white/10 text-white rounded-lg px-3 py-2 text-sm border border-white/20 focus:border-purple-400 focus:outline-none placeholder-white/50 transition-all duration-300"
-                                           placeholder="Your answer...">
+                                           class="flex-1 bg-white/90 text-black rounded-lg px-3 py-2 text-sm border border-white/20 focus:border-purple-400 focus:outline-none placeholder-gray-500 transition-all duration-300"
+                                           placeholder="Your answer..."
+                                           style="color: #000000 !important; background-color: rgba(255, 255, 255, 0.9) !important;">
                                     <button id="submitChallengeBtn" 
                                             class="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                         Submit
