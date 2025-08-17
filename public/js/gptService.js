@@ -87,6 +87,7 @@ class GPTService {
                 avatar: currentAvatar,
                 chatHistory: contextualHistory,
                 contextAnalysis: analysisResult, // Include analysis result for backend awareness
+                failedVideoIds: window.failedVideos ? Array.from(window.failedVideos) : [], // Include failed videos for blacklisting
                 userProfile: userProfile || {
                     full_name: 'Student',
                     class: this.currentGrade || '6',

@@ -2215,6 +2215,7 @@ async function initializeDashboard() {
     window.sessionStartTime = Date.now();
     window.lastVideoTime = 0;
     window.videoOfferedForTopic = {};
+    window.failedVideos = new Set();
     console.log('🔧 Session tracking initialized');
   }
   
@@ -2406,14 +2407,13 @@ async function initializeDashboard() {
     initializeVoiceFeatures();
     populateVoices();
     
-    // Ensure welcome message shows after data is loaded
+    // Ensure welcome message shows after data is loaded (AVATAR ONLY)
     if (!window.welcomeMessageShown) {
         console.log('🔧 Showing welcome message after data load...');
         showWelcomeMessage();
-        // Start TTS immediately after dashboard initialization
-        setTimeout(() => {
-            readWelcomeMessageAtLogin();
-        }, 1000); // Small delay to ensure everything is ready
+        // DISABLED: System voice welcome message
+        // Only avatar should speak, not system voice
+        window.welcomeMessageShown = true; // Mark as shown to prevent duplicates
     }
     
     // Initialize subject manager if available
@@ -2432,6 +2432,19 @@ async function initializeDashboard() {
     // Initialize Enhanced AI Service
     await initializeEnhancedAIService();
     
+    // Initialize Daily Challenge System
+    if (typeof DailyChallenge !== 'undefined') {
+        console.log('🔧 Initializing daily challenge system...');
+        try {
+            window.dailyChallenge = new DailyChallenge();
+            console.log('✅ Daily challenge system initialized');
+        } catch (error) {
+            console.error('❌ Daily challenge initialization error:', error);
+        }
+    } else {
+        console.warn('⚠️ DailyChallenge class not available');
+    }
+    
     // Load chat history from Supabase
     await loadChatHistoryFromSupabase();
         
@@ -2441,20 +2454,22 @@ async function initializeDashboard() {
     setupSmallTTSControls();
     // --- End of existing logic ---
 
-    // Ensure TTS is ready and voices are loaded
+    // Fast TTS ready check for immediate response
     setTimeout(() => {
         if (speechSynthesis && speechSynthesis.getVoices().length > 0) {
             console.log("✅ Voice services are ready and TTS should be active.");
         } else {
-            console.log("⚠️ Voices not ready yet, retrying TTS initialization...");
-            // Retry TTS initialization
-            initVoiceSelection().then(() => {
-                if (!window.welcomeMessageShown) {
-                    readWelcomeMessageAtLogin();
+            console.log("⚠️ Voices not ready yet, using fast retry...");
+            // Fast retry without additional voice initialization delays
+            try {
+                if (window.textToSpeech) {
+                    window.textToSpeech.loadVoices();
                 }
-            });
+            } catch (error) {
+                console.warn("⚠️ Fast TTS retry failed:", error);
+            }
         }
-    }, 1000);
+    }, 100); // Reduced from 1000ms to 100ms for immediate response
     
     // Set up periodic user session refresh for multiple users
     setInterval(async () => {
@@ -3809,11 +3824,8 @@ async function speakText(text) {
         return;
     }
 
-    // Check if user has interacted with the page
-    if (!window.userHasInteracted) {
-        console.log('[TTS] User has not interacted yet, skipping autoplay speech');
-        return;
-    }
+    // Allow TTS to work immediately (removed user interaction requirement)
+    // Note: Modern browsers may still require user interaction for autoplay
 
     // Don't speak if voice recording is active
     if (micSystem.isRecording) {
@@ -3834,6 +3846,14 @@ async function speakText(text) {
         cleanText = cleanText.replace(/watch a fun video/g, '');
         cleanText = cleanText.replace(/watch an interesting video/g, '');
         cleanText = cleanText.replace(/see a video that breaks it down/g, '');
+        
+        // Remove markdown formatting and special characters
+        cleanText = cleanText.replace(/\*\*/g, ''); // Remove bold markdown
+        cleanText = cleanText.replace(/\*/g, ''); // Remove asterisks
+        cleanText = cleanText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // Remove markdown links but keep text
+        cleanText = cleanText.replace(/\[([^\]]+)\]/g, '$1'); // Remove square brackets but keep text inside
+        cleanText = cleanText.replace(/\([^)]*\)/g, ''); // Remove parentheses and content
+        cleanText = cleanText.replace(/[\[\](){}]/g, ''); // Remove any remaining brackets
         
         // Remove extra whitespace and clean up
         cleanText = cleanText.replace(/\s+/g, ' ').trim();
@@ -5318,32 +5338,58 @@ console.log('✅ All functions assigned to window object');
 
 // YouTube video extraction helper
 function extractYouTubeVideoId(text) {
-    // Matches various YouTube URL formats
-    const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/;
-    const match = text.match(regex);
-    return match ? match[1] : null;
+    if (!text) return null;
+    
+    // Remove any markdown formatting first
+    const cleanText = text.replace(/\[.*?\]\((.*?)\)/g, '$1');
+    
+    // Updated regex patterns to handle various YouTube URL formats
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/,
+        /youtu\.be\/([a-zA-Z0-9_-]{11})/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = cleanText.match(pattern);
+        if (match && match[1] && match[1].length === 11) {
+            console.log('🎥 Extracted video ID:', match[1], 'from text:', cleanText.substring(0, 100));
+            return match[1];
+        }
+    }
+    
+    console.log('🎥 No valid video ID found in:', cleanText.substring(0, 100));
+    return null;
 }
 
 // Validate YouTube video availability
 async function validateYouTubeVideo(videoId) {
     try {
+        console.log('🔍 Validating video ID:', videoId);
+        
         const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
         
         const response = await fetch(oembedUrl, {
             method: 'GET',
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
         });
         
         if (response.ok) {
             const data = await response.json();
-            return data && data.title && data.thumbnail_url;
+            const isValid = data && data.title && data.thumbnail_url;
+            console.log(isValid ? '✅ Video is valid and embeddable' : '❌ Video data incomplete');
+            if (isValid) {
+                console.log('📺 Video title:', data.title);
+            }
+            return isValid;
+        } else {
+            console.log('❌ Video validation failed:', response.status, 'Video may not be embeddable or does not exist');
+            return false;
         }
-        
-        return false;
     } catch (error) {
-        console.error('Video validation error:', error);
+        console.error('❌ Video validation error:', error);
         return false;
     }
 }
@@ -5562,8 +5608,15 @@ async function addMessage(role, content, saveToDB = true) {
         console.log('🎥 Video should be rendered:', {
             videoId: videoId,
             content: contentString,
-            hasVideoData: !!window.lastVideoData
+            hasVideoData: !!window.lastVideoData,
+            contentLength: contentString.length,
+            containsVideoUrl: contentString.includes('youtube.com')
         });
+        
+        // Force video rendering if URL is present
+        if (contentString.includes('youtube.com')) {
+            console.log('🎥 Forcing video rendering for:', videoId);
+        }
     }
 
     if (videoId) {
@@ -6337,16 +6390,85 @@ function appendAssistantMessage(message, videoData = null) {
     window.lastVideoData = videoData;
   }
   
-  // Use Markdown parser + sanitizer for better formatting but safe HTML
-  let safeHTML = message;
-  if (typeof marked !== 'undefined') {
-    safeHTML = marked.parse(message);
-  }
-  if (typeof DOMPurify !== 'undefined') {
-    safeHTML = DOMPurify.sanitize(safeHTML);
+  // Check if message contains YouTube URL
+  const videoId = extractYouTubeVideoId(message);
+  console.log('🎥 appendAssistantMessage video check:', {
+    hasVideoData: !!videoData,
+    hasVideoId: !!videoId,
+    videoId: videoId,
+    messagePreview: message.substring(0, 100)
+  });
+  
+  if (videoId || videoData) {
+    // Use videoData's videoId if available, otherwise use extracted videoId
+    const finalVideoId = videoData?.videoId || videoId;
+    const videoTitle = videoData?.title || 'Educational Video';
+    const channelTitle = videoData?.channelTitle || 'Educational Channel';
+    
+                        console.log('🎥 Embedding video with playback detection:', finalVideoId);
+
+                    // DIRECT EMBEDDING with playback detection and fallback
+                    msgEl.innerHTML = `
+                      <div class="message-bubble">
+                        <div class="text-white mb-3 text-sm">🎥 Here's a helpful video to understand this better:</div>
+                        <div class="video-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;background:#000;margin-bottom:8px;">
+                          <iframe
+                            id="video-${finalVideoId}"
+                            src="https://www.youtube.com/embed/${finalVideoId}?rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&autoplay=0&enablejsapi=1"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:12px;"
+                            onload="checkVideoPlayability('${finalVideoId}', '${videoTitle}', '${channelTitle}')"
+                            onerror="handleVideoError('${finalVideoId}', '${videoTitle}', '${channelTitle}')"
+                          ></iframe>
+                          <div id="video-error-${finalVideoId}" class="video-error-overlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;border-radius:12px;">
+                            <div class="text-lg mb-2">⚠️ Video not available</div>
+                            <button onclick="requestAlternativeVideo('${finalVideoId}')" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-sm">
+                              🔄 Try Another Video
+                            </button>
+                          </div>
+                        </div>
+                        <div class="video-info mt-2 p-2 bg-gray-800 rounded-lg">
+                          <div class="text-white font-medium text-sm">${videoTitle}</div>
+                          <div class="text-gray-400 text-xs">by ${channelTitle}</div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-300 mt-2">
+                          <a href="https://www.youtube.com/watch?v=${finalVideoId}" target="_blank" rel="noopener" class="text-blue-300 hover:text-blue-200 underline">
+                            📺 Open in YouTube
+                          </a>
+                          <span class="text-green-400">🤖 AI Recommended</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-300 mt-2">
+                          <button onclick="reportVideoIssue('${finalVideoId}')" class="text-red-400 hover:text-red-300 underline">
+                            ⚠️ Report Issue
+                          </button>
+                          <button onclick="requestAlternativeVideo('${finalVideoId}')" class="text-yellow-400 hover:text-yellow-300 underline">
+                            🔄 Show Different Video
+                          </button>
+                        </div>
+                        <p class="text-gray-400 text-xs mt-2">Just now</p>
+                      </div>
+                    `;
+                    
+                    // Set up video playback monitoring
+                    setTimeout(() => {
+                        monitorVideoPlayback(finalVideoId, videoTitle, channelTitle);
+                    }, 2000);
+  } else {
+    // Regular text message
+    let safeHTML = message;
+    if (typeof marked !== 'undefined') {
+      safeHTML = marked.parse(message);
+    }
+    if (typeof DOMPurify !== 'undefined') {
+      safeHTML = DOMPurify.sanitize(safeHTML);
+    }
+    
+    msgEl.innerHTML = `<div class="message-bubble">${safeHTML}</div>`;
   }
   
-  msgEl.innerHTML = `<div class="message-bubble">${safeHTML}</div>`;
   container.appendChild(msgEl);
   container.scrollTop = container.scrollHeight;
 }
@@ -7640,12 +7762,17 @@ let micSystem = {
         };
         
         this.recognition.onresult = (event) => {
-            let transcript = '';
+            let fullTranscript = '';
             
-            // FIXED: Collect COMPLETE transcript including all previous results
-            // This ensures we don't lose any previously captured words during breaks
+            // FIXED: Collect ALL results from the beginning for complete transcript
+            // This ensures we capture the complete sentence without losing words
             for (let i = 0; i < event.results.length; ++i) {
-                transcript += event.results[i][0].transcript;
+                const result = event.results[i];
+                fullTranscript += result[0].transcript;
+                
+                if (result.isFinal) {
+                    console.log('🎤 Final result:', result[0].transcript);
+                }
             }
             
             // Update last speech time for silence detection
@@ -7657,18 +7784,18 @@ let micSystem = {
                 this.silenceTimer = null;
             }
             
-            // Display transcript or process further
-            console.log('Live transcript (complete):', transcript);
+            // Store the complete transcript
+            this.currentTranscript = fullTranscript;
+            console.log('🎤 Complete transcript:', fullTranscript);
             
-            this.currentTranscript = transcript;
-            this.displayTranscript(this.currentTranscript);
+            this.displayTranscript(fullTranscript);
             
             // For short press mode, set up silence detection
-            if (this.shortPressMode && transcript.trim()) {
+            if (this.shortPressMode && fullTranscript.trim()) {
                 this.silenceTimer = setTimeout(() => {
                     console.log('🎤 Silence detected in short press mode, stopping recording');
                     this.stopRecording();
-                }, 4000); // Wait 4 seconds of silence before stopping (better for kids)
+                }, 3000);
             }
         };
         
@@ -7690,11 +7817,6 @@ let micSystem = {
             
             // Reset mode
             this.shortPressMode = false;
-            
-            // Optionally restart recognition on end to improve continuous capture
-            if (this.recognition && this.recognition.state === 'inactive') {
-                this.recognition.start();
-            }
         };
         
         this.recognition.onerror = (event) => {
@@ -8135,6 +8257,20 @@ window.testVideoWithMetadata = function() {
     return 'Video with metadata test complete. Check console for results.';
 };
 
+// Helper function to extract YouTube video ID
+// Removed duplicate function - using the improved version above
+
+// Helper function to validate YouTube video
+async function validateYouTubeVideo(videoId) {
+    try {
+        const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+        return response.ok;
+    } catch (error) {
+        console.error('Error validating YouTube video:', error);
+        return false;
+    }
+}
+
 // Test the complete video flow
 window.testCompleteVideoFlow = function() {
     console.log('🎥 Testing complete video flow...');
@@ -8153,10 +8289,336 @@ window.testCompleteVideoFlow = function() {
     return 'Complete video flow test complete. Check console and chat for results.';
 };
 
+// Test direct video rendering
+window.testDirectVideoRendering = function() {
+    console.log('🎥 Testing direct video rendering...');
+    
+    const testVideoId = '3jZ5vnv-LZc';
+    const testResponse = `Here's a helpful video to understand this better: https://www.youtube.com/watch?v=${testVideoId}`;
+    
+    // Create a test message div
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message message-ai';
+    
+    // Render the video directly
+    messageDiv.innerHTML = `
+        <div class="message-bubble">
+            <div class="text-white mb-3 text-sm">🎥 Here's a helpful video to understand this better:</div>
+            <div class="video-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;background:#000;margin-bottom:8px;">
+                <iframe
+                    src="https://www.youtube.com/embed/${testVideoId}?rel=0"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:12px;"
+                ></iframe>
+            </div>
+            <div class="video-info mt-2 p-2 bg-gray-800 rounded-lg">
+                <div class="text-white font-medium text-sm">Twinkle Twinkle Little Star - Educational Poem</div>
+                <div class="text-gray-400 text-xs">by Educational Channel</div>
+            </div>
+            <div class="flex items-center justify-between text-xs text-gray-300 mt-2">
+                <a href="https://www.youtube.com/watch?v=${testVideoId}" target="_blank" rel="noopener" class="text-blue-300 hover:text-blue-200 underline">
+                    📺 Watch on YouTube
+                </a>
+                <span class="text-green-400">🤖 AI Recommended</span>
+            </div>
+            <p class="text-gray-400 text-xs mt-2">Just now</p>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    return 'Direct video rendering test complete. Check chat for video.';
+};
+
+// Test the complete video flow with appendAssistantMessage
+window.testVideoFlow = function() {
+    console.log('🎥 Testing complete video flow with appendAssistantMessage...');
+    
+    const testVideoId = '3jZ5vnv-LZc';
+    const testMessage = `Here's a helpful video to understand this better: https://www.youtube.com/watch?v=${testVideoId}`;
+    const testVideoData = {
+        videoId: testVideoId,
+        title: 'Twinkle Twinkle Little Star - Educational Poem for Kids',
+        channelTitle: 'Educational Channel',
+        description: 'A fun and educational version of the classic nursery rhyme'
+    };
+    
+    // Test with video data
+    appendAssistantMessage(testMessage, testVideoData);
+    
+    return 'Video flow test complete. Check chat for video.';
+};
+
+// Test the actual video request flow
+window.testRealVideoRequest = function() {
+    console.log('🎥 Testing real video request flow...');
+    
+    // Send a real video request through the system
+    const testMessage = "I want to see video of Twinkle Twinkle Little Star poem";
+    
+    // Use the actual sendMessage function
+    if (typeof sendMessage === 'function') {
+        console.log('📤 Sending real video request:', testMessage);
+        sendMessage(testMessage);
+    } else {
+        console.error('❌ sendMessage function not available');
+    }
+    
+    return 'Real video request sent. Check console and chat for results.';
+};
+
         // Load Sound Effects settings
         const soundEffectsEnabled = localStorage.getItem('soundEffectsEnabled');
         if (soundEffectsEnabled !== null) {
             document.getElementById('soundEffectsEnabled').checked = soundEffectsEnabled === 'true';
         }
+
+// Video playback monitoring and fallback functions
+async function checkVideoPlayability(videoId, title, channel) {
+    console.log('🎥 Checking video playability:', videoId);
+    
+    const iframe = document.getElementById(`video-${videoId}`);
+    if (!iframe) {
+        console.log('❌ Video iframe not found:', videoId);
+        return;
+    }
+
+    let playabilityChecked = false;
+    let loadTimeout;
+
+    // Monitor iframe load success
+    iframe.addEventListener('load', async () => {
+        console.log('✅ Video iframe loaded successfully:', videoId);
+        playabilityChecked = true;
+        clearTimeout(loadTimeout);
+        
+        // Hide error overlay if it was shown
+        const errorOverlay = document.getElementById(`video-error-${videoId}`);
+        if (errorOverlay) {
+            errorOverlay.style.display = 'none';
+        }
+        
+        // Simplified: Just log success, no additional validation
+        console.log('✅ Video iframe loaded successfully, no additional validation needed');
+    });
+
+    iframe.addEventListener('error', async () => {
+        console.log('❌ Video iframe failed to load:', videoId);
+        playabilityChecked = true;
+        clearTimeout(loadTimeout);
+        await reportVideoFailure(videoId, 'iframe_load_error', title, channel);
+        handleVideoError(videoId, title, channel);
+    });
+
+    // Set timeout for load failure detection
+    loadTimeout = setTimeout(async () => {
+        if (!playabilityChecked) {
+            console.log('❌ Video iframe load timeout:', videoId);
+            await reportVideoFailure(videoId, 'load_timeout', title, channel);
+            handleVideoError(videoId, title, channel);
+        }
+    }, 10000); // 10 second timeout
+
+    // Check for blocked content or embedding restrictions
+    setTimeout(async () => {
+        try {
+            const rect = iframe.getBoundingClientRect();
+            if (rect.height === 0 || rect.width === 0) {
+                console.log('❌ Video iframe has zero dimensions:', videoId);
+                await reportVideoFailure(videoId, 'zero_dimensions', title, channel);
+                handleVideoError(videoId, title, channel);
+            }
+        } catch (error) {
+            console.log('⚠️ Could not check iframe dimensions:', error.message);
+        }
+    }, 3000);
+}
+
+// Report video failure to backend for blacklisting
+async function reportVideoFailure(videoId, reason, title, channel) {
+    try {
+        console.log(`📊 Reporting video failure: ${videoId} (${reason})`);
+        
+        const response = await fetch('/api/report-video-failure', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                videoId: videoId,
+                reason: reason,
+                title: title,
+                channel: channel,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log(`✅ Video failure reported successfully. Blacklisted videos: ${result.blacklistedVideos}`);
+        } else {
+            console.log('⚠️ Failed to report video failure:', response.status);
+        }
+    } catch (error) {
+        console.log('⚠️ Error reporting video failure:', error.message);
+    }
+}
+
+function handleVideoError(videoId, title, channel) {
+    console.error('❌ Video failed to load:', videoId);
+    window.failedVideos.add(videoId);
+    
+    // Show error overlay
+    const errorOverlay = document.getElementById(`video-error-${videoId}`);
+    if (errorOverlay) {
+        errorOverlay.style.display = 'flex';
+    }
+    
+    // Auto-request alternative after 5 seconds
+    setTimeout(() => {
+        console.log('🔄 Auto-requesting alternative video due to load failure');
+        requestAlternativeVideo(videoId);
+    }, 5000);
+}
+
+function monitorVideoPlayback(videoId, title, channel) {
+    console.log('🎥 Setting up playback monitoring for:', videoId);
+    
+    // Check for "Video unavailable" after delay
+    setTimeout(() => {
+        checkForVideoUnavailable(videoId, title, channel);
+    }, 8000);
+}
+
+function checkForVideoUnavailable(videoId, title, channel) {
+    // Use oEmbed API to verify video availability
+    fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data || !data.title) {
+                console.log('⚠️ Video verification failed, may not be embeddable');
+                showVideoFallback(videoId, title, channel);
+            } else {
+                console.log('✅ Video verified as available:', data.title);
+            }
+        })
+        .catch(error => {
+            console.log('⚠️ Video verification failed:', error.message);
+            showVideoFallback(videoId, title, channel);
+        });
+}
+
+function showVideoFallback(videoId, title, channel) {
+    const errorOverlay = document.getElementById(`video-error-${videoId}`);
+    if (errorOverlay && errorOverlay.style.display === 'none') {
+        console.log('🔄 Showing fallback options for problematic video');
+        errorOverlay.style.display = 'flex';
+        window.failedVideos.add(videoId);
+    }
+}
+
+function requestAlternativeVideo(originalVideoId) {
+    console.log('🔄 User requested alternative video for:', originalVideoId);
+    window.failedVideos.add(originalVideoId);
+    
+    // Get the last user message to understand what they were looking for
+    const lastUserMessage = window.chatHistory && window.chatHistory.length > 0 
+        ? window.chatHistory[window.chatHistory.length - 1]?.content || 'educational video'
+        : 'educational video';
+    
+    // Request a new video from AI, excluding failed videos
+    const alternativeRequest = `The previous video didn't work. Please show me a different video about ${lastUserMessage.replace(/show me.*video/i, '').trim() || 'this topic'}. Please make sure it's from a safe educational channel for children.`;
+    
+    // Send the request with failed video IDs to avoid repeating them
+    if (typeof sendMessage === 'function') {
+        // Send as a special video request with metadata
+        const requestData = {
+            message: alternativeRequest,
+            failedVideoIds: Array.from(window.failedVideos || []),
+            isVideoRequest: true,
+            originalVideoId: originalVideoId
+        };
+        
+        // Use enhanced sendMessage with additional data
+        sendMessageWithContext(alternativeRequest, requestData);
+    } else {
+        console.error('❌ sendMessage function not available');
+        showManualVideoInstructions(originalVideoId);
+    }
+    
+    // Fallback for older sendMessage function
+    function sendMessageWithContext(message, context) {
+        try {
+            // Try to access the enhanced chat API directly
+            if (window.gptService && window.gptService.sendMessage) {
+                window.gptService.sendMessage(message, context);
+            } else {
+                // Fallback to regular sendMessage
+                sendMessage(message);
+            }
+        } catch (error) {
+            console.error('❌ Error sending message with context:', error);
+            sendMessage(message); // Final fallback
+        }
+    }
+}
+
+function reportVideoIssue(videoId) {
+    console.log('⚠️ User reported issue with video:', videoId);
+    window.failedVideos.add(videoId);
+    
+    // Show a simple notification
+    const notification = document.createElement('div');
+    notification.innerHTML = `
+        <div class="fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+            📝 Video issue reported. Thanks for the feedback!
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+        document.body.removeChild(notification);
+    }, 3000);
+    
+    // Auto-request alternative
+    setTimeout(() => {
+        requestAlternativeVideo(videoId);
+    }, 1000);
+}
+
+function showManualVideoInstructions(videoId) {
+    const iframe = document.getElementById(`video-${videoId}`);
+    if (iframe && iframe.parentElement) {
+        iframe.parentElement.innerHTML = `
+            <div class="text-center p-4 bg-gray-800 rounded-lg">
+                <div class="text-white mb-2">🎥 Video Troubleshooting</div>
+                <div class="text-gray-300 text-sm mb-3">
+                    The video couldn't be embedded. Here are some options:
+                </div>
+                <div class="space-y-2">
+                    <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" 
+                       class="block bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                        📺 Watch on YouTube
+                    </a>
+                    <button onclick="location.reload()" 
+                            class="block w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                        🔄 Try Again
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+}
 
 

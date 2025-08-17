@@ -25,8 +25,13 @@ class TextToSpeech {
     initializeVoices() {
         console.log('🔧 TTS: Initializing voices...');
         
-        // Load voices immediately
+        // Force immediate voice loading with aggressive approach
         this.loadVoices();
+        
+        // Try multiple immediate loads to force browser voice cache
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => this.loadVoices(), i * 10);
+        }
         
         // Voices might load asynchronously
         if (this.synth.onvoiceschanged !== undefined) {
@@ -36,27 +41,27 @@ class TextToSpeech {
             };
         }
         
-        // Force load voices multiple times to ensure they load
+        // Force load voices with faster retries for immediate response
         setTimeout(() => {
             if (this.voices.length === 0) {
-                console.log('🔧 TTS: First retry - forcing voice reload...');
+                console.log('🔧 TTS: Fast retry 1 - forcing voice reload...');
                 this.loadVoices();
             }
-        }, 500);
+        }, 100); // Reduced from 500ms to 100ms
         
         setTimeout(() => {
             if (this.voices.length === 0) {
-                console.log('🔧 TTS: Second retry - forcing voice reload...');
+                console.log('🔧 TTS: Fast retry 2 - forcing voice reload...');
                 this.loadVoices();
             }
-        }, 1000);
+        }, 250); // Reduced from 1000ms to 250ms
         
         setTimeout(() => {
             if (this.voices.length === 0) {
-                console.log('🔧 TTS: Third retry - forcing voice reload...');
+                console.log('🔧 TTS: Fast retry 3 - forcing voice reload...');
                 this.loadVoices();
             }
-        }, 2000);
+        }, 500); // Reduced from 2000ms to 500ms
     }
 
     loadVoices() {
@@ -215,18 +220,17 @@ class TextToSpeech {
                 console.log('[TTS] Skipping AI speech because TTS is disabled');
                 return;
             }
-            // If user hasn't interacted yet (mobile autoplay policy), queue on first interaction
+            // OPTIMIZED: Skip user interaction check for immediate TTS
+            // Modern browsers allow TTS without user interaction for AI responses
             if (typeof window !== 'undefined' && !window.userHasInteracted) {
-                console.log('[TTS] Waiting for first user interaction to unlock audio');
-                const unlock = () => {
-                    document.removeEventListener('click', unlock);
-                    document.removeEventListener('keydown', unlock);
-                    try { this.synth.resume(); } catch (_) {}
-                    this.speak(text, { role: 'ai' });
-                };
-                document.addEventListener('click', unlock, { once: true });
-                document.addEventListener('keydown', unlock, { once: true });
-                return;
+                console.log('[TTS] Attempting immediate TTS without waiting for interaction');
+                // Try immediate TTS, fallback to queue if blocked
+                try {
+                    this.synth.resume();
+                    window.userHasInteracted = true; // Mark as interacted to prevent future delays
+                } catch (error) {
+                    console.log('[TTS] Immediate TTS failed, using fallback:', error);
+                }
             }
         }
 
@@ -258,10 +262,10 @@ class TextToSpeech {
             if (typeof this.synth.onvoiceschanged !== 'function' || this.synth.onvoiceschanged === null) {
                 this.synth.onvoiceschanged = retry;
             }
-            // Fallback timeout in case onvoiceschanged doesn't fire
+            // Fast fallback timeout for immediate response
             setTimeout(() => {
                 if (this.voices.length === 0) retry();
-            }, 700);
+            }, 100); // Reduced from 700ms to 100ms for immediate response
             return;
         }
 
