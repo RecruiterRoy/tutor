@@ -66,7 +66,7 @@ self.addEventListener('activate', (event) => {
                     clients.forEach(client => {
                         client.postMessage({
                             type: 'SW_UPDATED',
-                            message: 'App updated! Refresh to get the latest version.'
+                            message: 'A new version of the app is available with latest features and improvements.'
                         });
                     });
                 });

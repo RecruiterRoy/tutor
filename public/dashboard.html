@@ -2573,30 +2573,65 @@
         }
         
         function showUpdateNotification(message) {
-            // Create update notification
+            // Remove any existing update notification
+            const existingNotification = document.getElementById('updateNotification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // Create update notification at the top of the page
             const notification = document.createElement('div');
-            notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-3';
+            notification.id = 'updateNotification';
+            notification.className = 'fixed top-0 left-0 right-0 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 shadow-lg z-50 flex items-center justify-between transform -translate-y-full transition-transform duration-300';
             notification.innerHTML = `
-                <div class="flex-1">
-                    <div class="font-semibold">🔄 App Updated!</div>
-                    <div class="text-sm">${message}</div>
+                <div class="flex items-center space-x-3">
+                    <div class="text-2xl">🔄</div>
+                    <div>
+                        <div class="font-semibold text-lg">New Update Available!</div>
+                        <div class="text-sm opacity-90">${message}</div>
+                    </div>
                 </div>
-                <button onclick="refreshApp()" class="bg-white text-green-600 px-3 py-1 rounded text-sm font-semibold hover:bg-green-50">
-                    Refresh
-                </button>
-                <button onclick="this.parentElement.remove()" class="text-white hover:text-green-200">
-                    ✕
-                </button>
+                <div class="flex items-center space-x-3">
+                    <button onclick="refreshApp()" class="bg-white text-green-600 px-4 py-2 rounded-lg font-semibold hover:bg-green-50 transition-colors">
+                        Update Now
+                    </button>
+                    <button onclick="dismissUpdateNotification()" class="text-white hover:text-green-200 text-xl">
+                        ✕
+                    </button>
+                </div>
             `;
             
             document.body.appendChild(notification);
             
-            // Auto-remove after 10 seconds
+            // Trigger slide-down animation
             setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 10000);
+                notification.classList.remove('-translate-y-full');
+            }, 100);
+            
+            // Add padding to body to prevent content overlap
+            document.body.style.paddingTop = '80px';
+            
+            // Auto-remove after 30 seconds (longer for better visibility)
+            setTimeout(() => {
+                dismissUpdateNotification();
+            }, 30000);
+        }
+        
+        function dismissUpdateNotification() {
+            const notification = document.getElementById('updateNotification');
+            if (notification) {
+                // Slide up animation
+                notification.classList.add('-translate-y-full');
+                
+                // Remove after animation completes
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                    // Remove padding from body
+                    document.body.style.paddingTop = '';
+                }, 300);
+            }
         }
         
         function refreshApp() {
