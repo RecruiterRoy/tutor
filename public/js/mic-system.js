@@ -29,7 +29,7 @@ class MicSystem {
         this.recognition = new SpeechRecognition();
         
         // Configure recognition settings
-        this.recognition.continuous = true;
+        this.recognition.continuous = false; // FIXED: Set to false to prevent accumulation
         this.recognition.interimResults = true;
         this.recognition.lang = 'en-US';
         this.recognition.maxAlternatives = 1;
@@ -50,25 +50,23 @@ class MicSystem {
             this.updateMicButton(true);
         };
 
-        // Result event - FIXED: Collect complete transcript properly
+        // Result event - COMPLETELY REWRITTEN: Simple, reliable transcript handling
         this.recognition.onresult = (event) => {
             console.log('🎤 Speech result received');
             
-            // FIXED: Only use the latest result to prevent repetition
-            const lastResult = event.results[event.results.length - 1];
-            const transcript = lastResult[0].transcript;
+            // Get the transcript from the first (and only) result
+            const transcript = event.results[0][0].transcript;
             
-            if (lastResult.isFinal) {
-                // Final result - add to final transcript
+            // Update the transcript
+            this.currentTranscript = transcript;
+            
+            // If it's final, also update final transcript
+            if (event.results[0].isFinal) {
                 this.finalTranscript = transcript;
-                this.currentTranscript = transcript;
-            } else {
-                // Interim result - update current transcript
-                this.currentTranscript = transcript;
             }
             
-            // Update input field with current transcript
-            this.updateInputField(this.currentTranscript);
+            // Update input field
+            this.updateInputField(transcript);
             
             // Reset silence timer
             this.resetSilenceTimer();
@@ -112,10 +110,19 @@ class MicSystem {
         console.log('🎤 Starting recording (short press)');
         this.isLongPress = false;
         
-        // Clear all transcripts and input fields
+        // COMPLETE RESET: Clear everything
         this.currentTranscript = '';
         this.finalTranscript = '';
         this.updateInputField('');
+        
+        // Clear any existing recognition instance
+        if (this.recognition) {
+            try {
+                this.recognition.abort();
+            } catch (e) {
+                // Ignore abort errors
+            }
+        }
         
         try {
             this.recognition.start();
