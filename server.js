@@ -937,7 +937,15 @@ app.post('/api/batch-video-processor', async (req, res) => {
                 try {
                     // Debug YouTube API by testing each channel individually
                     const { google } = await import('googleapis');
-                    const API_KEY = process.env.YOUTUBE_DATA_API_KEY || 'AIzaSyAhklnWI1zQL-C271nsAwryAzGgjnfZtEQ';
+                    const API_KEY = process.env.YOUTUBE_DATA_API_KEY;
+                    
+                    if (!API_KEY) {
+                        console.error('❌ YouTube API key not found in environment variables');
+                        return res.status(500).json({ 
+                            success: false, 
+                            error: 'YouTube API key not configured' 
+                        });
+                    }
                     
                     const youtube = google.youtube({
                         version: 'v3',

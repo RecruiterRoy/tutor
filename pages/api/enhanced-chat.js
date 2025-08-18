@@ -1734,8 +1734,17 @@ async function fetchYouTubeVideos(query, maxResults = 5, userContext = {}) {
       console.error('❌ Using hardcoded API key for testing...');
       
       // Use the provided API key directly
-      const hardcodedApiKey = 'AIzaSyAhklnWI1zQL-C271nsAwryAzGgjnfZtEQ';
-      console.log('🔑 Using hardcoded YouTube API key for search');
+                      const hardcodedApiKey = process.env.YOUTUBE_DATA_API_KEY;
+        
+        if (!hardcodedApiKey) {
+            console.error('❌ YouTube API key not found in environment variables');
+            return res.status(500).json({ 
+                success: false, 
+                error: 'YouTube API key not configured' 
+            });
+        }
+        
+        console.log('🔑 Using YouTube API key for search');
       
       // Continue with the hardcoded API key
       return await performYouTubeSearch(query, hardcodedApiKey, maxResults, userContext);

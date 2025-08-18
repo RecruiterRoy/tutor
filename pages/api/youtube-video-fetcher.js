@@ -3,7 +3,12 @@
 
 import { google } from 'googleapis';
 
-const API_KEY = process.env.YOUTUBE_DATA_API_KEY || 'AIzaSyAhklnWI1zQL-C271nsAwryAzGgjnfZtEQ';
+const API_KEY = process.env.YOUTUBE_DATA_API_KEY;
+
+if (!API_KEY) {
+    console.error('❌ YouTube API key not found in environment variables');
+    throw new Error('YouTube API key not configured');
+}
 
 // Initialize YouTube API
 const youtube = google.youtube({
