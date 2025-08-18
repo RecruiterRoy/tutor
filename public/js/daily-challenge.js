@@ -24,13 +24,9 @@ class DailyChallenge {
         try {
             console.log('📝 Loading daily challenge...');
             
-            const response = await fetch('/api/daily-challenge', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'get_challenge',
-                    user_id: window.userData?.id || 'anonymous'
-                })
+            const response = await fetch('/api/daily-challenge?action=get_challenge&user_id=' + (window.userData?.id || 'anonymous'), {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
             });
 
             if (!response.ok) {

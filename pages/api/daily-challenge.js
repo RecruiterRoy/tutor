@@ -2,14 +2,18 @@
 // Handles quiz questions, points calculation, and streaks
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
+    // Allow both GET and POST methods
+    if (req.method !== 'GET' && req.method !== 'POST') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
     }
 
-    const { action, user_id, answer } = req.body;
+    const { action, user_id, answer } = req.method === 'POST' ? req.body : req.query;
 
     try {
-        switch (action) {
+        // If no action specified, default to get_challenge
+        const actionToExecute = action || 'get_challenge';
+        
+        switch (actionToExecute) {
             case 'get_challenge':
                 return await getDailyChallenge(req, res);
             case 'submit_answer':

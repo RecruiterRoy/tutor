@@ -54,23 +54,18 @@ class MicSystem {
         this.recognition.onresult = (event) => {
             console.log('🎤 Speech result received');
             
-            // FIXED: Collect ALL results from index 0 to prevent losing previous words
-            let interimTranscript = '';
-            let finalTranscript = '';
+            // FIXED: Only use the latest result to prevent repetition
+            const lastResult = event.results[event.results.length - 1];
+            const transcript = lastResult[0].transcript;
             
-            for (let i = 0; i < event.results.length; ++i) {
-                const transcript = event.results[i][0].transcript;
-                
-                if (event.results[i].isFinal) {
-                    finalTranscript += transcript;
-                } else {
-                    interimTranscript += transcript;
-                }
+            if (lastResult.isFinal) {
+                // Final result - add to final transcript
+                this.finalTranscript = transcript;
+                this.currentTranscript = transcript;
+            } else {
+                // Interim result - update current transcript
+                this.currentTranscript = transcript;
             }
-
-            // Update transcripts
-            this.finalTranscript = finalTranscript;
-            this.currentTranscript = finalTranscript + interimTranscript;
             
             // Update input field with current transcript
             this.updateInputField(this.currentTranscript);
@@ -116,8 +111,11 @@ class MicSystem {
 
         console.log('🎤 Starting recording (short press)');
         this.isLongPress = false;
+        
+        // Clear all transcripts and input fields
         this.currentTranscript = '';
         this.finalTranscript = '';
+        this.updateInputField('');
         
         try {
             this.recognition.start();
