@@ -1,103 +1,37 @@
-// Fixed Mic System (STT)
-// Prevents repeating sounds and garbled text issues
+// Completely Rewritten Mic System (STT)
+// Simple, reliable speech-to-text without repetition
 
 class MicSystem {
     constructor() {
-        this.recognition = null;
-        this.isRecording = false;
         this.isListening = false;
-        this.currentTranscript = '';
-        this.finalTranscript = '';
-        this.silenceTimer = null;
-        this.silenceTimeout = 4000; // 4 seconds of silence
         this.isLongPress = false;
-        this.longPressTimer = null;
         this.init();
     }
 
     init() {
-        console.log('🎤 Initializing Mic System...');
+        console.log('🎤 Initializing Simple Mic System...');
         
         // Check browser support
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
             console.error('❌ Speech recognition not supported');
             return;
         }
-
-        // Initialize speech recognition
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        this.recognition = new SpeechRecognition();
-        
-        // Configure recognition settings
-        this.recognition.continuous = false; // FIXED: Set to false to prevent accumulation
-        this.recognition.interimResults = true;
-        this.recognition.lang = 'en-US';
-        this.recognition.maxAlternatives = 1;
-
-        // Set up event handlers
-        this.setupEventHandlers();
         
         console.log('✅ Mic System initialized');
     }
 
-    setupEventHandlers() {
-        // Start event
-        this.recognition.onstart = () => {
-            console.log('🎤 Speech recognition started');
-            this.isListening = true;
-            this.currentTranscript = '';
-            this.finalTranscript = '';
-            this.updateMicButton(true);
-        };
-
-        // Result event - COMPLETELY REWRITTEN: Simple, reliable transcript handling
-        this.recognition.onresult = (event) => {
-            console.log('🎤 Speech result received');
-            
-            // Get the transcript from the first (and only) result
-            const transcript = event.results[0][0].transcript;
-            
-            // Update the transcript
-            this.currentTranscript = transcript;
-            
-            // If it's final, also update final transcript
-            if (event.results[0].isFinal) {
-                this.finalTranscript = transcript;
-            }
-            
-            // Update input field
-            this.updateInputField(transcript);
-            
-            // Reset silence timer
-            this.resetSilenceTimer();
-        };
-
-        // Error event
-        this.recognition.onerror = (event) => {
-            console.error('🎤 Speech recognition error:', event.error);
-            this.isListening = false;
-            this.updateMicButton(false);
-            
-            if (event.error === 'no-speech') {
-                console.log('🎤 No speech detected');
-            } else if (event.error === 'audio-capture') {
-                console.error('🎤 Microphone not found');
-            } else if (event.error === 'not-allowed') {
-                console.error('🎤 Microphone permission denied');
-            }
-        };
-
-        // End event
-        this.recognition.onend = () => {
-            console.log('🎤 Speech recognition ended');
-            this.isListening = false;
-            this.updateMicButton(false);
-            
-            // If we have a final transcript, send it
-            if (this.finalTranscript.trim()) {
-                this.sendTranscript();
-            }
-        };
+    // Create a new recognition instance each time
+    createRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        // Simple settings - NO interim results
+        recognition.continuous = false;
+        recognition.interimResults = false; // CRITICAL: Only final results
+        recognition.lang = 'en-US';
+        recognition.maxAlternatives = 1;
+        
+        return recognition;
     }
 
     // Start recording (short press)
@@ -107,27 +41,54 @@ class MicSystem {
             return;
         }
 
-        console.log('🎤 Starting recording (short press)');
-        this.isLongPress = false;
+        console.log('🎤 Starting recording...');
+        this.isListening = true;
+        this.updateMicButton(true);
         
-        // COMPLETE RESET: Clear everything
-        this.currentTranscript = '';
-        this.finalTranscript = '';
+        // Clear input fields
         this.updateInputField('');
         
-        // Clear any existing recognition instance
-        if (this.recognition) {
-            try {
-                this.recognition.abort();
-            } catch (e) {
-                // Ignore abort errors
-            }
-        }
+        // Create new recognition instance
+        const recognition = this.createRecognition();
         
+        // Set up event handlers
+        recognition.onstart = () => {
+            console.log('🎤 Speech recognition started');
+        };
+
+        recognition.onresult = (event) => {
+            console.log('🎤 Final result received');
+            
+            // Get the final transcript
+            const transcript = event.results[0][0].transcript;
+            console.log('📝 Transcript:', transcript);
+            
+            // Update input field
+            this.updateInputField(transcript);
+            
+            // Send the transcript
+            this.sendTranscript(transcript);
+        };
+
+        recognition.onerror = (event) => {
+            console.error('🎤 Speech recognition error:', event.error);
+            this.isListening = false;
+            this.updateMicButton(false);
+        };
+
+        recognition.onend = () => {
+            console.log('🎤 Speech recognition ended');
+            this.isListening = false;
+            this.updateMicButton(false);
+        };
+        
+        // Start recognition
         try {
-            this.recognition.start();
+            recognition.start();
         } catch (error) {
             console.error('❌ Error starting speech recognition:', error);
+            this.isListening = false;
+            this.updateMicButton(false);
         }
     }
 
@@ -139,13 +100,8 @@ class MicSystem {
         }
 
         console.log('🎤 Stopping recording');
-        this.clearSilenceTimer();
-        
-        try {
-            this.recognition.stop();
-        } catch (error) {
-            console.error('❌ Error stopping speech recognition:', error);
-        }
+        this.isListening = false;
+        this.updateMicButton(false);
     }
 
     // Setup long press functionality
@@ -153,7 +109,7 @@ class MicSystem {
         if (!micButton) return;
 
         let pressTimer = null;
-        const longPressDelay = 500; // 500ms for long press
+        const longPressDelay = 500;
 
         const handlePress = (e) => {
             e.preventDefault();
@@ -199,24 +155,6 @@ class MicSystem {
         console.log('✅ Long press setup complete');
     }
 
-    // Reset silence timer
-    resetSilenceTimer() {
-        this.clearSilenceTimer();
-        
-        this.silenceTimer = setTimeout(() => {
-            console.log('🎤 Silence detected, stopping recording');
-            this.stopRecording();
-        }, this.silenceTimeout);
-    }
-
-    // Clear silence timer
-    clearSilenceTimer() {
-        if (this.silenceTimer) {
-            clearTimeout(this.silenceTimer);
-            this.silenceTimer = null;
-        }
-    }
-
     // Update input field with transcript
     updateInputField(transcript) {
         // Update desktop input
@@ -235,9 +173,8 @@ class MicSystem {
     }
 
     // Send transcript to chat
-    sendTranscript() {
-        const transcript = this.finalTranscript.trim();
-        if (!transcript) {
+    sendTranscript(transcript) {
+        if (!transcript || !transcript.trim()) {
             console.log('🎤 No transcript to send');
             return;
         }
@@ -290,16 +227,14 @@ class MicSystem {
 
     // Check if microphone is available
     isAvailable() {
-        return this.recognition !== null;
+        return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
     }
 
     // Get current status
     getStatus() {
         return {
             isListening: this.isListening,
-            isRecording: this.isRecording,
-            currentTranscript: this.currentTranscript,
-            finalTranscript: this.finalTranscript
+            isAvailable: this.isAvailable()
         };
     }
 }

@@ -31,55 +31,66 @@ export default async function handler(req, res) {
 
 // Get today's challenge question
 async function getDailyChallenge(req, res) {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Sample questions for different subjects
-    const questions = [
-        {
-            question: "What is the capital of India?",
-            answer: "new delhi",
-            subject: "geography",
-            points: 10
-        },
-        {
-            question: "What is 15 + 27?",
-            answer: "42",
-            subject: "mathematics", 
-            points: 10
-        },
-        {
-            question: "What is the chemical symbol for gold?",
-            answer: "au",
-            subject: "science",
-            points: 10
-        },
-        {
-            question: "Who wrote the Indian National Anthem?",
-            answer: "rabindranath tagore",
-            subject: "history",
-            points: 10
-        },
-        {
-            question: "What is the largest planet in our solar system?",
-            answer: "jupiter",
-            subject: "science",
-            points: 10
-        }
-    ];
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Sample questions for different subjects
+        const questions = [
+            {
+                question: "What is the capital of India?",
+                answer: "new delhi",
+                subject: "geography",
+                points: 10
+            },
+            {
+                question: "What is 15 + 27?",
+                answer: "42",
+                subject: "mathematics", 
+                points: 10
+            },
+            {
+                question: "What is the chemical symbol for gold?",
+                answer: "au",
+                subject: "science",
+                points: 10
+            },
+            {
+                question: "Who wrote the Indian National Anthem?",
+                answer: "rabindranath tagore",
+                subject: "history",
+                points: 10
+            },
+            {
+                question: "What is the largest planet in our solar system?",
+                answer: "jupiter",
+                subject: "science",
+                points: 10
+            }
+        ];
 
-    // Use date to select consistent question for the day
-    const dayIndex = new Date(today).getDate() % questions.length;
-    const todayQuestion = questions[dayIndex];
+        // Use date to select consistent question for the day
+        const dayIndex = new Date(today).getDate() % questions.length;
+        const todayQuestion = questions[dayIndex];
 
-    return res.status(200).json({
-        success: true,
-        data: {
-            question: todayQuestion.question,
-            subject: todayQuestion.subject,
-            points: todayQuestion.points,
-            date: today
-        }
-    });
+        console.log('📝 Daily challenge requested for:', today, 'Question:', todayQuestion.question);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                question: todayQuestion.question,
+                subject: todayQuestion.subject,
+                points: todayQuestion.points,
+                date: today
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error in getDailyChallenge:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: 'Failed to get daily challenge',
+            details: error.message 
+        });
+    }
 }
 
 // Submit answer and calculate points
