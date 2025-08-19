@@ -5203,8 +5203,8 @@ window.ensureButtonFunctionality = function() {
     
     // Reinitialize mic system if needed
     if (!checks.mic) {
-        console.log('🔧 Reinitializing mic system...');
-        micSystem.init();
+        console.log('🔧 OLD mic system disabled - using new mic-system.js');
+        // micSystem.init(); // DISABLED
     }
     
     // Rebind event listeners
@@ -5221,10 +5221,11 @@ setInterval(() => {
         window.textToSpeech = new TextToSpeech();
     }
     
-    if (!micSystem.recognition && micSystem.init) {
-        console.log('🔧 Auto-recovery: Reinitializing mic system');
-        micSystem.init();
-    }
+    // OLD mic system disabled - using new mic-system.js
+    // if (!micSystem.recognition && micSystem.init) {
+    //     console.log('🔧 Auto-recovery: Reinitializing mic system');
+    //     micSystem.init();
+    // }
 }, 30000); // Check every 30 seconds
 
 // Debug function to check avatar selection
@@ -7725,8 +7726,9 @@ window.installPWA = async function() {
 
 // Enhanced voice recognition variables are already declared globally
 
-// ===== NEW SIMPLIFIED MIC SYSTEM =====
-let micSystem = {
+// ===== OLD MIC SYSTEM DISABLED =====
+// DISABLED - Using new mic-system.js instead
+let micSystemOLD = {
     isRecording: false,
     recognition: null,
     currentTranscript: '',
@@ -7875,6 +7877,8 @@ let micSystem = {
     },
     
     updateMicButton(isRecording) {
+        console.log('🎤 OLD updateMicButton DISABLED - Using new mic-system.js instead');
+        return; // DISABLED - Using new mic-system.js
         // Update both mobile and desktop mic buttons
         const micButtonMobile = document.getElementById('voiceButtonMobile');
         const micButtonDesktop = document.getElementById('voiceButton');
@@ -8014,10 +8018,17 @@ let micSystem = {
 // ===== REPLACE OLD FUNCTIONS =====
 function startVoiceRecordingWithPermission() {
     console.log('🎤 Starting voice recording with permission...');
-    micSystem.startRecording();
+    // Use new mic system
+    if (window.micSystem) {
+        window.micSystem.startRecording();
+    } else {
+        console.error('🎤 New mic system not found');
+    }
 }
 
 function setupMicLongPress(micButton) {
+    console.log('🎤 OLD setupMicLongPress DISABLED - Using new mic-system.js instead');
+    return; // DISABLED - Using new mic-system.js
     micSystem.setupLongPress(micButton);
 }
 
