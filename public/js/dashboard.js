@@ -661,7 +661,19 @@ async function processCapturedImage() {
     try {
         // Extract text using enhanced OCR system
         updateStatus('Extracting text using enhanced OCR...');
+        const ocrStartTime = Date.now();
         const extractedText = await extractTextWithEnhancedOCR(imageData);
+        
+        // Track OCR usage
+        if (window.userAnalytics && extractedText) {
+            const processingTime = Date.now() - ocrStartTime;
+            window.userAnalytics.trackOCR({
+                text: extractedText,
+                confidence: window.lastOCRConfidence || 0,
+                processingTime: processingTime,
+                servicesUsed: window.lastOCRServices || 'enhanced'
+            });
+        }
         
         // Store original extracted text for comparison
         window.originalExtractedText = extractedText;
@@ -722,8 +734,9 @@ async function extractTextWithEnhancedOCR(imageData) {
             console.log('🚀 Using Enhanced OCR System...');
             const result = await window.enhancedOCR.processImage(imageFile);
             
-            // Store confidence for display
+            // Store confidence and services for display and analytics
             window.lastOCRConfidence = result.confidence * 100;
+            window.lastOCRServices = result.servicesUsed;
             
             console.log('✅ Enhanced OCR completed:', {
                 text: result.text,
@@ -3377,6 +3390,11 @@ async function sendMessage() {
         try {
             aiResponse = await window.gptService.sendMessage(message, context.userProfile);
             console.log('✅ AI response received via GPTService:', aiResponse);
+            
+            // Track chat usage for analytics
+            if (window.userAnalytics) {
+                window.userAnalytics.trackChat(message);
+            }
         } catch (error) {
             console.error('❌ GPTService Error:', error);
             throw error;
