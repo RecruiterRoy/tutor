@@ -5203,8 +5203,8 @@ window.ensureButtonFunctionality = function() {
     
     // Reinitialize mic system if needed
     if (!checks.mic) {
-        console.log('🔧 OLD mic system disabled - using new mic-system.js');
-        // micSystem.init(); // DISABLED
+        console.log('🔧 Reinitializing mic system...');
+        micSystem.init();
     }
     
     // Rebind event listeners
@@ -5221,11 +5221,10 @@ setInterval(() => {
         window.textToSpeech = new TextToSpeech();
     }
     
-    // OLD mic system disabled - using new mic-system.js
-    // if (!micSystem.recognition && micSystem.init) {
-    //     console.log('🔧 Auto-recovery: Reinitializing mic system');
-    //     micSystem.init();
-    // }
+    if (!micSystem.recognition && micSystem.init) {
+        console.log('🔧 Auto-recovery: Reinitializing mic system');
+        micSystem.init();
+    }
 }, 30000); // Check every 30 seconds
 
 // Debug function to check avatar selection
@@ -7726,9 +7725,8 @@ window.installPWA = async function() {
 
 // Enhanced voice recognition variables are already declared globally
 
-// ===== OLD MIC SYSTEM DISABLED =====
-// DISABLED - Using new mic-system.js instead
-let micSystemOLD = {
+// ===== NEW SIMPLIFIED MIC SYSTEM =====
+let micSystem = {
     isRecording: false,
     recognition: null,
     currentTranscript: '',
@@ -7739,8 +7737,6 @@ let micSystemOLD = {
     lastSpeechTime: 0,
     
     init() {
-        console.log('🎤 OLD MIC SYSTEM DISABLED - Using new mic-system.js instead');
-        return false; // DISABLED - Using new mic-system.js
         
         // Check for speech recognition support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -7877,8 +7873,6 @@ let micSystemOLD = {
     },
     
     updateMicButton(isRecording) {
-        console.log('🎤 OLD updateMicButton DISABLED - Using new mic-system.js instead');
-        return; // DISABLED - Using new mic-system.js
         // Update both mobile and desktop mic buttons
         const micButtonMobile = document.getElementById('voiceButtonMobile');
         const micButtonDesktop = document.getElementById('voiceButton');
@@ -7886,18 +7880,21 @@ let micSystemOLD = {
         const buttons = [micButtonMobile, micButtonDesktop].filter(Boolean);
         
         buttons.forEach(micButton => {
-            if (isRecording) {
-                // Red light when recording
-                micButton.innerHTML = '<span class="text-xs animate-pulse">🔴</span>';
-                micButton.classList.add('recording');
-                micButton.style.backgroundColor = '#dc2626'; // Red background
-                micButton.style.color = 'white';
-            } else {
-                // Normal mic icon when not recording
-                micButton.innerHTML = '<span class="text-xs">🎤</span>';
-                micButton.classList.remove('recording');
-                micButton.style.backgroundColor = ''; // Reset to default
-                micButton.style.color = '';
+            // Only update actual mic buttons, not send buttons
+            if (micButton.id === 'voiceButton' || micButton.id === 'voiceButtonMobile') {
+                if (isRecording) {
+                    // Red light when recording
+                    micButton.innerHTML = '<span class="text-xs animate-pulse">🔴</span>';
+                    micButton.classList.add('recording');
+                    micButton.style.backgroundColor = '#dc2626'; // Red background
+                    micButton.style.color = 'white';
+                } else {
+                    // Normal mic icon when not recording
+                    micButton.innerHTML = '<span class="text-xs">🎤</span>';
+                    micButton.classList.remove('recording');
+                    micButton.style.backgroundColor = ''; // Reset to default
+                    micButton.style.color = '';
+                }
             }
         });
     },
@@ -8015,20 +8012,25 @@ let micSystemOLD = {
     }
 };
 
-// ===== REPLACE OLD FUNCTIONS =====
-function startVoiceRecordingWithPermission() {
-    console.log('🎤 Starting voice recording with permission...');
-    // Use new mic system
-    if (window.micSystem) {
-        window.micSystem.startRecording();
-    } else {
-        console.error('🎤 New mic system not found');
+// ===== SEND BUTTON PROTECTION =====
+function protectSendButton() {
+    const sendButtonMobile = document.getElementById('sendButtonMobile');
+    if (sendButtonMobile && !sendButtonMobile.innerHTML.includes('Send')) {
+        sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
+        console.log('🔧 Send button text restored');
     }
 }
 
+// Protect send button every 2 seconds
+setInterval(protectSendButton, 2000);
+
+// ===== REPLACE OLD FUNCTIONS =====
+function startVoiceRecordingWithPermission() {
+    console.log('🎤 Starting voice recording with permission...');
+    micSystem.startRecording();
+}
+
 function setupMicLongPress(micButton) {
-    console.log('🎤 OLD setupMicLongPress DISABLED - Using new mic-system.js instead');
-    return; // DISABLED - Using new mic-system.js
     micSystem.setupLongPress(micButton);
 }
 
