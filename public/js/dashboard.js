@@ -7746,9 +7746,9 @@ let micSystem = {
         }
         
         this.recognition = new SpeechRecognition();
-        this.recognition.continuous = true;
-        this.recognition.interimResults = true;
-        this.recognition.maxAlternatives = 3; // Get multiple guesses for better accuracy
+        this.recognition.continuous = false;
+        this.recognition.interimResults = false; // CRITICAL: Only final results to prevent word repetition
+        this.recognition.maxAlternatives = 1;
         // Set language to English for better reliability (Hinglish mode)
         this.recognition.lang = 'en-US'; // Use en-US for better recognition
         console.log('🔤 STT set to English (en-US) for better reliability (Hinglish mode)');
@@ -7763,36 +7763,36 @@ let micSystem = {
         };
         
         this.recognition.onresult = (event) => {
-            let fullTranscript = '';
+            // Only process final results to prevent word repetition
+            const lastResult = event.results[event.results.length - 1];
             
-            // FIXED: Collect ALL results from the beginning for complete transcript
-            // This ensures we capture the complete sentence without losing words
-            for (let i = 0; i < event.results.length; ++i) {
-                const result = event.results[i];
-                fullTranscript += result[0].transcript;
+            if (lastResult.isFinal) {
+                const transcript = lastResult[0].transcript.trim();
+                console.log('🎤 Final result:', transcript);
                 
-                if (result.isFinal) {
-                    console.log('🎤 Final result:', result[0].transcript);
+                // Update last speech time for silence detection
+                this.lastSpeechTime = Date.now();
+                
+                // Clear any existing silence timer
+                if (this.silenceTimer) {
+                    clearTimeout(this.silenceTimer);
+                    this.silenceTimer = null;
                 }
+                
+                // Clean transcript to remove any duplicate words
+                const cleanedTranscript = this.removeDuplicateWords(transcript);
+                
+                // Store and display the clean transcript
+                this.currentTranscript = cleanedTranscript;
+                console.log('🎤 Clean transcript:', cleanedTranscript);
+                
+                this.displayTranscript(cleanedTranscript);
+            } else {
+                console.log('🎤 Interim result ignored to prevent repetition');
             }
-            
-            // Update last speech time for silence detection
-            this.lastSpeechTime = Date.now();
-            
-            // Clear any existing silence timer
-            if (this.silenceTimer) {
-                clearTimeout(this.silenceTimer);
-                this.silenceTimer = null;
-            }
-            
-            // Store the complete transcript
-            this.currentTranscript = fullTranscript;
-            console.log('🎤 Complete transcript:', fullTranscript);
-            
-            this.displayTranscript(fullTranscript);
             
             // For short press mode, set up silence detection
-            if (this.shortPressMode && fullTranscript.trim()) {
+            if (this.shortPressMode && this.currentTranscript.trim()) {
                 this.silenceTimer = setTimeout(() => {
                     console.log('🎤 Silence detected in short press mode, stopping recording');
                     this.stopRecording();
@@ -8009,6 +8009,27 @@ let micSystem = {
         micButton.addEventListener('mouseup', handleRelease);
         
         console.log('✅ Long press setup complete');
+    },
+    
+    // Remove duplicate consecutive words
+    removeDuplicateWords(transcript) {
+        if (!transcript || typeof transcript !== 'string') {
+            return '';
+        }
+        
+        const words = transcript.trim().split(/\s+/);
+        const cleanedWords = [];
+        let lastWord = '';
+        
+        for (const word of words) {
+            // Only add word if it's different from the last word (case insensitive)
+            if (word.toLowerCase() !== lastWord.toLowerCase() && word.length > 0) {
+                cleanedWords.push(word);
+                lastWord = word;
+            }
+        }
+        
+        return cleanedWords.join(' ');
     }
 };
 
