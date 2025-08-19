@@ -46,13 +46,22 @@ class MicSystem {
     }
 
     // Start recording (short press)
-    startRecording() {
+    async startRecording() {
         if (this.isListening) {
             console.log('🎤 Already listening');
             return;
         }
 
         console.log('🎤 Starting recording...');
+        
+        // Request permission first
+        const hasPermission = await this.requestPermission();
+        if (!hasPermission) {
+            console.error('❌ Microphone permission denied');
+            alert('Please allow microphone access to use speech-to-text feature.');
+            return;
+        }
+        
         this.isListening = true;
         this.updateMicButton(true);
         
@@ -141,11 +150,12 @@ class MicSystem {
         const handlePress = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('🎤 Mic button pressed');
+            console.log('🎤 Mic button pressed:', micButton.id);
             
             // Mobile haptic feedback if available
             if (navigator.vibrate) {
                 navigator.vibrate(50);
+                console.log('📳 Haptic feedback triggered');
             }
             
             this.isLongPress = false;
@@ -174,7 +184,11 @@ class MicSystem {
                 this.stopRecording();
             } else {
                 // Short press: start recording
-                this.startRecording();
+                this.startRecording().catch(error => {
+                    console.error('❌ Error starting recording:', error);
+                    this.isListening = false;
+                    this.updateMicButton(false);
+                });
             }
         };
 
@@ -232,8 +246,9 @@ class MicSystem {
         }
     }
 
-    // Update mic button appearance
+    // Update mic button appearance for both desktop and mobile
     updateMicButton(isRecording) {
+        // Desktop button
         const voiceButton = document.getElementById('voiceButton');
         const voiceIcon = document.getElementById('voiceIcon');
         
@@ -246,6 +261,22 @@ class MicSystem {
                 voiceButton.classList.remove('bg-red-500', 'animate-pulse');
                 voiceButton.classList.add('bg-gray-700/50');
                 voiceIcon.textContent = 'Mic';
+            }
+        }
+        
+        // Mobile button
+        const voiceButtonMobile = document.getElementById('voiceButtonMobile');
+        const voiceIconMobile = document.getElementById('voiceIconMobile');
+        
+        if (voiceButtonMobile && voiceIconMobile) {
+            if (isRecording) {
+                voiceButtonMobile.classList.add('bg-red-500', 'animate-pulse');
+                voiceButtonMobile.classList.remove('bg-purple-600');
+                voiceIconMobile.textContent = '🔴';
+            } else {
+                voiceButtonMobile.classList.remove('bg-red-500', 'animate-pulse');
+                voiceButtonMobile.classList.add('bg-purple-600');
+                voiceIconMobile.textContent = '🎤';
             }
         }
     }
@@ -315,22 +346,37 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🎤 Initializing new mic system...');
     window.micSystem = new MicSystem();
     
-    // Setup mic button if available
-    const micButton = document.getElementById('voiceButton');
-    if (micButton && window.micSystem) {
-        window.micSystem.setupLongPress(micButton);
-        console.log('✅ Mic button setup complete');
-    } else {
-        console.log('⚠️ Voice button not found, will retry...');
-        // Retry after a delay
-        setTimeout(() => {
-            const retryButton = document.getElementById('voiceButton');
-            if (retryButton && window.micSystem) {
-                window.micSystem.setupLongPress(retryButton);
-                console.log('✅ Mic button setup complete (retry)');
-            }
-        }, 1000);
-    }
+    // Setup both desktop and mobile mic buttons
+    const setupMicButtons = () => {
+        const desktopMicButton = document.getElementById('voiceButton');
+        const mobileMicButton = document.getElementById('voiceButtonMobile');
+        
+        let setupCount = 0;
+        
+        if (desktopMicButton && window.micSystem) {
+            window.micSystem.setupLongPress(desktopMicButton);
+            console.log('✅ Desktop mic button setup complete');
+            setupCount++;
+        }
+        
+        if (mobileMicButton && window.micSystem) {
+            window.micSystem.setupLongPress(mobileMicButton);
+            console.log('✅ Mobile mic button setup complete');
+            setupCount++;
+        }
+        
+        if (setupCount === 0) {
+            console.log('⚠️ No voice buttons found, will retry...');
+            // Retry after a delay
+            setTimeout(() => {
+                setupMicButtons();
+            }, 1000);
+        } else {
+            console.log(`✅ ${setupCount} mic button(s) setup complete`);
+        }
+    };
+    
+    setupMicButtons();
 });
 
 // Make functions globally available
