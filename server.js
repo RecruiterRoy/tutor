@@ -737,6 +737,41 @@ app.post('/api/chat-claude', async (req, res) => {
     }
 });
 
+// Daily Challenge API endpoint
+app.get('/api/daily-challenge', async (req, res) => {
+    try {
+        // Import the daily challenge handler dynamically
+        const dailyChallengeHandler = await import('./pages/api/daily-challenge.js');
+        
+        // Call the handler with the request and response
+        await dailyChallengeHandler.default(req, res);
+        
+    } catch (error) {
+        console.error('Daily challenge API error:', error);
+        res.status(500).json({ 
+            error: 'Daily challenge service unavailable',
+            details: error.message 
+        });
+    }
+});
+
+app.post('/api/daily-challenge', async (req, res) => {
+    try {
+        // Import the daily challenge handler dynamically
+        const dailyChallengeHandler = await import('./pages/api/daily-challenge.js');
+        
+        // Call the handler with the request and response
+        await dailyChallengeHandler.default(req, res);
+        
+    } catch (error) {
+        console.error('Daily challenge API error:', error);
+        res.status(500).json({ 
+            error: 'Daily challenge service unavailable',
+            details: error.message 
+        });
+    }
+});
+
 // Static file serving FIRST (before HTML routes)
 app.use(express.static(path.join(__dirname), {
     setHeaders: (res, path) => {

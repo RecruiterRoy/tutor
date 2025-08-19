@@ -25,11 +25,22 @@ class MicSystem {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         
-        // Simple settings - NO interim results
+        // Detect mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Mobile-optimized settings
         recognition.continuous = false;
         recognition.interimResults = false; // CRITICAL: Only final results
-        recognition.lang = 'en-US';
+        recognition.lang = isMobile ? 'en-IN' : 'en-US'; // Use Indian English for better mobile recognition
         recognition.maxAlternatives = 1;
+        
+        // Mobile-specific optimizations
+        if (isMobile) {
+            // Shorter timeout for mobile
+            recognition.grammars = null; // Clear any grammars for mobile
+        }
+        
+        console.log(`🎤 Created recognition for ${isMobile ? 'mobile' : 'desktop'} with lang: ${recognition.lang}`);
         
         return recognition;
     }
@@ -57,17 +68,33 @@ class MicSystem {
         };
 
         recognition.onresult = (event) => {
-            console.log('🎤 Final result received');
+            console.log('🎤 Speech result received, processing...');
             
-            // Get the final transcript
-            const transcript = event.results[0][0].transcript;
-            console.log('📝 Transcript:', transcript);
+            // Process only final results to avoid repetition
+            let finalTranscript = '';
             
-            // Update input field
-            this.updateInputField(transcript);
+            for (let i = 0; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                }
+            }
             
-            // Send the transcript
-            this.sendTranscript(transcript);
+            // Only process if we have a final result
+            if (finalTranscript.trim()) {
+                console.log('📝 Final transcript:', finalTranscript);
+                
+                // Clean up the transcript (remove extra spaces, duplicates)
+                const cleanedTranscript = this.cleanTranscript(finalTranscript);
+                console.log('🧹 Cleaned transcript:', cleanedTranscript);
+                
+                // Update input field
+                this.updateInputField(cleanedTranscript);
+                
+                // Send the transcript
+                this.sendTranscript(cleanedTranscript);
+            } else {
+                console.log('⏳ No final result yet, waiting...');
+            }
         };
 
         recognition.onerror = (event) => {
@@ -113,17 +140,28 @@ class MicSystem {
 
         const handlePress = (e) => {
             e.preventDefault();
+            e.stopPropagation();
             console.log('🎤 Mic button pressed');
+            
+            // Mobile haptic feedback if available
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
             
             this.isLongPress = false;
             pressTimer = setTimeout(() => {
                 this.isLongPress = true;
                 console.log('🎤 Long press detected');
+                // Stronger haptic feedback for long press
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
             }, longPressDelay);
         };
 
         const handleRelease = (e) => {
             e.preventDefault();
+            e.stopPropagation();
             console.log('🎤 Mic button released');
             
             if (pressTimer) {
@@ -230,6 +268,33 @@ class MicSystem {
         return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
     }
 
+    // Clean transcript to remove repetitions and fix common issues
+    cleanTranscript(transcript) {
+        if (!transcript || typeof transcript !== 'string') {
+            return '';
+        }
+        
+        // Remove extra whitespace and normalize
+        let cleaned = transcript.trim().toLowerCase();
+        
+        // Split into words
+        const words = cleaned.split(/\s+/);
+        const cleanedWords = [];
+        
+        // Remove consecutive duplicate words
+        let lastWord = '';
+        for (const word of words) {
+            if (word !== lastWord && word.length > 0) {
+                cleanedWords.push(word);
+                lastWord = word;
+            }
+        }
+        
+        // Join back and capitalize first letter
+        const result = cleanedWords.join(' ');
+        return result.charAt(0).toUpperCase() + result.slice(1);
+    }
+
     // Get current status
     getStatus() {
         return {
@@ -239,14 +304,32 @@ class MicSystem {
     }
 }
 
-// Initialize mic system when DOM is ready
+// Initialize mic system when DOM is ready (singleton pattern)
 document.addEventListener('DOMContentLoaded', () => {
+    // Prevent multiple instances
+    if (window.micSystem) {
+        console.log('🎤 Mic system already initialized');
+        return;
+    }
+    
+    console.log('🎤 Initializing new mic system...');
     window.micSystem = new MicSystem();
     
     // Setup mic button if available
     const micButton = document.getElementById('voiceButton');
     if (micButton && window.micSystem) {
         window.micSystem.setupLongPress(micButton);
+        console.log('✅ Mic button setup complete');
+    } else {
+        console.log('⚠️ Voice button not found, will retry...');
+        // Retry after a delay
+        setTimeout(() => {
+            const retryButton = document.getElementById('voiceButton');
+            if (retryButton && window.micSystem) {
+                window.micSystem.setupLongPress(retryButton);
+                console.log('✅ Mic button setup complete (retry)');
+            }
+        }, 1000);
     }
 });
 

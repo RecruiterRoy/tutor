@@ -284,16 +284,33 @@ class DailyChallenge {
 
 // Initialize daily challenge when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Wait for user data to be loaded
+    console.log('🎯 DOM loaded, initializing daily challenge...');
+    
+    // Wait for DOM elements to be available
     const initChallenge = () => {
-        if (window.userData || document.readyState === 'complete') {
+        const questionElement = document.getElementById('challengeQuestion');
+        if (questionElement) {
+            console.log('✅ Challenge elements found, initializing...');
             window.dailyChallenge = new DailyChallenge();
         } else {
-            setTimeout(initChallenge, 100);
+            console.log('⏳ Waiting for challenge elements...');
+            setTimeout(initChallenge, 500);
         }
     };
     
+    // Start initialization immediately, then retry if needed
     initChallenge();
+});
+
+// Also try to initialize after page load as backup
+window.addEventListener('load', () => {
+    if (!window.dailyChallenge) {
+        console.log('🔄 Backup initialization of daily challenge...');
+        const questionElement = document.getElementById('challengeQuestion');
+        if (questionElement) {
+            window.dailyChallenge = new DailyChallenge();
+        }
+    }
 });
 
 // Make functions globally available

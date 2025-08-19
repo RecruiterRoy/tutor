@@ -1972,17 +1972,19 @@ function setupMobileEventListeners() {
 }
 
 function enableMobileFeatures() {
+    // DISABLED: Mobile voice recognition - using new mic-system.js instead
+    console.log('🎤 Mobile voice features disabled - using new mic system');
     // Enable mobile-specific voice recognition improvements
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        // Mobile voice recognition optimizations
-        const recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (recognition) {
-            // Set mobile-optimized settings
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-        }
-    }
+    // if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    //     // Mobile voice recognition optimizations
+    //     const recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    //     if (recognition) {
+    //         // Set mobile-optimized settings
+    //         recognition.continuous = false;
+    //         recognition.interimResults = false;
+    //         recognition.maxAlternatives = 1;
+    //     }
+    // }
     
     // Mobile-specific TTS optimizations
     if ('speechSynthesis' in window) {
@@ -7735,7 +7737,8 @@ let micSystem = {
     lastSpeechTime: 0,
     
     init() {
-        console.log('🎤 Initializing new mic system...');
+        console.log('🎤 OLD MIC SYSTEM DISABLED - Using new mic-system.js instead');
+        return false; // DISABLED - Using new mic-system.js
         
         // Check for speech recognition support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
