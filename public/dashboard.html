@@ -1616,19 +1616,24 @@
             
             <!-- Sidebar Navigation -->
             <nav class="flex-1 p-6 space-y-4">
-                <div class="nav-item active">
+                <div class="nav-item active" onclick="showSection('chatSection')">
                     <span class="text-xl">🏫</span>
                     <span>Classroom</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item" onclick="showSection('dailyChallengeSection')" id="dailyChallengeNavItem">
+                    <span class="text-xl">🎉</span>
+                    <span>Daily Challenge</span>
+                    <span id="challengeStar" class="text-yellow-400 text-lg hidden">⭐</span>
+                </div>
+                <div class="nav-item" onclick="showSection('materialsSection')">
                     <span class="text-xl">📚</span>
                     <span>Study Materials</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item" onclick="showSection('progressSection')">
                     <span class="text-xl">📊</span>
                     <span>Progress</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item" onclick="showSection('settingsSection')">
                     <span class="text-xl">⚙️</span>
                     <span>Settings</span>
                 </div>
@@ -1712,59 +1717,8 @@
                     </div>
                             </div>
                             
-                            <!-- Daily Challenge Section -->
-                            <div id="dailyChallengeHeader" class="flex-1 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-3 border border-white/10">
-                                <!-- Challenge Header -->
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-lg">🎉</span>
-                                        <span class="text-white font-medium text-sm">Daily Challenge</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Challenge Question -->
-                                <div id="challengeQuestion" class="text-white/90 text-sm mb-2 leading-relaxed">
-                                    Loading today's challenge...
-                                </div>
-                                
-                                <!-- Challenge Input -->
-                                <div id="challengeInputSection" class="challenge-input-row flex gap-2">
-                                    <input id="challengeAnswer" 
-                                           type="text" 
-                                           class="flex-1 bg-white/90 text-black rounded-lg px-3 py-2 text-sm border border-white/20 focus:border-purple-400 focus:outline-none placeholder-gray-500 transition-all duration-300"
-                                           placeholder="Your answer..."
-                                           style="color: #000000 !important; background-color: rgba(255, 255, 255, 0.9) !important;">
-                                    <button id="submitChallengeBtn" 
-                                            class="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                        Submit
-                                    </button>
-                                </div>
-                                
-                                                            <!-- Challenge Stats (shown after completion) -->
-                            <div id="challengeStats" class="hidden bg-white/5 rounded-lg p-2 mt-2">
-                                <!-- Line 1: Streak and Points -->
-                                <div class="text-xs text-center text-white/70 mb-1">
-                                    ⭐ Daily Streak: <span id="challengeStreak" class="text-yellow-300 font-semibold">0 days</span> | 
-                                    🏆 Total Points: <span id="totalPoints" class="text-green-300 font-semibold">0 pts</span>
-                                </div>
-                                <!-- Line 2: Rankings -->
-                                <div class="text-xs text-center text-white/70">
-                                    🇮🇳 India Ranking: <span id="indiaRank" class="text-blue-300 font-semibold">00</span> | 
-                                    🏙️ City Ranking: <span id="cityRank" class="text-purple-300 font-semibold">00</span>
-                                </div>
-                            </div>
-                                
-                                <!-- Challenge Feedback -->
-                                <div id="challengeFeedback" class="text-green-400 font-semibold text-xs bg-green-400/10 px-3 py-2 rounded-lg mt-2 hidden transform transition-all duration-500">
-                                    <!-- Feedback will appear here -->
-                                </div>
-                                
-                                <!-- Challenge Reward -->
-                                <div id="challengeReward" class="text-center mt-2 hidden">
-                                    <div class="text-2xl animate-bounce">🏆</div>
-                                    <div class="text-yellow-300 font-bold text-xs">Awesome! +10 points!</div>
-                                </div>
-                            </div>
+                            <!-- Avatar Name -->
+                            <div id="avatarName" class="text-xs text-white/80 font-medium text-center">Roy Sir</div>
                         </div>
                     </div>
                     
@@ -1856,6 +1810,83 @@
                                 <h3 class="text-white text-xl font-semibold mb-2">Coming Soon!</h3>
                                 <p class="text-gray-300 mb-4">We're working hard to bring you amazing study materials.</p>
                                 <p class="text-gray-400 text-sm">NCERT Books, Practice Tests, and Video Lessons will be available soon!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Daily Challenge Section -->
+                <div id="dailyChallengeSection" class="h-full hidden overflow-y-auto">
+                    <div class="p-6 pb-20">
+                        <h2 class="text-white text-2xl font-bold mb-6">🎉 Daily Challenge</h2>
+                        
+                        <!-- Daily Challenge Card -->
+                        <div class="card-modern mb-6">
+                            <div id="dailyChallengeHeader" class="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-6 border border-white/10">
+                                <!-- Challenge Header -->
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-2xl">🎉</span>
+                                        <span class="text-white font-semibold text-lg">Today's Challenge</span>
+                                    </div>
+                                    <div class="text-sm text-white/70">
+                                        <span id="challengeDate">Loading...</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Challenge Question -->
+                                <div id="challengeQuestion" class="text-white/90 text-base mb-4 leading-relaxed p-4 bg-white/5 rounded-lg">
+                                    Loading today's challenge...
+                                </div>
+                                
+                                <!-- Challenge Input -->
+                                <div id="challengeInputSection" class="challenge-input-row flex gap-3 mb-4">
+                                    <input id="challengeAnswer" 
+                                           type="text" 
+                                           class="flex-1 bg-white/90 text-black rounded-lg px-4 py-3 text-base border border-white/20 focus:border-purple-400 focus:outline-none placeholder-gray-500 transition-all duration-300"
+                                           placeholder="Your answer..."
+                                           style="color: #000000 !important; background-color: rgba(255, 255, 255, 0.9) !important;">
+                                    <button id="submitChallengeBtn" 
+                                            class="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Submit Answer
+                                    </button>
+                                </div>
+                                
+                                <!-- Challenge Stats (shown after completion) -->
+                                <div id="challengeStats" class="hidden bg-white/5 rounded-lg p-4 mt-4">
+                                    <!-- Line 1: Streak and Points -->
+                                    <div class="text-sm text-center text-white/70 mb-2">
+                                        ⭐ Daily Streak: <span id="challengeStreak" class="text-yellow-300 font-semibold">0 days</span> | 
+                                        🏆 Total Points: <span id="totalPoints" class="text-green-300 font-semibold">0 pts</span>
+                                    </div>
+                                    <!-- Line 2: Rankings -->
+                                    <div class="text-sm text-center text-white/70">
+                                        🇮🇳 India Ranking: <span id="indiaRank" class="text-blue-300 font-semibold">00</span> | 
+                                        🏙️ City Ranking: <span id="cityRank" class="text-purple-300 font-semibold">00</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Challenge Feedback -->
+                                <div id="challengeFeedback" class="text-green-400 font-semibold text-sm bg-green-400/10 px-4 py-3 rounded-lg mt-4 hidden transform transition-all duration-500">
+                                    <!-- Feedback will appear here -->
+                                </div>
+                                
+                                <!-- Challenge Reward -->
+                                <div id="challengeReward" class="text-center mt-4 hidden">
+                                    <div class="text-4xl animate-bounce">🏆</div>
+                                    <div class="text-yellow-300 font-bold text-lg">Awesome! +10 points!</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Challenge History -->
+                        <div class="card-modern">
+                            <h3 class="text-white text-lg font-semibold mb-4">📊 Challenge History</h3>
+                            <div id="challengeHistory" class="space-y-3">
+                                <div class="text-center text-white/50 py-8">
+                                    <div class="text-3xl mb-2">📈</div>
+                                    <p>Your challenge history will appear here</p>
+                                </div>
                             </div>
                         </div>
                     </div>

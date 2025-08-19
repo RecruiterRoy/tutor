@@ -38,6 +38,7 @@ class DailyChallenge {
             if (data.success) {
                 this.currentQuestion = data.data;
                 this.displayQuestion();
+                this.updateStarIndicator();
                 console.log('✅ Challenge loaded:', this.currentQuestion.question);
             } else {
                 throw new Error(data.error || 'Failed to load challenge');
@@ -57,6 +58,22 @@ class DailyChallenge {
                     ${this.currentQuestion.question}
                 </div>
             `;
+        }
+    }
+
+    updateStarIndicator() {
+        const starElement = document.getElementById('challengeStar');
+        const navItem = document.getElementById('dailyChallengeNavItem');
+        
+        if (starElement && navItem) {
+            // Show star if challenge is not answered today
+            if (this.currentQuestion && !this.currentQuestion.answered) {
+                starElement.classList.remove('hidden');
+                navItem.classList.add('animate-pulse');
+            } else {
+                starElement.classList.add('hidden');
+                navItem.classList.remove('animate-pulse');
+            }
         }
     }
 

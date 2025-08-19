@@ -4,6 +4,56 @@
 // Use the global supabaseClient that's initialized in config.js
 // No need to declare supabase here as it's already available via window.supabaseClient
 
+// Persistent Login System
+function checkPersistentLogin() {
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const userData = localStorage.getItem('userData');
+    
+    if (isLoggedIn === 'true' && userData) {
+        try {
+            window.userData = JSON.parse(userData);
+            console.log('🔐 Persistent login detected, user:', window.userData.name);
+            return true;
+        } catch (error) {
+            console.error('❌ Error parsing stored user data:', error);
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userData');
+        }
+    }
+    
+    // Check if we're on login page, if not redirect
+    if (!window.location.href.includes('login.html') && !window.location.href.includes('index.html')) {
+        console.log('🔐 No persistent login found, redirecting to login');
+        window.location.href = 'index.html';
+        return false;
+    }
+    
+    return false;
+}
+
+// Set persistent login
+function setPersistentLogin(userData) {
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('userData', JSON.stringify(userData));
+    window.userData = userData;
+    console.log('🔐 Persistent login set for:', userData.name);
+}
+
+// Clear persistent login
+function clearPersistentLogin() {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userData');
+    window.userData = null;
+    console.log('🔐 Persistent login cleared');
+}
+
+// Check login status immediately
+if (checkPersistentLogin()) {
+    console.log('✅ User is logged in, proceeding to dashboard');
+} else {
+    console.log('❌ User not logged in, staying on current page');
+}
+
 // Global variable declarations to prevent redeclaration errors
 window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 // Proper APK detection (Capacitor/Android or file protocol)
@@ -97,6 +147,14 @@ window.showSection = function(sectionName) {
         selectedSection.style.maxHeight = '100vh';
         selectedSection.style.webkitOverflowScrolling = 'touch';
         console.log('✅ Section shown:', sectionName + 'Section');
+        
+        // Special handling for daily challenge section
+        if (sectionName === 'dailyChallenge') {
+            // Initialize daily challenge if not already done
+            if (window.dailyChallenge) {
+                window.dailyChallenge.loadChallenge();
+            }
+        }
         
         // Update subject progress when progress section is shown
         if (sectionName === 'progress') {
@@ -2792,7 +2850,7 @@ function showWelcomeMessage() {
             <div class="message message-ai">
                 <div class="message-bubble">
                     <div class="flex items-center space-x-3 mb-3">
-                        <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDQgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
+                        <img id="welcomeTeacherAvatar" src="images/roy_sir.jpg" alt="Teacher" class="w-8 h-8 rounded-full object-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjdGRUEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTQgMC0yLjIxLTEuNzktNC00LTQgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
                         <span id="welcomeTeacherName" class="text-sm font-medium text-blue-200">Tution App</span>
                     </div>
                     <p>${welcomeText}</p>
@@ -4106,6 +4164,9 @@ async function logout() {
         
         // Clear cached credentials
         clearCachedUserCredentials();
+        
+        // Clear persistent login
+        clearPersistentLogin();
         
         // Reset welcome message flag for next login
         window.welcomeMessageShown = false;
