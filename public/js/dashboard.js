@@ -7756,6 +7756,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Start send button protection
     startSendButtonProtection();
 
+    // GLOBAL OVERRIDE: Prevent any script from changing send button
+    const sendButtonMobile = document.getElementById('sendButtonMobile');
+    if (sendButtonMobile) {
+        // Override the innerHTML setter to prevent mic icons
+        const originalInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+        Object.defineProperty(sendButtonMobile, 'innerHTML', {
+            set: function(value) {
+                if (value.includes('🎤') || value.includes('🔴')) {
+                    console.log('🚨 BLOCKED: Attempt to set mic icon on send button');
+                    value = '<span id="sendButtonMobileText">Send</span>';
+                }
+                originalInnerHTML.set.call(this, value);
+            },
+            get: originalInnerHTML.get
+        });
+    }
+
     // PWA: capture install prompt
     window.addEventListener('beforeinstallprompt', (e) => {
         try { e.preventDefault(); } catch(_) {}
@@ -7778,40 +7795,58 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to continuously protect send button
 function startSendButtonProtection() {
-    // Run protection every 2 seconds
+    // AGGRESSIVE PROTECTION - Run every 500ms to catch any changes immediately
     setInterval(() => {
         const sendButtonMobile = document.getElementById('sendButtonMobile');
         const sendButtonMobileText = document.getElementById('sendButtonMobileText');
         
         if (sendButtonMobile && sendButtonMobileText) {
-            // Ensure send button always shows "Send" text
-            if (sendButtonMobileText.textContent !== 'Send') {
-                console.log('🛡️ Periodic protection - restoring "Send" text');
-                sendButtonMobileText.textContent = 'Send';
-            }
+            // FORCE the send button to show "Send" text - no exceptions
+            sendButtonMobileText.textContent = 'Send';
+            sendButtonMobileText.innerHTML = 'Send';
             
-            // Ensure send button has correct styling
-            sendButtonMobile.classList.remove('bg-red-500', 'animate-pulse');
+            // FORCE correct styling
+            sendButtonMobile.classList.remove('bg-red-500', 'animate-pulse', 'recording');
             sendButtonMobile.classList.add('bg-blue-600');
+            
+            // FORCE the button content to be correct
+            if (sendButtonMobile.innerHTML.includes('🎤') || sendButtonMobile.innerHTML.includes('🔴')) {
+                console.log('🚨 EMERGENCY: Send button showing mic icon - FORCING FIX');
+                sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
+            }
         }
-    }, 2000);
+    }, 500); // Run every 500ms for immediate protection
     
     // Add click event listener to send button
     const sendButtonMobile = document.getElementById('sendButtonMobile');
     if (sendButtonMobile) {
         sendButtonMobile.addEventListener('click', function() {
             console.log('📤 Send button clicked');
-            // Ensure text is correct before sending
+            // FORCE text to be correct before sending
             const sendButtonMobileText = document.getElementById('sendButtonMobileText');
             if (sendButtonMobileText) {
                 sendButtonMobileText.textContent = 'Send';
+                sendButtonMobileText.innerHTML = 'Send';
             }
             // Call the send message function
             sendMessage();
         });
     }
     
-    console.log('🛡️ Send button protection started');
+    // IMMEDIATE FIX on page load
+    setTimeout(() => {
+        const sendButtonMobile = document.getElementById('sendButtonMobile');
+        const sendButtonMobileText = document.getElementById('sendButtonMobileText');
+        if (sendButtonMobile && sendButtonMobileText) {
+            console.log('🚀 IMMEDIATE FIX: Setting send button text to "Send"');
+            sendButtonMobileText.textContent = 'Send';
+            sendButtonMobileText.innerHTML = 'Send';
+            sendButtonMobile.classList.remove('bg-red-500', 'animate-pulse', 'recording');
+            sendButtonMobile.classList.add('bg-blue-600');
+        }
+    }, 100);
+    
+    console.log('🛡️ AGGRESSIVE Send button protection started');
 }
 
 // Expose install function for any button to call
@@ -8016,15 +8051,19 @@ let micSystem = {
         const sendButtonMobileText = document.getElementById('sendButtonMobileText');
         
         if (sendButtonMobile && sendButtonMobileText) {
-            // Ensure send button always shows "Send" text
-            if (sendButtonMobileText.textContent !== 'Send') {
-                console.log('🛡️ Protecting send button - restoring "Send" text');
-                sendButtonMobileText.textContent = 'Send';
-            }
+            // FORCE send button to always show "Send" text
+            sendButtonMobileText.textContent = 'Send';
+            sendButtonMobileText.innerHTML = 'Send';
             
-            // Ensure send button has correct styling
-            sendButtonMobile.classList.remove('bg-red-500', 'animate-pulse');
+            // FORCE correct styling
+            sendButtonMobile.classList.remove('bg-red-500', 'animate-pulse', 'recording');
             sendButtonMobile.classList.add('bg-blue-600');
+            
+            // EMERGENCY FIX if button content is wrong
+            if (sendButtonMobile.innerHTML.includes('🎤') || sendButtonMobile.innerHTML.includes('🔴')) {
+                console.log('🚨 EMERGENCY: Send button showing mic icon - FORCING FIX');
+                sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
+            }
         }
     },
     

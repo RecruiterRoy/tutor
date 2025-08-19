@@ -1489,6 +1489,29 @@
 </head>
 <body class="min-h-screen overflow-x-hidden">
 
+    <!-- IMMEDIATE SEND BUTTON FIX -->
+    <script>
+        // EMERGENCY FIX: Force send button to show "Send" immediately
+        function fixSendButton() {
+            const sendButtonMobile = document.getElementById('sendButtonMobile');
+            const sendButtonMobileText = document.getElementById('sendButtonMobileText');
+            if (sendButtonMobile && sendButtonMobileText) {
+                console.log('🚨 EMERGENCY: Forcing send button to show "Send"');
+                sendButtonMobileText.textContent = 'Send';
+                sendButtonMobileText.innerHTML = 'Send';
+                sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
+                sendButtonMobile.classList.remove('bg-red-500', 'animate-pulse', 'recording');
+                sendButtonMobile.classList.add('bg-blue-600');
+            }
+        }
+        
+        // Run immediately and then every 100ms
+        fixSendButton();
+        setInterval(fixSendButton, 100);
+        
+        // Also run when DOM is ready
+        document.addEventListener('DOMContentLoaded', fixSendButton);
+    </script>
 
     <script>
         // PWA install capture (dashboard)
