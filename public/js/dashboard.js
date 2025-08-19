@@ -7753,6 +7753,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // setupDashboardEventListeners(); // REMOVED to prevent duplicate event listeners
     setupMicLongPress();
 
+    // Start send button protection
+    startSendButtonProtection();
+
     // PWA: capture install prompt
     window.addEventListener('beforeinstallprompt', (e) => {
         try { e.preventDefault(); } catch(_) {}
@@ -7772,6 +7775,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Function to continuously protect send button
+function startSendButtonProtection() {
+    // Run protection every 2 seconds
+    setInterval(() => {
+        const sendButtonMobile = document.getElementById('sendButtonMobile');
+        const sendButtonMobileText = document.getElementById('sendButtonMobileText');
+        
+        if (sendButtonMobile && sendButtonMobileText) {
+            // Ensure send button always shows "Send" text
+            if (sendButtonMobileText.textContent !== 'Send') {
+                console.log('🛡️ Periodic protection - restoring "Send" text');
+                sendButtonMobileText.textContent = 'Send';
+            }
+            
+            // Ensure send button has correct styling
+            sendButtonMobile.classList.remove('bg-red-500', 'animate-pulse');
+            sendButtonMobile.classList.add('bg-blue-600');
+        }
+    }, 2000);
+    
+    // Add click event listener to send button
+    const sendButtonMobile = document.getElementById('sendButtonMobile');
+    if (sendButtonMobile) {
+        sendButtonMobile.addEventListener('click', function() {
+            console.log('📤 Send button clicked');
+            // Ensure text is correct before sending
+            const sendButtonMobileText = document.getElementById('sendButtonMobileText');
+            if (sendButtonMobileText) {
+                sendButtonMobileText.textContent = 'Send';
+            }
+            // Call the send message function
+            sendMessage();
+        });
+    }
+    
+    console.log('🛡️ Send button protection started');
+}
 
 // Expose install function for any button to call
 window.installPWA = async function() {
@@ -7964,6 +8005,27 @@ let micSystem = {
                 }
             }
         });
+        
+        // Always protect send button after updating mic buttons
+        this.protectSendButton();
+    },
+    
+    // Protect send button from being changed to mic icon
+    protectSendButton() {
+        const sendButtonMobile = document.getElementById('sendButtonMobile');
+        const sendButtonMobileText = document.getElementById('sendButtonMobileText');
+        
+        if (sendButtonMobile && sendButtonMobileText) {
+            // Ensure send button always shows "Send" text
+            if (sendButtonMobileText.textContent !== 'Send') {
+                console.log('🛡️ Protecting send button - restoring "Send" text');
+                sendButtonMobileText.textContent = 'Send';
+            }
+            
+            // Ensure send button has correct styling
+            sendButtonMobile.classList.remove('bg-red-500', 'animate-pulse');
+            sendButtonMobile.classList.add('bg-blue-600');
+        }
     },
     
     displayTranscript(transcript) {
