@@ -659,9 +659,9 @@ async function processCapturedImage() {
     document.getElementById('cameraContainer').classList.add('hidden');
     
     try {
-        // Extract text using enhanced OCR
-        updateStatus('Extracting text from image...');
-        const extractedText = await extractTextFromImage(imageData);
+        // Extract text using enhanced OCR system
+        updateStatus('Extracting text using enhanced OCR...');
+        const extractedText = await extractTextWithEnhancedOCR(imageData);
         
         // Store original extracted text for comparison
         window.originalExtractedText = extractedText;
@@ -696,8 +696,57 @@ function updateStatus(message) {
     document.getElementById('statusText').textContent = message;
 }
 
-// OCR using Tesseract.js (client-side, free)
-async function extractTextFromImage(imageData) {
+// Helper function to convert data URL to File
+async function dataURLtoFile(dataurl, filename) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    
+    return new File([u8arr], filename, {type: mime});
+}
+
+// Enhanced OCR function using multiple services
+async function extractTextWithEnhancedOCR(imageData) {
+    try {
+        // Convert image data to file
+        const imageFile = await dataURLtoFile(imageData, 'captured_image.png');
+        
+        // Use enhanced OCR system if available
+        if (window.enhancedOCR) {
+            console.log('🚀 Using Enhanced OCR System...');
+            const result = await window.enhancedOCR.processImage(imageFile);
+            
+            // Store confidence for display
+            window.lastOCRConfidence = result.confidence * 100;
+            
+            console.log('✅ Enhanced OCR completed:', {
+                text: result.text,
+                confidence: result.confidence,
+                servicesUsed: result.servicesUsed
+            });
+            
+            return result.text;
+        } else {
+            // Fallback to original OCR
+            console.log('⚠️ Enhanced OCR not available, using fallback...');
+            return await extractTextFromImageFallback(imageData);
+        }
+        
+    } catch (error) {
+        console.error('❌ Enhanced OCR failed:', error);
+        // Fallback to original method
+        return await extractTextFromImageFallback(imageData);
+    }
+}
+
+// Fallback OCR using Tesseract.js (client-side, free)
+async function extractTextFromImageFallback(imageData) {
     // Load Tesseract.js dynamically
     if (!window.Tesseract) {
         await loadTesseract();
