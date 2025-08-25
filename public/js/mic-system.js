@@ -140,69 +140,84 @@ class MicSystem {
         this.updateMicButton(false);
     }
 
-    // Setup long press functionality
+    // Setup long press functionality for mic button
     setupLongPress(micButton) {
-        if (!micButton) return;
-
+        if (!micButton) {
+            console.log('⚠️ Mic button not found, skipping long press setup');
+            return;
+        }
+        
+        console.log('🔧 Setting up long press for mic button...');
+        
         let pressTimer = null;
-        const longPressDelay = 500;
-
+        let recordingStarted = false;
+        let pressStartTime = 0;
+        
         const handlePress = (e) => {
             e.preventDefault();
-            e.stopPropagation();
-            console.log('🎤 Mic button pressed:', micButton.id);
+            pressStartTime = Date.now();
+            console.log('🎤 Press detected');
             
-            // Mobile haptic feedback if available
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-                console.log('📳 Haptic feedback triggered');
-            }
-            
-            this.isLongPress = false;
             pressTimer = setTimeout(() => {
-                this.isLongPress = true;
-                console.log('🎤 Long press detected');
-                // Stronger haptic feedback for long press
-                if (navigator.vibrate) {
-                    navigator.vibrate([100, 50, 100]);
-                }
-            }, longPressDelay);
+                console.log('🎤 Long press detected - starting recording');
+                recordingStarted = true;
+                this.startRecording();
+            }, 500);
         };
-
+        
         const handleRelease = (e) => {
             e.preventDefault();
-            e.stopPropagation();
-            console.log('🎤 Mic button released');
+            const pressDuration = Date.now() - pressStartTime;
             
             if (pressTimer) {
                 clearTimeout(pressTimer);
                 pressTimer = null;
             }
-
-            if (this.isLongPress) {
-                // Long press: stop recording
+            
+            if (pressDuration > 500 && recordingStarted) {
+                // Long press - stop recording
+                console.log('🎤 Long press release - stopping recording');
                 this.stopRecording();
-            } else {
-                // Short press: start recording
-                this.startRecording().catch(error => {
-                    console.error('❌ Error starting recording:', error);
-                    this.isListening = false;
-                    this.updateMicButton(false);
-                });
+                recordingStarted = false;
+            } else if (recordingStarted) {
+                // Short press - switch to short press mode
+                console.log('🎤 Short press - switching to short press mode');
             }
         };
-
-        // Remove existing listeners
-        micButton.removeEventListener('touchstart', handlePress);
-        micButton.removeEventListener('touchend', handleRelease);
-        micButton.removeEventListener('mousedown', handlePress);
-        micButton.removeEventListener('mouseup', handleRelease);
-
-        // Add new listeners
-        micButton.addEventListener('touchstart', handlePress, { passive: false });
-        micButton.addEventListener('touchend', handleRelease, { passive: false });
-        micButton.addEventListener('mousedown', handlePress, { passive: false });
-        micButton.addEventListener('mouseup', handleRelease, { passive: false });
+        
+        // Safe event listener removal
+        const safeRemoveEventListener = (element, event, handler) => {
+            if (element && typeof element.removeEventListener === 'function') {
+                try {
+                    element.removeEventListener(event, handler);
+                } catch (error) {
+                    console.log('⚠️ Error removing event listener:', error);
+                }
+            }
+        };
+        
+        // Safe event listener addition
+        const safeAddEventListener = (element, event, handler, options) => {
+            if (element && typeof element.addEventListener === 'function') {
+                try {
+                    element.addEventListener(event, handler, options);
+                } catch (error) {
+                    console.log('⚠️ Error adding event listener:', error);
+                }
+            }
+        };
+        
+        // Remove any existing listeners safely
+        safeRemoveEventListener(micButton, 'touchstart', handlePress);
+        safeRemoveEventListener(micButton, 'touchend', handleRelease);
+        safeRemoveEventListener(micButton, 'mousedown', handlePress);
+        safeRemoveEventListener(micButton, 'mouseup', handleRelease);
+        
+        // Add new listeners safely
+        safeAddEventListener(micButton, 'touchstart', handlePress, { passive: false });
+        safeAddEventListener(micButton, 'touchend', handleRelease, { passive: false });
+        safeAddEventListener(micButton, 'mousedown', handlePress, { passive: false });
+        safeAddEventListener(micButton, 'mouseup', handleRelease, { passive: false });
 
         console.log('✅ Long press setup complete');
     }

@@ -64,42 +64,54 @@ class TextToSpeech {
         }, 500); // Reduced from 2000ms to 500ms
     }
 
+    // Load available voices with fallback
     loadVoices() {
-        try {
-            this.voices = this.synth.getVoices();
-            console.log('🔧 TTS: Loaded voices:', this.voices.length);
-            console.log('🔧 TTS: Available voices:', this.voices.map(v => `${v.name} (${v.lang})`));
-            
-            // Log all Indian English male voices for Roy Sir
-            const indianEnglishMaleVoices = this.voices.filter(voice => 
-                voice.lang.includes('en-IN') && 
-                (voice.name.toLowerCase().includes('male') || 
-                 voice.name.toLowerCase().includes('google') ||
-                 voice.name.toLowerCase().includes('natural'))
-            );
-            console.log('🔧 TTS: Indian English Male voices for Roy Sir:', indianEnglishMaleVoices.map(v => `${v.name} (${v.lang})`));
-            
-            // If no voices available, try alternative method
-            if (this.voices.length === 0) {
-                console.log('🔧 TTS: No voices found, trying alternative method...');
-                // Try to get voices using a different approach
-                if (typeof speechSynthesis !== 'undefined' && speechSynthesis.getVoices) {
-                    this.voices = speechSynthesis.getVoices();
-                    console.log('🔧 TTS: Alternative method found voices:', this.voices.length);
-                }
-            }
-            
-            // Set voice based on current avatar
-            if (this.voices.length > 0) {
-                this.detectLanguageAndSetVoice('');
-            } else {
-                console.warn('🔧 TTS: Still no voices available after all attempts');
-            }
-
-            // Update voice selector UI
-            this.updateVoiceSelector();
-        } catch (error) {
-            console.error('🔧 TTS: Error loading voices:', error);
+        console.log('🔧 TTS: Loading voices...');
+        
+        // Get available voices
+        const voices = window.speechSynthesis.getVoices();
+        console.log('🔧 TTS: Loaded voices:', voices.length);
+        console.log('🔧 TTS: Available voices:', voices);
+        
+        // Try to find Indian English Male voices for Roy Sir
+        let indianEnglishMaleVoices = voices.filter(voice => 
+            voice.lang === 'en-IN' && voice.name.toLowerCase().includes('male')
+        );
+        console.log('🔧 TTS: Indian English Male voices for Roy Sir:', indianEnglishMaleVoices);
+        
+        // If no Indian English Male voices, try any Indian English voice
+        if (indianEnglishMaleVoices.length === 0) {
+            indianEnglishMaleVoices = voices.filter(voice => voice.lang === 'en-IN');
+            console.log('🔧 TTS: Indian English voices (any gender):', indianEnglishMaleVoices);
+        }
+        
+        // If still no Indian English voices, try any English voice
+        if (indianEnglishMaleVoices.length === 0) {
+            indianEnglishMaleVoices = voices.filter(voice => voice.lang.startsWith('en-'));
+            console.log('🔧 TTS: Any English voices:', indianEnglishMaleVoices);
+        }
+        
+        // Final fallback: use any available voice
+        if (indianEnglishMaleVoices.length === 0 && voices.length > 0) {
+            indianEnglishMaleVoices = [voices[0]];
+            console.log('🔧 TTS: Using fallback voice:', voices[0].name);
+        }
+        
+        // Set the voice
+        if (indianEnglishMaleVoices.length > 0) {
+            this.voice = indianEnglishMaleVoices[0];
+            console.log('✅ TTS: Voice set to:', this.voice.name, this.voice.lang);
+        } else {
+            console.log('⚠️ TTS: No suitable voices found, TTS will use default voice');
+            // Don't throw error, just log warning
+        }
+        
+        // Set up voice change listener for mobile devices
+        if (window.speechSynthesis.onvoiceschanged) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                console.log('🔧 TTS: Voices changed, reloading...');
+                this.loadVoices();
+            };
         }
     }
 
