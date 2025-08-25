@@ -55,26 +55,46 @@ if (checkPersistentLogin()) {
 }
 
 // Global variable declarations to prevent redeclaration errors
-window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+if (typeof window.isMobile === 'undefined') {
+    window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 // Proper APK detection (Capacitor/Android or file protocol)
-window.isAPK = (window.location.protocol === 'file:'
-  || navigator.userAgent.includes('Capacitor')
-  || navigator.userAgent.includes('Android'));
-window.ttsEnabled = true;
-window.isRecording = false;
-window.currentUser = null;
-window.selectedAvatar = 'miss-sapna'; // Default to Miss Sapna
-window.userData = null;
+if (typeof window.isAPK === 'undefined') {
+    window.isAPK = (window.location.protocol === 'file:'
+      || navigator.userAgent.includes('Capacitor')
+      || navigator.userAgent.includes('Android'));
+}
+if (typeof window.ttsEnabled === 'undefined') {
+    window.ttsEnabled = true;
+}
+if (typeof window.isRecording === 'undefined') {
+    window.isRecording = false;
+}
+if (typeof window.currentUser === 'undefined') {
+    window.currentUser = null;
+}
+if (typeof window.selectedAvatar === 'undefined') {
+    window.selectedAvatar = 'miss-sapna'; // Default to Miss Sapna
+}
+if (typeof window.userData === 'undefined') {
+    window.userData = null;
+}
 
 // Enhanced AI Service instance
-window.enhancedAI = null;
+if (typeof window.enhancedAI === 'undefined') {
+    window.enhancedAI = null;
+}
 // PWA install prompt placeholder
-window.deferredPrompt = null;
+if (typeof window.deferredPrompt === 'undefined') {
+    window.deferredPrompt = null;
+}
 // Do not override the TTS instance created by textToSpeech.js
 if (typeof window.textToSpeech === 'undefined') {
     window.textToSpeech = null;
 }
-window.voiceRecognition = null;
+if (typeof window.voiceRecognition === 'undefined') {
+    window.voiceRecognition = null;
+}
 
 // Make functions globally accessible IMMEDIATELY for HTML onclick handlers
 // These will be replaced with actual implementations later

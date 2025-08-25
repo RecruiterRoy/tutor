@@ -1652,34 +1652,64 @@
         }
         
         // Global sendMessage function - SIMPLIFIED with debugging
+        let isSending = false; // Prevent multiple rapid sends
+        
         function sendMessage() {
-            console.log('📤 Global sendMessage called...');
-            
-            // Try mobile input first, then desktop input
-            let chatInput = document.getElementById('chatInputMobile');
-            if (!chatInput || !chatInput.value.trim()) {
-                chatInput = document.getElementById('chatInput');
-            }
-            
-            if (!chatInput || !chatInput.value.trim()) {
-                console.log('❌ No message to send');
+            if (isSending) {
+                console.log('⚠️ Already sending message, please wait...');
                 return;
             }
             
-            const message = chatInput.value.trim();
-            console.log('📤 Message to send:', message);
+            console.log('📤 Global sendMessage called...');
+            isSending = true;
             
-            // Clear the input
-            chatInput.value = '';
-            
-            // Add user message to chat
-            addMessageToChat('user', message);
-            
-            // Send to AI (if AI integration is available)
-            if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
-                window.aiTutorIntegration.sendMessage(message);
-            } else {
-                console.log('🤖 AI integration not available, message logged:', message);
+            try {
+                // Get message from appropriate input
+                let message = '';
+                const chatInput = document.getElementById('chatInput');
+                const chatInputMobile = document.getElementById('chatInputMobile');
+                
+                if (chatInputMobile && chatInputMobile.value.trim()) {
+                    message = chatInputMobile.value.trim();
+                    console.log('📱 Using mobile input:', message);
+                } else if (chatInput && chatInput.value.trim()) {
+                    message = chatInput.value.trim();
+                    console.log('💻 Using desktop input:', message);
+                } else {
+                    console.log('⚠️ No message to send');
+                    isSending = false;
+                    return;
+                }
+                
+                // Clear input immediately
+                if (chatInputMobile) chatInputMobile.value = '';
+                if (chatInput) chatInput.value = '';
+                
+                console.log('📤 Sending message:', message);
+                
+                // Try different send methods
+                if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
+                    console.log('📤 Using aiTutorIntegration.sendMessage');
+                    window.aiTutorIntegration.sendMessage(message);
+                } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
+                    console.log('📤 Using gptService.sendMessage');
+                    window.gptService.sendMessage(message);
+                } else if (typeof window.sendMessageEnhanced === 'function') {
+                    console.log('📤 Using sendMessageEnhanced');
+                    window.sendMessageEnhanced(message);
+                } else {
+                    console.error('❌ No send method available');
+                    alert('Chat service not available. Please try again.');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error in sendMessage:', error);
+                alert('Error sending message. Please try again.');
+            } finally {
+                // Reset sending flag after a delay
+                setTimeout(() => {
+                    isSending = false;
+                }, 1000);
             }
         }
         
