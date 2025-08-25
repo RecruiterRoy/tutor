@@ -1558,96 +1558,9 @@
 
     <!-- IMMEDIATE SEND BUTTON FIX -->
     <script>
-        // PROPER MOBILE SEND BUTTON SETUP - USING ADDEVENTLISTENER AS SUGGESTED
-        function setupMobileSendButtonProperly() {
-            console.log('📱 Setting up mobile send button properly...');
-            
-            const sendButtonMobile = document.getElementById('sendButtonMobile');
-            const chatInputMobile = document.getElementById('chatInputMobile');
-            
-            if (sendButtonMobile && chatInputMobile) {
-                console.log('✅ Found mobile send button and input');
-                
-                // Set the button content once
-                sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
-                sendButtonMobile.className = 'w-2/5 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm';
-                
-                // Remove any existing listeners by cloning (as suggested)
-                const newButton = sendButtonMobile.cloneNode(true);
-                sendButtonMobile.parentNode.replaceChild(newButton, sendButtonMobile);
-                
-                // Use addEventListener as suggested instead of inline onclick
-                newButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('📱 Mobile send button clicked - event fired!');
-                    
-                    const input = document.getElementById('chatInputMobile');
-                    if (input && input.value.trim()) {
-                        const message = input.value.trim();
-                        console.log('📤 Sending message:', message);
-                        
-                        // Clear input
-                        input.value = '';
-                        
-                        // Add message to chat
-                        addMessageToChat('user', message);
-                        
-                        // Call the global sendMessage function
-                        if (typeof sendMessage === 'function') {
-                            sendMessage();
-                        } else {
-                            console.log('🤖 Global sendMessage not available, message logged:', message);
-                        }
-                    } else {
-                        console.log('❌ No message to send');
-                    }
-                });
-                
-                // Add enter key handler
-                chatInputMobile.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        console.log('📱 Enter key pressed on mobile input');
-                        newButton.click();
-                    }
-                });
-                
-                console.log('✅ Mobile send button setup complete with addEventListener');
-                return true;
-            } else {
-                console.error('❌ Mobile send button or input not found');
-                console.log('Send button:', sendButtonMobile);
-                console.log('Chat input:', chatInputMobile);
-                return false;
-            }
-        }
+
         
-        // Alternative mobile send button setup - more aggressive
-        function forceSetupMobileSendButton() {
-            console.log('🚨 Force setting up mobile send button...');
-            
-            // Wait a bit more and try again
-            setTimeout(() => {
-                const sendButton = document.getElementById('sendButtonMobile');
-                const chatInput = document.getElementById('chatInputMobile');
-                
-                if (sendButton && chatInput) {
-                    console.log('✅ Found elements in force setup');
-                    
-                    // Set up the button with inline onclick (don't clone, just set attribute)
-                    sendButton.setAttribute('onclick', 'sendMessage(); return false;');
-                    sendButton.style.cursor = 'pointer';
-                    sendButton.innerHTML = '<span id="sendButtonMobileText">Send</span>';
-                    
-                    console.log('📱 Force setup: Set inline onclick on existing button');
-                    
-                    console.log('✅ Force setup complete');
-                } else {
-                    console.error('❌ Force setup failed - elements still not found');
-                }
-            }, 1000);
-        }
+
         
         // Helper function to add message to chat
         function addMessageToChat(sender, message) {
@@ -1744,86 +1657,34 @@
             }
         }
         
-        // Setup mobile send button when DOM is ready (as suggested)
+        // Simple send button setup - ONE TIME ONLY
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📱 DOM loaded, setting up mobile send button...');
+            console.log('📱 Setting up send buttons...');
             
-            // Try to setup immediately
-            if (!setupMobileSendButtonProperly()) {
-                // If it fails, try again after a short delay
-                setTimeout(() => {
-                    console.log('📱 Retrying mobile send button setup...');
-                    setupMobileSendButtonProperly();
-                }, 500);
+            // Simple setup for mobile send button
+            const sendButtonMobile = document.getElementById('sendButtonMobile');
+            if (sendButtonMobile) {
+                sendButtonMobile.setAttribute('onclick', 'sendMessage(); return false;');
+                sendButtonMobile.innerHTML = '<span>Send</span>';
+                console.log('✅ Mobile send button ready');
             }
             
-            // Also try force setup as backup
-            setTimeout(() => {
-                forceSetupMobileSendButton();
-            }, 2000);
+            // Simple setup for desktop send button
+            const sendButton = document.getElementById('sendButton');
+            if (sendButton) {
+                sendButton.setAttribute('onclick', 'sendMessage(); return false;');
+                console.log('✅ Desktop send button ready');
+            }
             
-            // Also try to show user name immediately from localStorage
-            setTimeout(() => {
-                showUserNameFromLocalStorage();
-            }, 1000);
-            
-            // Ensure send button is properly bound
-            setTimeout(() => {
-                ensureSendButtonWorks();
-            }, 3000);
-            
-            // Test send button functionality (just add test text, don't click)
-            setTimeout(() => {
-                testSendButton();
-            }, 4000);
+            // Show user name
+            showUserNameFromLocalStorage();
         });
         
 
         
-        // Test send button functionality
-        function testSendButton() {
-            console.log('🧪 Testing send button functionality...');
-            
-            const sendButtonMobile = document.getElementById('sendButtonMobile');
-            const sendButton = document.getElementById('sendButton');
-            const chatInputMobile = document.getElementById('chatInputMobile');
-            const chatInput = document.getElementById('chatInput');
-            
-            if (sendButtonMobile) {
-                console.log('📱 Mobile send button found and ready');
-            }
-            
-            if (sendButton) {
-                console.log('💻 Desktop send button found and ready');
-            }
-            
-            console.log('✅ Send button test completed - buttons are ready for use');
-        }
+
         
-        // Function to ensure send button works
-        function ensureSendButtonWorks() {
-            console.log('🔧 Ensuring send button works...');
-            
-            const sendButtonMobile = document.getElementById('sendButtonMobile');
-            const sendButton = document.getElementById('sendButton');
-            
-            if (sendButtonMobile) {
-                // Set inline onclick directly
-                sendButtonMobile.setAttribute('onclick', 'sendMessage(); return false;');
-                sendButtonMobile.style.cursor = 'pointer';
-                sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
-                
-                console.log('✅ Mobile send button set with inline onclick');
-            }
-            
-            if (sendButton) {
-                // Set inline onclick directly
-                sendButton.setAttribute('onclick', 'sendMessage(); return false;');
-                sendButton.style.cursor = 'pointer';
-                
-                console.log('✅ Desktop send button set with inline onclick');
-            }
-        }
+
         
         // Simple function to show user name from localStorage
         function showUserNameFromLocalStorage() {
