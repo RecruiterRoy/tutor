@@ -12,6 +12,8 @@
     <meta http-equiv="Expires" content="0">
     <title>Dashboard - tution.app</title>
     
+    <!-- Authentication check removed - now handled by localStorage -->
+    
     <!-- PWA Manifest and App Icons -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/jpeg" href="images/tution.app_emblem.jpg">
@@ -1533,14 +1535,14 @@
         });
     </script>
     <script>
-        // Ensure Service Worker is registered on dashboard for standalone mode
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                console.log('Service Worker (dashboard) registered:', reg.scope);
-            }).catch(function(err) {
-                console.error('Service Worker (dashboard) registration failed:', err);
-            });
-        }
+        // Service Worker registration disabled to prevent crashes
+        // if ('serviceWorker' in navigator) {
+        //     navigator.serviceWorker.register('/sw.js').then(function(reg) {
+        //         console.log('Service Worker (dashboard) registered:', reg.scope);
+        //     }).catch(function(err) {
+        //         console.error('Service Worker (dashboard) registration failed:', err);
+        //     });
+        // }
     </script>
     <!-- Mobile Sidebar -->
         <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-gray-900/95 backdrop-blur-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
@@ -2487,16 +2489,16 @@
             loadNotificationSettings();
             loadVoiceCommandSettings();
             
-            // Register service worker for offline functionality
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('✅ Service Worker registered:', registration);
-                    })
-                    .catch(error => {
-                        console.error('❌ Service Worker registration failed:', error);
-                    });
-            }
+            // Service Worker registration disabled to prevent crashes
+            // if ('serviceWorker' in navigator) {
+            //     navigator.serviceWorker.register('/sw.js')
+            //         .then(registration => {
+            //             console.log('✅ Service Worker registered:', registration);
+            //         })
+            //         .catch(error => {
+            //             console.error('❌ Service Worker registration failed:', error);
+            //         });
+            // }
         }
         
         // Notification Settings Functions
@@ -2653,27 +2655,29 @@
         
         // Initialize mobile enhancements when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                initializeMobileEnhancements();
-                setupServiceWorkerUpdates();
-            }, 1000); // Wait for other scripts to load
+                            setTimeout(() => {
+                    initializeMobileEnhancements();
+                    // setupServiceWorkerUpdates(); // DISABLED TO PREVENT CRASHES
+                }, 1000); // Wait for other scripts to load
         });
         
-        // Service Worker Update Notification System
+        // Service Worker Update Notification System - DISABLED TO PREVENT CRASHES
         function setupServiceWorkerUpdates() {
-            if ('serviceWorker' in navigator) {
-                // Listen for service worker messages
-                navigator.serviceWorker.addEventListener('message', (event) => {
-                    if (event.data && event.data.type === 'SW_UPDATED') {
-                        showUpdateNotification(event.data.message);
-                    }
-                });
-                
-                // Check for updates on page load
-                navigator.serviceWorker.ready.then(registration => {
-                    registration.update();
-                });
-            }
+            console.log('🚫 Service worker updates disabled to prevent crashes');
+            return;
+            // if ('serviceWorker' in navigator) {
+            //     // Listen for service worker messages
+            //     navigator.serviceWorker.addEventListener('message', (event) => {
+            //         if (event.data && event.data.type === 'SW_UPDATED') {
+            //             showUpdateNotification(event.data.message);
+            //         }
+            //     });
+            //     
+            //     // Check for updates on page load
+            //     navigator.serviceWorker.ready.then(registration => {
+            //         registration.update();
+            //     });
+            // }
         }
         
         function showUpdateNotification(message) {

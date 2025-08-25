@@ -49,8 +49,8 @@ class UserAnalytics {
     async getUserData() {
         try {
             // Get user from Supabase
-            if (window.supabase) {
-                const { data: { user } } = await window.supabase.auth.getUser();
+            if (window.supabaseClient) {
+                const { data: { user } } = await window.supabaseClient.auth.getUser();
                 if (user) {
                     this.userId = user.id;
                     window.userData = user;

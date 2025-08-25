@@ -521,7 +521,34 @@
                 const isLoggedIn = await checkIfLoggedIn();
                 if (isLoggedIn) {
                     console.log('✅ User already logged in, redirecting to dashboard');
-                    if (window.goToDashboard) window.goToDashboard();
+                    
+                    // Get user data and set localStorage for dashboard
+                    const { data: { user } } = await window.supabaseClient.auth.getUser();
+                    if (user) {
+                        const userData = {
+                            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student',
+                            email: user.email,
+                            id: user.id,
+                            class: '10',
+                            board: 'CBSE'
+                        };
+                        localStorage.setItem('isLoggedIn', 'true');
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                        console.log('🔐 localStorage authentication set for existing session');
+                    }
+                    
+                    // Add the missing goToDashboard function
+                    if (typeof window.goToDashboard === 'function') {
+                        window.goToDashboard();
+                    } else {
+                        // Fallback redirect
+                        console.log('🔧 Using fallback redirect to dashboard');
+                        if (window.location.protocol === 'file:') {
+                            window.location.replace('dashboard.html');
+                        } else {
+                            window.location.replace('/dashboard');
+                        }
+                    }
                     return;
                 } else {
                     // Clear any stale session data to prevent loops
@@ -580,6 +607,18 @@
                 
                 // Save credentials to cache for future logins
                 saveUserCredentials(email, password);
+                
+                // Set localStorage for dashboard authentication
+                const userData = {
+                    name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'Student',
+                    email: data.user.email,
+                    id: data.user.id,
+                    class: '10',
+                    board: 'CBSE'
+                };
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userData', JSON.stringify(userData));
+                console.log('🔐 localStorage authentication set for dashboard');
                 
                 // Check if user profile exists
                 try {
@@ -678,9 +717,19 @@
                 localStorage.setItem('tution_last_login', Date.now().toString());
                 console.log('✅ Credentials saved to cache');
             } catch (error) {
-                console.error('❌ Error saving credentials to cache:', error);
+                console.warn('⚠️ Failed to save credentials to cache:', error);
             }
         }
+        
+        // Add goToDashboard function
+        window.goToDashboard = function() {
+            console.log('🔧 goToDashboard called from login page');
+            if (window.location.protocol === 'file:') {
+                window.location.replace('dashboard.html');
+            } else {
+                window.location.replace('/dashboard');
+            }
+        };
         
         function loadCachedCredentials() {
             try {

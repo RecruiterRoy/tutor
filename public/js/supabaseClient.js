@@ -16,9 +16,14 @@ async function getSupabaseClient() {
             throw new Error('Supabase configuration not available');
         }
         
-        // Create the client
-        supabase = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
-        console.log('✅ Supabase client initialized successfully');
+                // Create the client
+        try {
+            supabase = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY); 
+            console.log('✅ Supabase client initialized successfully');
+        } catch (error) {
+            console.error('❌ Supabase client initialization failed:', error);
+            // Don't crash the dashboard, continue without Supabase
+        }
         
         return supabase;
     } catch (error) {
@@ -42,12 +47,16 @@ async function initializeSupabaseClient() {
 
 // Initialize immediately if possible
 if (typeof window !== 'undefined' && typeof window.supabase !== 'undefined' && window.TUTOR_CONFIG) {
-    initializeSupabaseClient();
+    initializeSupabaseClient().catch(error => {
+        console.warn('Supabase initialization failed, continuing without it:', error);
+    });
 }
 
 // Also initialize when DOM is loaded (fallback)
 window.addEventListener('DOMContentLoaded', function() {
     if (!window.supabaseClient && typeof window.supabase !== 'undefined' && window.TUTOR_CONFIG) {
-        initializeSupabaseClient();
+        initializeSupabaseClient().catch(error => {
+            console.warn('Supabase initialization failed on DOMContentLoaded, continuing without it:', error);
+        });
     }
 }); 

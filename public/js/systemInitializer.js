@@ -76,7 +76,7 @@ class SystemInitializer {
             }
             
             // Test connection
-            const { data, error } = await window.supabase.from('profiles').select('count').limit(1);
+            const { data, error } = await window.supabaseClient.from('profiles').select('count').limit(1);
             if (error && !error.message.includes('permission')) {
                 throw error;
             }
@@ -100,8 +100,8 @@ class SystemInitializer {
             }
             
             // Get current user
-            if (window.supabase) {
-                const { data: { user } } = await window.supabase.auth.getUser();
+            if (window.supabaseClient) {
+                const { data: { user } } = await window.supabaseClient.auth.getUser();
                 if (user) {
                     window.userData = user;
                     console.log('👤 User authenticated:', user.email);
@@ -224,8 +224,8 @@ class SystemInitializer {
         try {
             console.log('🔧 Loading user subjects...');
             
-            if (window.userData && window.supabase) {
-                const { data: profile } = await window.supabase
+            if (window.userData && window.supabaseClient) {
+                const { data: profile } = await window.supabaseClient
                     .from('profiles')
                     .select('*')
                     .eq('id', window.userData.id)
@@ -262,8 +262,8 @@ class SystemInitializer {
         try {
             console.log('🔧 Loading chat history...');
             
-            if (window.userData && window.supabase) {
-                const { data: chats } = await window.supabase
+            if (window.userData && window.supabaseClient) {
+                const { data: chats } = await window.supabaseClient
                     .from('chat_history')
                     .select('*')
                     .eq('user_id', window.userData.id)

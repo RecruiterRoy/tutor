@@ -1180,6 +1180,16 @@ app.post('/api/batch-video-processor', async (req, res) => {
     }
 });
 
+// Specific route for dashboard.html
+app.get('/dashboard.html', (req, res) => {
+    const dashboardPath = path.join(__dirname, 'public', 'dashboard.html');
+    if (fs.existsSync(dashboardPath)) {
+        res.sendFile(dashboardPath);
+    } else {
+        res.status(404).send('Dashboard not found');
+    }
+});
+
 // Catch all route for SPA - must be LAST
 app.get('*', (req, res) => {
     // Don't serve index.html for API routes
