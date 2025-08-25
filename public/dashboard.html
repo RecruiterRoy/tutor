@@ -1592,11 +1592,11 @@
                         // Add message to chat
                         addMessageToChat('user', message);
                         
-                        // Send to AI if available
-                        if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
-                            window.aiTutorIntegration.sendMessage(message);
+                        // Call the global sendMessage function
+                        if (typeof sendMessage === 'function') {
+                            sendMessage();
                         } else {
-                            console.log('🤖 AI integration not available, message logged:', message);
+                            console.log('🤖 Global sendMessage not available, message logged:', message);
                         }
                     } else {
                         console.log('❌ No message to send');
@@ -1643,13 +1643,20 @@
                         e.preventDefault();
                         console.log('📱 Force setup send button clicked!');
                         
-                        const input = document.getElementById('chatInputMobile');
-                        if (input && input.value.trim()) {
-                            const message = input.value.trim();
-                            console.log('📤 Force setup sending message:', message);
-                            
-                            input.value = '';
-                            addMessageToChat('user', message);
+                        // Call the global sendMessage function
+                        if (typeof sendMessage === 'function') {
+                            sendMessage();
+                        } else {
+                            console.error('❌ Global sendMessage function not available');
+                            // Fallback to direct message handling
+                            const input = document.getElementById('chatInputMobile');
+                            if (input && input.value.trim()) {
+                                const message = input.value.trim();
+                                console.log('📤 Force setup sending message:', message);
+                                
+                                input.value = '';
+                                addMessageToChat('user', message);
+                            }
                         }
                     };
                     
@@ -1772,7 +1779,34 @@
             setTimeout(() => {
                 ensureSendButtonWorks();
             }, 3000);
+            
+            // Test send button functionality
+            setTimeout(() => {
+                testSendButton();
+            }, 4000);
         });
+        
+        // Test send button functionality
+        function testSendButton() {
+            console.log('🧪 Testing send button functionality...');
+            
+            const sendButtonMobile = document.getElementById('sendButtonMobile');
+            const sendButton = document.getElementById('sendButton');
+            
+            if (sendButtonMobile) {
+                console.log('📱 Mobile send button found, testing click...');
+                // Simulate a click to test
+                sendButtonMobile.click();
+            }
+            
+            if (sendButton) {
+                console.log('💻 Desktop send button found, testing click...');
+                // Simulate a click to test
+                sendButton.click();
+            }
+            
+            console.log('✅ Send button test completed');
+        }
         
         // Function to ensure send button works
         function ensureSendButtonWorks() {
@@ -1786,7 +1820,7 @@
                 const newButton = sendButtonMobile.cloneNode(true);
                 sendButtonMobile.parentNode.replaceChild(newButton, sendButtonMobile);
                 
-                // Add new listener
+                // Add new listener with multiple approaches
                 newButton.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1794,7 +1828,15 @@
                     sendMessage();
                 });
                 
-                console.log('✅ Mobile send button re-bound');
+                // Also add onclick as backup
+                newButton.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('📤 Mobile send button onclick triggered');
+                    sendMessage();
+                };
+                
+                console.log('✅ Mobile send button re-bound with multiple handlers');
             }
             
             if (sendButton) {
@@ -1802,7 +1844,7 @@
                 const newButton = sendButton.cloneNode(true);
                 sendButton.parentNode.replaceChild(newButton, sendButton);
                 
-                // Add new listener
+                // Add new listener with multiple approaches
                 newButton.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1810,7 +1852,15 @@
                     sendMessage();
                 });
                 
-                console.log('✅ Desktop send button re-bound');
+                // Also add onclick as backup
+                newButton.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('📤 Desktop send button onclick triggered');
+                    sendMessage();
+                };
+                
+                console.log('✅ Desktop send button re-bound with multiple handlers');
             }
         }
         

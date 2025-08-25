@@ -43,10 +43,12 @@ if (typeof window.ClaudeChat === 'undefined') {
 window.claudeChat = new ClaudeChat();
 
 // Usage tracking for cost monitoring
-const logUsage = (usage) => {
-  console.log('Claude Usage:', {
-    input_tokens: usage.input_tokens,
-    output_tokens: usage.output_tokens,
-    estimated_cost: (usage.input_tokens * 0.000003) + (usage.output_tokens * 0.000015)
-  });
-}; 
+if (typeof window.logUsage === 'undefined') {
+    window.logUsage = (usage) => {
+        console.log('Claude Usage:', {
+            input_tokens: usage.input_tokens,
+            output_tokens: usage.output_tokens,
+            estimated_cost: (usage.input_tokens * 0.000003) + (usage.output_tokens * 0.000015)
+        });
+    };
+} 
