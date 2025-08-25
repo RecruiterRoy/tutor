@@ -71,9 +71,9 @@ class SystemInitializer {
                 return;
             }
             
-            // Test connection with timeout for mobile
+            // Test connection with shorter timeout for mobile
             const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Supabase connection timeout')), 5000)
+                setTimeout(() => reject(new Error('Supabase connection timeout')), 3000)
             );
             
             const connectionPromise = window.supabaseClient.from('profiles').select('count').limit(1);
@@ -97,17 +97,28 @@ class SystemInitializer {
         try {
             console.log('🔧 Initializing Auth...');
             
-            // Ensure auth module is loaded
-            if (!window.auth) {
-                await this.loadScript('/js/auth.js');
+            // Check if user is already logged in via localStorage
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const userData = localStorage.getItem('userData');
+            
+            if (isLoggedIn === 'true' && userData) {
+                try {
+                    window.userData = JSON.parse(userData);
+                    console.log('👤 User authenticated from localStorage:', window.userData.email || 'Unknown');
+                    this.features.auth = true;
+                    console.log('✅ Auth initialized from localStorage');
+                    return;
+                } catch (e) {
+                    console.log('⚠️ Invalid localStorage data, trying Supabase...');
+                }
             }
             
-            // Get current user
+            // Fallback to Supabase auth
             if (window.supabaseClient) {
                 const { data: { user } } = await window.supabaseClient.auth.getUser();
                 if (user) {
                     window.userData = user;
-                    console.log('👤 User authenticated:', user.email);
+                    console.log('👤 User authenticated from Supabase:', user.email);
                 }
             }
             
@@ -124,6 +135,13 @@ class SystemInitializer {
         try {
             console.log('🔧 Initializing TTS...');
             
+            // Check if speech synthesis is available
+            if (!window.speechSynthesis) {
+                console.log('⚠️ Speech synthesis not supported, skipping TTS...');
+                this.features.tts = false;
+                return;
+            }
+            
             // Ensure TTS class is loaded
             if (!window.TextToSpeech) {
                 await this.loadScript('/js/textToSpeech.js');
@@ -136,13 +154,6 @@ class SystemInitializer {
             
             // Test TTS with silent test
             await this.testTTS();
-            
-            // Play welcome message if user is logged in
-            if (window.userData && this.shouldPlayWelcome()) {
-                setTimeout(() => {
-                    this.playWelcomeMessage();
-                }, 2000);
-            }
             
             this.features.tts = true;
             console.log('✅ TTS initialized');
@@ -174,11 +185,11 @@ class SystemInitializer {
                 micSystem.init();
             }
             
-            // Test microphone permissions with timeout for mobile
+            // Test microphone permissions with shorter timeout for mobile
             try {
                 await Promise.race([
                     this.testMicrophonePermissions(),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Mic test timeout')), 3000))
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Mic test timeout')), 2000))
                 ]);
                 this.features.mic = true;
                 console.log('✅ Microphone initialized');
@@ -204,11 +215,11 @@ class SystemInitializer {
                 return;
             }
             
-            // Test camera permissions with timeout for mobile
+            // Test camera permissions with shorter timeout for mobile
             try {
                 const stream = await Promise.race([
                     navigator.mediaDevices.getUserMedia({ video: true }),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Camera test timeout')), 3000))
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Camera test timeout')), 2000))
                 ]);
                 stream.getTracks().forEach(track => track.stop());
                 this.features.camera = true;
@@ -500,22 +511,55 @@ class SystemInitializer {
         
         console.log(`📊 System Status: ${workingFeatures}/${totalFeatures} features working`);
         
-        // Show temporary status message
+        // Show mobile-friendly status message
         const statusDiv = document.createElement('div');
         statusDiv.className = 'initialization-status';
         statusDiv.style.cssText = `
             position: fixed; top: 20px; right: 20px; 
-            background: #10b981; color: white; 
-            padding: 10px 20px; border-radius: 8px; 
-            z-index: 10000; font-size: 14px;
+            background: ${workingFeatures >= 7 ? '#10b981' : workingFeatures >= 5 ? '#f59e0b' : '#ef4444'}; 
+            color: white; 
+            padding: 12px 16px; border-radius: 12px; 
+            z-index: 10000; font-size: 14px; font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            max-width: 200px;
+            text-align: center;
         `;
-        statusDiv.textContent = `✅ All systems ready (${workingFeatures}/${totalFeatures})`;
+        
+        let statusText = '';
+        if (workingFeatures >= 7) {
+            statusText = `✅ All systems ready (${workingFeatures}/${totalFeatures})`;
+        } else if (workingFeatures >= 5) {
+            statusText = `⚠️ Most systems ready (${workingFeatures}/${totalFeatures})`;
+        } else {
+            statusText = `❌ Some systems offline (${workingFeatures}/${totalFeatures})`;
+        }
+        
+        statusDiv.textContent = statusText;
+        
+        // Add detailed status for mobile debugging
+        if (window.innerWidth <= 768) {
+            const detailsDiv = document.createElement('div');
+            detailsDiv.style.cssText = `
+                font-size: 11px; margin-top: 4px; opacity: 0.9;
+            `;
+            
+            const featureStatus = Object.entries(this.features).map(([feature, status]) => 
+                `${feature}: ${status ? '✅' : '❌'}`
+            ).join(' ');
+            
+            detailsDiv.textContent = featureStatus;
+            statusDiv.appendChild(detailsDiv);
+        }
         
         document.body.appendChild(statusDiv);
         
+        // Remove after 5 seconds on mobile, 3 seconds on desktop
+        const removeTime = window.innerWidth <= 768 ? 5000 : 3000;
         setTimeout(() => {
-            statusDiv.remove();
-        }, 3000);
+            if (statusDiv.parentElement) {
+                statusDiv.remove();
+            }
+        }, removeTime);
     }
 
     showErrorMessage(message) {

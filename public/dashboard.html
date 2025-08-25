@@ -1539,28 +1539,63 @@
         // Also run when DOM is ready
         document.addEventListener('DOMContentLoaded', fixSendButton);
         
-        // Ensure send button works on mobile
+        // Ensure send button works on mobile - SIMPLIFIED VERSION
         document.addEventListener('DOMContentLoaded', function() {
             const sendButtonMobile = document.getElementById('sendButtonMobile');
             if (sendButtonMobile) {
-                // Remove any existing click listeners
-                sendButtonMobile.replaceWith(sendButtonMobile.cloneNode(true));
-                const newSendButton = document.getElementById('sendButtonMobile');
+                // Remove any existing click listeners by cloning
+                const newSendButton = sendButtonMobile.cloneNode(true);
+                sendButtonMobile.parentNode.replaceChild(newSendButton, sendButtonMobile);
                 
-                // Add click event listener
+                // Add simple click event listener
                 newSendButton.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     console.log('📱 Mobile send button clicked');
-                    sendMessage();
+                    
+                    // Get the input value
+                    const chatInputMobile = document.getElementById('chatInputMobile');
+                    if (chatInputMobile && chatInputMobile.value.trim()) {
+                        const message = chatInputMobile.value.trim();
+                        console.log('📤 Sending message:', message);
+                        
+                        // Clear input
+                        chatInputMobile.value = '';
+                        
+                        // Add message to chat
+                        addMessageToChat('user', message);
+                        
+                        // Send to AI if available
+                        if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
+                            window.aiTutorIntegration.sendMessage(message);
+                        }
+                    }
                 });
                 
                 console.log('✅ Mobile send button event listener added');
             }
         });
         
-        // Global sendMessage function
+        // Helper function to add message to chat
+        function addMessageToChat(sender, message) {
+            const chatContainer = document.querySelector('#chatMessages');
+            if (chatContainer) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}-message`;
+                
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.className = 'message-bubble';
+                bubbleDiv.textContent = message;
+                
+                messageDiv.appendChild(bubbleDiv);
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+        
+        // Global sendMessage function - SIMPLIFIED
         function sendMessage() {
-            console.log('📤 Sending message...');
+            console.log('📤 Global sendMessage called...');
             
             // Try mobile input first, then desktop input
             let chatInput = document.getElementById('chatInputMobile');
@@ -1580,19 +1615,7 @@
             chatInput.value = '';
             
             // Add user message to chat
-            if (typeof addMessage === 'function') {
-                addMessage('user', message);
-            } else {
-                // Fallback: manually add message to chat
-                const chatContainer = document.querySelector('.chat-messages') || document.querySelector('#chatMessages');
-                if (chatContainer) {
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message user-message bg-blue-600 text-white p-3 rounded-lg mb-3 max-w-xs ml-auto';
-                    messageDiv.textContent = message;
-                    chatContainer.appendChild(messageDiv);
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                }
-            }
+            addMessageToChat('user', message);
             
             // Send to AI (if AI integration is available)
             if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
@@ -2761,6 +2784,11 @@
                     viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
                 }
                 
+                // Mobile-specific send button setup
+                setTimeout(() => {
+                    setupMobileSendButton();
+                }, 500);
+                
                 // Optimize system initialization for mobile
                 setTimeout(() => {
                     initializeMobileEnhancements();
@@ -2774,6 +2802,55 @@
                 }, 1000);
             }
         });
+        
+        // Mobile-specific send button setup
+        function setupMobileSendButton() {
+            console.log('📱 Setting up mobile send button...');
+            
+            const sendButtonMobile = document.getElementById('sendButtonMobile');
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            
+            if (sendButtonMobile && chatInputMobile) {
+                // Ensure button shows correct text
+                sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
+                sendButtonMobile.className = 'w-2/5 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm';
+                
+                // Add click handler
+                sendButtonMobile.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('📱 Mobile send button clicked');
+                    
+                    if (chatInputMobile.value.trim()) {
+                        const message = chatInputMobile.value.trim();
+                        console.log('📤 Sending message:', message);
+                        
+                        // Clear input
+                        chatInputMobile.value = '';
+                        
+                        // Add message to chat
+                        addMessageToChat('user', message);
+                        
+                        // Send to AI if available
+                        if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
+                            window.aiTutorIntegration.sendMessage(message);
+                        }
+                    }
+                };
+                
+                // Add enter key handler to input
+                chatInputMobile.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        sendButtonMobile.click();
+                    }
+                });
+                
+                console.log('✅ Mobile send button setup complete');
+            } else {
+                console.error('❌ Mobile send button or input not found');
+            }
+        }
         
         // Service Worker Update Notification System - DISABLED TO PREVENT CRASHES
         function setupServiceWorkerUpdates() {
