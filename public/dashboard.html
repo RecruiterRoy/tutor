@@ -1707,6 +1707,12 @@
                 const chatInput = document.getElementById('chatInput');
                 const chatInputMobile = document.getElementById('chatInputMobile');
                 
+                console.log('🔍 Debugging input fields:');
+                console.log('  - chatInput found:', !!chatInput);
+                console.log('  - chatInputMobile found:', !!chatInputMobile);
+                console.log('  - chatInput value:', chatInput ? chatInput.value : 'N/A');
+                console.log('  - chatInputMobile value:', chatInputMobile ? chatInputMobile.value : 'N/A');
+                
                 if (chatInputMobile && chatInputMobile.value.trim()) {
                     message = chatInputMobile.value.trim();
                     console.log('📱 Using mobile input:', message);
@@ -1715,6 +1721,10 @@
                     console.log('💻 Using desktop input:', message);
                 } else {
                     console.log('⚠️ No message to send');
+                    console.log('  - chatInputMobile exists:', !!chatInputMobile);
+                    console.log('  - chatInputMobile value length:', chatInputMobile ? chatInputMobile.value.length : 'N/A');
+                    console.log('  - chatInput exists:', !!chatInput);
+                    console.log('  - chatInput value length:', chatInput ? chatInput.value.length : 'N/A');
                     isSending = false;
                     return;
                 }
@@ -1785,7 +1795,32 @@
             setTimeout(() => {
                 testSendButton();
             }, 4000);
+            
+            // Manual test with actual click
+            setTimeout(() => {
+                manualTestSendButton();
+            }, 5000);
         });
+        
+        // Manual test function that actually clicks the send button
+        function manualTestSendButton() {
+            console.log('🧪 Manual testing send button with click...');
+            
+            const sendButtonMobile = document.getElementById('sendButtonMobile');
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            
+            if (sendButtonMobile && chatInputMobile) {
+                // Add test text
+                chatInputMobile.value = 'Hello, this is a test message!';
+                console.log('📝 Added test text to mobile input:', chatInputMobile.value);
+                
+                // Click the send button
+                console.log('🖱️ Clicking mobile send button...');
+                sendButtonMobile.click();
+            } else {
+                console.log('❌ Mobile send button or input not found for manual test');
+            }
+        }
         
         // Test send button functionality
         function testSendButton() {
@@ -1793,20 +1828,28 @@
             
             const sendButtonMobile = document.getElementById('sendButtonMobile');
             const sendButton = document.getElementById('sendButton');
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            const chatInput = document.getElementById('chatInput');
             
             if (sendButtonMobile) {
-                console.log('📱 Mobile send button found, testing click...');
-                // Simulate a click to test
-                sendButtonMobile.click();
+                console.log('📱 Mobile send button found');
+                // Add test text to mobile input
+                if (chatInputMobile) {
+                    chatInputMobile.value = 'Test message from mobile';
+                    console.log('📝 Added test text to mobile input');
+                }
             }
             
             if (sendButton) {
-                console.log('💻 Desktop send button found, testing click...');
-                // Simulate a click to test
-                sendButton.click();
+                console.log('💻 Desktop send button found');
+                // Add test text to desktop input
+                if (chatInput) {
+                    chatInput.value = 'Test message from desktop';
+                    console.log('📝 Added test text to desktop input');
+                }
             }
             
-            console.log('✅ Send button test completed');
+            console.log('✅ Send button test completed - added test text');
         }
         
         // Function to ensure send button works
