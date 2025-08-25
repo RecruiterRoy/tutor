@@ -66,9 +66,24 @@ class SystemInitializer {
             
             // Check if supabase client is available
             if (!window.supabaseClient) {
-                console.log('⚠️ Supabase client not available, skipping...');
-                this.features.supabase = false;
-                return;
+                console.log('⚠️ Supabase client not available, trying to initialize...');
+                
+                // Try to initialize supabase client
+                if (window.supabaseUrl && window.supabaseKey) {
+                    try {
+                        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+                        window.supabaseClient = createClient(window.supabaseUrl, window.supabaseKey);
+                        console.log('✅ Supabase client created from CDN');
+                    } catch (e) {
+                        console.log('⚠️ Failed to create Supabase client from CDN');
+                        this.features.supabase = false;
+                        return;
+                    }
+                } else {
+                    console.log('⚠️ Supabase credentials not available');
+                    this.features.supabase = false;
+                    return;
+                }
             }
             
             // Test connection with shorter timeout for mobile
@@ -246,22 +261,46 @@ class SystemInitializer {
         try {
             console.log('🔧 Initializing OCR...');
             
-            // Load OCR services
-            if (!window.azureOCRService) {
-                await this.loadScript('/js/azureOCRService.js');
+            // Check if OCR services are available
+            let ocrAvailable = false;
+            
+            // Try to load OCR services dynamically
+            try {
+                // Check if Azure OCR is available
+                if (typeof window.azureOCRService !== 'undefined') {
+                    ocrAvailable = true;
+                    console.log('✅ Azure OCR service available');
+                }
+                
+                // Check if OCR.Space is available
+                if (typeof window.ocrSpaceService !== 'undefined') {
+                    ocrAvailable = true;
+                    console.log('✅ OCR.Space service available');
+                }
+                
+                // Check if Free OCR is available
+                if (typeof window.freeOCRService !== 'undefined') {
+                    ocrAvailable = true;
+                    console.log('✅ Free OCR service available');
+                }
+                
+                // Check if image preprocessor is available
+                if (typeof window.imagePreprocessor !== 'undefined') {
+                    console.log('✅ Image preprocessor available');
+                }
+                
+            } catch (e) {
+                console.log('⚠️ OCR services not loaded yet, but will be available when needed');
+                ocrAvailable = true; // Mark as available since they can be loaded dynamically
             }
             
-            if (!window.freeOCRService) {
-                await this.loadScript('/js/freeOCRService.js');
+            if (ocrAvailable) {
+                this.features.ocr = true;
+                console.log('✅ OCR initialized');
+            } else {
+                console.log('⚠️ No OCR services available');
+                this.features.ocr = false;
             }
-            
-            // Initialize image preprocessor for better OCR
-            if (!window.imagePreprocessor) {
-                await this.loadScript('/js/imagePreprocessor.js');
-            }
-            
-            this.features.ocr = true;
-            console.log('✅ OCR initialized');
             
         } catch (error) {
             console.error('❌ OCR initialization failed:', error);

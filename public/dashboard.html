@@ -1630,7 +1630,73 @@
                     setupMobileSendButtonProperly();
                 }, 500);
             }
+            
+            // Also try to show user name immediately from localStorage
+            setTimeout(() => {
+                showUserNameFromLocalStorage();
+            }, 1000);
         });
+        
+        // Simple function to show user name from localStorage
+        function showUserNameFromLocalStorage() {
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    console.log('👤 Found user data in localStorage:', user);
+                    
+                    // Update user name displays
+                    const userNameElements = [
+                        document.getElementById('userName'),
+                        document.getElementById('userName2')
+                    ];
+                    
+                    let displayName = 'Student';
+                    if (user.full_name) {
+                        displayName = user.full_name;
+                    } else if (user.name) {
+                        displayName = user.name;
+                    } else if (user.user_metadata && user.user_metadata.full_name) {
+                        displayName = user.user_metadata.full_name;
+                    } else if (user.email) {
+                        displayName = user.email.split('@')[0];
+                    }
+                    
+                    userNameElements.forEach(element => {
+                        if (element) {
+                            element.textContent = displayName;
+                            console.log('✅ Updated user name to:', displayName);
+                        }
+                    });
+                }
+            } catch (e) {
+                console.log('⚠️ Could not load user name from localStorage:', e);
+            }
+        }
+        
+        // Test function to verify mobile send button
+        function testMobileSendButton() {
+            console.log('🧪 Testing mobile send button...');
+            const sendButton = document.getElementById('sendButtonMobile');
+            const chatInput = document.getElementById('chatInputMobile');
+            
+            if (sendButton) {
+                console.log('✅ Send button found:', sendButton);
+                console.log('✅ Send button text:', sendButton.textContent);
+                console.log('✅ Send button onclick:', sendButton.onclick);
+            } else {
+                console.log('❌ Send button not found');
+            }
+            
+            if (chatInput) {
+                console.log('✅ Chat input found:', chatInput);
+            } else {
+                console.log('❌ Chat input not found');
+            }
+        }
+        
+        // Run test after a delay
+        setTimeout(testMobileSendButton, 2000);
     </script>
 
     <script>
@@ -1890,7 +1956,7 @@
                                             🎤
                                         </button>
                                         <!-- Send Button (40%) -->
-                                        <button id="sendButtonMobile" class="w-2/5 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm" onclick="sendMessage()">
+                                        <button id="sendButtonMobile" class="w-2/5 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
                                             <span id="sendButtonMobileText">Send</span>
                                         </button>
                                     </div>
@@ -2793,7 +2859,7 @@
                 
                 // Mobile-specific send button setup
                 setTimeout(() => {
-                    setupMobileSendButton();
+                    setupMobileSendButtonProperly();
                 }, 500);
                 
                 // Optimize system initialization for mobile
@@ -2810,54 +2876,7 @@
             }
         });
         
-        // Mobile-specific send button setup
-        function setupMobileSendButton() {
-            console.log('📱 Setting up mobile send button...');
-            
-            const sendButtonMobile = document.getElementById('sendButtonMobile');
-            const chatInputMobile = document.getElementById('chatInputMobile');
-            
-            if (sendButtonMobile && chatInputMobile) {
-                // Ensure button shows correct text
-                sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
-                sendButtonMobile.className = 'w-2/5 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm';
-                
-                // Add click handler
-                sendButtonMobile.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('📱 Mobile send button clicked');
-                    
-                    if (chatInputMobile.value.trim()) {
-                        const message = chatInputMobile.value.trim();
-                        console.log('📤 Sending message:', message);
-                        
-                        // Clear input
-                        chatInputMobile.value = '';
-                        
-                        // Add message to chat
-                        addMessageToChat('user', message);
-                        
-                        // Send to AI if available
-                        if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
-                            window.aiTutorIntegration.sendMessage(message);
-                        }
-                    }
-                };
-                
-                // Add enter key handler to input
-                chatInputMobile.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        sendButtonMobile.click();
-                    }
-                });
-                
-                console.log('✅ Mobile send button setup complete');
-            } else {
-                console.error('❌ Mobile send button or input not found');
-            }
-        }
+
         
         // Service Worker Update Notification System - DISABLED TO PREVENT CRASHES
         function setupServiceWorkerUpdates() {
