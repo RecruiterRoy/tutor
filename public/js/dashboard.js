@@ -8244,18 +8244,39 @@ let micSystem = {
             }
         };
         
-        // Remove any existing listeners
-        micButton.removeEventListener('touchstart', handlePress);
-        micButton.removeEventListener('touchend', handleRelease);
-        micButton.removeEventListener('mousedown', handlePress);
-        micButton.removeEventListener('mouseup', handleRelease);
-        micButton.removeEventListener('click', () => {});
+        // Safe event listener removal
+        const safeRemoveEventListener = (element, event, handler) => {
+            if (element && typeof element.removeEventListener === 'function') {
+                try {
+                    element.removeEventListener(event, handler);
+                } catch (error) {
+                    console.log('⚠️ Error removing event listener:', error);
+                }
+            }
+        };
         
-        // Add new listeners
-        micButton.addEventListener('touchstart', handlePress);
-        micButton.addEventListener('touchend', handleRelease);
-        micButton.addEventListener('mousedown', handlePress);
-        micButton.addEventListener('mouseup', handleRelease);
+        // Safe event listener addition
+        const safeAddEventListener = (element, event, handler, options) => {
+            if (element && typeof element.addEventListener === 'function') {
+                try {
+                    element.addEventListener(event, handler, options);
+                } catch (error) {
+                    console.log('⚠️ Error adding event listener:', error);
+                }
+            }
+        };
+        
+        // Remove any existing listeners safely
+        safeRemoveEventListener(micButton, 'touchstart', handlePress);
+        safeRemoveEventListener(micButton, 'touchend', handleRelease);
+        safeRemoveEventListener(micButton, 'mousedown', handlePress);
+        safeRemoveEventListener(micButton, 'mouseup', handleRelease);
+        
+        // Add new listeners safely
+        safeAddEventListener(micButton, 'touchstart', handlePress, { passive: false });
+        safeAddEventListener(micButton, 'touchend', handleRelease, { passive: false });
+        safeAddEventListener(micButton, 'mousedown', handlePress, { passive: false });
+        safeAddEventListener(micButton, 'mouseup', handleRelease, { passive: false });
         
         console.log('✅ Long press setup complete');
     },

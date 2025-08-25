@@ -319,4 +319,7 @@ class EnhancedAIService {
 }
 
 // For ES module export
-window.EnhancedAIService = EnhancedAIService; 
+window.EnhancedAIService = EnhancedAIService;
+
+// Create and expose instance for immediate use
+window.enhancedAI = new EnhancedAIService(); 

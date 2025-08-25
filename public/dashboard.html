@@ -247,6 +247,36 @@
     </script>
     
     <!-- Load services BEFORE dashboard.js for proper initialization -->
+    <script>
+        // Script loading protection to prevent duplicate declarations
+        window.loadedScripts = window.loadedScripts || new Set();
+        
+        function loadScriptOnce(src, callback) {
+            if (window.loadedScripts.has(src)) {
+                console.log('📜 Script already loaded:', src);
+                if (callback) callback();
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = src;
+            script.defer = true;
+            
+            script.onload = () => {
+                window.loadedScripts.add(src);
+                console.log('✅ Script loaded:', src);
+                if (callback) callback();
+            };
+            
+            script.onerror = (error) => {
+                console.error('❌ Script failed to load:', src, error);
+                if (callback) callback();
+            };
+            
+            document.head.appendChild(script);
+        }
+    </script>
+    
     <script src="js/gptService.js?v=1.0.2" defer></script>
     <script src="js/enhancedAIService.js?v=1.0.2" defer></script>
     <script src="js/supabaseClient.js?v=1.0.2" defer></script>
@@ -1687,19 +1717,21 @@
                 
                 console.log('📤 Sending message:', message);
                 
-                // Try different send methods
-                if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
-                    console.log('📤 Using aiTutorIntegration.sendMessage');
-                    window.aiTutorIntegration.sendMessage(message);
+                // Try different send methods - prioritize working services
+                if (window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function') {
+                    console.log('📤 Using enhancedAI.sendMessage');
+                    window.enhancedAI.sendMessage(message);
                 } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
                     console.log('📤 Using gptService.sendMessage');
                     window.gptService.sendMessage(message);
-                } else if (typeof window.sendMessageEnhanced === 'function') {
-                    console.log('📤 Using sendMessageEnhanced');
-                    window.sendMessageEnhanced(message);
+                } else if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
+                    console.log('📤 Using aiTutorIntegration.sendMessage');
+                    window.aiTutorIntegration.sendMessage(message);
                 } else {
                     console.error('❌ No send method available');
-                    alert('Chat service not available. Please try again.');
+                    // Add message to chat anyway for user feedback
+                    addMessageToChat('user', message);
+                    addMessageToChat('ai', 'I apologize, but the AI service is currently unavailable. Please try again later.');
                 }
                 
             } catch (error) {

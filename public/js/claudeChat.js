@@ -1,38 +1,40 @@
 // claudeChat.js - Claude API integration for Tutor.AI
 
 // Simple Claude Chat implementation for vanilla JavaScript
-class ClaudeChat {
-    constructor() {
-        this.baseUrl = window.TUTOR_CONFIG ? window.TUTOR_CONFIG.apiBaseUrl + '/api/chat' : '/api/chat';
-    }
+if (typeof window.ClaudeChat === 'undefined') {
+    window.ClaudeChat = class ClaudeChat {
+        constructor() {
+            this.baseUrl = window.TUTOR_CONFIG ? window.TUTOR_CONFIG.apiBaseUrl + '/api/chat' : '/api/chat';
+        }
 
-    async sendMessage(message, context = {}) {
-        try {
-            const response = await fetch(this.baseUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message,
-                    ...context
-                }),
-            });
+        async sendMessage(message, context = {}) {
+            try {
+                const response = await fetch(this.baseUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message,
+                        ...context
+                    }),
+                });
 
-            const data = await response.json();
+                const data = await response.json();
 
-            if (!data.success) {
-                throw new Error(data.error || 'Failed to get response');
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to get response');
+                }
+
+                return {
+                    response: data.response,
+                    usage: data.usage
+                };
+
+            } catch (err) {
+                console.error('Claude Chat Error:', err);
+                throw err;
             }
-
-            return {
-                response: data.response,
-                usage: data.usage
-            };
-
-        } catch (err) {
-            console.error('Claude Chat Error:', err);
-            throw err;
         }
     }
 }
