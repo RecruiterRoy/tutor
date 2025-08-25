@@ -324,11 +324,27 @@ class SystemInitializer {
         try {
             console.log('🔧 Loading user subjects...');
             
+            // Always try localStorage first for immediate display
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    console.log('👤 Found user data in localStorage:', user);
+                    this.updateUserDisplay(user);
+                } catch (e) {
+                    console.log('⚠️ Invalid localStorage user data');
+                }
+            }
+            
+            // Then try Supabase for additional data
             if (window.userData && window.supabaseClient) {
+                console.log('🔍 Attempting to load profile from Supabase...');
+                
                 // Try different table names as suggested
                 let profile;
                 try {
                     // First try user_profiles table
+                    console.log('🔍 Trying user_profiles table...');
                     const { data, error } = await window.supabaseClient
                         .from('user_profiles')
                         .select('*')
@@ -345,7 +361,7 @@ class SystemInitializer {
                             .single();
                         
                         if (profileError) {
-                            console.log('⚠️ Both tables failed, using localStorage fallback');
+                            console.log('⚠️ Both tables failed, using localStorage data only');
                             throw profileError;
                         }
                         
@@ -354,8 +370,8 @@ class SystemInitializer {
                         profile = data;
                     }
                 } catch (e) {
-                    console.log('⚠️ Supabase profile loading failed, using localStorage fallback');
-                    // Continue with localStorage fallback
+                    console.log('⚠️ Supabase profile loading failed, using localStorage data only');
+                    // Continue with localStorage data only
                 }
                 
                 if (profile) {
@@ -376,20 +392,8 @@ class SystemInitializer {
                         window.userBoard = profile.board;
                     }
                     
-                    // Update UI with user data
+                    // Update UI with user data from Supabase
                     this.updateUserDisplay(profile);
-                }
-            }
-            
-            // Fallback to localStorage data (as suggested)
-            const userData = localStorage.getItem('userData');
-            if (userData) {
-                try {
-                    const user = JSON.parse(userData);
-                    this.updateUserDisplay(user);
-                    console.log('✅ User data loaded from localStorage fallback');
-                } catch (e) {
-                    console.log('⚠️ Invalid localStorage user data');
                 }
             }
             

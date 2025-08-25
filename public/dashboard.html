@@ -228,14 +228,15 @@
                 if (!response.ok) {
                     console.error(`❌ API Error: ${response.status} ${response.statusText} for ${url}`);
                     
-                    // Handle specific API errors
+                    // Handle specific API errors silently (don't show user notifications for non-critical errors)
                     if (url.includes('/api/enhanced-chat') && response.status === 500) {
-                        window.handleAPIError('Enhanced Chat', 'Server error');
+                        console.log('⚠️ Enhanced chat service unavailable, continuing without AI features');
                     } else if (url.includes('/api/analytics/start-session') && response.status === 404) {
                         console.log('⚠️ Analytics endpoint not available, continuing without analytics');
                     } else if (url.includes('/api/ocrspace-credentials') && response.status === 404) {
                         console.log('⚠️ OCR credentials not configured, using fallback OCR');
                     }
+                    // Don't show user notifications for these non-critical API failures
                 }
                 return response;
             }).catch(error => {
@@ -1633,6 +1634,44 @@
             }
         }
         
+        // Alternative mobile send button setup - more aggressive
+        function forceSetupMobileSendButton() {
+            console.log('🚨 Force setting up mobile send button...');
+            
+            // Wait a bit more and try again
+            setTimeout(() => {
+                const sendButton = document.getElementById('sendButtonMobile');
+                const chatInput = document.getElementById('chatInputMobile');
+                
+                if (sendButton && chatInput) {
+                    console.log('✅ Found elements in force setup');
+                    
+                    // Remove all existing event listeners
+                    const newButton = sendButton.cloneNode(true);
+                    sendButton.parentNode.replaceChild(newButton, sendButton);
+                    
+                    // Set up the button with a simple click handler
+                    newButton.onclick = function(e) {
+                        e.preventDefault();
+                        console.log('📱 Force setup send button clicked!');
+                        
+                        const input = document.getElementById('chatInputMobile');
+                        if (input && input.value.trim()) {
+                            const message = input.value.trim();
+                            console.log('📤 Force setup sending message:', message);
+                            
+                            input.value = '';
+                            addMessageToChat('user', message);
+                        }
+                    };
+                    
+                    console.log('✅ Force setup complete');
+                } else {
+                    console.error('❌ Force setup failed - elements still not found');
+                }
+            }, 1000);
+        }
+        
         // Helper function to add message to chat
         function addMessageToChat(sender, message) {
             console.log('💬 Adding message to chat:', sender, message);
@@ -1699,6 +1738,11 @@
                 }, 500);
             }
             
+            // Also try force setup as backup
+            setTimeout(() => {
+                forceSetupMobileSendButton();
+            }, 2000);
+            
             // Also try to show user name immediately from localStorage
             setTimeout(() => {
                 showUserNameFromLocalStorage();
@@ -1734,8 +1778,33 @@
                         if (element) {
                             element.textContent = displayName;
                             console.log('✅ Updated user name to:', displayName);
+                        } else {
+                            console.log('⚠️ User name element not found');
                         }
                     });
+                    
+                    // Also update class if available
+                    const userClassElements = [
+                        document.getElementById('userClass'),
+                        document.getElementById('userClass2')
+                    ];
+                    
+                    let displayClass = 'Class 10';
+                    if (user.class) {
+                        displayClass = user.class;
+                    } else if (user.user_metadata && user.user_metadata.class) {
+                        displayClass = user.user_metadata.class;
+                    }
+                    
+                    userClassElements.forEach(element => {
+                        if (element) {
+                            element.textContent = displayClass;
+                            console.log('✅ Updated user class to:', displayClass);
+                        }
+                    });
+                    
+                } else {
+                    console.log('⚠️ No user data found in localStorage');
                 }
             } catch (e) {
                 console.log('⚠️ Could not load user name from localStorage:', e);
