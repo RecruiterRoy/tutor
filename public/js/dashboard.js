@@ -95,6 +95,14 @@ if (typeof window.textToSpeech === 'undefined') {
 if (typeof window.voiceRecognition === 'undefined') {
     window.voiceRecognition = null;
 }
+// Mic system protection
+if (typeof window.micSystem === 'undefined') {
+    window.micSystem = null;
+}
+// Camera stream protection
+if (typeof window.cameraStream === 'undefined') {
+    window.cameraStream = null;
+}
 
 // Make functions globally accessible IMMEDIATELY for HTML onclick handlers
 // These will be replaced with actual implementations later
@@ -8266,6 +8274,12 @@ let micSystem = {
             }
         };
         
+        // Check if micButton exists before proceeding
+        if (!micButton) {
+            console.log('⚠️ Mic button not found, skipping long press setup');
+            return;
+        }
+        
         // Remove any existing listeners safely
         safeRemoveEventListener(micButton, 'touchstart', handlePress);
         safeRemoveEventListener(micButton, 'touchend', handleRelease);
@@ -8322,7 +8336,11 @@ function startVoiceRecordingWithPermission() {
 }
 
 function setupMicLongPress(micButton) {
-    micSystem.setupLongPress(micButton);
+    if (window.micSystem && typeof window.micSystem.setupLongPress === 'function') {
+        window.micSystem.setupLongPress(micButton);
+    } else {
+        console.log('⚠️ Mic system not available for long press setup');
+    }
 }
 
 // Remove all the old complex functions

@@ -174,12 +174,12 @@
         window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
         window.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
         
-        // Anthropic API Key - will be set by Vercel environment variables
-        window.anthropicApiKey = null;
+        // OpenAI API Key - will be set by Vercel environment variables
+        window.openaiApiKey = null;
         
         console.log('🔧 Supabase URL:', window.supabaseUrl);
         console.log('🔧 Supabase Key:', window.supabaseKey ? 'Available' : 'Not found');
-        console.log('🔧 Anthropic API Key:', window.anthropicApiKey ? 'Available' : 'Not found');
+        console.log('🔧 OpenAI API Key:', window.openaiApiKey ? 'Available' : 'Not found');
         
         // Add error handling for script loading (as suggested)
         window.addEventListener('error', function(e) {
@@ -1767,7 +1767,52 @@
             setTimeout(() => {
                 showUserNameFromLocalStorage();
             }, 1000);
+            
+            // Ensure send button is properly bound
+            setTimeout(() => {
+                ensureSendButtonWorks();
+            }, 3000);
         });
+        
+        // Function to ensure send button works
+        function ensureSendButtonWorks() {
+            console.log('🔧 Ensuring send button works...');
+            
+            const sendButtonMobile = document.getElementById('sendButtonMobile');
+            const sendButton = document.getElementById('sendButton');
+            
+            if (sendButtonMobile) {
+                // Remove any existing listeners
+                const newButton = sendButtonMobile.cloneNode(true);
+                sendButtonMobile.parentNode.replaceChild(newButton, sendButtonMobile);
+                
+                // Add new listener
+                newButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('📤 Mobile send button clicked');
+                    sendMessage();
+                });
+                
+                console.log('✅ Mobile send button re-bound');
+            }
+            
+            if (sendButton) {
+                // Remove any existing listeners
+                const newButton = sendButton.cloneNode(true);
+                sendButton.parentNode.replaceChild(newButton, sendButton);
+                
+                // Add new listener
+                newButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('📤 Desktop send button clicked');
+                    sendMessage();
+                });
+                
+                console.log('✅ Desktop send button re-bound');
+            }
+        }
         
         // Simple function to show user name from localStorage
         function showUserNameFromLocalStorage() {

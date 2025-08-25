@@ -1,6 +1,6 @@
 // TextToSpeech.js - Enhanced TTS with voice management
-if (typeof window.TextToSpeech === 'undefined') {
-    window.TextToSpeech = class TextToSpeech {
+if (typeof window.TextToSpeech === 'undefined' && typeof window.TextToSpeechClass === 'undefined') {
+    window.TextToSpeechClass = class TextToSpeech {
         constructor() {
             this.synth = window.speechSynthesis;
             this.voices = [];
@@ -77,8 +77,15 @@ if (typeof window.TextToSpeech === 'undefined') {
                 
                 if (voices.length === 0) {
                     console.log('⚠️ TTS: No voices available, speech synthesis may not be supported');
+                    console.log('💡 This is common on mobile browsers. TTS will be disabled.');
                     this.voices = [];
                     this.voice = null;
+                    
+                    // Show user-friendly message
+                    if (window.isMobile) {
+                        console.log('📱 Mobile device detected - TTS may be limited');
+                        // You can add a UI notification here if needed
+                    }
                     return;
                 }
                 
@@ -851,7 +858,7 @@ if (typeof window.TextToSpeech === 'undefined') {
     }
 
     // Initialize TTS
-    const textToSpeech = new TextToSpeech();
+    const textToSpeech = new window.TextToSpeechClass();
     window.textToSpeech = textToSpeech;
 
     // Export for module usage
