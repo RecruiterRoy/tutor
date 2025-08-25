@@ -164,11 +164,11 @@
         }
     </style>
     
-    <!-- Load essential scripts with proper order -->
+    <!-- Load essential scripts with proper order and error handling -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="js/config.js" defer></script>
     
-    <!-- Environment Variables Loader -->
+    <!-- Environment Variables Loader with error handling -->
     <script>
         // Direct Supabase credentials (fallback if .env doesn't work)
         window.supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
@@ -181,7 +181,7 @@
         console.log('🔧 Supabase Key:', window.supabaseKey ? 'Available' : 'Not found');
         console.log('🔧 Anthropic API Key:', window.anthropicApiKey ? 'Available' : 'Not found');
         
-        // Add error handling for script loading
+        // Add error handling for script loading (as suggested)
         window.addEventListener('error', function(e) {
             console.error('❌ Script loading error:', e);
             if (e.target && e.target.src && e.target.src.includes('supabase')) {
@@ -191,6 +191,58 @@
                 }
             }
         });
+        
+        // Add error handling for API calls (as suggested)
+        window.handleAPIError = function(endpoint, error) {
+            console.error(`❌ API Error for ${endpoint}:`, error);
+            
+            // Show user-friendly error message
+            const errorMessage = `Service temporarily unavailable. Please try again later.`;
+            
+            // Create error notification
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'api-error-notification';
+            errorDiv.style.cssText = `
+                position: fixed; top: 20px; left: 20px; 
+                background: #ef4444; color: white; 
+                padding: 12px 16px; border-radius: 8px; 
+                z-index: 10000; font-size: 14px; max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            errorDiv.textContent = errorMessage;
+            
+            document.body.appendChild(errorDiv);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        };
+        
+        // Override fetch to add error handling (as suggested)
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            return originalFetch(url, options).then(response => {
+                if (!response.ok) {
+                    console.error(`❌ API Error: ${response.status} ${response.statusText} for ${url}`);
+                    
+                    // Handle specific API errors
+                    if (url.includes('/api/enhanced-chat') && response.status === 500) {
+                        window.handleAPIError('Enhanced Chat', 'Server error');
+                    } else if (url.includes('/api/analytics/start-session') && response.status === 404) {
+                        console.log('⚠️ Analytics endpoint not available, continuing without analytics');
+                    } else if (url.includes('/api/ocrspace-credentials') && response.status === 404) {
+                        console.log('⚠️ OCR credentials not configured, using fallback OCR');
+                    }
+                }
+                return response;
+            }).catch(error => {
+                console.error(`❌ Network Error for ${url}:`, error);
+                return Promise.reject(error);
+            });
+        };
     </script>
     
     <!-- Load services BEFORE dashboard.js for proper initialization -->
@@ -1516,7 +1568,7 @@
 
     <!-- IMMEDIATE SEND BUTTON FIX -->
     <script>
-        // PROPER MOBILE SEND BUTTON SETUP - RUNS ONLY ONCE
+        // PROPER MOBILE SEND BUTTON SETUP - USING ADDEVENTLISTENER AS SUGGESTED
         function setupMobileSendButtonProperly() {
             console.log('📱 Setting up mobile send button properly...');
             
@@ -1524,19 +1576,21 @@
             const chatInputMobile = document.getElementById('chatInputMobile');
             
             if (sendButtonMobile && chatInputMobile) {
+                console.log('✅ Found mobile send button and input');
+                
                 // Set the button content once
                 sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
                 sendButtonMobile.className = 'w-2/5 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm';
                 
-                // Remove any existing listeners
+                // Remove any existing listeners by cloning (as suggested)
                 const newButton = sendButtonMobile.cloneNode(true);
                 sendButtonMobile.parentNode.replaceChild(newButton, sendButtonMobile);
                 
-                // Add click handler to the new button
+                // Use addEventListener as suggested instead of inline onclick
                 newButton.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('📱 Mobile send button clicked');
+                    console.log('📱 Mobile send button clicked - event fired!');
                     
                     const input = document.getElementById('chatInputMobile');
                     if (input && input.value.trim()) {
@@ -1552,7 +1606,11 @@
                         // Send to AI if available
                         if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
                             window.aiTutorIntegration.sendMessage(message);
+                        } else {
+                            console.log('🤖 AI integration not available, message logged:', message);
                         }
+                    } else {
+                        console.log('❌ No message to send');
                     }
                 });
                 
@@ -1560,20 +1618,24 @@
                 chatInputMobile.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
+                        console.log('📱 Enter key pressed on mobile input');
                         newButton.click();
                     }
                 });
                 
-                console.log('✅ Mobile send button setup complete');
+                console.log('✅ Mobile send button setup complete with addEventListener');
                 return true;
             } else {
                 console.error('❌ Mobile send button or input not found');
+                console.log('Send button:', sendButtonMobile);
+                console.log('Chat input:', chatInputMobile);
                 return false;
             }
         }
         
         // Helper function to add message to chat
         function addMessageToChat(sender, message) {
+            console.log('💬 Adding message to chat:', sender, message);
             const chatContainer = document.querySelector('#chatMessages');
             if (chatContainer) {
                 const messageDiv = document.createElement('div');
@@ -1586,10 +1648,13 @@
                 messageDiv.appendChild(bubbleDiv);
                 chatContainer.appendChild(messageDiv);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
+                console.log('✅ Message added to chat');
+            } else {
+                console.error('❌ Chat container not found');
             }
         }
         
-        // Global sendMessage function - SIMPLIFIED
+        // Global sendMessage function - SIMPLIFIED with debugging
         function sendMessage() {
             console.log('📤 Global sendMessage called...');
             
@@ -1621,12 +1686,15 @@
             }
         }
         
-        // Setup mobile send button when DOM is ready
+        // Setup mobile send button when DOM is ready (as suggested)
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('📱 DOM loaded, setting up mobile send button...');
+            
             // Try to setup immediately
             if (!setupMobileSendButtonProperly()) {
                 // If it fails, try again after a short delay
                 setTimeout(() => {
+                    console.log('📱 Retrying mobile send button setup...');
                     setupMobileSendButtonProperly();
                 }, 500);
             }
@@ -1674,7 +1742,7 @@
             }
         }
         
-        // Test function to verify mobile send button
+        // Test function to verify mobile send button (as suggested)
         function testMobileSendButton() {
             console.log('🧪 Testing mobile send button...');
             const sendButton = document.getElementById('sendButtonMobile');
@@ -1684,6 +1752,7 @@
                 console.log('✅ Send button found:', sendButton);
                 console.log('✅ Send button text:', sendButton.textContent);
                 console.log('✅ Send button onclick:', sendButton.onclick);
+                console.log('✅ Send button event listeners:', sendButton.onclick ? 'Has onclick' : 'No onclick');
             } else {
                 console.log('❌ Send button not found');
             }
@@ -1695,7 +1764,7 @@
             }
         }
         
-        // Run test after a delay
+        // Run test after a delay (as suggested)
         setTimeout(testMobileSendButton, 2000);
     </script>
 

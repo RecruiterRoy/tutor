@@ -91,16 +91,28 @@ class SystemInitializer {
                 setTimeout(() => reject(new Error('Supabase connection timeout')), 3000)
             );
             
-            const connectionPromise = window.supabaseClient.from('profiles').select('count').limit(1);
+            // Try different table names as suggested (profiles vs user_profiles)
+            let connectionPromise;
+            try {
+                // First try user_profiles (most likely correct table name)
+                connectionPromise = window.supabaseClient.from('user_profiles').select('count').limit(1);
+                console.log('🔍 Testing connection with user_profiles table...');
+            } catch (e) {
+                console.log('⚠️ user_profiles table not found, trying profiles...');
+                connectionPromise = window.supabaseClient.from('profiles').select('count').limit(1);
+            }
             
             const { data, error } = await Promise.race([connectionPromise, timeoutPromise]);
             
-            if (error && !error.message.includes('permission')) {
-                throw error;
+            if (error) {
+                console.log('⚠️ Supabase connection error:', error.message);
+                // Don't throw error, just mark as not available
+                this.features.supabase = false;
+                return;
             }
             
             this.features.supabase = true;
-            console.log('✅ Supabase initialized');
+            console.log('✅ Supabase initialized successfully');
             
         } catch (error) {
             console.error('❌ Supabase initialization failed:', error);
@@ -313,13 +325,42 @@ class SystemInitializer {
             console.log('🔧 Loading user subjects...');
             
             if (window.userData && window.supabaseClient) {
-                const { data: profile } = await window.supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', window.userData.id)
-                    .single();
+                // Try different table names as suggested
+                let profile;
+                try {
+                    // First try user_profiles table
+                    const { data, error } = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('id', window.userData.id)
+                        .single();
+                    
+                    if (error) {
+                        console.log('⚠️ user_profiles table error, trying profiles...');
+                        // Fallback to profiles table
+                        const { data: profileData, error: profileError } = await window.supabaseClient
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', window.userData.id)
+                            .single();
+                        
+                        if (profileError) {
+                            console.log('⚠️ Both tables failed, using localStorage fallback');
+                            throw profileError;
+                        }
+                        
+                        profile = profileData;
+                    } else {
+                        profile = data;
+                    }
+                } catch (e) {
+                    console.log('⚠️ Supabase profile loading failed, using localStorage fallback');
+                    // Continue with localStorage fallback
+                }
                 
                 if (profile) {
+                    console.log('✅ Profile loaded from Supabase:', profile);
+                    
                     // Load saved subjects
                     if (profile.preferred_subjects) {
                         window.userSubjects = profile.preferred_subjects;
@@ -338,16 +379,17 @@ class SystemInitializer {
                     // Update UI with user data
                     this.updateUserDisplay(profile);
                 }
-            } else {
-                // Fallback to localStorage data
-                const userData = localStorage.getItem('userData');
-                if (userData) {
-                    try {
-                        const user = JSON.parse(userData);
-                        this.updateUserDisplay(user);
-                    } catch (e) {
-                        console.log('⚠️ Invalid localStorage user data');
-                    }
+            }
+            
+            // Fallback to localStorage data (as suggested)
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    this.updateUserDisplay(user);
+                    console.log('✅ User data loaded from localStorage fallback');
+                } catch (e) {
+                    console.log('⚠️ Invalid localStorage user data');
                 }
             }
             
