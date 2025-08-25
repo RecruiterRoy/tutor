@@ -64,19 +64,22 @@ class SystemInitializer {
         try {
             console.log('🔧 Initializing Supabase...');
             
-            // Check if supabase is available
-            if (typeof window.supabase === 'undefined') {
-                // Load from config
-                const config = await fetch('/api/config').then(r => r.json());
-                if (config.supabaseUrl && config.supabaseAnonKey) {
-                    window.supabase = window.supabase || await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2').then(module => 
-                        module.createClient(config.supabaseUrl, config.supabaseAnonKey)
-                    );
-                }
+            // Check if supabase client is available
+            if (!window.supabaseClient) {
+                console.log('⚠️ Supabase client not available, skipping...');
+                this.features.supabase = false;
+                return;
             }
             
-            // Test connection
-            const { data, error } = await window.supabaseClient.from('profiles').select('count').limit(1);
+            // Test connection with timeout for mobile
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Supabase connection timeout')), 5000)
+            );
+            
+            const connectionPromise = window.supabaseClient.from('profiles').select('count').limit(1);
+            
+            const { data, error } = await Promise.race([connectionPromise, timeoutPromise]);
+            
             if (error && !error.message.includes('permission')) {
                 throw error;
             }
@@ -154,6 +157,13 @@ class SystemInitializer {
         try {
             console.log('🔧 Initializing Microphone...');
             
+            // Check if mediaDevices is available (mobile compatibility)
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.log('⚠️ Media devices not supported, skipping microphone...');
+                this.features.mic = false;
+                return;
+            }
+            
             // Ensure mic system is loaded
             if (!window.micSystem && !window.MicSystem) {
                 await this.loadScript('/js/mic-system.js');
@@ -164,11 +174,18 @@ class SystemInitializer {
                 micSystem.init();
             }
             
-            // Test microphone permissions
-            await this.testMicrophonePermissions();
-            
-            this.features.mic = true;
-            console.log('✅ Microphone initialized');
+            // Test microphone permissions with timeout for mobile
+            try {
+                await Promise.race([
+                    this.testMicrophonePermissions(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Mic test timeout')), 3000))
+                ]);
+                this.features.mic = true;
+                console.log('✅ Microphone initialized');
+            } catch (micError) {
+                console.log('⚠️ Microphone permission not granted, but module available');
+                this.features.mic = true; // Available but no permission yet
+            }
             
         } catch (error) {
             console.error('❌ Microphone initialization failed:', error);
@@ -180,15 +197,29 @@ class SystemInitializer {
         try {
             console.log('🔧 Initializing Camera...');
             
-            // Test camera permissions
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            stream.getTracks().forEach(track => track.stop());
+            // Check if mediaDevices is available (mobile compatibility)
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.log('⚠️ Media devices not supported, skipping camera...');
+                this.features.camera = false;
+                return;
+            }
             
-            this.features.camera = true;
-            console.log('✅ Camera initialized');
+            // Test camera permissions with timeout for mobile
+            try {
+                const stream = await Promise.race([
+                    navigator.mediaDevices.getUserMedia({ video: true }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Camera test timeout')), 3000))
+                ]);
+                stream.getTracks().forEach(track => track.stop());
+                this.features.camera = true;
+                console.log('✅ Camera initialized');
+            } catch (cameraError) {
+                console.log('⚠️ Camera permission not granted, but camera module available');
+                this.features.camera = true; // Available but no permission yet
+            }
             
         } catch (error) {
-            console.log('⚠️ Camera permission not granted, but camera module available');
+            console.log('⚠️ Camera initialization failed, but module available');
             this.features.camera = true; // Available but no permission yet
         }
     }
