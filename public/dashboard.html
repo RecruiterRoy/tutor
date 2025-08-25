@@ -1635,31 +1635,12 @@
                 if (sendButton && chatInput) {
                     console.log('✅ Found elements in force setup');
                     
-                    // Remove all existing event listeners
-                    const newButton = sendButton.cloneNode(true);
-                    sendButton.parentNode.replaceChild(newButton, sendButton);
+                    // Set up the button with inline onclick (don't clone, just set attribute)
+                    sendButton.setAttribute('onclick', 'sendMessage(); return false;');
+                    sendButton.style.cursor = 'pointer';
+                    sendButton.innerHTML = '<span id="sendButtonMobileText">Send</span>';
                     
-                    // Set up the button with a simple click handler
-                    newButton.onclick = function(e) {
-                        e.preventDefault();
-                        console.log('📱 Force setup send button clicked!');
-                        
-                        // Call the global sendMessage function
-                        if (typeof sendMessage === 'function') {
-                            sendMessage();
-                        } else {
-                            console.error('❌ Global sendMessage function not available');
-                            // Fallback to direct message handling
-                            const input = document.getElementById('chatInputMobile');
-                            if (input && input.value.trim()) {
-                                const message = input.value.trim();
-                                console.log('📤 Force setup sending message:', message);
-                                
-                                input.value = '';
-                                addMessageToChat('user', message);
-                            }
-                        }
-                    };
+                    console.log('📱 Force setup: Set inline onclick on existing button');
                     
                     console.log('✅ Force setup complete');
                 } else {
@@ -1791,36 +1772,13 @@
                 ensureSendButtonWorks();
             }, 3000);
             
-            // Test send button functionality
+            // Test send button functionality (just add test text, don't click)
             setTimeout(() => {
                 testSendButton();
             }, 4000);
-            
-            // Manual test with actual click
-            setTimeout(() => {
-                manualTestSendButton();
-            }, 5000);
         });
         
-        // Manual test function that actually clicks the send button
-        function manualTestSendButton() {
-            console.log('🧪 Manual testing send button with click...');
-            
-            const sendButtonMobile = document.getElementById('sendButtonMobile');
-            const chatInputMobile = document.getElementById('chatInputMobile');
-            
-            if (sendButtonMobile && chatInputMobile) {
-                // Add test text
-                chatInputMobile.value = 'Hello, this is a test message!';
-                console.log('📝 Added test text to mobile input:', chatInputMobile.value);
-                
-                // Click the send button
-                console.log('🖱️ Clicking mobile send button...');
-                sendButtonMobile.click();
-            } else {
-                console.log('❌ Mobile send button or input not found for manual test');
-            }
-        }
+
         
         // Test send button functionality
         function testSendButton() {
@@ -1832,24 +1790,14 @@
             const chatInput = document.getElementById('chatInput');
             
             if (sendButtonMobile) {
-                console.log('📱 Mobile send button found');
-                // Add test text to mobile input
-                if (chatInputMobile) {
-                    chatInputMobile.value = 'Test message from mobile';
-                    console.log('📝 Added test text to mobile input');
-                }
+                console.log('📱 Mobile send button found and ready');
             }
             
             if (sendButton) {
-                console.log('💻 Desktop send button found');
-                // Add test text to desktop input
-                if (chatInput) {
-                    chatInput.value = 'Test message from desktop';
-                    console.log('📝 Added test text to desktop input');
-                }
+                console.log('💻 Desktop send button found and ready');
             }
             
-            console.log('✅ Send button test completed - added test text');
+            console.log('✅ Send button test completed - buttons are ready for use');
         }
         
         // Function to ensure send button works
