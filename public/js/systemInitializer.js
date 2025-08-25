@@ -105,6 +105,10 @@ class SystemInitializer {
                 try {
                     window.userData = JSON.parse(userData);
                     console.log('👤 User authenticated from localStorage:', window.userData.email || 'Unknown');
+                    
+                    // Update user display immediately
+                    this.updateUserDisplay(window.userData);
+                    
                     this.features.auth = true;
                     console.log('✅ Auth initialized from localStorage');
                     return;
@@ -119,6 +123,9 @@ class SystemInitializer {
                 if (user) {
                     window.userData = user;
                     console.log('👤 User authenticated from Supabase:', user.email);
+                    
+                    // Update user display immediately
+                    this.updateUserDisplay(user);
                 }
             }
             
@@ -288,6 +295,20 @@ class SystemInitializer {
                     if (profile.board) {
                         window.userBoard = profile.board;
                     }
+                    
+                    // Update UI with user data
+                    this.updateUserDisplay(profile);
+                }
+            } else {
+                // Fallback to localStorage data
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    try {
+                        const user = JSON.parse(userData);
+                        this.updateUserDisplay(user);
+                    } catch (e) {
+                        console.log('⚠️ Invalid localStorage user data');
+                    }
                 }
             }
             
@@ -298,6 +319,85 @@ class SystemInitializer {
             console.error('❌ Subject loading failed:', error);
             this.features.subjects = false;
         }
+    }
+    
+    updateUserDisplay(userData) {
+        console.log('👤 Updating user display with:', userData);
+        
+        // Update user name displays
+        const userNameElements = [
+            document.getElementById('userName'),
+            document.getElementById('userName2'),
+            document.getElementById('popupProfileName'),
+            document.getElementById('contactUsName')
+        ];
+        
+        const userClassElements = [
+            document.getElementById('userClass'),
+            document.getElementById('userClass2'),
+            document.getElementById('popupProfileClass')
+        ];
+        
+        // Get user name from various possible sources
+        let displayName = 'Student';
+        if (userData.full_name) {
+            displayName = userData.full_name;
+        } else if (userData.name) {
+            displayName = userData.name;
+        } else if (userData.user_metadata && userData.user_metadata.full_name) {
+            displayName = userData.user_metadata.full_name;
+        } else if (userData.email) {
+            displayName = userData.email.split('@')[0]; // Use email prefix as name
+        }
+        
+        // Get user class
+        let displayClass = 'Class 10';
+        if (userData.class) {
+            displayClass = userData.class;
+        } else if (userData.user_metadata && userData.user_metadata.class) {
+            displayClass = userData.user_metadata.class;
+        }
+        
+        // Update all name elements
+        userNameElements.forEach(element => {
+            if (element) {
+                element.textContent = displayName;
+            }
+        });
+        
+        // Update all class elements
+        userClassElements.forEach(element => {
+            if (element) {
+                element.textContent = displayClass;
+            }
+        });
+        
+        // Update other profile fields if available
+        if (userData.email) {
+            const emailElements = [
+                document.getElementById('popupProfileEmail'),
+                document.getElementById('contactUsEmail')
+            ];
+            emailElements.forEach(element => {
+                if (element) {
+                    element.value = userData.email;
+                }
+            });
+        }
+        
+        if (userData.phone || userData.mobile) {
+            const phoneElements = [
+                document.getElementById('popupProfileMobile'),
+                document.getElementById('contactUsMobile')
+            ];
+            phoneElements.forEach(element => {
+                if (element) {
+                    element.value = userData.phone || userData.mobile;
+                }
+            });
+        }
+        
+        console.log('✅ User display updated:', { displayName, displayClass });
     }
 
     async loadChatHistory() {

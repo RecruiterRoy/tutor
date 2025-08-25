@@ -239,12 +239,10 @@
         
         <!-- System Initialization - CRITICAL: Load first -->
         <script src="js/systemInitializer.js?v=1.0.0" defer></script>
-        <script src="js/enhancedOCR.js?v=1.0.0" defer></script>
         <script src="js/userAnalytics.js?v=1.0.0" defer></script>
         
-        <!-- Fixed Mic System and Daily Challenge -->
+        <!-- Fixed Mic System -->
         <script src="js/mic-system.js?v=1.0.0" defer></script>
-        <script src="js/daily-challenge.js?v=1.0.0" defer></script>
         
         <!-- Mobile App Enhancements -->
         <script src="js/smart-notifications.js?v=1.0.0" defer></script>
@@ -1518,49 +1516,35 @@
 
     <!-- IMMEDIATE SEND BUTTON FIX -->
     <script>
-        // EMERGENCY FIX: Force send button to show "Send" immediately
-        function fixSendButton() {
+        // PROPER MOBILE SEND BUTTON SETUP - RUNS ONLY ONCE
+        function setupMobileSendButtonProperly() {
+            console.log('📱 Setting up mobile send button properly...');
+            
             const sendButtonMobile = document.getElementById('sendButtonMobile');
-            const sendButtonMobileText = document.getElementById('sendButtonMobileText');
-            if (sendButtonMobile && sendButtonMobileText) {
-                console.log('🚨 EMERGENCY: Forcing send button to show "Send"');
-                sendButtonMobileText.textContent = 'Send';
-                sendButtonMobileText.innerHTML = 'Send';
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            
+            if (sendButtonMobile && chatInputMobile) {
+                // Set the button content once
                 sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
-                sendButtonMobile.classList.remove('bg-red-500', 'animate-pulse', 'recording');
-                sendButtonMobile.classList.add('bg-blue-600');
-            }
-        }
-        
-        // Run immediately and then every 100ms
-        fixSendButton();
-        setInterval(fixSendButton, 100);
-        
-        // Also run when DOM is ready
-        document.addEventListener('DOMContentLoaded', fixSendButton);
-        
-        // Ensure send button works on mobile - SIMPLIFIED VERSION
-        document.addEventListener('DOMContentLoaded', function() {
-            const sendButtonMobile = document.getElementById('sendButtonMobile');
-            if (sendButtonMobile) {
-                // Remove any existing click listeners by cloning
-                const newSendButton = sendButtonMobile.cloneNode(true);
-                sendButtonMobile.parentNode.replaceChild(newSendButton, sendButtonMobile);
+                sendButtonMobile.className = 'w-2/5 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm';
                 
-                // Add simple click event listener
-                newSendButton.addEventListener('click', function(e) {
+                // Remove any existing listeners
+                const newButton = sendButtonMobile.cloneNode(true);
+                sendButtonMobile.parentNode.replaceChild(newButton, sendButtonMobile);
+                
+                // Add click handler to the new button
+                newButton.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('📱 Mobile send button clicked');
                     
-                    // Get the input value
-                    const chatInputMobile = document.getElementById('chatInputMobile');
-                    if (chatInputMobile && chatInputMobile.value.trim()) {
-                        const message = chatInputMobile.value.trim();
+                    const input = document.getElementById('chatInputMobile');
+                    if (input && input.value.trim()) {
+                        const message = input.value.trim();
                         console.log('📤 Sending message:', message);
                         
                         // Clear input
-                        chatInputMobile.value = '';
+                        input.value = '';
                         
                         // Add message to chat
                         addMessageToChat('user', message);
@@ -1572,9 +1556,21 @@
                     }
                 });
                 
-                console.log('✅ Mobile send button event listener added');
+                // Add enter key handler
+                chatInputMobile.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        newButton.click();
+                    }
+                });
+                
+                console.log('✅ Mobile send button setup complete');
+                return true;
+            } else {
+                console.error('❌ Mobile send button or input not found');
+                return false;
             }
-        });
+        }
         
         // Helper function to add message to chat
         function addMessageToChat(sender, message) {
@@ -1624,6 +1620,17 @@
                 console.log('🤖 AI integration not available, message logged:', message);
             }
         }
+        
+        // Setup mobile send button when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Try to setup immediately
+            if (!setupMobileSendButtonProperly()) {
+                // If it fails, try again after a short delay
+                setTimeout(() => {
+                    setupMobileSendButtonProperly();
+                }, 500);
+            }
+        });
     </script>
 
     <script>
