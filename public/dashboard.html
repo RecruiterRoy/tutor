@@ -277,29 +277,30 @@
         }
     </script>
     
-    <script src="js/gptService.js?v=1.0.2" defer></script>
-    <script src="js/enhancedAIService.js?v=1.0.2" defer></script>
-    <script src="js/supabaseClient.js?v=1.0.2" defer></script>
-    <script src="js/textToSpeech.js?v=1.0.2" defer></script>
-    <script src="js/subjectManager.js?v=1.0.2" defer></script>
+    <script src="js/gptService.js?v=1.0.3" defer></script>
+    <script src="js/enhancedAIService.js?v=1.0.3" defer></script>
+    <script src="js/supabaseClient.js?v=1.0.3" defer></script>
+    <script src="js/textToSpeech.js?v=1.0.3" defer></script>
+    <script src="js/subjectManager.js?v=1.0.3" defer></script>
     
     <!-- System Initialization - CRITICAL: Load first -->
-    <script src="js/systemInitializer.js?v=1.0.0" defer></script>
-    <script src="js/userAnalytics.js?v=1.0.0" defer></script>
+    <script src="js/systemInitializer.js?v=1.0.1" defer></script>
+    <script src="js/userAnalytics.js?v=1.0.1" defer></script>
     
     <!-- Fixed Mic System -->
-    <script src="js/mic-system.js?v=1.0.0" defer></script>
+    <script src="js/mic-system.js?v=1.0.1" defer></script>
     
-    <script src="js/dashboard.js?v=1.0.2" defer></script>
+    <script src="js/dashboard.js?v=1.0.3" defer></script>
     
     <!-- Load other essential scripts -->
-    <script src="js/learningProgress.js?v=1.0.2" defer></script>
-    <script src="js/classBookManager.js?v=1.0.2" defer></script>
-    <script src="js/groupLearning.js?v=1.0.2" defer></script>
-    <script src="js/imageSearch.js?v=1.0.2" defer></script>
-    <script src="js/claudeChat.js?v=1.0.2" defer></script>
-    <script src="js/aiHealthCheck.js?v=1.0.2" defer></script>
-    <script src="js/syllabusSearch.js?v=1.0.2" defer></script>
+    <script src="js/learningProgress.js?v=1.0.3" defer></script>
+    <script src="js/classBookManager.js?v=1.0.3" defer></script>
+    <script src="js/groupLearning.js?v=1.0.3" defer></script>
+    <script src="js/imageSearch.js?v=1.0.3" defer></script>
+    <script src="js/claudeChat.js?v=1.0.3" defer></script>
+    <script src="js/aiHealthCheck.js?v=1.0.3" defer></script>
+    <script src="js/syllabusSearch.js?v=1.0.3" defer></script>
+    <script src="js/dailyChallenge.js?v=1.0.3" defer></script>
     
     <!-- Load Razorpay for payments -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -1816,51 +1817,20 @@
             const sendButton = document.getElementById('sendButton');
             
             if (sendButtonMobile) {
-                // Remove any existing listeners
-                const newButton = sendButtonMobile.cloneNode(true);
-                sendButtonMobile.parentNode.replaceChild(newButton, sendButtonMobile);
+                // Set inline onclick directly
+                sendButtonMobile.setAttribute('onclick', 'sendMessage(); return false;');
+                sendButtonMobile.style.cursor = 'pointer';
+                sendButtonMobile.innerHTML = '<span id="sendButtonMobileText">Send</span>';
                 
-                // Add new listener with multiple approaches
-                newButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('📤 Mobile send button clicked');
-                    sendMessage();
-                });
-                
-                // Also add onclick as backup
-                newButton.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('📤 Mobile send button onclick triggered');
-                    sendMessage();
-                };
-                
-                console.log('✅ Mobile send button re-bound with multiple handlers');
+                console.log('✅ Mobile send button set with inline onclick');
             }
             
             if (sendButton) {
-                // Remove any existing listeners
-                const newButton = sendButton.cloneNode(true);
-                sendButton.parentNode.replaceChild(newButton, sendButton);
+                // Set inline onclick directly
+                sendButton.setAttribute('onclick', 'sendMessage(); return false;');
+                sendButton.style.cursor = 'pointer';
                 
-                // Add new listener with multiple approaches
-                newButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('📤 Desktop send button clicked');
-                    sendMessage();
-                });
-                
-                // Also add onclick as backup
-                newButton.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('📤 Desktop send button onclick triggered');
-                    sendMessage();
-                };
-                
-                console.log('✅ Desktop send button re-bound with multiple handlers');
+                console.log('✅ Desktop send button set with inline onclick');
             }
         }
         
@@ -1998,6 +1968,11 @@
                 <div class="nav-item active bg-gray-800 hover:bg-gray-700 text-white" data-section="chat">
                     <span class="text-xl">🏫</span>
                     <span>Classroom</span>
+                </div>
+                <div class="nav-item bg-gray-800 hover:bg-gray-700 text-white" data-section="dailyChallenge">
+                    <span class="text-xl">🎉</span>
+                    <span>Daily Challenge</span>
+                    <span id="mobileChallengeStar" class="text-yellow-400 text-lg hidden">⭐</span>
                 </div>
                 <div class="nav-item bg-gray-800 hover:bg-gray-700 text-white" data-section="materials">
                     <span class="text-xl">📚</span>
