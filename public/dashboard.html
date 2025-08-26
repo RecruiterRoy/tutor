@@ -1649,7 +1649,7 @@
         })();
     </script>
 
-    <!-- MOBILE FUNCTION PROTECTION -->
+    <!-- MOBILE FUNCTION PROTECTION - AGGRESSIVE FIX -->
     <script>
         // Prevent old scripts from overriding mobile functions
         window.mobileSendMessage = window.mobileSendMessage || function() {
@@ -1778,6 +1778,62 @@
                 voiceButton.disabled = false;
             }
         };
+
+        // AGGRESSIVE PROTECTION - Override any old functions that might interfere
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🔒 Setting up aggressive mobile function protection...');
+            
+            // Override any old sendMessage function that might interfere
+            const originalSendMessage = window.sendMessage;
+            window.sendMessage = function() {
+                console.log('🚫 BLOCKED: Old sendMessage function called, redirecting to mobile function');
+                // Don't call the original function, just return
+                return;
+            };
+            
+            // Override any old mic functions
+            if (window.MicSystem) {
+                console.log('🚫 BLOCKED: Old MicSystem detected, disabling...');
+                window.MicSystem = null;
+            }
+            
+            // Override any old voice functions
+            if (window.startVoiceRecordingWithPermission) {
+                console.log('🚫 BLOCKED: Old startVoiceRecordingWithPermission detected, disabling...');
+                window.startVoiceRecordingWithPermission = function() {
+                    console.log('🚫 BLOCKED: Old voice function called, redirecting to mobile function');
+                    return;
+                };
+            }
+            
+            // Ensure mobile buttons call the right functions
+            setTimeout(() => {
+                const sendButton = document.getElementById('sendButtonMobile');
+                const voiceButton = document.getElementById('voiceButtonMobile');
+                
+                if (sendButton) {
+                    console.log('🔒 Securing mobile send button...');
+                    sendButton.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('📤 MOBILE SEND CLICKED - SECURED');
+                        window.mobileSendMessage();
+                        return false;
+                    };
+                }
+                
+                if (voiceButton) {
+                    console.log('🔒 Securing mobile voice button...');
+                    voiceButton.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🎤 MOBILE MIC CLICKED - SECURED');
+                        window.mobileStartVoice();
+                        return false;
+                    };
+                }
+            }, 1000);
+        });
     </script>
 
     <!-- IMMEDIATE SEND BUTTON FIX -->
