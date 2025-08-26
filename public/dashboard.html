@@ -1678,7 +1678,7 @@
         
         // ===== MOBILE FUNCTIONS - COMPLETELY REWRITTEN =====
         
-        // Mobile Send Message Function
+        // Mobile Send Message Function - SIMPLIFIED AND FIXED
         function mobileSendMessage() {
             console.log('📱 MOBILE: Send button clicked - FUNCTION CALLED');
             
@@ -1707,35 +1707,53 @@
             // Add user message to chat
             mobileAddMessage('user', message);
             
-            // Try to send via AI service
+            // DIRECT AI SERVICE CALL - NO DESKTOP FUNCTION DEPENDENCY
+            console.log('🤖 MOBILE: Sending directly to AI service...');
+            
+            // Try to send via AI service directly
             try {
                 console.log('🔍 MOBILE: Checking AI services...');
                 console.log('🔍 MOBILE: enhancedAI available:', !!(window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function'));
                 console.log('🔍 MOBILE: gptService available:', !!(window.gptService && typeof window.gptService.sendMessage === 'function'));
+                console.log('🔍 MOBILE: aiTutorIntegration available:', !!(window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function'));
+                
+                let aiServiceFound = false;
                 
                 if (window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function') {
-                    console.log('📤 MOBILE: Using enhancedAI');
+                    console.log('📤 MOBILE: Using enhancedAI directly');
                     window.enhancedAI.sendMessage(message);
+                    aiServiceFound = true;
                 } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
-                    console.log('📤 MOBILE: Using gptService');
+                    console.log('📤 MOBILE: Using gptService directly');
                     window.gptService.sendMessage(message);
+                    aiServiceFound = true;
                 } else if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
-                    console.log('📤 MOBILE: Using aiTutorIntegration');
+                    console.log('📤 MOBILE: Using aiTutorIntegration directly');
                     window.aiTutorIntegration.sendMessage(message);
-                } else {
+                    aiServiceFound = true;
+                }
+                
+                if (!aiServiceFound) {
                     console.log('📤 MOBILE: No AI service available, showing fallback response');
                     mobileAddMessage('ai', 'Thank you for your message! I am processing your request. Please wait while I connect to the AI service.');
                     
-                    // Try to initialize AI services
+                    // Try to initialize AI services and retry
                     setTimeout(() => {
+                        console.log('🔄 MOBILE: Retrying AI services...');
                         if (window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function') {
                             console.log('📤 MOBILE: Retrying with enhancedAI');
                             window.enhancedAI.sendMessage(message);
                         } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
                             console.log('📤 MOBILE: Retrying with gptService');
                             window.gptService.sendMessage(message);
+                        } else if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
+                            console.log('📤 MOBILE: Retrying with aiTutorIntegration');
+                            window.aiTutorIntegration.sendMessage(message);
+                        } else {
+                            console.log('❌ MOBILE: Still no AI service available after retry');
+                            mobileAddMessage('ai', 'I apologize, but the AI service is currently unavailable. Please try again in a few moments.');
                         }
-                    }, 2000);
+                    }, 3000);
                 }
             } catch (error) {
                 console.error('❌ MOBILE: Error sending message:', error);
@@ -1743,7 +1761,7 @@
             }
         }
         
-        // Mobile Voice Recording Function
+        // Mobile Voice Recording Function - SIMPLIFIED AND FIXED
         function mobileStartVoice() {
             console.log('🎤 MOBILE: Voice button clicked - FUNCTION CALLED');
             
@@ -1757,12 +1775,14 @@
             
             // Check if browser supports speech recognition
             console.log('🔍 MOBILE: Checking speech recognition support...');
-            console.log('🔍 MOBILE: webkitSpeechRecognition available:', !!('webkitSpeechRecognition' in window));
-            console.log('🔍 MOBILE: SpeechRecognition available:', !!('SpeechRecognition' in window));
+            const hasWebkitSpeech = 'webkitSpeechRecognition' in window;
+            const hasSpeech = 'SpeechRecognition' in window;
+            console.log('🔍 MOBILE: webkitSpeechRecognition available:', hasWebkitSpeech);
+            console.log('🔍 MOBILE: SpeechRecognition available:', hasSpeech);
             
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            if (!hasWebkitSpeech && !hasSpeech) {
                 console.error('❌ MOBILE: Speech recognition not supported');
-                mobileAddMessage('ai', 'Sorry, voice recording is not supported in your browser.');
+                mobileAddMessage('ai', 'Sorry, voice recording is not supported in your browser. Please type your message instead.');
                 return;
             }
             
@@ -1771,6 +1791,7 @@
             // Update button state
             voiceButton.textContent = '🔴 Recording...';
             voiceButton.style.backgroundColor = '#dc2626';
+            voiceButton.disabled = true;
             
             // Start speech recognition
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1779,40 +1800,58 @@
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.lang = 'en-US';
+            recognition.maxAlternatives = 1;
             
             recognition.onstart = function() {
                 console.log('🎤 MOBILE: Speech recognition started successfully');
+                mobileAddMessage('ai', '🎤 Listening... Please speak now.');
             };
             
             recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                console.log('🎤 MOBILE: Recognized text:', transcript);
-                
-                // Put transcript in input field
-                const chatInputMobile = document.getElementById('chatInputMobile');
-                if (chatInputMobile) {
-                    chatInputMobile.value = transcript;
-                    console.log('🎤 MOBILE: Transcript added to input field');
-                } else {
-                    console.error('❌ MOBILE: Could not find input field to add transcript');
+                console.log('🎤 MOBILE: Speech recognition result received');
+                if (event.results && event.results.length > 0) {
+                    const transcript = event.results[0][0].transcript;
+                    console.log('🎤 MOBILE: Recognized text:', transcript);
+                    
+                    // Put transcript in input field
+                    const chatInputMobile = document.getElementById('chatInputMobile');
+                    if (chatInputMobile) {
+                        chatInputMobile.value = transcript;
+                        chatInputMobile.focus();
+                        console.log('🎤 MOBILE: Transcript added to input field');
+                        mobileAddMessage('ai', '✅ Voice captured: "' + transcript + '"');
+                    } else {
+                        console.error('❌ MOBILE: Could not find input field to add transcript');
+                    }
                 }
                 
                 // Reset button
                 voiceButton.textContent = '🎤 Mic';
                 voiceButton.style.backgroundColor = '';
+                voiceButton.disabled = false;
             };
             
             recognition.onerror = function(event) {
                 console.error('❌ MOBILE: Speech recognition error:', event.error);
                 voiceButton.textContent = '🎤 Mic';
                 voiceButton.style.backgroundColor = '';
-                mobileAddMessage('ai', 'Sorry, there was an error with voice recognition. Please try typing instead.');
+                voiceButton.disabled = false;
+                
+                let errorMessage = 'Sorry, there was an error with voice recognition. Please try typing instead.';
+                if (event.error === 'not-allowed') {
+                    errorMessage = 'Microphone access denied. Please allow microphone access and try again.';
+                } else if (event.error === 'no-speech') {
+                    errorMessage = 'No speech detected. Please try speaking more clearly.';
+                }
+                
+                mobileAddMessage('ai', errorMessage);
             };
             
             recognition.onend = function() {
                 console.log('🎤 MOBILE: Speech recognition ended');
                 voiceButton.textContent = '🎤 Mic';
                 voiceButton.style.backgroundColor = '';
+                voiceButton.disabled = false;
             };
             
             try {
@@ -1822,6 +1861,8 @@
                 console.error('❌ MOBILE: Error starting speech recognition:', error);
                 voiceButton.textContent = '🎤 Mic';
                 voiceButton.style.backgroundColor = '';
+                voiceButton.disabled = false;
+                mobileAddMessage('ai', 'Sorry, there was an error starting voice recognition. Please try typing instead.');
             }
         }
         
