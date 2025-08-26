@@ -1649,15 +1649,20 @@
         
         // Mobile Send Message Function
         function mobileSendMessage() {
-            console.log('📱 MOBILE: Send button clicked');
+            console.log('📱 MOBILE: Send button clicked - FUNCTION CALLED');
             
             const chatInputMobile = document.getElementById('chatInputMobile');
+            console.log('🔍 MOBILE: Input field found:', !!chatInputMobile);
+            
             if (!chatInputMobile) {
                 console.error('❌ MOBILE: Input field not found');
                 return;
             }
             
             const message = chatInputMobile.value.trim();
+            console.log('🔍 MOBILE: Message content:', `"${message}"`);
+            console.log('🔍 MOBILE: Message length:', message.length);
+            
             if (!message) {
                 console.log('⚠️ MOBILE: No message to send');
                 return;
@@ -1673,6 +1678,10 @@
             
             // Try to send via AI service
             try {
+                console.log('🔍 MOBILE: Checking AI services...');
+                console.log('🔍 MOBILE: enhancedAI available:', !!(window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function'));
+                console.log('🔍 MOBILE: gptService available:', !!(window.gptService && typeof window.gptService.sendMessage === 'function'));
+                
                 if (window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function') {
                     console.log('📤 MOBILE: Using enhancedAI');
                     window.enhancedAI.sendMessage(message);
@@ -1691,20 +1700,28 @@
         
         // Mobile Voice Recording Function
         function mobileStartVoice() {
-            console.log('🎤 MOBILE: Voice button clicked');
+            console.log('🎤 MOBILE: Voice button clicked - FUNCTION CALLED');
             
             const voiceButton = document.getElementById('voiceButtonMobile');
+            console.log('🔍 MOBILE: Voice button found:', !!voiceButton);
+            
             if (!voiceButton) {
                 console.error('❌ MOBILE: Voice button not found');
                 return;
             }
             
             // Check if browser supports speech recognition
+            console.log('🔍 MOBILE: Checking speech recognition support...');
+            console.log('🔍 MOBILE: webkitSpeechRecognition available:', !!('webkitSpeechRecognition' in window));
+            console.log('🔍 MOBILE: SpeechRecognition available:', !!('SpeechRecognition' in window));
+            
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 console.error('❌ MOBILE: Speech recognition not supported');
                 mobileAddMessage('ai', 'Sorry, voice recording is not supported in your browser.');
                 return;
             }
+            
+            console.log('🎤 MOBILE: Starting speech recognition...');
             
             // Update button state
             voiceButton.textContent = '🔴 Recording...';
@@ -1719,17 +1736,20 @@
             recognition.lang = 'en-US';
             
             recognition.onstart = function() {
-                console.log('🎤 MOBILE: Speech recognition started');
+                console.log('🎤 MOBILE: Speech recognition started successfully');
             };
             
             recognition.onresult = function(event) {
                 const transcript = event.results[0][0].transcript;
-                console.log('🎤 MOBILE: Recognized:', transcript);
+                console.log('🎤 MOBILE: Recognized text:', transcript);
                 
                 // Put transcript in input field
                 const chatInputMobile = document.getElementById('chatInputMobile');
                 if (chatInputMobile) {
                     chatInputMobile.value = transcript;
+                    console.log('🎤 MOBILE: Transcript added to input field');
+                } else {
+                    console.error('❌ MOBILE: Could not find input field to add transcript');
                 }
                 
                 // Reset button
@@ -1750,7 +1770,14 @@
                 voiceButton.style.backgroundColor = '';
             };
             
-            recognition.start();
+            try {
+                recognition.start();
+                console.log('🎤 MOBILE: Speech recognition start() called');
+            } catch (error) {
+                console.error('❌ MOBILE: Error starting speech recognition:', error);
+                voiceButton.textContent = '🎤 Mic';
+                voiceButton.style.backgroundColor = '';
+            }
         }
         
         // Mobile Camera Function
@@ -2239,14 +2266,14 @@
                                     <!-- Mic Button -->
                                     <button id="voiceButtonMobile" 
                                             class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                                            onclick="mobileStartVoice()">
+                                            onclick="console.log('🎤 MOBILE MIC CLICKED'); mobileStartVoice(); return false;">
                                         🎤 Mic
                                     </button>
                                     
                                     <!-- Send Button -->
                                     <button id="sendButtonMobile" 
                                             class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                                            onclick="mobileSendMessage()">
+                                            onclick="console.log('📤 MOBILE SEND CLICKED'); mobileSendMessage(); return false;">
                                         📤 Send
                                     </button>
                                 </div>
