@@ -567,6 +567,27 @@
             }
         });
 
+        // ========== GLOBAL FUNCTIONS ==========
+        
+        // Global goToDashboard function
+        window.goToDashboard = function() {
+            console.log('🚀 goToDashboard function called');
+            try {
+                // Check if we're in a file protocol or web server
+                if (window.location.protocol === 'file:') {
+                    console.log('📁 File protocol detected, redirecting to dashboard.html');
+                    window.location.replace('dashboard.html');
+                } else {
+                    console.log('🌐 Web protocol detected, redirecting to /dashboard');
+                    window.location.replace('/dashboard');
+                }
+            } catch (error) {
+                console.error('❌ Error in goToDashboard:', error);
+                // Fallback redirect
+                window.location.href = 'dashboard.html';
+            }
+        };
+
         // ========== AUTHENTICATION FUNCTIONS ==========
 
         async function handleLoginWithData(email, password) {

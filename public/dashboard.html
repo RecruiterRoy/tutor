@@ -1618,6 +1618,37 @@
 </head>
 <body class="min-h-screen overflow-x-hidden">
 
+    <!-- AUTHENTICATION CHECK -->
+    <script>
+        // Check authentication immediately
+        (function() {
+            console.log('🔐 Checking authentication...');
+            
+            // Check if user is logged in via localStorage
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const userData = localStorage.getItem('userData');
+            
+            console.log('🔍 Authentication check:', {
+                isLoggedIn: isLoggedIn,
+                hasUserData: !!userData,
+                userData: userData ? JSON.parse(userData) : null
+            });
+            
+            if (!isLoggedIn || !userData) {
+                console.log('❌ User not authenticated, redirecting to login');
+                // Redirect to login page
+                if (window.location.protocol === 'file:') {
+                    window.location.replace('login.html');
+                } else {
+                    window.location.replace('/login');
+                }
+                return;
+            }
+            
+            console.log('✅ Authentication check passed');
+        })();
+    </script>
+
     <!-- IMMEDIATE SEND BUTTON FIX -->
     <script>
 
@@ -1688,9 +1719,23 @@
                 } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
                     console.log('📤 MOBILE: Using gptService');
                     window.gptService.sendMessage(message);
+                } else if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
+                    console.log('📤 MOBILE: Using aiTutorIntegration');
+                    window.aiTutorIntegration.sendMessage(message);
                 } else {
                     console.log('📤 MOBILE: No AI service available, showing fallback response');
-                    mobileAddMessage('ai', 'Thank you for your message! I am processing your request.');
+                    mobileAddMessage('ai', 'Thank you for your message! I am processing your request. Please wait while I connect to the AI service.');
+                    
+                    // Try to initialize AI services
+                    setTimeout(() => {
+                        if (window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function') {
+                            console.log('📤 MOBILE: Retrying with enhancedAI');
+                            window.enhancedAI.sendMessage(message);
+                        } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
+                            console.log('📤 MOBILE: Retrying with gptService');
+                            window.gptService.sendMessage(message);
+                        }
+                    }, 2000);
                 }
             } catch (error) {
                 console.error('❌ MOBILE: Error sending message:', error);
