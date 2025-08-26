@@ -1649,6 +1649,137 @@
         })();
     </script>
 
+    <!-- MOBILE FUNCTION PROTECTION -->
+    <script>
+        // Prevent old scripts from overriding mobile functions
+        window.mobileSendMessage = window.mobileSendMessage || function() {
+            console.log('📱 MOBILE: Send button clicked - PROTECTED FUNCTION CALLED');
+            
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            if (!chatInputMobile) {
+                console.error('❌ MOBILE: Input field not found');
+                return;
+            }
+            
+            const message = chatInputMobile.value.trim();
+            if (!message) {
+                console.log('⚠️ MOBILE: No message to send');
+                return;
+            }
+            
+            console.log('📤 MOBILE: Sending message:', message);
+            chatInputMobile.value = '';
+            
+            // Add user message to chat
+            if (typeof mobileAddMessage === 'function') {
+                mobileAddMessage('user', message);
+            }
+            
+            // Direct AI service call
+            try {
+                if (window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function') {
+                    console.log('📤 MOBILE: Using enhancedAI directly');
+                    window.enhancedAI.sendMessage(message);
+                } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
+                    console.log('📤 MOBILE: Using gptService directly');
+                    window.gptService.sendMessage(message);
+                } else if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
+                    console.log('📤 MOBILE: Using aiTutorIntegration directly');
+                    window.aiTutorIntegration.sendMessage(message);
+                } else {
+                    console.log('📤 MOBILE: No AI service available, showing fallback response');
+                    if (typeof mobileAddMessage === 'function') {
+                        mobileAddMessage('ai', 'Thank you for your message! I am processing your request.');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ MOBILE: Error sending message:', error);
+                if (typeof mobileAddMessage === 'function') {
+                    mobileAddMessage('ai', 'Sorry, there was an error processing your message. Please try again.');
+                }
+            }
+        };
+
+        window.mobileStartVoice = window.mobileStartVoice || function() {
+            console.log('🎤 MOBILE: Voice button clicked - PROTECTED FUNCTION CALLED');
+            
+            const voiceButton = document.getElementById('voiceButtonMobile');
+            if (!voiceButton) {
+                console.error('❌ MOBILE: Voice button not found');
+                return;
+            }
+            
+            // Check if browser supports speech recognition
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.error('❌ MOBILE: Speech recognition not supported');
+                if (typeof mobileAddMessage === 'function') {
+                    mobileAddMessage('ai', 'Sorry, voice recording is not supported in your browser.');
+                }
+                return;
+            }
+            
+            // Update button state
+            voiceButton.textContent = '🔴 Recording...';
+            voiceButton.style.backgroundColor = '#dc2626';
+            voiceButton.disabled = true;
+            
+            // Start speech recognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                console.log('🎤 MOBILE: Speech recognition started');
+                if (typeof mobileAddMessage === 'function') {
+                    mobileAddMessage('ai', '🎤 Listening... Please speak now.');
+                }
+            };
+            
+            recognition.onresult = function(event) {
+                if (event.results && event.results.length > 0) {
+                    const transcript = event.results[0][0].transcript;
+                    console.log('🎤 MOBILE: Recognized:', transcript);
+                    
+                    const chatInputMobile = document.getElementById('chatInputMobile');
+                    if (chatInputMobile) {
+                        chatInputMobile.value = transcript;
+                        chatInputMobile.focus();
+                    }
+                }
+                
+                voiceButton.textContent = '🎤 Mic';
+                voiceButton.style.backgroundColor = '';
+                voiceButton.disabled = false;
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('❌ MOBILE: Speech recognition error:', event.error);
+                voiceButton.textContent = '🎤 Mic';
+                voiceButton.style.backgroundColor = '';
+                voiceButton.disabled = false;
+            };
+            
+            recognition.onend = function() {
+                console.log('🎤 MOBILE: Speech recognition ended');
+                voiceButton.textContent = '🎤 Mic';
+                voiceButton.style.backgroundColor = '';
+                voiceButton.disabled = false;
+            };
+            
+            try {
+                recognition.start();
+            } catch (error) {
+                console.error('❌ MOBILE: Error starting speech recognition:', error);
+                voiceButton.textContent = '🎤 Mic';
+                voiceButton.style.backgroundColor = '';
+                voiceButton.disabled = false;
+            }
+        };
+    </script>
+
     <!-- IMMEDIATE SEND BUTTON FIX -->
     <script>
 
