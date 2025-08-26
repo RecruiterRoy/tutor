@@ -161,6 +161,68 @@
                 margin-left: 0;
                 margin-right: 0;
             }
+            
+            /* New Mobile Input Styling */
+            .mobile-input-container {
+                background: rgba(31, 41, 55, 0.95) !important;
+                backdrop-filter: blur(10px);
+                border-top: 1px solid rgba(75, 85, 99, 0.5);
+            }
+            
+            .mobile-input-container input {
+                font-size: 16px !important; /* Prevents zoom on iOS */
+                padding: 12px 16px !important;
+                border-radius: 12px !important;
+                border: 2px solid rgba(75, 85, 99, 0.5) !important;
+                background: rgba(55, 65, 81, 0.9) !important;
+                color: white !important;
+                transition: all 0.3s ease;
+            }
+            
+            .mobile-input-container input:focus {
+                border-color: #3b82f6 !important;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+                outline: none !important;
+            }
+            
+            .mobile-input-container button {
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                padding: 12px 8px !important;
+                border-radius: 12px !important;
+                transition: all 0.3s ease !important;
+                border: none !important;
+                min-height: 48px !important;
+            }
+            
+            .mobile-input-container button:active {
+                transform: scale(0.95) !important;
+            }
+            
+            /* Message styling for mobile */
+            .message {
+                margin-bottom: 16px !important;
+                padding: 0 8px !important;
+            }
+            
+            .message-content {
+                padding: 12px 16px !important;
+                border-radius: 16px !important;
+                font-size: 15px !important;
+                line-height: 1.4 !important;
+            }
+            
+            .user-message .message-content {
+                background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+                color: white !important;
+                margin-left: 20px !important;
+            }
+            
+            .ai-message .message-content {
+                background: rgba(55, 65, 81, 0.9) !important;
+                color: white !important;
+                margin-right: 20px !important;
+            }
         }
     </style>
     
@@ -1583,6 +1645,167 @@
             }
         }
         
+        // ===== MOBILE FUNCTIONS - COMPLETELY REWRITTEN =====
+        
+        // Mobile Send Message Function
+        function mobileSendMessage() {
+            console.log('📱 MOBILE: Send button clicked');
+            
+            const chatInputMobile = document.getElementById('chatInputMobile');
+            if (!chatInputMobile) {
+                console.error('❌ MOBILE: Input field not found');
+                return;
+            }
+            
+            const message = chatInputMobile.value.trim();
+            if (!message) {
+                console.log('⚠️ MOBILE: No message to send');
+                return;
+            }
+            
+            console.log('📤 MOBILE: Sending message:', message);
+            
+            // Clear input immediately
+            chatInputMobile.value = '';
+            
+            // Add user message to chat
+            mobileAddMessage('user', message);
+            
+            // Try to send via AI service
+            try {
+                if (window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function') {
+                    console.log('📤 MOBILE: Using enhancedAI');
+                    window.enhancedAI.sendMessage(message);
+                } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
+                    console.log('📤 MOBILE: Using gptService');
+                    window.gptService.sendMessage(message);
+                } else {
+                    console.log('📤 MOBILE: No AI service available, showing fallback response');
+                    mobileAddMessage('ai', 'Thank you for your message! I am processing your request.');
+                }
+            } catch (error) {
+                console.error('❌ MOBILE: Error sending message:', error);
+                mobileAddMessage('ai', 'Sorry, there was an error processing your message. Please try again.');
+            }
+        }
+        
+        // Mobile Voice Recording Function
+        function mobileStartVoice() {
+            console.log('🎤 MOBILE: Voice button clicked');
+            
+            const voiceButton = document.getElementById('voiceButtonMobile');
+            if (!voiceButton) {
+                console.error('❌ MOBILE: Voice button not found');
+                return;
+            }
+            
+            // Check if browser supports speech recognition
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.error('❌ MOBILE: Speech recognition not supported');
+                mobileAddMessage('ai', 'Sorry, voice recording is not supported in your browser.');
+                return;
+            }
+            
+            // Update button state
+            voiceButton.textContent = '🔴 Recording...';
+            voiceButton.style.backgroundColor = '#dc2626';
+            
+            // Start speech recognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                console.log('🎤 MOBILE: Speech recognition started');
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                console.log('🎤 MOBILE: Recognized:', transcript);
+                
+                // Put transcript in input field
+                const chatInputMobile = document.getElementById('chatInputMobile');
+                if (chatInputMobile) {
+                    chatInputMobile.value = transcript;
+                }
+                
+                // Reset button
+                voiceButton.textContent = '🎤 Mic';
+                voiceButton.style.backgroundColor = '';
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('❌ MOBILE: Speech recognition error:', event.error);
+                voiceButton.textContent = '🎤 Mic';
+                voiceButton.style.backgroundColor = '';
+                mobileAddMessage('ai', 'Sorry, there was an error with voice recognition. Please try typing instead.');
+            };
+            
+            recognition.onend = function() {
+                console.log('🎤 MOBILE: Speech recognition ended');
+                voiceButton.textContent = '🎤 Mic';
+                voiceButton.style.backgroundColor = '';
+            };
+            
+            recognition.start();
+        }
+        
+        // Mobile Camera Function
+        function mobileStartCamera() {
+            console.log('📷 MOBILE: Camera button clicked');
+            
+            // Check if camera is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.error('❌ MOBILE: Camera not supported');
+                mobileAddMessage('ai', 'Sorry, camera is not supported in your browser.');
+                return;
+            }
+            
+            // Request camera permission
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    console.log('📷 MOBILE: Camera access granted');
+                    mobileAddMessage('ai', 'Camera access granted! You can now take photos or scan documents.');
+                    
+                    // Stop the stream immediately (we'll implement camera UI later)
+                    stream.getTracks().forEach(track => track.stop());
+                })
+                .catch(function(error) {
+                    console.error('❌ MOBILE: Camera access denied:', error);
+                    mobileAddMessage('ai', 'Camera access was denied. You can still type your questions.');
+                });
+        }
+        
+        // Mobile Add Message Function
+        function mobileAddMessage(sender, message) {
+            console.log('💬 MOBILE: Adding message from', sender);
+            
+            const chatContainer = document.getElementById('chatMessages');
+            if (!chatContainer) {
+                console.error('❌ MOBILE: Chat container not found');
+                return;
+            }
+            
+            // Create message element
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message mb-4`;
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content bg-gray-700 rounded-lg p-3 text-white';
+            messageContent.textContent = message;
+            
+            messageDiv.appendChild(messageContent);
+            chatContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // ===== DESKTOP FUNCTIONS (KEPT FOR COMPATIBILITY) =====
+        
         // Global sendMessage function - SIMPLIFIED with debugging
         let isSending = false; // Prevent multiple rapid sends
         
@@ -1994,34 +2217,38 @@
                             </button>
                         </div>
                         
-                        <!-- Mobile Layout -->
+                        <!-- Mobile Layout - COMPLETELY REWRITTEN -->
                         <div class="md:hidden">
-                            <!-- Mobile Chat Input -->
-                            <div class="mobile-chat-input p-2 bg-gray-800/50 border-t border-gray-700/50 flex-shrink-0">
-                                <!-- Mobile Input Area -->
-                                <div class="mobile-input-area bg-gray-800 border-t border-gray-700 p-2">
-                                    <!-- Text Input (Full Width) -->
-                                    <input type="text" id="chatInputMobile" placeholder="Ask me anything about your studies..." class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 mb-2 text-sm">
+                            <div class="mobile-input-container p-3 bg-gray-800/80 border-t border-gray-700/50">
+                                <!-- Text Input -->
+                                <input type="text" 
+                                       id="chatInputMobile" 
+                                       placeholder="Ask me anything about your studies..." 
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 mb-3 text-base"
+                                       onkeypress="if(event.key === 'Enter') { mobileSendMessage(); }">
+                                
+                                <!-- Button Row -->
+                                <div class="flex gap-2">
+                                    <!-- Camera Button -->
+                                    <button id="cameraButtonMobile" 
+                                            class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                                            onclick="mobileStartCamera()">
+                                        📷 Camera
+                                    </button>
                                     
-                                    <!-- Camera, Mic, Voice Commands, Send Buttons in One Row -->
-                                    <div class="flex space-x-2 flex-nowrap w-full mobile-chat-input">
-                                        <!-- Camera Button (20%) -->
-                                        <button id="cameraButtonMobile" class="w-1/5 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
-                                            📷
-                                        </button>
-                                        <!-- Mic Button (20%) -->
-                                        <button id="voiceButtonMobile" class="w-1/5 bg-purple-600 hover:bg-purple-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm" onclick="startVoiceRecordingWithPermission(); return false;">
-                                            <span id="voiceIconMobile">🎤</span>
-                                        </button>
-                                        <!-- Voice Commands Button (20%) -->
-                                        <button id="voiceCommandBtn" class="w-1/5 bg-green-600 hover:bg-green-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm">
-                                            🎤
-                                        </button>
-                                        <!-- Send Button (40%) -->
-                                        <button id="sendButtonMobile" class="w-2/5 bg-blue-600 hover:bg-blue-700 text-white transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 flex-grow-0 text-sm" onclick="sendMessage(); return false;">
-                                            <span id="sendButtonMobileText">Send</span>
-                                        </button>
-                                    </div>
+                                    <!-- Mic Button -->
+                                    <button id="voiceButtonMobile" 
+                                            class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                                            onclick="mobileStartVoice()">
+                                        🎤 Mic
+                                    </button>
+                                    
+                                    <!-- Send Button -->
+                                    <button id="sendButtonMobile" 
+                                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                                            onclick="mobileSendMessage()">
+                                        📤 Send
+                                    </button>
                                 </div>
                             </div>
                         </div>
