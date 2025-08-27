@@ -1675,21 +1675,88 @@
                 mobileAddMessage('user', message);
             }
             
-            // Direct AI service call
+            // Direct AI service call with response handling
             try {
                 if (window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function') {
                     console.log('📤 MOBILE: Using enhancedAI directly');
-                    window.enhancedAI.sendMessage(message);
+                    
+                    // Call enhancedAI and handle the response
+                    window.enhancedAI.sendMessage(message, 'chat').then(response => {
+                        console.log('🤖 MOBILE: EnhancedAI response received:', response);
+                        
+                        if (response && response.success && response.reply) {
+                            // Display AI response
+                            if (typeof mobileAddMessage === 'function') {
+                                mobileAddMessage('ai', response.reply);
+                            }
+                        } else if (response && response.message) {
+                            // Fallback: use message field
+                            if (typeof mobileAddMessage === 'function') {
+                                mobileAddMessage('ai', response.message);
+                            }
+                        } else {
+                            // No response data
+                            if (typeof mobileAddMessage === 'function') {
+                                mobileAddMessage('ai', 'I received your message but there was an issue processing the response. Please try again.');
+                            }
+                        }
+                    }).catch(error => {
+                        console.error('❌ MOBILE: EnhancedAI error:', error);
+                        if (typeof mobileAddMessage === 'function') {
+                            mobileAddMessage('ai', 'Sorry, there was an error getting a response. Please try again.');
+                        }
+                    });
+                    
                 } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
                     console.log('📤 MOBILE: Using gptService directly');
-                    window.gptService.sendMessage(message);
+                    
+                    // Call gptService and handle the response
+                    window.gptService.sendMessage(message).then(response => {
+                        console.log('🤖 MOBILE: GPT response received:', response);
+                        
+                        if (response && response.message) {
+                            if (typeof mobileAddMessage === 'function') {
+                                mobileAddMessage('ai', response.message);
+                            }
+                        } else {
+                            if (typeof mobileAddMessage === 'function') {
+                                mobileAddMessage('ai', 'I received your message but there was an issue processing the response. Please try again.');
+                            }
+                        }
+                    }).catch(error => {
+                        console.error('❌ MOBILE: GPT error:', error);
+                        if (typeof mobileAddMessage === 'function') {
+                            mobileAddMessage('ai', 'Sorry, there was an error getting a response. Please try again.');
+                        }
+                    });
+                    
                 } else if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
                     console.log('📤 MOBILE: Using aiTutorIntegration directly');
-                    window.aiTutorIntegration.sendMessage(message);
+                    
+                    // Call aiTutorIntegration and handle the response
+                    window.aiTutorIntegration.sendMessage(message).then(response => {
+                        console.log('🤖 MOBILE: AI Tutor response received:', response);
+                        
+                        if (response && response.message) {
+                            if (typeof mobileAddMessage === 'function') {
+                                mobileAddMessage('ai', response.message);
+                            }
+                        } else {
+                            if (typeof mobileAddMessage === 'function') {
+                                mobileAddMessage('ai', 'I received your message but there was an issue processing the response. Please try again.');
+                            }
+                        }
+                    }).catch(error => {
+                        console.error('❌ MOBILE: AI Tutor error:', error);
+                        if (typeof mobileAddMessage === 'function') {
+                            mobileAddMessage('ai', 'Sorry, there was an error getting a response. Please try again.');
+                        }
+                    });
+                    
                 } else {
                     console.log('📤 MOBILE: No AI service available, showing fallback response');
                     if (typeof mobileAddMessage === 'function') {
-                        mobileAddMessage('ai', 'Thank you for your message! I am processing your request.');
+                        mobileAddMessage('ai', 'Thank you for your message! I am processing your request. Please wait while I connect to the AI service.');
                     }
                 }
             } catch (error) {
@@ -1723,13 +1790,20 @@
             voiceButton.style.backgroundColor = '#dc2626';
             voiceButton.disabled = true;
             
-            // Start speech recognition
+            // Create recognition with mobile-optimized settings (from mic-system.js)
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             
+            // Mobile-optimized settings (matching mic-system.js)
             recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
+            recognition.interimResults = false; // CRITICAL: Only final results
+            recognition.lang = 'en-IN'; // Use Indian English for better mobile recognition
+            recognition.maxAlternatives = 1;
+            
+            // Clear grammars to prevent the error
+            recognition.grammars = null;
+            
+            console.log('🎤 MOBILE: Created recognition with mobile settings');
             
             recognition.onstart = function() {
                 console.log('🎤 MOBILE: Speech recognition started');
@@ -1739,17 +1813,35 @@
             };
             
             recognition.onresult = function(event) {
-                if (event.results && event.results.length > 0) {
-                    const transcript = event.results[0][0].transcript;
-                    console.log('🎤 MOBILE: Recognized:', transcript);
-                    
-                    const chatInputMobile = document.getElementById('chatInputMobile');
-                    if (chatInputMobile) {
-                        chatInputMobile.value = transcript;
-                        chatInputMobile.focus();
+                console.log('🎤 MOBILE: Speech result received, processing...');
+                
+                // Process only final results to avoid repetition (from mic-system.js)
+                let finalTranscript = '';
+                
+                for (let i = 0; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
                     }
                 }
                 
+                // Only process if we have a final result
+                if (finalTranscript.trim()) {
+                    console.log('📝 MOBILE: Final transcript:', finalTranscript);
+                    
+                    // Clean up the transcript (remove extra spaces, duplicates)
+                    const cleanedTranscript = finalTranscript.trim().replace(/\s+/g, ' ');
+                    console.log('🧹 MOBILE: Cleaned transcript:', cleanedTranscript);
+                    
+                    // Update input field
+                    const chatInputMobile = document.getElementById('chatInputMobile');
+                    if (chatInputMobile) {
+                        chatInputMobile.value = cleanedTranscript;
+                        chatInputMobile.focus();
+                        console.log('✅ MOBILE: Transcript added to input field');
+                    }
+                }
+                
+                // Reset button
                 voiceButton.textContent = '🎤 Mic';
                 voiceButton.style.backgroundColor = '';
                 voiceButton.disabled = false;
@@ -1760,6 +1852,17 @@
                 voiceButton.textContent = '🎤 Mic';
                 voiceButton.style.backgroundColor = '';
                 voiceButton.disabled = false;
+                
+                let errorMessage = 'Sorry, there was an error with voice recognition. Please try typing instead.';
+                if (event.error === 'not-allowed') {
+                    errorMessage = 'Microphone access denied. Please allow microphone access and try again.';
+                } else if (event.error === 'no-speech') {
+                    errorMessage = 'No speech detected. Please try speaking more clearly.';
+                }
+                
+                if (typeof mobileAddMessage === 'function') {
+                    mobileAddMessage('ai', errorMessage);
+                }
             };
             
             recognition.onend = function() {
@@ -1771,11 +1874,15 @@
             
             try {
                 recognition.start();
+                console.log('🎤 MOBILE: Speech recognition start() called');
             } catch (error) {
                 console.error('❌ MOBILE: Error starting speech recognition:', error);
                 voiceButton.textContent = '🎤 Mic';
                 voiceButton.style.backgroundColor = '';
                 voiceButton.disabled = false;
+                if (typeof mobileAddMessage === 'function') {
+                    mobileAddMessage('ai', 'Sorry, there was an error starting voice recognition. Please try typing instead.');
+                }
             }
         };
 
