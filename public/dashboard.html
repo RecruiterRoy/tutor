@@ -2213,7 +2213,7 @@
         
         // ===== DESKTOP FUNCTIONS (KEPT FOR COMPATIBILITY) =====
         
-        // Global sendMessage function - SIMPLIFIED with debugging
+        // Global sendMessage function - FIXED WITH REAL AI API
         let isSending = false; // Prevent multiple rapid sends
         
         function sendMessage() {
@@ -2259,22 +2259,58 @@
                 
                 console.log('📤 Sending message:', message);
                 
-                // Try different send methods - prioritize working services
-                if (window.enhancedAI && typeof window.enhancedAI.sendMessage === 'function') {
-                    console.log('📤 Using enhancedAI.sendMessage');
-                    window.enhancedAI.sendMessage(message);
-                } else if (window.gptService && typeof window.gptService.sendMessage === 'function') {
-                    console.log('📤 Using gptService.sendMessage');
-                    window.gptService.sendMessage(message);
-                } else if (window.aiTutorIntegration && typeof window.aiTutorIntegration.sendMessage === 'function') {
-                    console.log('📤 Using aiTutorIntegration.sendMessage');
-                    window.aiTutorIntegration.sendMessage(message);
-                } else {
-                    console.error('❌ No send method available');
-                    // Add message to chat anyway for user feedback
-                    addMessageToChat('user', message);
-                    addMessageToChat('ai', 'I apologize, but the AI service is currently unavailable. Please try again later.');
-                }
+                // Add user message to chat
+                addMessageToChat('user', message);
+                
+                // Show loading indicator
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message ai-message mb-4';
+                loadingDiv.innerHTML = '<div class="message-content bg-gray-700 rounded-lg p-3 text-white">🤔 Thinking...</div>';
+                document.getElementById('chatMessages').appendChild(loadingDiv);
+                
+                // Call the actual chat API
+                fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: 'user', content: message }
+                        ],
+                        grade: '8', // Default grade - you can make this dynamic
+                        subject: 'general', // Default subject
+                        language: 'english',
+                        userProfile: {
+                            name: 'Student', // You can get this from localStorage
+                            class: '8',
+                            board: 'CBSE',
+                            subject: 'general'
+                        }
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Chat API request failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Remove loading indicator
+                    loadingDiv.remove();
+                    
+                    // Add AI response
+                    if (data.response) {
+                        addMessageToChat('ai', data.response);
+                    } else {
+                        addMessageToChat('ai', 'Sorry, I couldn\'t process your request. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Chat API error:', error);
+                    loadingDiv.remove();
+                    addMessageToChat('ai', 'Sorry, there was an error processing your message. Please try again.');
+                });
                 
             } catch (error) {
                 console.error('❌ Error in sendMessage:', error);
