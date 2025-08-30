@@ -12,6 +12,14 @@ import fs from 'fs';
 
 dotenv.config();
 
+// Helper function to generate unique school registration codes
+function generateSchoolCode() {
+    const prefix = 'SCH';
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${prefix}${timestamp}${random}`;
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const BOOKS_DIR = path.join(__dirname, 'books');
@@ -82,7 +90,6 @@ app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.use('/scripts', express.static(path.join(__dirname, 'public', 'scripts')));
 app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname)));
 
 // API Key middleware
 app.use('/api', (req, res, next) => {
@@ -772,18 +779,7 @@ app.post('/api/daily-challenge', async (req, res) => {
     }
 });
 
-// Static file serving FIRST (before HTML routes)
-app.use(express.static(path.join(__dirname), {
-    setHeaders: (res, path) => {
-        if (path.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        } else if (path.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        } else if (path.endsWith('.html')) {
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        }
-    }
-}));
+// Static file serving for specific directories only
 
 // Serve extracted images statically
 app.use('/extracted_images', express.static(path.join(__dirname, 'extracted_images')));
@@ -832,6 +828,12 @@ app.get('/api/book-images', (req, res) => {
 app.get('/', (req, res) => {
     const indexPath = path.join(__dirname, 'public', 'index.html');
     if (fs.existsSync(indexPath)) {
+        // Add cache-busting headers
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
         res.sendFile(indexPath);
     } else {
         res.status(404).send('index.html not found');
@@ -850,6 +852,12 @@ app.get('/dashboard', (req, res) => {
 app.get('/login', (req, res) => {
     const loginPath = path.join(__dirname, 'public', 'login.html');
     if (fs.existsSync(loginPath)) {
+        // Add cache-busting headers
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
         res.sendFile(loginPath);
     } else {
         res.status(404).send('login.html not found');
@@ -859,6 +867,12 @@ app.get('/login', (req, res) => {
 app.get('/register', (req, res) => {
     const registerPath = path.join(__dirname, 'public', 'register.html');
     if (fs.existsSync(registerPath)) {
+        // Add cache-busting headers
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
         res.sendFile(registerPath);
     } else {
         res.status(404).send('register.html not found');
@@ -1173,6 +1187,497 @@ app.post('/api/batch-video-processor', async (req, res) => {
         
     } catch (error) {
         console.error('❌ Error in batch video processor:', error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// School Management API Endpoints
+app.use('/api/school-management', async (req, res) => {
+    try {
+        // CORS headers
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        if (req.method === 'OPTIONS') {
+            return res.status(200).end();
+        }
+
+        // Initialize Supabase with service role key for admin operations
+        const supabaseAdmin = createClient(
+            process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
+        );
+
+        const { action, data } = req.body;
+
+        switch (action) {
+            case 'create_school':
+                try {
+                    const { school, admin } = data;
+                    
+                    // Generate unique school registration code
+                    const schoolCode = generateSchoolCode();
+                    
+                    // Insert school first
+                    const { data: schoolData, error: schoolError } = await supabaseAdmin
+                        .from('schools')
+                        .insert([{
+                            name: school.name,
+                            school_type: school.type,
+                            board: school.board,
+                            established_year: school.established_year,
+                            total_students: school.total_students,
+                            total_teachers: school.total_teachers,
+                            address_line1: school.address_line1,
+                            address_line2: school.address_line2,
+                            city: school.city,
+                            state: school.state,
+                            pin_code: school.pin_code,
+                            country: school.country,
+                            registration_code: schoolCode,
+                            status: 'pending'
+                        }])
+                        .select()
+                        .single();
+                    
+                    if (schoolError) throw schoolError;
+                    
+                    // Insert admin
+                    const { data: adminData, error: adminError } = await supabaseAdmin
+                        .from('school_admins')
+                        .insert([{
+                            school_id: schoolData.id,
+                            name: admin.name,
+                            email: admin.email,
+                            phone: admin.phone,
+                            password_hash: admin.password, // In production, hash this
+                            status: 'pending'
+                        }])
+                        .select()
+                        .single();
+                    
+                    if (adminError) throw adminError;
+                    
+                    return res.json({ 
+                        success: true, 
+                        data: { 
+                            school: schoolData, 
+                            admin: adminData,
+                            registration_code: schoolCode 
+                        } 
+                    });
+                } catch (error) {
+                    console.error('Error creating school:', error);
+                    return res.status(500).json({ success: false, error: error.message });
+                }
+
+            case 'create_teacher':
+                try {
+                    // First validate school code
+                    const { data: schoolData, error: schoolError } = await supabaseAdmin
+                        .from('schools')
+                        .select('id, name, city, state, board')
+                        .eq('registration_code', data.schoolCode)
+                        .eq('status', 'approved')
+                        .single();
+                    
+                    if (schoolError || !schoolData) {
+                        return res.status(400).json({ 
+                            success: false, 
+                            error: 'Invalid or unapproved school registration code' 
+                        });
+                    }
+                    
+                    // Create teacher with school_id
+                    const teacherData = {
+                        school_id: schoolData.id,
+                        first_name: data.firstName,
+                        last_name: data.lastName,
+                        email: data.email,
+                        phone: data.phone,
+                        subject: data.subject,
+                        qualification: data.qualification,
+                        status: 'pending'
+                    };
+                    
+                    const { data: newTeacher, error: teacherError } = await supabaseAdmin
+                        .from('teachers')
+                        .insert([teacherData])
+                        .select()
+                        .single();
+                    
+                    if (teacherError) throw teacherError;
+                    return res.json({ success: true, data: newTeacher });
+                } catch (error) {
+                    console.error('Error creating teacher:', error);
+                    return res.status(500).json({ success: false, error: error.message });
+                }
+
+            case 'create_student':
+                try {
+                    // First validate school code
+                    const { data: schoolData, error: schoolError } = await supabaseAdmin
+                        .from('schools')
+                        .select('id, name, city, state, board')
+                        .eq('registration_code', data.schoolCode)
+                        .eq('status', 'approved')
+                        .single();
+                    
+                    if (schoolError || !schoolData) {
+                        return res.status(400).json({ 
+                            success: false, 
+                            error: 'Invalid or unapproved school registration code' 
+                        });
+                    }
+                    
+                    // Create student with school_id
+                    const studentData = {
+                        school_id: schoolData.id,
+                        first_name: data.firstName,
+                        last_name: data.lastName,
+                        email: data.email,
+                        phone: data.phone,
+                        dob: data.dob,
+                        gender: data.gender,
+                        class: data.class,
+                        section: data.section,
+                        roll_number: data.rollNumber,
+                        parent_name: data.parentName,
+                        parent_phone: data.parentPhone,
+                        status: 'pending'
+                    };
+                    
+                    const { data: newStudent, error: studentError } = await supabaseAdmin
+                        .from('students')
+                        .insert([studentData])
+                        .select()
+                        .single();
+                    
+                    if (studentError) throw studentError;
+                    return res.json({ success: true, data: newStudent });
+                } catch (error) {
+                    console.error('Error creating student:', error);
+                    return res.status(500).json({ success: false, error: error.message });
+                }
+
+            case 'approve_teacher':
+                const { data: approvedTeacher, error: approveTeacherError } = await supabaseAdmin
+                    .from('teachers')
+                    .update({ status: 'approved' })
+                    .eq('id', data.teacher_id)
+                    .select()
+                    .single();
+                
+                if (approveTeacherError) throw approveTeacherError;
+                return res.json({ success: true, data: approvedTeacher });
+
+            case 'approve_student':
+                const { data: approvedStudent, error: approveStudentError } = await supabaseAdmin
+                    .from('students')
+                    .update({ status: 'approved' })
+                    .eq('id', data.student_id)
+                    .select()
+                    .single();
+                
+                if (approveStudentError) throw approveStudentError;
+                return res.json({ success: true, data: approvedStudent });
+
+            case 'get_school_data':
+                const { data: schoolInfo, error: schoolInfoError } = await supabaseAdmin
+                    .from('schools')
+                    .select('*')
+                    .eq('id', data.school_id)
+                    .single();
+                
+                if (schoolInfoError) throw schoolInfoError;
+                return res.json({ success: true, data: schoolInfo });
+
+            case 'validate_school_code':
+                try {
+                    const { data: schoolData, error: schoolError } = await supabaseAdmin
+                        .from('schools')
+                        .select('id, name, city, state, board, status')
+                        .eq('registration_code', data.school_code)
+                        .single();
+                    
+                    if (schoolError || !schoolData) {
+                        return res.status(400).json({ 
+                            success: false, 
+                            error: 'Invalid school registration code' 
+                        });
+                    }
+                    
+                    if (schoolData.status !== 'approved') {
+                        return res.status(400).json({ 
+                            success: false, 
+                            error: 'School is not yet approved. Please contact the school administrator.' 
+                        });
+                    }
+                    
+                    return res.json({ 
+                        success: true, 
+                        data: {
+                            id: schoolData.id,
+                            name: schoolData.name,
+                            city: schoolData.city,
+                            state: schoolData.state,
+                            board: schoolData.board
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error validating school code:', error);
+                    return res.status(500).json({ success: false, error: error.message });
+                }
+
+            case 'get_teachers':
+                const { data: teachers, error: teachersError } = await supabaseAdmin
+                    .from('teachers')
+                    .select('*')
+                    .eq('school_id', data.school_id);
+                
+                if (teachersError) throw teachersError;
+                return res.json({ success: true, data: teachers });
+
+            case 'get_students':
+                const { data: students, error: studentsError } = await supabaseAdmin
+                    .from('students')
+                    .select('*')
+                    .eq('school_id', data.school_id);
+                
+                if (studentsError) throw studentsError;
+                return res.json({ success: true, data: students });
+
+            case 'create_homework':
+                const { data: homeworkData, error: homeworkError } = await supabaseAdmin
+                    .from('homework')
+                    .insert([data])
+                    .select()
+                    .single();
+                
+                if (homeworkError) throw homeworkError;
+                return res.json({ success: true, data: homeworkData });
+
+            case 'get_homework':
+                const { data: homework, error: homeworkGetError } = await supabaseAdmin
+                    .from('homework')
+                    .select('*')
+                    .eq('class_id', data.class_id)
+                    .order('created_at', { ascending: false });
+                
+                if (homeworkGetError) throw homeworkGetError;
+                return res.json({ success: true, data: homework });
+
+            case 'submit_homework':
+                const { data: submissionData, error: submissionError } = await supabaseAdmin
+                    .from('homework_submissions')
+                    .insert([data])
+                    .select()
+                    .single();
+                
+                if (submissionError) throw submissionError;
+                return res.json({ success: true, data: submissionData });
+
+            case 'get_school_dashboard_stats':
+                const schoolId = data.school_id;
+                
+                // Get counts for dashboard
+                const [teachersCount, studentsCount, classesCount, pendingApprovals] = await Promise.all([
+                    supabaseAdmin.from('teachers').select('id', { count: 'exact' }).eq('school_id', schoolId),
+                    supabaseAdmin.from('students').select('id', { count: 'exact' }).eq('school_id', schoolId),
+                    supabaseAdmin.from('classes').select('id', { count: 'exact' }).eq('school_id', schoolId),
+                    supabaseAdmin.from('teachers').select('id', { count: 'exact' }).eq('school_id', schoolId).eq('status', 'pending')
+                ]);
+                
+                const pendingStudents = await supabaseAdmin
+                    .from('students')
+                    .select('id', { count: 'exact' })
+                    .eq('school_id', schoolId)
+                    .eq('status', 'pending');
+                
+                return res.json({
+                    success: true,
+                    data: {
+                        total_teachers: teachersCount.count || 0,
+                        total_students: studentsCount.count || 0,
+                        total_classes: classesCount.count || 0,
+                        pending_teachers: pendingApprovals.count || 0,
+                        pending_students: pendingStudents.count || 0
+                    }
+                });
+
+            case 'get_classes':
+                const { data: classes, error: classesError } = await supabaseAdmin
+                    .from('classes')
+                    .select(`
+                        *,
+                        class_teacher:teachers(name, email, phone),
+                        total_students
+                    `)
+                    .eq('school_id', data.school_id)
+                    .order('class_name', { ascending: true });
+                
+                if (classesError) throw classesError;
+                return res.json({ success: true, data: classes });
+
+            case 'create_class':
+                const { data: classData, error: classError } = await supabaseAdmin
+                    .from('classes')
+                    .insert([data])
+                    .select()
+                    .single();
+                
+                if (classError) throw classError;
+                return res.json({ success: true, data: classData });
+
+            case 'get_attendance':
+                const { data: attendance, error: attendanceError } = await supabaseAdmin
+                    .from('attendance')
+                    .select(`
+                        *,
+                        student:students(name, roll_number),
+                        class:classes(class_name, section)
+                    `)
+                    .eq('class_id', data.class_id)
+                    .eq('date', data.date);
+                
+                if (attendanceError) throw attendanceError;
+                return res.json({ success: true, data: attendance });
+
+            case 'mark_attendance':
+                const { data: attendanceData, error: attendanceMarkError } = await supabaseAdmin
+                    .from('attendance')
+                    .upsert(data.attendance_records, { 
+                        onConflict: 'class_id,student_id,date' 
+                    })
+                    .select();
+                
+                if (attendanceMarkError) throw attendanceMarkError;
+                return res.json({ success: true, data: attendanceData });
+
+            case 'get_exams':
+                const { data: exams, error: examsError } = await supabaseAdmin
+                    .from('exams')
+                    .select(`
+                        *,
+                        class:classes(class_name, section),
+                        subject:subjects(name)
+                    `)
+                    .eq('school_id', data.school_id)
+                    .order('exam_date', { ascending: true });
+                
+                if (examsError) throw examsError;
+                return res.json({ success: true, data: exams });
+
+            case 'create_exam':
+                const { data: examData, error: examError } = await supabaseAdmin
+                    .from('exams')
+                    .insert([data])
+                    .select()
+                    .single();
+                
+                if (examError) throw examError;
+                return res.json({ success: true, data: examData });
+
+            case 'get_exam_results':
+                const { data: examResults, error: examResultsError } = await supabaseAdmin
+                    .from('exam_results')
+                    .select(`
+                        *,
+                        student:students(name, roll_number),
+                        exam:exams(exam_name, total_marks)
+                    `)
+                    .eq('exam_id', data.exam_id);
+                
+                if (examResultsError) throw examResultsError;
+                return res.json({ success: true, data: examResults });
+
+            case 'submit_exam_results':
+                const { data: resultsData, error: resultsError } = await supabaseAdmin
+                    .from('exam_results')
+                    .upsert(data.results, { 
+                        onConflict: 'exam_id,student_id' 
+                    })
+                    .select();
+                
+                if (resultsError) throw resultsError;
+                return res.json({ success: true, data: resultsData });
+
+            case 'get_fees':
+                const { data: fees, error: feesError } = await supabaseAdmin
+                    .from('fees')
+                    .select(`
+                        *,
+                        class:classes(class_name, section)
+                    `)
+                    .eq('school_id', data.school_id);
+                
+                if (feesError) throw feesError;
+                return res.json({ success: true, data: fees });
+
+            case 'get_fee_payments':
+                const { data: feePayments, error: feePaymentsError } = await supabaseAdmin
+                    .from('fee_payments')
+                    .select(`
+                        *,
+                        student:students(name, roll_number),
+                        fee:fees(fee_type, amount)
+                    `)
+                    .eq('fee_id', data.fee_id);
+                
+                if (feePaymentsError) throw feePaymentsError;
+                return res.json({ success: true, data: feePayments });
+
+            case 'get_holidays_events':
+                const { data: holidaysEvents, error: holidaysError } = await supabaseAdmin
+                    .from('holidays_events')
+                    .select('*')
+                    .eq('school_id', data.school_id)
+                    .order('start_date', { ascending: true });
+                
+                if (holidaysError) throw holidaysError;
+                return res.json({ success: true, data: holidaysEvents });
+
+            case 'create_holiday_event':
+                const { data: holidayData, error: holidayError } = await supabaseAdmin
+                    .from('holidays_events')
+                    .insert([data])
+                    .select()
+                    .single();
+                
+                if (holidayError) throw holidayError;
+                return res.json({ success: true, data: holidayData });
+
+            case 'send_notification':
+                const { data: notificationData, error: notificationError } = await supabaseAdmin
+                    .from('notifications')
+                    .insert([data])
+                    .select()
+                    .single();
+                
+                if (notificationError) throw notificationError;
+                return res.json({ success: true, data: notificationData });
+
+            case 'ai_chat':
+                // Mock AI response for now - replace with actual AI service
+                const aiResponse = {
+                    message: `AI Assistant: I'm here to help with your ${data.context || 'academic'} questions. This is a mock response - replace with actual AI integration.`,
+                    timestamp: new Date().toISOString()
+                };
+                return res.json({ success: true, data: aiResponse });
+
+            default:
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Invalid action' 
+                });
+        }
+        
+    } catch (error) {
+        console.error('School Management API Error:', error);
         return res.status(500).json({
             success: false,
             error: error.message
