@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 // import { PDFProcessor } from './utils/pdfExtractor.js';
 import rateLimit from 'express-rate-limit';
 import fs from 'fs';
+import multer from 'multer';
 
 dotenv.config();
 
@@ -63,8 +64,9 @@ let pdfProcessor = null;
 async function getPDFProcessor() {
     if (!pdfProcessor) {
         try {
-                    const PDFProcessor = (await import('./utils/pdfExtractor.js')).default;
-        pdfProcessor = new PDFProcessor();
+            const PDFProcessor = (await import('./utils/pdfExtractor.js')).default;
+            pdfProcessor = new PDFProcessor();
+            await pdfProcessor.initialize();
         } catch (error) {
             console.warn('PDF Processor initialization failed:', error.message);
             // Create a fallback processor that doesn't use PDF parsing
@@ -84,12 +86,76 @@ async function getPDFProcessor() {
 app.use(cors());
 app.use(express.json());
 
-// Serve static files
-app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
-app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
-app.use('/scripts', express.static(path.join(__dirname, 'public', 'scripts')));
-app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
-app.use(express.static(path.join(__dirname, 'public')));
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB limit
+    },
+    fileFilter: function (req, file, cb) {
+        // Accept only image files
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'), false);
+        }
+    }
+});
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Serve static files with cache-busting headers
+app.use('/js', express.static(path.join(__dirname, 'public', 'js'), {
+    setHeaders: (res, path) => {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+}));
+app.use('/images', express.static(path.join(__dirname, 'public', 'images'), {
+    setHeaders: (res, path) => {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+}));
+app.use('/scripts', express.static(path.join(__dirname, 'public', 'scripts'), {
+    setHeaders: (res, path) => {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+}));
+app.use('/css', express.static(path.join(__dirname, 'public', 'css'), {
+    setHeaders: (res, path) => {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+}));
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        }
+    }
+}));
 
 // API Key middleware
 app.use('/api', (req, res, next) => {
@@ -326,15 +392,22 @@ app.get('/api/supabase-config', (req, res) => {
 // Claude Chat API
 app.post('/api/chat', async (req, res) => {
   try {
-    const { messages, grade, subject, language, userProfile } = req.body;
+    const { message, messages, grade, subject, language, userProfile } = req.body;
 
-    // Validate input
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Invalid messages format' });
+    // Handle both single message and messages array formats
+    let messageArray = [];
+    if (message) {
+      // Single message format from frontend
+      messageArray = [{ role: 'user', content: message }];
+    } else if (messages && Array.isArray(messages)) {
+      // Messages array format
+      messageArray = messages;
+    } else {
+      return res.status(400).json({ error: 'Invalid message format' });
     }
 
     // Filter out any messages with null/undefined/empty content
-    const filteredMessages = messages.filter(msg =>
+    const filteredMessages = messageArray.filter(msg =>
       msg.content && typeof msg.content === 'string' && msg.content.trim() !== ''
     );
 
@@ -432,11 +505,12 @@ Use natural language without any formatting or special characters.`;
     const response = chat.choices[0]?.message?.content || '';
 
     res.json({
-      response: response,
+      success: true,
+      reply: response,
       status: "success",
       usage: {
-        input_tokens: completion.usage.input_tokens,
-        output_tokens: completion.usage.output_tokens
+        input_tokens: chat.usage?.input_tokens || 0,
+        output_tokens: chat.usage?.output_tokens || 0
       }
     });
 
@@ -1725,6 +1799,12 @@ async function loadBooks() {
             console.log('No processed_books.json found, skipping book loading');
         }
         
+        // Initialize with empty book content if none loaded
+        if (!pdfProc.bookContent || pdfProc.bookContent.size === 0) {
+            pdfProc.bookContent = new Map();
+            console.log('Initialized empty book content');
+        }
+        
         // PDF processing temporarily disabled to prevent errors - will fix later
         // Only process PDFs if we have a books directory and no existing content
         /*
@@ -1742,6 +1822,599 @@ async function loadBooks() {
         console.log('Continuing without book data...');
         // Don't fail the server startup for book loading issues
     }
+}
+
+// Syllabus-based Test Generation API
+app.post('/api/ai/generate-test', async (req, res) => {
+    try {
+        const { subject, classLevel, board, numberOfQuestions, duration } = req.body;
+        
+        // Load syllabus data
+        const syllabusPath = `public/Syllabus/${board}/Class_${classLevel}.json`;
+        let syllabusData;
+        try {
+            const fileContent = fs.readFileSync(syllabusPath, 'utf8');
+            syllabusData = JSON.parse(fileContent);
+        } catch (error) {
+            console.error('❌ Error parsing syllabus JSON:', error);
+            console.error('📁 File path:', syllabusPath);
+            console.error('📄 File content preview:', fs.readFileSync(syllabusPath, 'utf8').substring(0, 500));
+            throw new Error(`Invalid JSON in syllabus file: ${error.message}`);
+        }
+        
+        const subjectData = syllabusData.subjects[subject];
+        if (!subjectData) {
+            return res.status(400).json({ success: false, error: 'Subject not found in syllabus' });
+        }
+        
+        // Create syllabus context for AI
+        const syllabusContext = JSON.stringify(subjectData, null, 2);
+        
+        const prompt = `Generate ${numberOfQuestions} multiple choice questions for ${subject} class ${classLevel} ${board} students.
+        
+        Syllabus context:
+        ${syllabusContext}
+        
+        Requirements:
+        1. Questions should be based on the syllabus topics
+        2. Each question should have 4 options (A, B, C, D)
+        3. Include the correct answer
+        4. Questions should be appropriate for class ${classLevel} level
+        5. Mix different types of questions (conceptual, application, analysis)
+        
+        Format each question as JSON object with: question, options (array), correctAnswer (0-3), explanation
+        
+        Return only valid JSON array of questions.`;
+        
+        const openai = getOpenAI();
+        const completion = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                { role: "system", content: "You are an expert educational content creator. Generate only valid JSON." },
+                { role: "user", content: prompt }
+            ],
+            max_tokens: 2000,
+            temperature: 0.7
+        });
+        
+        const questionsText = completion.choices[0].message.content;
+        const questions = JSON.parse(questionsText);
+        
+        res.json({ 
+            success: true, 
+            questions: questions,
+            duration: duration,
+            subject: subject,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Test Generation Error:', error);
+        res.status(500).json({ success: false, error: 'Test generation failed' });
+    }
+});
+
+// Azure OCR API endpoint
+app.post('/api/ocr', upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No image file provided' });
+        }
+
+        const azureEndpoint = process.env.AZURE_VISION_ENDPOINT;
+        const azureKey = process.env.AZURE_VISION_KEY;
+
+        if (!azureEndpoint || !azureKey) {
+            console.error('Azure Vision credentials not found in environment variables');
+            return res.status(500).json({ success: false, error: 'OCR service not configured' });
+        }
+
+        // Read the image file
+        const imageBuffer = fs.readFileSync(req.file.path);
+        const base64Image = imageBuffer.toString('base64');
+
+        // Prepare the request to Azure Vision API
+        const requestBody = {
+            requests: [
+                {
+                    image: {
+                        content: base64Image
+                    },
+                    features: [
+                        {
+                            type: "TEXT_DETECTION",
+                            maxResults: 1
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Make request to Azure Vision API
+        const response = await fetch(`${azureEndpoint}/vision/v3.2/read/analyze`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Ocp-Apim-Subscription-Key': azureKey
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Azure Vision API error: ${response.status} ${response.statusText}`);
+        }
+
+        // Get the operation location for polling
+        const operationLocation = response.headers.get('Operation-Location');
+        
+        // Poll for results
+        let result;
+        for (let i = 0; i < 10; i++) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const resultResponse = await fetch(operationLocation, {
+                headers: {
+                    'Ocp-Apim-Subscription-Key': azureKey
+                }
+            });
+            
+            result = await resultResponse.json();
+            
+            if (result.status === 'succeeded') {
+                break;
+            }
+        }
+
+        // Extract text from the result
+        let extractedText = '';
+        if (result.analyzeResult && result.analyzeResult.readResults) {
+            for (const page of result.analyzeResult.readResults) {
+                for (const line of page.lines) {
+                    extractedText += line.text + ' ';
+                }
+            }
+        }
+
+        // Clean up the uploaded file
+        fs.unlinkSync(req.file.path);
+
+        if (extractedText.trim()) {
+            res.json({ 
+                success: true, 
+                text: extractedText.trim(),
+                timestamp: new Date().toISOString()
+            });
+        } else {
+            res.json({ 
+                success: false, 
+                error: 'No text found in the image',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+    } catch (error) {
+        console.error('OCR Error:', error);
+        
+        // Clean up the uploaded file if it exists
+        if (req.file && req.file.path) {
+            try {
+                fs.unlinkSync(req.file.path);
+            } catch (cleanupError) {
+                console.error('Error cleaning up file:', cleanupError);
+            }
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            error: 'OCR processing failed',
+            details: error.message
+        });
+    }
+});
+
+// Enhanced Leaderboard endpoint with India Top 3 and City Top 3
+app.post('/api/students/leaderboard', async (req, res) => {
+    try {
+        const { type, city } = req.body;
+        const supabase = getSupabase();
+        
+        console.log('🏆 Fetching leaderboard data, type:', type, 'city:', city);
+        
+        let leaderboardData = {};
+        
+        // Get India Top 3 (Global)
+        const { data: indiaTop3, error: indiaError } = await supabase
+            .from('students')
+            .select('id, name, class, city, monthly_total_points, monthly_quiz_points, monthly_assessment_points')
+            .order('monthly_total_points', { ascending: false })
+            .limit(3);
+        
+        if (indiaError) {
+            console.error('❌ Error fetching India top 3:', indiaError);
+        } else {
+            leaderboardData.indiaTop3 = indiaTop3 || [];
+            console.log('🇮🇳 India Top 3 fetched:', indiaTop3?.length || 0);
+        }
+        
+        // Get City Top 3 (if city is specified)
+        if (city && city !== 'all') {
+            const { data: cityTop3, error: cityError } = await supabase
+                .from('students')
+                .select('id, name, class, city, monthly_total_points, monthly_quiz_points, monthly_assessment_points')
+                .eq('city', city)
+                .order('monthly_total_points', { ascending: false })
+                .limit(3);
+            
+            if (cityError) {
+                console.error('❌ Error fetching city top 3:', cityError);
+            } else {
+                leaderboardData.cityTop3 = cityTop3 || [];
+                console.log(`🏙️ ${city} Top 3 fetched:`, cityTop3?.length || 0);
+            }
+        }
+        
+        // Get Class Top 3 (if type is 'class')
+        if (type === 'class') {
+            const { data: classTop3, error: classError } = await supabase
+                .from('students')
+                .select('id, name, class, city, monthly_total_points, monthly_quiz_points, monthly_assessment_points')
+                .order('monthly_total_points', { ascending: false })
+                .limit(3);
+            
+            if (classError) {
+                console.error('❌ Error fetching class top 3:', classError);
+            } else {
+                leaderboardData.classTop3 = classTop3 || [];
+                console.log('📚 Class Top 3 fetched:', classTop3?.length || 0);
+            }
+        }
+        
+        // Add ranks and avatars
+        Object.keys(leaderboardData).forEach(key => {
+            if (leaderboardData[key]) {
+                leaderboardData[key].forEach((user, index) => {
+                    user.rank = index + 1;
+                    user.avatar = user.name.charAt(0).toUpperCase();
+                    user.points = user.monthly_total_points || 0;
+                });
+            }
+        });
+        
+        console.log(`✅ Leaderboard data fetched successfully`);
+        res.json(leaderboardData);
+        
+    } catch (error) {
+        console.error('❌ Leaderboard error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Internal server error' 
+        });
+    }
+});
+
+// Profile API endpoints
+app.get('/api/profile', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        const token = authHeader.split(' ')[1];
+        const supabase = getSupabase();
+        
+        // Verify the token and get user info
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !user) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        
+        // Get user profile from students table
+        const { data: profile, error: profileError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+        
+        if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            return res.status(500).json({ error: 'Failed to fetch profile' });
+        }
+        
+        res.json(profile);
+        
+    } catch (error) {
+        console.error('Profile API error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.put('/api/profile', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        const token = authHeader.split(' ')[1];
+        const supabase = getSupabase();
+        
+        // Verify the token and get user info
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !user) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        
+        const profileData = req.body;
+        
+        // Update user profile in students table
+        const { data, error } = await supabase
+            .from('students')
+            .update(profileData)
+            .eq('id', user.id)
+            .select()
+            .single();
+        
+        if (error) {
+            console.error('Profile update error:', error);
+            return res.status(500).json({ error: 'Failed to update profile' });
+        }
+        
+        res.json(data);
+        
+    } catch (error) {
+        console.error('Profile update API error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Subjects API endpoint
+app.get('/api/subjects', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        const token = authHeader.split(' ')[1];
+        const supabase = getSupabase();
+        
+        // Verify the token and get user info
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !user) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        
+        // Get user's subjects from students table
+        const { data: profile, error: profileError } = await supabase
+            .from('students')
+            .select('subjects')
+            .eq('id', user.id)
+            .single();
+        
+        if (profileError) {
+            console.error('Subjects fetch error:', profileError);
+            return res.status(500).json({ error: 'Failed to fetch subjects' });
+        }
+        
+        // Return subjects array or default subjects
+        const subjects = profile?.subjects || ['Mathematics', 'Science', 'English', 'Hindi', 'EVS'];
+        res.json(subjects);
+        
+    } catch (error) {
+        console.error('Subjects API error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Videos API endpoint
+app.get('/api/videos', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        const token = authHeader.split(' ')[1];
+        const supabase = getSupabase();
+        
+        // Verify the token and get user info
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !user) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        
+        // Get user's class to filter videos
+        const { data: profile, error: profileError } = await supabase
+            .from('students')
+            .select('class')
+            .eq('id', user.id)
+            .single();
+        
+        if (profileError) {
+            console.error('Profile fetch error for videos:', profileError);
+            return res.status(500).json({ error: 'Failed to fetch user profile' });
+        }
+        
+        // Fetch videos for the user's class
+        const { data: videos, error: videosError } = await supabase
+            .from('videos')
+            .select('*')
+            .eq('class', profile.class)
+            .order('created_at', { ascending: false });
+        
+        if (videosError) {
+            console.error('Videos fetch error:', videosError);
+            return res.status(500).json({ error: 'Failed to fetch videos' });
+        }
+        
+        res.json(videos || []);
+        
+    } catch (error) {
+        console.error('Videos API error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Points Update API endpoint
+app.post('/api/points/update', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        const token = authHeader.split(' ')[1];
+        const supabase = getSupabase();
+        
+        // Verify the token and get user info
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !user) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        
+        const { points, type, timestamp } = req.body;
+        
+        if (!points || !type) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Update both total and monthly points in students table
+        let updateData = {};
+        if (type === 'quiz') {
+            updateData.quiz_points = supabase.raw(`quiz_points + ${points}`);
+            updateData.monthly_quiz_points = supabase.raw(`COALESCE(monthly_quiz_points, 0) + ${points}`);
+            updateData.monthly_total_points = supabase.raw(`COALESCE(monthly_total_points, 0) + ${points}`);
+        } else if (type === 'assessment') {
+            updateData.assessment_points = supabase.raw(`assessment_points + ${points}`);
+            updateData.monthly_assessment_points = supabase.raw(`COALESCE(monthly_assessment_points, 0) + ${points}`);
+            updateData.monthly_total_points = supabase.raw(`COALESCE(monthly_total_points, 0) + ${points}`);
+        }
+        
+        const { error: updateError } = await supabase
+            .from('students')
+            .update(updateData)
+            .eq('id', user.id);
+        
+        if (updateError) {
+            console.error('Points update error:', updateError);
+            return res.status(500).json({ error: 'Failed to update points' });
+        }
+        
+        res.json({ success: true, message: 'Points updated successfully' });
+        
+    } catch (error) {
+        console.error('Points update API error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Monthly Leaderboard Reset Function
+async function resetMonthlyLeaderboard() {
+    try {
+        console.log('🔄 Resetting monthly leaderboard...');
+        const supabase = getSupabase();
+        
+        // Reset all students' monthly points to 0
+        const { error: resetError } = await supabase
+            .from('students')
+            .update({ 
+                monthly_quiz_points: 0,
+                monthly_assessment_points: 0,
+                monthly_total_points: 0
+            })
+            .neq('id', 0); // Add WHERE clause to fix SQL error
+        
+        if (resetError) {
+            console.error('❌ Error resetting monthly leaderboard:', resetError);
+        } else {
+            console.log('✅ Monthly leaderboard reset successfully');
+        }
+        
+        // Archive current month's data to monthly_stats table (only if table exists)
+        try {
+            const { data: students, error: fetchError } = await supabase
+                .from('students')
+                .select('id, quiz_points, assessment_points, total_points');
+            
+            if (!fetchError && students && students.length > 0) {
+                const currentMonth = new Date().getMonth();
+                const currentYear = new Date().getFullYear();
+                
+                for (const student of students) {
+                    try {
+                        const { error: archiveError } = await supabase
+                            .from('monthly_stats')
+                            .insert({
+                                student_id: student.id,
+                                month: currentMonth,
+                                year: currentYear,
+                                quiz_points: student.quiz_points || 0,
+                                assessment_points: student.assessment_points || 0,
+                                total_points: student.total_points || 0
+                            });
+                        
+                        if (archiveError) {
+                            console.error('❌ Error archiving student stats:', archiveError);
+                        }
+                    } catch (archiveError) {
+                        console.error('❌ Error archiving individual student:', archiveError);
+                    }
+                }
+                
+                console.log(`✅ Archived stats for ${students.length} students`);
+            }
+        } catch (archiveError) {
+            console.log('⚠️ monthly_stats table not available, skipping archive');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error in monthly leaderboard reset:', error);
+    }
+}
+
+// Schedule monthly leaderboard reset (runs at 12 AM on 1st of each month)
+function scheduleMonthlyReset() {
+    try {
+        const now = new Date();
+        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0);
+        let timeUntilNextMonth = nextMonth.getTime() - now.getTime();
+        
+        // Fix timeout overflow issue - limit to maximum safe timeout
+        const maxTimeout = 2147483647; // Maximum safe timeout in milliseconds (~24 days)
+        if (timeUntilNextMonth > maxTimeout) {
+            timeUntilNextMonth = maxTimeout;
+            console.log('⚠️ Timeout too large, using maximum safe timeout');
+        }
+        
+        console.log(`⏰ Next monthly leaderboard reset scheduled for: ${nextMonth.toISOString()}`);
+        console.log(`⏰ Time until next reset: ${Math.round(timeUntilNextMonth / (1000 * 60 * 60 * 24))} days`);
+        
+        setTimeout(() => {
+            resetMonthlyLeaderboard();
+            // Schedule next reset
+            scheduleMonthlyReset();
+        }, timeUntilNextMonth);
+        
+    } catch (error) {
+        console.error('❌ Error scheduling monthly reset:', error);
+        // Fallback: schedule for next day if there's an error
+        setTimeout(() => {
+            console.log('🔄 Retrying monthly reset scheduler...');
+            scheduleMonthlyReset();
+        }, 24 * 60 * 60 * 1000); // 24 hours
+    }
+}
+
+// Start the monthly reset scheduler (only in production or when explicitly enabled)
+if (process.env.NODE_ENV === 'production' || process.env.ENABLE_MONTHLY_RESET === 'true') {
+    scheduleMonthlyReset();
+} else {
+    console.log('⚠️ Monthly leaderboard reset scheduler disabled in development mode');
 }
 
 // Only load books in development environment

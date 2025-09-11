@@ -335,14 +335,14 @@
                         <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
                             Ask your school administrator for the registration code
                         </small>
-                    </div>
+                </div>
                     
                     <div id="schoolInfo" class="school-info hidden">
                         <h4>School Details</h4>
                         <p id="schoolName">School Name: <span></span></p>
                         <p id="schoolLocation">Location: <span></span></p>
                         <p id="schoolBoard">Board: <span></span></p>
-                    </div>
+                </div>
                 </div>
 
                 <!-- Personal Information -->
@@ -505,7 +505,7 @@
                     const schoolInfo = result.data;
                     displaySchoolInfo(schoolInfo);
                     showAlert('School found! Please verify the details above.', 'success');
-                } else {
+                    } else {
                     hideSchoolInfo();
                     showAlert('Invalid school registration code. Please check with your school administrator.', 'error');
                 }
@@ -615,10 +615,10 @@
             `;
             
             // Auto-hide after 5 seconds
-            setTimeout(() => {
+                setTimeout(() => {
                 alertContainer.innerHTML = '';
-            }, 5000);
-        }
+                }, 5000);
+            }
     </script>
 </body>
 </html>

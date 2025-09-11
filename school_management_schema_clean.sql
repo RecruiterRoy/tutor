@@ -175,6 +175,15 @@ CREATE TABLE students (
     parent_email VARCHAR(255),
     address TEXT,
     admission_date DATE,
+    -- New fields for enhanced registration
+    class VARCHAR(10), -- Class level (1-12)
+    school_name VARCHAR(255), -- School name (for independent students)
+    board_name VARCHAR(100), -- CBSE, ICSE, State Board, etc.
+    state_board_name VARCHAR(100), -- Specific state board name
+    city VARCHAR(100), -- Living city
+    state VARCHAR(100), -- Living state
+    study_city VARCHAR(100), -- Study city (if different from living city)
+    study_state VARCHAR(100), -- Study state (if different from living state)
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'inactive')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -191,6 +200,21 @@ CREATE TABLE subjects (
     description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(school_id, name)
+);
+
+-- School join requests (for independent students to request joining schools)
+CREATE TABLE school_join_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+    school_id UUID REFERENCES schools(id) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    requested_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    reviewed_by UUID REFERENCES school_admins(id),
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(student_id, school_id)
 );
 
 -- Class subjects mapping (which subjects are taught in which class)
@@ -547,6 +571,40 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_class_student_count_trigger
     AFTER INSERT OR DELETE OR UPDATE ON students
     FOR EACH ROW EXECUTE FUNCTION update_class_student_count();
+
+-- RLS Policies for school_join_requests
+ALTER TABLE school_join_requests ENABLE ROW LEVEL SECURITY;
+
+-- Students can view their own requests
+CREATE POLICY "Students can view own join requests" ON school_join_requests
+FOR SELECT USING (student_id::text = auth.uid()::text);
+
+-- Students can create join requests
+CREATE POLICY "Students can create join requests" ON school_join_requests
+FOR INSERT WITH CHECK (student_id::text = auth.uid()::text);
+
+-- School admins can view requests for their school
+CREATE POLICY "School admins can view school join requests" ON school_join_requests
+FOR SELECT USING (
+    EXISTS (
+        SELECT 1 FROM school_admins 
+        WHERE id::text = auth.uid()::text 
+        AND school_id = school_join_requests.school_id
+    )
+);
+
+-- School admins can update requests for their school
+CREATE POLICY "School admins can update school join requests" ON school_join_requests
+FOR UPDATE USING (
+    EXISTS (
+        SELECT 1 FROM school_admins 
+        WHERE id::text = auth.uid()::text 
+        AND school_id = school_join_requests.school_id
+    )
+);
+
+-- Grant permissions
+GRANT ALL ON school_join_requests TO authenticated;
 
 -- Success message
 DO $$

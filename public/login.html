@@ -14,7 +14,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(to bottom, #eff6ff, #fef3c7);
@@ -132,19 +132,8 @@
             background: #3b82f6;
             color: white;
         }
-
+        
         .btn-primary:hover {
-            background: #1e40af;
-            transform: translateY(-1px);
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-secondary {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .btn-secondary:hover {
             background: #1e40af;
             transform: translateY(-1px);
             box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
@@ -219,41 +208,52 @@
                 <div class="logo">
                     <div class="logo-icon">🎓</div>
                     <span class="logo-text">tution.app</span>
-                </div>
+            </div>
                 <h1 class="card-title">Welcome Back</h1>
                 <p class="card-subtitle">Sign in to your account to continue</p>
-            </div>
+        </div>
 
             <div id="alert-container"></div>
 
             <form id="loginForm">
-                <div class="form-group">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input type="email" id="email" name="email" class="form-input" required>
-                </div>
-
-                <div class="form-group">
+            <div class="form-group">
+                    <label for="email" class="form-label">Email Address or Phone Number</label>
+                    <input type="text" id="email" name="email" class="form-input" placeholder="Enter your email or phone number" required>
+            </div>
+            
+            <div class="form-group">
                     <label for="password" class="form-label">Password</label>
                     <input type="password" id="password" name="password" class="form-input" required>
-                </div>
+            </div>
 
                 <button type="submit" class="btn btn-primary" id="loginBtn">
                     <span id="loginText">Sign In</span>
                     <span id="loginSpinner" class="spinner hidden"></span>
-                </button>
+            </button>
             </form>
 
             <div class="form-footer">
                 <p>Don't have an account?</p>
                 <div style="display: flex; gap: 1rem; justify-content: center;">
-                    <a href="register.html" class="btn btn-outline">Student Registration</a>
+                    <a href="student-register.html" class="btn btn-outline">Student Registration</a>
                     <a href="school-register.html" class="btn btn-outline">School Registration</a>
                 </div>
+        </div>
             </div>
         </div>
-    </div>
+
+    <!-- Load Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Load config -->
+    <script src="js/config.js"></script>
 
     <script>
+        // Initialize Supabase client
+        const supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -273,17 +273,21 @@
             alertContainer.innerHTML = '';
             
             try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password })
+                console.log('🔐 Attempting login for:', email);
+                
+                // Use Supabase authentication
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
                 });
                 
-                const data = await response.json();
+                if (error) {
+                    throw new Error(error.message);
+                }
                 
-                if (response.ok) {
+                if (data.user) {
+                    console.log('✅ Authentication successful');
+                    
                     // Show success message
                     alertContainer.innerHTML = `
                         <div class="alert alert-success">
@@ -291,21 +295,91 @@
                         </div>
                     `;
                     
+                    // Check which table the user exists in to determine role
+                    let userRole = 'student'; // default
+                    let userData = null;
+                    
+                    console.log('🔍 Checking user role for:', email);
+                    
+                    // Check if user is a school admin (by email or phone)
+                    const { data: adminData, error: adminError } = await supabase
+                        .from('school_admins')
+                        .select('*')
+                        .or(`email.eq.${email},phone.eq.${email}`)
+                        .limit(1);
+                    
+                    console.log('👨‍💼 Admin check:', { adminData, adminError });
+                    
+                    if (adminData && adminData.length > 0 && !adminError) {
+                        userRole = 'school_admin';
+                        userData = adminData[0];
+                        console.log('✅ User is school admin:', userData);
+                    } else {
+                        // Check if user is a teacher (by email or phone)
+                        const { data: teacherData, error: teacherError } = await supabase
+                            .from('teachers')
+                            .select('*')
+                            .or(`email.eq.${email},phone.eq.${email}`)
+                            .limit(1);
+                        
+                        console.log('👨‍🏫 Teacher check:', { teacherData, teacherError });
+                        
+                        if (teacherData && teacherData.length > 0 && !teacherError) {
+                            userRole = 'teacher';
+                            userData = teacherData[0];
+                            console.log('✅ User is teacher:', userData);
+                        } else {
+                            // Check if user is a student (by email or phone)
+                            const { data: studentData, error: studentError } = await supabase
+                                .from('students')
+                    .select('*')
+                                .or(`email.eq.${email},phone.eq.${email}`)
+                                .limit(1);
+                            
+                            console.log('👨‍🎓 Student check:', { studentData, studentError });
+                            
+                            if (studentData && studentData.length > 0 && !studentError) {
+                                userRole = 'student';
+                                userData = studentData[0];
+                                console.log('✅ User is student:', userData);
+                            } else {
+                                console.log('⚠️ User not found in any table, using default student role');
+                                // If user not found in any table, create basic user data
+                                userData = {
+                                    email: email,
+                                    role: 'student'
+                                };
+                            }
+                        }
+                    }
+                    
+                    // Store user data in localStorage for session management
+                    const userDataToStore = {
+                        ...userData,
+                        role: userRole
+                    };
+                    
+                    localStorage.setItem('userData', JSON.stringify(userDataToStore));
+                    localStorage.setItem('isLoggedIn', 'true');
+                    
+                    console.log('💾 Stored user data:', userDataToStore);
+                    
                     // Redirect based on user role
                     setTimeout(() => {
-                        if (data.user.role === 'school_admin') {
+                        console.log('🚀 Redirecting to:', userRole);
+                        if (userRole === 'school_admin') {
                             window.location.href = 'admin-dashboard.html';
-                        } else if (data.user.role === 'teacher') {
+                        } else if (userRole === 'teacher') {
                             window.location.href = 'teacher-dashboard.html';
-                        } else {
+            } else {
                             window.location.href = 'student-dashboard.html';
                         }
                     }, 1000);
                 } else {
-                    throw new Error(data.error || 'Login failed');
+                    throw new Error('Login failed');
                 }
             } catch (error) {
-                console.error('Login error:', error);
+                console.error('❌ Login error:', error);
                 
                 // Show error message
                 alertContainer.innerHTML = `
