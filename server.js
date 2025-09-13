@@ -2286,23 +2286,19 @@ app.post('/api/points/update', async (req, res) => {
         // Update both total and monthly points in students table
         let updateData = {};
         if (type === 'quiz') {
-            updateData.quiz_points = supabase.raw(`quiz_points + ${points}`);
-            updateData.monthly_quiz_points = supabase.raw(`COALESCE(monthly_quiz_points, 0) + ${points}`);
-            updateData.monthly_total_points = supabase.raw(`COALESCE(monthly_total_points, 0) + ${points}`);
+            // Use SQL increment functions
+            const { error: quizError } = await supabase.rpc('increment_quiz_points', {
+                student_id: user.id,
+                points: points
+            });
+            if (quizError) throw quizError;
         } else if (type === 'assessment') {
-            updateData.assessment_points = supabase.raw(`assessment_points + ${points}`);
-            updateData.monthly_assessment_points = supabase.raw(`COALESCE(monthly_assessment_points, 0) + ${points}`);
-            updateData.monthly_total_points = supabase.raw(`COALESCE(monthly_total_points, 0) + ${points}`);
-        }
-        
-        const { error: updateError } = await supabase
-            .from('students')
-            .update(updateData)
-            .eq('id', user.id);
-        
-        if (updateError) {
-            console.error('Points update error:', updateError);
-            return res.status(500).json({ error: 'Failed to update points' });
+            // Use SQL increment functions
+            const { error: assessmentError } = await supabase.rpc('increment_assessment_points', {
+                student_id: user.id,
+                points: points
+            });
+            if (assessmentError) throw assessmentError;
         }
         
         res.json({ success: true, message: 'Points updated successfully' });
