@@ -105,10 +105,10 @@
                                             <span class="text-lg">⏹️</span>
                                         </button>
                                         <button id="micButton" onclick="startMic()" class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors" title="Voice Input">
-                                            <span class="text-lg">🎤</span>
+                                            <span class="text-sm font-medium">Mic</span>
                                         </button>
                                         <button id="ocrButton" onclick="startCameraScan()" class="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors" title="Camera OCR">
-                                            <span class="text-lg">📷</span>
+                                            <span class="text-sm font-medium">Camera</span>
                                         </button>
                                     </div>
                                 </div>
@@ -125,13 +125,13 @@
                                     <input type="text" id="chatInput" placeholder="Ask me anything about your studies..." 
                                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
                                     <button id="cameraButton" onclick="startCameraScan()" class="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                                        📷
+                                        Camera
                                     </button>
-                                    <button id="voiceButton" class="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                                        🎤
+                                    <button id="voiceButton" onclick="startMic()" class="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                        Mic
                                     </button>
-                                    <button id="sendButton" class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                        📤
+                                    <button id="sendButton" onclick="sendMessage()" class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                        Send
                                     </button>
                                 </div>
                             </div>
@@ -1118,16 +1118,14 @@
                 
                 // Refresh data for specific sections
                 if (sectionName === 'profileSection') {
+                    console.error('❌ Section not found:', sectionName);
                     refreshProfileData();
                 } else if (sectionName === 'dailyQuizSection') {
                     refreshQuizData();
                 } else if (sectionName === 'assessmentSection') {
                     refreshAssessmentData();
                 }
-            } else {
-                console.error('❌ Section not found:', sectionName);
-            }
-        }
+            } 
 
         async function refreshProfileData() {
             console.log('🔄 Refreshing profile data...');
@@ -3618,11 +3616,12 @@
                 window.recognition.onstart = () => {
                     console.log('🎤 Microphone started');
                     // Update UI to show mic is active
-                    const micButton = document.querySelector('[onclick="startMic()"]');
-                    if (micButton) {
-                        micButton.classList.add('bg-red-500');
-                        micButton.classList.remove('bg-blue-100');
-                    }
+                    const micButtons = document.querySelectorAll('#micButton, #voiceButton');
+                    micButtons.forEach(button => {
+                        button.classList.add('bg-red-500', 'text-white');
+                        button.classList.remove('bg-blue-100', 'bg-green-600');
+                        button.textContent = 'Listening...';
+                    });
                 };
                 
                 window.recognition.onresult = (event) => {
@@ -3664,11 +3663,17 @@
             }
             
             // Update UI
-            const micButton = document.querySelector('[onclick="startMic()"]');
-            if (micButton) {
-                micButton.classList.remove('bg-red-500');
-                micButton.classList.add('bg-blue-100');
-            }
+            const micButtons = document.querySelectorAll('#micButton, #voiceButton');
+            micButtons.forEach(button => {
+                button.classList.remove('bg-red-500', 'text-white');
+                if (button.id === 'micButton') {
+                    button.classList.add('bg-blue-100', 'text-blue-600');
+                    button.textContent = 'Mic';
+                } else {
+                    button.classList.add('bg-green-600', 'text-white');
+                    button.textContent = 'Mic';
+                }
+            });
             
             console.log('🔇 Microphone stopped');
         }
