@@ -9,7 +9,7 @@
     <!-- Favicon and App Icons -->
     <link rel="icon" type="image/jpeg" href="images/tution.app_emblem.jpg">
     <link rel="apple-touch-icon" href="images/tution.app_emblem.jpg">
-    <link rel="manifest" href="manifest.json">
+    <!-- <link rel="manifest" href="manifest.json"> -->
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -294,9 +294,12 @@
             
             try {
                 console.log('🔐 Attempting login for:', email);
+                console.log('🔍 Current URL:', window.location.href);
+                console.log('🔍 Current origin:', window.location.origin);
                 
                 // Get the Supabase client
                 const supabaseClient = await getSupabaseClient();
+                console.log('✅ Supabase client obtained:', supabaseClient);
                 
                 // Use Supabase authentication
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -390,13 +393,21 @@
                     // Redirect based on user role
                     setTimeout(() => {
                         console.log('🚀 Redirecting to:', userRole);
+                        console.log('🚀 Current location before redirect:', window.location.href);
+                        
+                        let redirectUrl = '';
                         if (userRole === 'school_admin') {
-                            window.location.href = 'admin-dashboard.html';
+                            redirectUrl = 'admin-dashboard.html';
                         } else if (userRole === 'teacher') {
-                            window.location.href = 'teacher-dashboard.html';
+                            redirectUrl = 'teacher-dashboard.html';
                         } else {
-                            window.location.href = 'student-dashboard.html';
+                            redirectUrl = 'student-dashboard.html';
                         }
+                        
+                        console.log('🚀 Redirect URL:', redirectUrl);
+                        console.log('🚀 Full redirect URL:', window.location.origin + '/' + redirectUrl);
+                        
+                        window.location.href = redirectUrl;
                     }, 1000);
                 } else {
                     throw new Error('Login failed');
