@@ -112,10 +112,12 @@ const upload = multer({
     }
 });
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+// Create uploads directory if it doesn't exist (only in non-serverless environments)
+if (!process.env.VERCEL) {
+    const uploadsDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
 }
 
 // Serve static files with cache-busting headers
@@ -1833,12 +1835,12 @@ app.post('/api/ai/generate-test', async (req, res) => {
         const syllabusPath = `public/Syllabus/${board}/Class_${classLevel}.json`;
         let syllabusData;
         try {
-            const fileContent = fs.readFileSync(syllabusPath, 'utf8');
+            // Use async file reading for serverless compatibility
+            const fileContent = await fs.promises.readFile(syllabusPath, 'utf8');
             syllabusData = JSON.parse(fileContent);
         } catch (error) {
             console.error('❌ Error parsing syllabus JSON:', error);
             console.error('📁 File path:', syllabusPath);
-            console.error('📄 File content preview:', fs.readFileSync(syllabusPath, 'utf8').substring(0, 500));
             throw new Error(`Invalid JSON in syllabus file: ${error.message}`);
         }
         
@@ -1909,7 +1911,7 @@ app.post('/api/ocr', upload.single('image'), async (req, res) => {
         }
 
         // Read the image file
-        const imageBuffer = fs.readFileSync(req.file.path);
+        const imageBuffer = await fs.promises.readFile(req.file.path);
         const base64Image = imageBuffer.toString('base64');
 
         // Prepare the request to Azure Vision API
@@ -1975,7 +1977,7 @@ app.post('/api/ocr', upload.single('image'), async (req, res) => {
         }
 
         // Clean up the uploaded file
-        fs.unlinkSync(req.file.path);
+        await fs.promises.unlink(req.file.path);
 
         if (extractedText.trim()) {
             res.json({ 
@@ -1997,7 +1999,7 @@ app.post('/api/ocr', upload.single('image'), async (req, res) => {
         // Clean up the uploaded file if it exists
         if (req.file && req.file.path) {
             try {
-                fs.unlinkSync(req.file.path);
+                await fs.promises.unlink(req.file.path);
             } catch (cleanupError) {
                 console.error('Error cleaning up file:', cleanupError);
             }
@@ -2418,7 +2420,13 @@ if (process.env.NODE_ENV !== 'production') {
     loadBooks();
 }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Tutor.AI backend listening at http://localhost:${PORT}`);
-}); 
+// Export the app for Vercel serverless functions
+export default app;
+
+// Only start server if not in Vercel environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`Tutor.AI backend listening at http://localhost:${PORT}`);
+    });
+} 
