@@ -466,22 +466,33 @@
     </div>
 
     <script>
-        // Initialize Supabase
-        let supabase;
-
-        async function initializeSupabase() {
-            try {
-                const response = await fetch('/api/config');
-                const config = await response.json();
-                supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-            } catch (error) {
-                console.error('Error initializing Supabase:', error);
-                showAlert('Failed to initialize application. Please refresh the page.', 'error');
+        // Use the existing Supabase client from supabaseClient.js
+        // Wait for the client to be initialized
+        async function getSupabaseClient() {
+            // Wait for the client to be available
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (window.supabaseClient) {
+                return window.supabaseClient;
+            } else {
+                throw new Error('Supabase client not available');
             }
         }
 
         // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initializeSupabase);
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await getSupabaseClient();
+                console.log('✅ Supabase client ready for registration');
+            } catch (error) {
+                console.error('Error initializing Supabase:', error);
+                showAlert('Failed to initialize application. Please refresh the page.', 'error');
+            }
+        });
 
         // School code validation
         document.getElementById('schoolCode').addEventListener('blur', async function() {

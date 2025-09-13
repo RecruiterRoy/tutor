@@ -251,10 +251,22 @@
     <script src="js/auth.js"></script>
 
     <script>
-        // Initialize Supabase client
-        const supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        // Use the existing Supabase client from supabaseClient.js
+        // Wait for the client to be initialized
+        async function getSupabaseClient() {
+            // Wait for the client to be available
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (window.supabaseClient) {
+                return window.supabaseClient;
+            } else {
+                throw new Error('Supabase client not available');
+            }
+        }
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -277,8 +289,11 @@
             try {
                 console.log('🔐 Attempting login for:', email);
                 
+                // Get the Supabase client
+                const supabaseClient = await getSupabaseClient();
+                
                 // Use Supabase authentication
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
@@ -304,7 +319,7 @@
                     console.log('🔍 Checking user role for:', email);
                     
                     // Check if user is a school admin (by email or phone)
-                    const { data: adminData, error: adminError } = await supabase
+                    const { data: adminData, error: adminError } = await supabaseClient
                         .from('school_admins')
                         .select('*')
                         .or(`email.eq.${email},phone.eq.${email}`)
@@ -318,7 +333,7 @@
                         console.log('✅ User is school admin:', userData);
                     } else {
                         // Check if user is a teacher (by email or phone)
-                        const { data: teacherData, error: teacherError } = await supabase
+                        const { data: teacherData, error: teacherError } = await supabaseClient
                             .from('teachers')
                             .select('*')
                             .or(`email.eq.${email},phone.eq.${email}`)
@@ -332,9 +347,9 @@
                             console.log('✅ User is teacher:', userData);
                         } else {
                             // Check if user is a student (by email or phone)
-                            const { data: studentData, error: studentError } = await supabase
+                            const { data: studentData, error: studentError } = await supabaseClient
                                 .from('students')
-                    .select('*')
+                                .select('*')
                                 .or(`email.eq.${email},phone.eq.${email}`)
                                 .limit(1);
                             
