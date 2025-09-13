@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - tution.app</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Configuration and Client Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="api.js"></script>
+    <script src="ai-assistant.js"></script>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+    <!-- Mobile Sidebar -->
+    <div class="mobile-sidebar">
+        <div class="sidebar-header">
+            <h1 class="logo">👨‍🏫 Teacher</h1>
+            <p class="text-sm opacity-80" id="teacherName">Loading...</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <button onclick="showSection('dashboard')" class="nav-item">
+                📊 Dashboard
+            </button>
+            <button onclick="showSection('classes')" class="nav-item">
+                🏫 My Classes
+            </button>
+            <button onclick="showSection('homework')" class="nav-item">
+                📚 Homework
+            </button>
+            <button onclick="showSection('attendance')" class="nav-item">
+                ✅ Attendance
+            </button>
+            <button onclick="showSection('exams')" class="nav-item">
+                📝 Exams
+            </button>
+            <button onclick="showSection('lessonPlans')" class="nav-item">
+                📖 Lesson Plans
+            </button>
+            <button onclick="showSection('students')" class="nav-item">
+                👨‍🎓 Students
+            </button>
+            <button onclick="logout()" class="nav-item logout-btn">
+                🚪 Logout
+            </button>
+        </nav>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Desktop Sidebar -->
+        <div class="sidebar desktop-sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">👨‍🏫 Teacher</h1>
+                <p class="text-sm opacity-80" id="teacherName">Loading...</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button onclick="showSection('dashboard')" class="nav-item">
+                    📊 Dashboard
+                </button>
+                <button onclick="showSection('classes')" class="nav-item">
+                    🏫 My Classes
+                </button>
+                <button onclick="showSection('homework')" class="nav-item">
+                    📚 Homework
+                </button>
+                <button onclick="showSection('attendance')" class="nav-item">
+                    ✅ Attendance
+                </button>
+                <button onclick="showSection('exams')" class="nav-item">
+                    📝 Exams
+                </button>
+                <button onclick="showSection('lessonPlans')" class="nav-item">
+                    📖 Lesson Plans
+                </button>
+                <button onclick="showSection('students')" class="nav-item">
+                    👨‍🎓 Students
+                </button>
+                <button onclick="logout()" class="nav-item logout-btn">
+                    🚪 Logout
+                </button>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="section">
+                <div class="card">
+                    <h2 class="card-title">📊 Teacher Dashboard</h2>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalClasses">0</div>
+                            <div class="stat-label">Classes Teaching</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalStudents">0</div>
+                            <div class="stat-label">Total Students</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="pendingHomework">0</div>
+                            <div class="stat-label">Pending Homework</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="todayClasses">0</div>
+                            <div class="stat-label">Today's Classes</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <h3 class="card-subtitle">Today's Schedule</h3>
+                            <div id="todaySchedule" class="schedule-list">
+                                <div class="text-muted">Loading schedule...</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3 class="card-subtitle">Quick Actions</h3>
+                            <div class="quick-actions">
+                                <button onclick="showSection('homework')" class="btn-secondary">
+                                    📚 Assign Homework
+                                </button>
+                                <button onclick="showSection('attendance')" class="btn-secondary">
+                                    ✅ Take Attendance
+                                </button>
+                                <button onclick="showSection('lessonPlans')" class="btn-secondary">
+                                    📖 Create Lesson Plan
+                                </button>
+                                <button onclick="showSection('exams')" class="btn-secondary">
+                                    📝 Schedule Exam
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classes Section -->
+            <div id="classesSection" class="section hidden">
+                <div class="card">
+                    <h2 class="card-title">🏫 My Classes</h2>
+                    
+                    <div class="grid-3" id="classesGrid">
+                        <div class="text-muted">Loading classes...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Homework Section -->
+            <div id="homeworkSection" class="section hidden">
+                <div class="card">
+                    <h2 class="card-title">📚 Homework Management</h2>
+                    
+                    <div class="mb-4">
+                        <button onclick="showHomeworkForm()" class="btn-primary">
+                            ➕ Assign Homework
+                        </button>
+                    </div>
+
+                    <div class="grid-3" id="homeworkGrid">
+                        <div class="text-muted">Loading homework...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Section -->
+            <div id="attendanceSection" class="section hidden">
+                <div class="card">
+                    <h2 class="card-title">✅ Attendance Management</h2>
+                    
+                    <div class="form-row">
+                        <select id="attendanceClass" class="form-select">
+                            <option value="">Select Class</option>
+                        </select>
+                        <input type="date" id="attendanceDate" class="form-input">
+                        <button onclick="loadAttendanceStudents()" class="btn-primary">
+                            Load Students
+                        </button>
+                    </div>
+
+                    <div id="attendanceTable" class="hidden">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Roll No</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody">
+                            </tbody>
+                        </table>
+                        <button onclick="saveAttendance()" class="btn-primary mt-4">
+                            Save Attendance
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other sections -->
+            <div id="examsSection" class="section hidden">
+                <div class="card">
+                    <h2 class="card-title">📝 Exam Management</h2>
+                    <p class="text-muted">Exam management features coming soon...</p>
+                </div>
+            </div>
+
+            <div id="lessonPlansSection" class="section hidden">
+                <div class="card">
+                    <h2 class="card-title">📖 Lesson Plans</h2>
+                    <p class="text-muted">AI-powered lesson plan generation coming soon...</p>
+                </div>
+            </div>
+
+            <div id="studentsSection" class="section hidden">
+                <div class="card">
+                    <h2 class="card-title">👨‍🎓 My Students</h2>
+                    <p class="text-muted">Student management features coming soon...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use the existing Supabase client from supabaseClient.js
+        let currentUser = null;
+        let teacherData = null;
+        
+        // Wait for the client to be initialized
+        async function getSupabaseClient() {
+            // Wait for the client to be available
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (window.supabaseClient) {
+                return window.supabaseClient;
+            } else {
+                throw new Error('Supabase client not available');
+            }
+        }
+        
+        // Initialize Supabase client
+        async function initializeSupabase() {
+            try {
+                await getSupabaseClient();
+                return true;
+            } catch (error) {
+                console.error('Error loading Supabase config:', error);
+                return false;
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Initializing teacher dashboard...');
+            
+            // Initialize Supabase first
+            const supabaseInitialized = await initializeSupabase();
+            if (!supabaseInitialized) {
+                console.error('Failed to initialize Supabase');
+                alert('Failed to connect to the server. Please refresh the page.');
+                return;
+            }
+            
+            // Check authentication
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            currentUser = session.user;
+            
+            // Check if user is teacher
+            if (currentUser.user_metadata?.role !== 'teacher') {
+                alert('Access denied. Only teachers can access this page.');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            console.log('✅ Teacher authenticated:', currentUser.email);
+            
+            // Load teacher data
+            await loadTeacherData();
+            
+            // Load dashboard data
+            await loadDashboardData();
+            
+            // Show dashboard section by default
+            showSection('dashboard');
+        });
+
+        async function loadTeacherData() {
+            try {
+                const { data, error } = await supabase
+                    .from('teachers')
+                    .select('*')
+                    .eq('email', currentUser.email)
+                    .single();
+
+                if (error) throw error;
+
+                teacherData = data;
+                document.getElementById('teacherName').textContent = data.full_name;
+
+            } catch (error) {
+                console.error('Error loading teacher data:', error);
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Load counts
+                document.getElementById('totalClasses').textContent = teacherData.classes_taught?.length || 0;
+                document.getElementById('totalStudents').textContent = '0'; // Will be calculated
+                document.getElementById('pendingHomework').textContent = '0'; // Will be calculated
+                document.getElementById('todayClasses').textContent = '0'; // Will be calculated
+
+                // Load today's schedule
+                await loadTodaySchedule();
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        async function loadTodaySchedule() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const scheduleDiv = document.getElementById('todaySchedule');
+                
+                // Mock schedule data - in real implementation, this would come from database
+                const schedule = [
+                    { time: '8:00 AM', class: 'Class 9A', subject: 'Mathematics' },
+                    { time: '9:00 AM', class: 'Class 10B', subject: 'Mathematics' },
+                    { time: '10:00 AM', class: 'Class 8A', subject: 'Mathematics' }
+                ];
+
+                scheduleDiv.innerHTML = '';
+                schedule.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'schedule-item';
+                    div.innerHTML = `
+                        <span class="schedule-time">${item.time}</span>
+                        <span class="schedule-details">${item.class} - ${item.subject}</span>
+                    `;
+                    scheduleDiv.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+            }
+        }
+
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + 'Section').classList.remove('hidden');
+            
+            // Load section-specific data
+            if (sectionName === 'classes') {
+                loadClasses();
+            } else if (sectionName === 'homework') {
+                loadHomework();
+            } else if (sectionName === 'attendance') {
+                loadAttendanceClasses();
+            }
+        }
+
+        async function loadClasses() {
+            try {
+                const classesGrid = document.getElementById('classesGrid');
+                classesGrid.innerHTML = '';
+
+                // Mock classes data - in real implementation, this would come from database
+                const classes = [
+                    { name: 'Class 9A', subject: 'Mathematics', students: 35, time: '8:00 AM' },
+                    { name: 'Class 10B', subject: 'Mathematics', students: 32, time: '9:00 AM' },
+                    { name: 'Class 8A', subject: 'Mathematics', students: 38, time: '10:00 AM' }
+                ];
+
+                classes.forEach(cls => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `
+                        <h3 class="card-subtitle">${cls.name}</h3>
+                        <p class="text-muted mb-2">${cls.subject}</p>
+                        <p class="text-sm text-muted">${cls.students} students</p>
+                        <p class="text-sm text-muted">${cls.time}</p>
+                        <button onclick="viewClassDetails('${cls.name}')" class="btn-primary btn-sm">
+                            View Details
+                        </button>
+                    `;
+                    classesGrid.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error('Error loading classes:', error);
+            }
+        }
+
+        async function loadHomework() {
+            try {
+                const homeworkGrid = document.getElementById('homeworkGrid');
+                homeworkGrid.innerHTML = '';
+
+                // Mock homework data - in real implementation, this would come from database
+                const homework = [
+                    { title: 'Algebra Practice', class: 'Class 9A', dueDate: '2024-01-15', submissions: 28 },
+                    { title: 'Geometry Problems', class: 'Class 10B', dueDate: '2024-01-16', submissions: 25 },
+                    { title: 'Basic Math Review', class: 'Class 8A', dueDate: '2024-01-17', submissions: 30 }
+                ];
+
+                homework.forEach(hw => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `
+                        <h3 class="card-subtitle">${hw.title}</h3>
+                        <p class="text-muted mb-2">${hw.class}</p>
+                        <p class="text-sm text-muted">Due: ${hw.dueDate}</p>
+                        <p class="text-sm text-muted">${hw.submissions} submissions</p>
+                        <button onclick="viewHomeworkDetails('${hw.title}')" class="btn-primary btn-sm">
+                            View Details
+                        </button>
+                    `;
+                    homeworkGrid.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error('Error loading homework:', error);
+            }
+        }
+
+        async function loadAttendanceClasses() {
+            try {
+                const classSelect = document.getElementById('attendanceClass');
+                classSelect.innerHTML = '<option value="">Select Class</option>';
+
+                // Mock classes - in real implementation, this would come from database
+                const classes = ['Class 9A', 'Class 10B', 'Class 8A'];
+                
+                classes.forEach(cls => {
+                    const option = document.createElement('option');
+                    option.value = cls;
+                    option.textContent = cls;
+                    classSelect.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Error loading attendance classes:', error);
+            }
+        }
+
+        async function loadAttendanceStudents() {
+            try {
+                const selectedClass = document.getElementById('attendanceClass').value;
+                const selectedDate = document.getElementById('attendanceDate').value;
+
+                if (!selectedClass || !selectedDate) {
+                    alert('Please select both class and date');
+                    return;
+                }
+
+                const tableBody = document.getElementById('attendanceTableBody');
+                tableBody.innerHTML = '';
+
+                // Mock students data - in real implementation, this would come from database
+                const students = [
+                    { name: 'Rahul Kumar', rollNo: '001' },
+                    { name: 'Priya Sharma', rollNo: '002' },
+                    { name: 'Amit Singh', rollNo: '003' },
+                    { name: 'Neha Patel', rollNo: '004' }
+                ];
+
+                students.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${student.name}</td>
+                        <td>${student.rollNo}</td>
+                        <td>
+                            <select class="form-select attendance-status">
+                                <option value="present">Present</option>
+                                <option value="absent">Absent</option>
+                                <option value="late">Late</option>
+                            </select>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                document.getElementById('attendanceTable').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error loading attendance students:', error);
+            }
+        }
+
+        async function saveAttendance() {
+            try {
+                const selectedClass = document.getElementById('attendanceClass').value;
+                const selectedDate = document.getElementById('attendanceDate').value;
+                const attendanceRows = document.querySelectorAll('#attendanceTableBody tr');
+
+                const attendanceData = [];
+                attendanceRows.forEach(row => {
+                    const name = row.cells[0].textContent;
+                    const rollNo = row.cells[1].textContent;
+                    const status = row.querySelector('.attendance-status').value;
+                    
+                    attendanceData.push({
+                        student_name: name,
+                        roll_number: rollNo,
+                        class: selectedClass,
+                        date: selectedDate,
+                        status: status
+                    });
+                });
+
+                // In real implementation, save to database
+                console.log('Attendance data:', attendanceData);
+                alert('Attendance saved successfully!');
+
+            } catch (error) {
+                console.error('Error saving attendance:', error);
+                alert('Failed to save attendance');
+            }
+        }
+
+        function showHomeworkForm() {
+            // Implementation for homework form
+            alert('Homework assignment form will be implemented here');
+        }
+
+        function viewClassDetails(className) {
+            // Implementation for viewing class details
+            alert(`Viewing details for ${className}`);
+        }
+
+        function viewHomeworkDetails(homeworkTitle) {
+            // Implementation for viewing homework details
+            alert(`Viewing details for ${homeworkTitle}`);
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.mobile-sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        async function logout() {
+            try {
+                await supabase.auth.signOut();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

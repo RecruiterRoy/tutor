@@ -1,0 +1,290 @@
+
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { 
+  Home, // Added
+  GraduationCap, 
+  MessageCircle, 
+  Video, 
+  Trophy, 
+  BarChart3, 
+  User, 
+  Menu,
+  X,
+  BookOpen,
+  Target,
+  Users,
+  CreditCard // Added
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { User as UserEntity } from "@/entities/User";
+import { UserProfile } from "@/entities/UserProfile";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Added
+
+const navigationItems = [
+  {
+    title: "Home",
+    url: createPageUrl("Home"),
+    icon: Home,
+    description: "Welcome to tution.app"
+  },
+  {
+    title: "Classroom",
+    url: createPageUrl("Classroom"),
+    icon: Users,
+    description: "Interactive AI teachers"
+  },
+  {
+    title: "Assessments",
+    url: createPageUrl("Assessment"),
+    icon: Target,
+    description: "Test your knowledge"
+  },
+  {
+    title: "Learning Videos",
+    url: createPageUrl("Videos"),
+    icon: Video,
+    description: "Educational content"
+  },
+  {
+    title: "Daily Challenges",
+    url: createPageUrl("DailyChallenges"),
+    icon: Trophy,
+    description: "Earn points & streaks"
+  },
+  {
+    title: "Progress Analytics",
+    url: createPageUrl("Analytics"),
+    icon: BarChart3,
+    description: "Track your growth"
+  },
+  {
+    title: "Profile",
+    url: createPageUrl("Profile"),
+    icon: User,
+    description: "Manage your account"
+  },
+  {
+    title: "Premium",
+    url: createPageUrl("Premium"),
+    icon: CreditCard,
+    description: "Upgrade your plan"
+  }
+];
+
+export default function Layout({ children, currentPageName }) {
+  const location = useLocation();
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const currentUser = await UserEntity.me();
+      setUser(currentUser);
+      
+      const profiles = await UserProfile.filter({ created_by: currentUser.email });
+      if (profiles.length > 0) {
+        setProfile(profiles[0]);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+    setIsLoading(false);
+  };
+
+  const handleLogin = async () => {
+      try {
+        await UserEntity.loginWithRedirect(window.location.href);
+      } catch (e) {
+        console.error(e);
+      }
+  };
+
+  const isPublicPage = currentPageName === "Home";
+
+  if (!user && !isPublicPage && !isLoading) {
+    return (
+        <div className="w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50 p-4">
+            <Card className="max-w-md w-full text-center p-8 shadow-2xl bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                    <CardTitle className="text-2xl">Access Denied</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="mb-6 text-gray-600">Please log in to access this page and continue your learning journey.</p>
+                    <Button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700">
+                        Log In
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+    );
+  }
+
+  if (isPublicPage) {
+    return <>{children}</>;
+  }
+  
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-orange-50">
+        <style>
+          {`
+            :root {
+              --primary-blue: #1e40af;
+              --accent-orange: #f59e0b;
+              --success-green: #10b981;
+              --text-dark: #1f2937;
+              --text-light: #6b7280;
+            }
+          `}
+        </style>
+        
+        <Sidebar className="border-r border-blue-100 bg-white/80 backdrop-blur-sm">
+          <SidebarHeader className="border-b border-blue-100 p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                <GraduationCap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Tution.app</h2>
+                <p className="text-xs text-gray-500">AI-Powered Learning</p>
+              </div>
+            </div>
+          </SidebarHeader>
+          
+          <SidebarContent className="p-3">
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2">
+                Learning Hub
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu className="space-y-1">
+                  {navigationItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton 
+                        asChild 
+                        className={`group hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 rounded-xl p-3 ${
+                          location.pathname === item.url ? 'bg-blue-50 text-blue-700 border border-blue-200' : ''
+                        }`}
+                      >
+                        <Link to={item.url} className="flex items-center gap-3">
+                          <item.icon className="w-5 h-5" />
+                          <div className="flex-1">
+                            <span className="font-medium text-sm">{item.title}</span>
+                            <p className="text-xs text-gray-500 group-hover:text-blue-600">
+                              {item.description}
+                            </p>
+                          </div>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {profile && (
+              <SidebarGroup className="mt-6">
+                <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2">
+                  Your Progress
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <div className="px-3 py-2 space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-orange-500" />
+                        Points
+                      </span>
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                        {profile.total_points || 0}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 flex items-center gap-2">
+                        <Target className="w-4 h-4 text-green-500" />
+                        Streak
+                      </span>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                        {profile.daily_streak || 0} days
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Class {profile.class_level}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {profile.board}
+                      </Badge>
+                    </div>
+                  </div>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+          </SidebarContent>
+
+          <SidebarFooter className="border-t border-blue-100 p-4">
+            {!isLoading && (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {user?.full_name?.[0]?.toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">
+                    {profile?.student_name || user?.full_name || 'Student'}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant={profile?.subscription_status === 'premium' ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {profile?.subscription_status === 'premium' ? 'Premium' : 'Free'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            )}
+          </SidebarFooter>
+        </Sidebar>
+
+        <main className="flex-1 flex flex-col">
+          {/* Mobile header */}
+          <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 px-4 py-3 md:hidden">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="hover:bg-blue-50 p-2 rounded-lg transition-colors duration-200" />
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-6 h-6 text-blue-600" />
+                <h1 className="text-lg font-bold text-gray-900">Tution.app</h1>
+              </div>
+            </div>
+          </header>
+
+          {/* Main content */}
+          <div className="flex-1 overflow-auto">
+            {children}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
+  );
+}

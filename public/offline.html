@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Tutor App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+        }
+        .offline-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="offline-card rounded-2xl p-8 max-w-md w-full text-center">
+        <!-- Offline Icon -->
+        <div class="mb-6">
+            <div class="w-20 h-20 mx-auto bg-red-500/20 rounded-full flex items-center justify-center pulse-animation">
+                <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <h1 class="text-2xl font-bold text-white mb-4">You're Offline</h1>
+        
+        <!-- Message -->
+        <p class="text-gray-200 mb-6">
+            Don't worry! You can still access your downloaded content and continue learning offline.
+        </p>
+
+        <!-- Available Features -->
+        <div class="bg-white/10 rounded-lg p-4 mb-6">
+            <h3 class="text-white font-semibold mb-3">Available Offline:</h3>
+            <ul class="text-gray-200 text-sm space-y-2">
+                <li class="flex items-center">
+                    <span class="text-green-400 mr-2">✓</span>
+                    Downloaded videos and lessons
+                </li>
+                <li class="flex items-center">
+                    <span class="text-green-400 mr-2">✓</span>
+                    Saved notes and progress
+                </li>
+                <li class="flex items-center">
+                    <span class="text-green-400 mr-2">✓</span>
+                    Practice questions
+                </li>
+                <li class="flex items-center">
+                    <span class="text-green-400 mr-2">✓</span>
+                    Study materials
+                </li>
+            </ul>
+        </div>
+
+        <!-- Actions -->
+        <div class="space-y-3">
+            <button onclick="retryConnection()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                🔄 Try Again
+            </button>
+            
+            <button onclick="goToOfflineContent()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                📚 Continue Learning
+            </button>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="mt-6 text-sm text-gray-300">
+            <div id="connectionStatus" class="flex items-center justify-center">
+                <div class="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+                <span>Checking connection...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check connection status
+        function checkConnection() {
+            const statusElement = document.getElementById('connectionStatus');
+            
+            if (navigator.onLine) {
+                statusElement.innerHTML = `
+                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                    <span>Connected! Redirecting...</span>
+                `;
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 2000);
+            } else {
+                statusElement.innerHTML = `
+                    <div class="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+                    <span>No internet connection</span>
+                `;
+            }
+        }
+
+        // Retry connection
+        function retryConnection() {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.innerHTML = `
+                <div class="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></div>
+                <span>Checking connection...</span>
+            `;
+            
+            setTimeout(checkConnection, 1000);
+        }
+
+        // Go to offline content
+        function goToOfflineContent() {
+            // Store offline mode preference
+            localStorage.setItem('offlineMode', 'true');
+            window.location.href = '/dashboard.html';
+        }
+
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            checkConnection();
+        });
+
+        window.addEventListener('offline', () => {
+            checkConnection();
+        });
+
+        // Check connection on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkConnection();
+            
+            // Check connection every 5 seconds
+            setInterval(checkConnection, 5000);
+        });
+    </script>
+</body>
+</html>

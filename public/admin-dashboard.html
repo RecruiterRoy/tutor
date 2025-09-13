@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - tution.app</title>
+    
+    <!-- Load Supabase CDN first -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Unified CSS -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Configuration and Client Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="api.js"></script>
+    <script src="ai-assistant.js"></script>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button id="mobileMenuBtn" class="mobile-menu-btn">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
+    <!-- Mobile Sidebar -->
+    <div id="mobileSidebar" class="mobile-sidebar">
+        <div class="flex justify-between items-center mb-8">
+            <div class="text-center flex-1">
+                <h1 class="text-2xl font-bold">SchoolEdu</h1>
+                <p class="text-sm opacity-80">Admin Dashboard</p>
+            </div>
+            <button onclick="closeMobileSidebar()" class="ml-4 p-2 hover:bg-white hover:bg-opacity-20 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <nav class="space-y-2">
+            <button onclick="showSection('dashboard'); closeMobileSidebar();" class="nav-item">
+                📊 Dashboard
+            </button>
+            <button onclick="showSection('teachers'); closeMobileSidebar();" class="nav-item">
+                👨‍🏫 Teachers
+            </button>
+            <button onclick="showSection('students'); closeMobileSidebar();" class="nav-item">
+                👨‍🎓 Students
+            </button>
+            <button onclick="showSection('classes'); closeMobileSidebar();" class="nav-item">
+                🏫 Classes
+            </button>
+            <button onclick="showSection('exams'); closeMobileSidebar();" class="nav-item">
+                📝 Exams
+            </button>
+            <button onclick="showSection('fees'); closeMobileSidebar();" class="nav-item">
+                💰 Fees
+            </button>
+            <button onclick="showSection('reports'); closeMobileSidebar();" class="nav-item">
+                📈 Reports
+            </button>
+            <button onclick="showSection('settings'); closeMobileSidebar();" class="nav-item">
+                ⚙️ Settings
+            </button>
+            <button onclick="logout()" class="nav-item text-red-400 hover:bg-red-500 hover:text-white mt-8">
+                🚪 Logout
+            </button>
+        </nav>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Desktop Sidebar -->
+        <div class="sidebar desktop-sidebar">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold">SchoolEdu</h1>
+                <p class="text-sm opacity-80">Admin Dashboard</p>
+            </div>
+            
+            <nav class="space-y-2">
+                <button onclick="showSection('dashboard')" class="nav-item">
+                    📊 Dashboard
+                </button>
+                <button onclick="showSection('teachers')" class="nav-item">
+                    👨‍🏫 Teachers
+                </button>
+                <button onclick="showSection('students')" class="nav-item">
+                    👨‍🎓 Students
+                </button>
+                <button onclick="showSection('classes')" class="nav-item">
+                    🏫 Classes
+                </button>
+                <button onclick="showSection('exams')" class="nav-item">
+                    📝 Exams
+                </button>
+                <button onclick="showSection('fees')" class="nav-item">
+                    💰 Fees
+                </button>
+                <button onclick="showSection('reports')" class="nav-item">
+                    📈 Reports
+                </button>
+                <button onclick="showSection('settings')" class="nav-item">
+                    ⚙️ Settings
+                </button>
+                <button onclick="logout()" class="nav-item text-red-400 hover:bg-red-500 hover:text-white mt-8">
+                    🚪 Logout
+                </button>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 School Overview</h2>
+                        <p class="card-subtitle">Welcome back, <span id="adminName">Admin</span>!</p>
+                    </div>
+                    
+                    <!-- Stats Grid -->
+                    <div class="grid-4 mb-6">
+                        <div class="card bg-blue-50 p-4 text-center">
+                            <div class="text-3xl font-bold text-blue-600" id="totalStudents">0</div>
+                            <div class="text-sm text-gray-600">Total Students</div>
+                        </div>
+                        <div class="card bg-green-50 p-4 text-center">
+                            <div class="text-3xl font-bold text-green-600" id="totalTeachers">0</div>
+                            <div class="text-sm text-gray-600">Total Teachers</div>
+                        </div>
+                        <div class="card bg-purple-50 p-4 text-center">
+                            <div class="text-3xl font-bold text-purple-600" id="totalClasses">0</div>
+                            <div class="text-sm text-gray-600">Total Classes</div>
+                        </div>
+                        <div class="card bg-orange-50 p-4 text-center">
+                            <div class="text-3xl font-bold text-orange-600" id="pendingApprovals">0</div>
+                            <div class="text-sm text-gray-600">Pending Approvals</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="card bg-gray-50 p-4">
+                        <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+                        <div id="recentActivity" class="space-y-3">
+                            <div class="flex items-center p-3 bg-white rounded-lg">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                                <div>
+                                    <p class="text-sm font-medium">New teacher registration</p>
+                                    <p class="text-xs text-gray-500">2 minutes ago</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center p-3 bg-white rounded-lg">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                                <div>
+                                    <p class="text-sm font-medium">Student attendance marked</p>
+                                    <p class="text-xs text-gray-500">15 minutes ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teachers Section -->
+            <div id="teachersSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">👨‍🏫 Teacher Management</h2>
+                        <p class="card-subtitle">Manage teachers and their approvals</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <button onclick="showAddTeacherModal()" class="btn-primary">
+                            ➕ Add Teacher
+                        </button>
+                    </div>
+                    
+                    <div class="card bg-gray-50 p-4">
+                        <h3 class="text-lg font-semibold mb-4">Pending Approvals</h3>
+                        <div id="pendingTeachers" class="space-y-3">
+                            <!-- Pending teachers will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-gray-50 p-4 mt-4">
+                        <h3 class="text-lg font-semibold mb-4">All Teachers</h3>
+                        <div class="overflow-x-auto">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teachersTableBody">
+                                    <!-- Teachers will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Section -->
+            <div id="studentsSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">👨‍🎓 Student Management</h2>
+                        <p class="card-subtitle">Manage students and their information</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <button onclick="showAddStudentModal()" class="btn-primary">
+                            ➕ Add Student
+                        </button>
+                    </div>
+                    
+                    <div class="card bg-gray-50 p-4">
+                        <h3 class="text-lg font-semibold mb-4">All Students</h3>
+                        <div class="overflow-x-auto">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Class</th>
+                                        <th>Roll Number</th>
+                                        <th>Phone</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentsTableBody">
+                                    <!-- Students will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classes Section -->
+            <div id="classesSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🏫 Class Management</h2>
+                        <p class="card-subtitle">Manage classes and sections</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <button onclick="showAddClassModal()" class="btn-primary">
+                            ➕ Add Class
+                        </button>
+                    </div>
+                    
+                    <div class="grid-3" id="classesGrid">
+                        <!-- Classes will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exams Section -->
+            <div id="examsSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📝 Exam Management</h2>
+                        <p class="card-subtitle">Schedule and manage exams</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <button onclick="showAddExamModal()" class="btn-primary">
+                            ➕ Schedule Exam
+                        </button>
+                    </div>
+                    
+                    <div class="card bg-gray-50 p-4">
+                        <h3 class="text-lg font-semibold mb-4">Upcoming Exams</h3>
+                        <div id="upcomingExams" class="space-y-3">
+                            <!-- Upcoming exams will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fees Section -->
+            <div id="feesSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">💰 Fee Management</h2>
+                        <p class="card-subtitle">Manage fee structure and payments</p>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="card bg-gray-50 p-4">
+                            <h3 class="text-lg font-semibold mb-4">Fee Structure</h3>
+                            <div id="feeStructure">
+                                <!-- Fee structure will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-gray-50 p-4">
+                            <h3 class="text-lg font-semibold mb-4">Pending Payments</h3>
+                            <div id="pendingPayments">
+                                <!-- Pending payments will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reportsSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📈 Reports & Analytics</h2>
+                        <p class="card-subtitle">View detailed reports and analytics</p>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="card bg-gray-50 p-4">
+                            <h3 class="text-lg font-semibold mb-4">Attendance Report</h3>
+                            <div id="attendanceReport">
+                                <!-- Attendance report will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-gray-50 p-4">
+                            <h3 class="text-lg font-semibold mb-4">Performance Report</h3>
+                            <div id="performanceReport">
+                                <!-- Performance report will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settingsSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">⚙️ Settings</h2>
+                        <p class="card-subtitle">Manage school settings and preferences</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="card bg-gray-50 p-4">
+                            <h3 class="text-lg font-semibold mb-4">School Information</h3>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label class="form-label">School Name</label>
+                                    <input type="text" id="schoolName" class="form-input" value="Loading...">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">School Type</label>
+                                    <input type="text" id="schoolType" class="form-input" value="Loading...">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-gray-50 p-4">
+                            <h3 class="text-lg font-semibold mb-4">Notification Settings</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="emailNotifications" class="mr-2">
+                                    <span>Email Notifications</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="smsNotifications" class="mr-2">
+                                    <span>SMS Notifications</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="pushNotifications" class="mr-2">
+                                    <span>Push Notifications</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use the existing Supabase client from supabaseClient.js
+        // Wait for the client to be initialized
+        async function getSupabaseClient() {
+            // Wait for the client to be available
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (window.supabaseClient) {
+                return window.supabaseClient;
+            } else {
+                throw new Error('Supabase client not available');
+            }
+        }
+        
+        // Initialize Supabase client
+        async function initializeSupabase() {
+            try {
+                await getSupabaseClient();
+                return true;
+            } catch (error) {
+                console.error('Error loading Supabase config:', error);
+                return false;
+            }
+        }
+
+        // Global variables
+        let currentUser = null;
+        let schoolData = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Initializing admin dashboard...');
+            
+            // Initialize Supabase first
+            const supabaseInitialized = await initializeSupabase();
+            if (!supabaseInitialized) {
+                console.error('Failed to initialize Supabase');
+                alert('Failed to connect to the server. Please refresh the page.');
+                return;
+            }
+            
+            // Check authentication
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            currentUser = session.user;
+            console.log('✅ User authenticated:', currentUser.email);
+            
+            // Check if user is school admin
+            if (currentUser.user_metadata?.role !== 'school_admin') {
+                alert('Access denied. Only school administrators can access this dashboard.');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Load school data
+            await loadSchoolData();
+            
+            // Load dashboard data
+            await loadDashboardData();
+            
+            // Setup mobile sidebar
+            setupMobileSidebar();
+            
+            // Show dashboard section by default
+            showSection('dashboard');
+            
+            console.log('✅ Admin dashboard initialized');
+        });
+
+        // Load school data
+        async function loadSchoolData() {
+            try {
+                // Get school data for the current admin
+                const { data: adminData, error: adminError } = await supabase
+                    .from('school_admins')
+                    .select('school_id, name')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (adminError) throw adminError;
+                
+                const { data: school, error: schoolError } = await supabase
+                    .from('schools')
+                    .select('*')
+                    .eq('id', adminData.school_id)
+                    .single();
+                
+                if (schoolError) throw schoolError;
+                
+                schoolData = school;
+                document.getElementById('adminName').textContent = adminData.name;
+                
+                console.log('✅ School data loaded:', schoolData);
+                
+            } catch (error) {
+                console.error('❌ Error loading school data:', error);
+                alert('Failed to load school data. Please refresh the page.');
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                // Use the new API endpoint
+                const response = await fetch('/api/school-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'get_school_dashboard_stats',
+                        data: { school_id: schoolData.id }
+                    })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to load dashboard stats');
+                }
+
+                const stats = result.data;
+
+                // Update dashboard stats
+                document.getElementById('totalStudents').textContent = stats.total_students;
+                document.getElementById('totalTeachers').textContent = stats.total_teachers;
+                document.getElementById('totalClasses').textContent = stats.total_classes;
+                document.getElementById('pendingApprovals').textContent = stats.pending_teachers + stats.pending_students;
+                
+                console.log('✅ Dashboard stats loaded');
+                
+            } catch (error) {
+                console.error('❌ Error loading dashboard data:', error);
+            }
+        }
+
+        // Setup mobile sidebar
+        function setupMobileSidebar() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mobileSidebar = document.getElementById('mobileSidebar');
+
+            mobileMenuBtn.addEventListener('click', function() {
+                mobileSidebar.classList.add('active');
+                sidebarOverlay.classList.add('active');
+            });
+
+            sidebarOverlay.addEventListener('click', function() {
+                closeMobileSidebar();
+            });
+        }
+
+        // Close mobile sidebar
+        function closeMobileSidebar() {
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mobileSidebar = document.getElementById('mobileSidebar');
+            
+            mobileSidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        }
+
+        // Show section
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected section
+            const selectedSection = document.getElementById(sectionName + 'Section');
+            if (selectedSection) {
+                selectedSection.classList.remove('hidden');
+            }
+            
+            // Add active class to nav item
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                if (item.textContent.toLowerCase().includes(sectionName)) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Load section-specific data
+            switch (sectionName) {
+                case 'teachers':
+                    loadTeachers();
+                    break;
+                case 'students':
+                    loadStudents();
+                    break;
+                case 'classes':
+                    loadClasses();
+                    break;
+                case 'exams':
+                    loadExams();
+                    break;
+                case 'fees':
+                    loadFees();
+                    break;
+                case 'reports':
+                    loadReports();
+                    break;
+            }
+        }
+
+        // Load teachers
+        async function loadTeachers() {
+            try {
+                const response = await fetch('/api/school-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'get_teachers',
+                        data: { school_id: schoolData.id }
+                    })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to load teachers');
+                }
+
+                displayTeachers(result.data);
+                
+            } catch (error) {
+                console.error('❌ Error loading teachers:', error);
+            }
+        }
+
+        // Display teachers
+        function displayTeachers(teachers) {
+            const pendingContainer = document.getElementById('pendingTeachers');
+            const tableBody = document.getElementById('teachersTableBody');
+            
+            // Clear existing content
+            pendingContainer.innerHTML = '';
+            tableBody.innerHTML = '';
+            
+            teachers.forEach(teacher => {
+                if (teacher.status === 'pending') {
+                    const pendingDiv = document.createElement('div');
+                    pendingDiv.className = 'flex items-center justify-between p-3 bg-white rounded-lg';
+                    pendingDiv.innerHTML = `
+                        <div>
+                            <p class="font-medium">${teacher.name}</p>
+                            <p class="text-sm text-gray-500">${teacher.email}</p>
+                        </div>
+                        <div class="space-x-2">
+                            <button onclick="approveTeacher('${teacher.id}')" class="btn-primary text-sm px-3 py-1">Approve</button>
+                            <button onclick="rejectTeacher('${teacher.id}')" class="btn-secondary text-sm px-3 py-1">Reject</button>
+                        </div>
+                    `;
+                    pendingContainer.appendChild(pendingDiv);
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${teacher.name}</td>
+                    <td>${teacher.email}</td>
+                    <td>${teacher.specialization || 'N/A'}</td>
+                    <td><span class="badge badge-${teacher.status === 'active' ? 'success' : 'warning'}">${teacher.status}</span></td>
+                    <td>
+                        <button onclick="viewTeacher('${teacher.id}')" class="text-blue-600 hover:underline">View</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Load students
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/school-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'get_students',
+                        data: { school_id: schoolData.id }
+                    })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to load students');
+                }
+
+                displayStudents(result.data);
+                
+            } catch (error) {
+                console.error('❌ Error loading students:', error);
+            }
+        }
+
+        // Display students
+        function displayStudents(students) {
+            const tableBody = document.getElementById('studentsTableBody');
+            tableBody.innerHTML = '';
+            
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.class_id || 'N/A'}</td>
+                    <td>${student.roll_number || 'N/A'}</td>
+                    <td>${student.phone || 'N/A'}</td>
+                    <td>
+                        <button onclick="viewStudent('${student.id}')" class="text-blue-600 hover:underline">View</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Approve teacher
+        async function approveTeacher(teacherId) {
+            try {
+                const response = await fetch('/api/school-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'approve_teacher',
+                        data: { teacher_id: teacherId }
+                    })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to approve teacher');
+                }
+
+                alert('Teacher approved successfully!');
+                loadTeachers();
+                loadDashboardData();
+                
+            } catch (error) {
+                console.error('❌ Error approving teacher:', error);
+                alert('Failed to approve teacher. Please try again.');
+            }
+        }
+
+        // Reject teacher
+        async function rejectTeacher(teacherId) {
+            if (confirm('Are you sure you want to reject this teacher?')) {
+                try {
+                    // Implementation for rejecting teacher
+                    alert('Teacher rejected successfully!');
+                    loadTeachers();
+                    loadDashboardData();
+                } catch (error) {
+                    console.error('❌ Error rejecting teacher:', error);
+                    alert('Failed to reject teacher. Please try again.');
+                }
+            }
+        }
+
+        // Load classes, exams, fees, reports (placeholder functions)
+        function loadClasses() {
+            console.log('Loading classes...');
+        }
+
+        function loadExams() {
+            console.log('Loading exams...');
+        }
+
+        function loadFees() {
+            console.log('Loading fees...');
+        }
+
+        function loadReports() {
+            console.log('Loading reports...');
+        }
+
+        // Modal functions (placeholder)
+        function showAddTeacherModal() {
+            alert('Add Teacher modal - to be implemented');
+        }
+
+        function showAddStudentModal() {
+            alert('Add Student modal - to be implemented');
+        }
+
+        function showAddClassModal() {
+            alert('Add Class modal - to be implemented');
+        }
+
+        function showAddExamModal() {
+            alert('Add Exam modal - to be implemented');
+        }
+
+        // View functions (placeholder)
+        function viewTeacher(teacherId) {
+            alert(`View teacher ${teacherId} - to be implemented`);
+        }
+
+        function viewStudent(studentId) {
+            alert(`View student ${studentId} - to be implemented`);
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                await supabase.auth.signOut();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('❌ Error during logout:', error);
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>

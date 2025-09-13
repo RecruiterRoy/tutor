@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration - tution.app</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="tution.app">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/jpeg" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" href="images/tution.app_emblem.jpg">
+    
+    <!-- Load Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(to bottom, #eff6ff, #fef3c7);
+            color: #1f2937;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1f2937;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtitle {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-outline {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-outline:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .form-footer p {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .info-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box h4 {
+            color: #92400e;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p {
+            color: #78350f;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .section-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .school-info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .school-info h4 {
+            color: #0c4a6e;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .school-info p {
+            color: #0369a1;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .registration-code {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .dropdown-container {
+            position: relative;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .dropdown-item:hover {
+            background: #f9fafb;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .state-board-field {
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="logo">
+                    <div class="logo-icon">🎓</div>
+                    <span class="logo-text">tution.app</span>
+                </div>
+                <h1 class="card-title">Student Registration</h1>
+                <p class="card-subtitle">Join tution.app for AI-powered learning</p>
+            </div>
+
+            <div class="info-box">
+                <h4>💰 Monthly Subscription - ₹99 INR</h4>
+                <p>Get access to AI tutoring, NCERT curriculum, personalized learning, and comprehensive study materials. Cancel anytime.</p>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <form id="studentRegistrationForm">
+                <!-- Personal Information -->
+                <div class="section-card">
+                    <h3 class="section-title">👤 Personal Information</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">First Name</label>
+                            <input type="text" id="firstName" class="form-input" placeholder="Enter first name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" id="lastName" class="form-input" placeholder="Enter last name" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="email" class="form-input" placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" id="phone" class="form-input" placeholder="Enter your phone number" required>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" id="dob" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <select id="gender" class="form-select" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input type="text" id="city" class="form-input" placeholder="Enter your city" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">State</label>
+                            <select id="state" class="form-select" required>
+                                <option value="">Select State</option>
+                                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                <option value="Assam">Assam</option>
+                                <option value="Bihar">Bihar</option>
+                                <option value="Chhattisgarh">Chhattisgarh</option>
+                                <option value="Goa">Goa</option>
+                                <option value="Gujarat">Gujarat</option>
+                                <option value="Haryana">Haryana</option>
+                                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                <option value="Jharkhand">Jharkhand</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Kerala">Kerala</option>
+                                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Manipur">Manipur</option>
+                                <option value="Meghalaya">Meghalaya</option>
+                                <option value="Mizoram">Mizoram</option>
+                                <option value="Nagaland">Nagaland</option>
+                                <option value="Odisha">Odisha</option>
+                                <option value="Punjab">Punjab</option>
+                                <option value="Rajasthan">Rajasthan</option>
+                                <option value="Sikkim">Sikkim</option>
+                                <option value="Tamil Nadu">Tamil Nadu</option>
+                                <option value="Telangana">Telangana</option>
+                                <option value="Tripura">Tripura</option>
+                                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                <option value="Uttarakhand">Uttarakhand</option>
+                                <option value="West Bengal">West Bengal</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                                <option value="Ladakh">Ladakh</option>
+                                <option value="Chandigarh">Chandigarh</option>
+                                <option value="Dadra and Nagar Haveli">Dadra and Nagar Haveli</option>
+                                <option value="Daman and Diu">Daman and Diu</option>
+                                <option value="Lakshadweep">Lakshadweep</option>
+                                <option value="Puducherry">Puducherry</option>
+                                <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Information -->
+                <div class="section-card">
+                    <h3 class="section-title">📚 Academic Information</h3>
+                    <div class="form-group">
+                        <label class="form-label">Class</label>
+                        <select id="class" class="form-select" required>
+                            <option value="">Select Class</option>
+                            <option value="1">Class 1</option>
+                            <option value="2">Class 2</option>
+                            <option value="3">Class 3</option>
+                            <option value="4">Class 4</option>
+                            <option value="5">Class 5</option>
+                            <option value="6">Class 6</option>
+                            <option value="7">Class 7</option>
+                            <option value="8">Class 8</option>
+                            <option value="9">Class 9</option>
+                            <option value="10">Class 10</option>
+                            <option value="11">Class 11</option>
+                            <option value="12">Class 12</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">School Name</label>
+                        <div class="dropdown-container">
+                            <input type="text" id="schoolName" class="form-input" placeholder="Start typing school name..." autocomplete="off">
+                            <div id="schoolDropdown" class="dropdown-list"></div>
+                        </div>
+                        <small class="form-help">Type to search for your school. If not found, you can enter it manually.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Board Name</label>
+                        <select id="boardName" class="form-select" required>
+                            <option value="">Select Board</option>
+                            <option value="CBSE">CBSE (Central Board of Secondary Education)</option>
+                            <option value="ICSE">ICSE (Indian Certificate of Secondary Education)</option>
+                            <option value="State Board">State Board</option>
+                            <option value="IB">IB (International Baccalaureate)</option>
+                            <option value="IGCSE">IGCSE (International General Certificate of Secondary Education)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group state-board-field" id="stateBoardField">
+                        <label class="form-label">State Board Name</label>
+                        <select id="stateBoardName" class="form-select">
+                            <option value="">Select State Board</option>
+                            <option value="Andhra Pradesh Board">Andhra Pradesh Board</option>
+                            <option value="Arunachal Pradesh Board">Arunachal Pradesh Board</option>
+                            <option value="Assam Board">Assam Board</option>
+                            <option value="Bihar Board">Bihar Board</option>
+                            <option value="Chhattisgarh Board">Chhattisgarh Board</option>
+                            <option value="Goa Board">Goa Board</option>
+                            <option value="Gujarat Board">Gujarat Board</option>
+                            <option value="Haryana Board">Haryana Board</option>
+                            <option value="Himachal Pradesh Board">Himachal Pradesh Board</option>
+                            <option value="Jharkhand Board">Jharkhand Board</option>
+                            <option value="Karnataka Board">Karnataka Board</option>
+                            <option value="Kerala Board">Kerala Board</option>
+                            <option value="Madhya Pradesh Board">Madhya Pradesh Board</option>
+                            <option value="Maharashtra Board">Maharashtra Board</option>
+                            <option value="Manipur Board">Manipur Board</option>
+                            <option value="Meghalaya Board">Meghalaya Board</option>
+                            <option value="Mizoram Board">Mizoram Board</option>
+                            <option value="Nagaland Board">Nagaland Board</option>
+                            <option value="Odisha Board">Odisha Board</option>
+                            <option value="Punjab Board">Punjab Board</option>
+                            <option value="Rajasthan Board">Rajasthan Board</option>
+                            <option value="Sikkim Board">Sikkim Board</option>
+                            <option value="Tamil Nadu Board">Tamil Nadu Board</option>
+                            <option value="Telangana Board">Telangana Board</option>
+                            <option value="Tripura Board">Tripura Board</option>
+                            <option value="Uttar Pradesh Board">Uttar Pradesh Board</option>
+                            <option value="Uttarakhand Board">Uttarakhand Board</option>
+                            <option value="West Bengal Board">West Bengal Board</option>
+                            <option value="Delhi Board">Delhi Board</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Parent/Guardian Name</label>
+                        <input type="text" id="parentName" class="form-input" placeholder="Enter parent/guardian name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Parent/Guardian Phone</label>
+                        <input type="tel" id="parentPhone" class="form-input" placeholder="Enter parent/guardian phone" required>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Study City</label>
+                            <input type="text" id="studyCity" class="form-input" placeholder="Enter study city (if different from living city)">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Study State</label>
+                            <select id="studyState" class="form-select">
+                                <option value="">Select Study State (if different)</option>
+                                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                <option value="Assam">Assam</option>
+                                <option value="Bihar">Bihar</option>
+                                <option value="Chhattisgarh">Chhattisgarh</option>
+                                <option value="Goa">Goa</option>
+                                <option value="Gujarat">Gujarat</option>
+                                <option value="Haryana">Haryana</option>
+                                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                <option value="Jharkhand">Jharkhand</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Kerala">Kerala</option>
+                                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Manipur">Manipur</option>
+                                <option value="Meghalaya">Meghalaya</option>
+                                <option value="Mizoram">Mizoram</option>
+                                <option value="Nagaland">Nagaland</option>
+                                <option value="Odisha">Odisha</option>
+                                <option value="Punjab">Punjab</option>
+                                <option value="Rajasthan">Rajasthan</option>
+                                <option value="Sikkim">Sikkim</option>
+                                <option value="Tamil Nadu">Tamil Nadu</option>
+                                <option value="Telangana">Telangana</option>
+                                <option value="Tripura">Tripura</option>
+                                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                <option value="Uttarakhand">Uttarakhand</option>
+                                <option value="West Bengal">West Bengal</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                                <option value="Ladakh">Ladakh</option>
+                                <option value="Chandigarh">Chandigarh</option>
+                                <option value="Dadra and Nagar Haveli">Dadra and Nagar Haveli</option>
+                                <option value="Daman and Diu">Daman and Diu</option>
+                                <option value="Lakshadweep">Lakshadweep</option>
+                                <option value="Puducherry">Puducherry</option>
+                                <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Information -->
+                <div class="section-card">
+                    <h3 class="section-title">🔐 Account Information</h3>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="password" class="form-input" placeholder="Create a password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span id="submitText">Create Student Account</span>
+                    <span id="submitSpinner" class="spinner hidden"></span>
+                </button>
+            </form>
+
+            <div class="form-footer">
+                <p>Already have an account?</p>
+                <a href="login.html" class="btn btn-secondary">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use the existing Supabase client from supabaseClient.js
+        // Wait for the client to be initialized
+        async function getSupabaseClient() {
+            // Wait for the client to be available
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (window.supabaseClient) {
+                return window.supabaseClient;
+            } else {
+                throw new Error('Supabase client not available');
+            }
+        }
+
+        // School search functionality
+        let schools = [];
+        let filteredSchools = [];
+
+        // Load schools on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadSchools();
+        });
+
+        async function loadSchools() {
+            try {
+                const supabaseClient = await getSupabaseClient();
+                const { data, error } = await supabaseClient
+                    .from('schools')
+                    .select('id, name, city, state')
+                    .eq('status', 'approved');
+                
+                if (error) {
+                    console.error('Error loading schools:', error);
+                    return;
+                }
+                
+                schools = data || [];
+            } catch (error) {
+                console.error('Error loading schools:', error);
+            }
+        }
+
+        // School search input handler
+        document.getElementById('schoolName').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const dropdown = document.getElementById('schoolDropdown');
+            
+            if (searchTerm.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            
+            filteredSchools = schools.filter(school => 
+                school.name.toLowerCase().includes(searchTerm) ||
+                school.city.toLowerCase().includes(searchTerm) ||
+                school.state.toLowerCase().includes(searchTerm)
+            );
+            
+            displaySchoolDropdown(filteredSchools);
+        });
+
+        function displaySchoolDropdown(schools) {
+            const dropdown = document.getElementById('schoolDropdown');
+            
+            if (schools.length === 0) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            
+            dropdown.innerHTML = schools.map(school => 
+                `<div class="dropdown-item" onclick="selectSchool('${school.name}', '${school.id}')">
+                    ${school.name} - ${school.city}, ${school.state}
+                </div>`
+            ).join('');
+            
+            dropdown.style.display = 'block';
+        }
+
+        function selectSchool(schoolName, schoolId) {
+            document.getElementById('schoolName').value = schoolName;
+            document.getElementById('schoolDropdown').style.display = 'none';
+            // Store school ID for form submission
+            document.getElementById('schoolName').setAttribute('data-school-id', schoolId);
+        }
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('schoolDropdown');
+            const schoolInput = document.getElementById('schoolName');
+            
+            if (!schoolInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Board name change handler
+        document.getElementById('boardName').addEventListener('change', function(e) {
+            const stateBoardField = document.getElementById('stateBoardField');
+            if (e.target.value === 'State Board') {
+                stateBoardField.style.display = 'block';
+                document.getElementById('stateBoardName').required = true;
+            } else {
+                stateBoardField.style.display = 'none';
+                document.getElementById('stateBoardName').required = false;
+            }
+        });
+
+        // Form submission
+        document.getElementById('studentRegistrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            
+            // Validate passwords match
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'error');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.textContent = 'Creating Account...';
+            submitSpinner.classList.remove('hidden');
+            
+            try {
+                // Get the Supabase client
+                const supabaseClient = await getSupabaseClient();
+                
+                // Create user in Supabase Auth
+                const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                    email: document.getElementById('email').value,
+                    password: password
+                });
+                
+                if (authError) {
+                    throw new Error(authError.message);
+                }
+                
+                if (authData.user) {
+                    // Get school ID if school was selected
+                    const schoolId = document.getElementById('schoolName').getAttribute('data-school-id');
+                    
+                    // Create student profile
+                    const studentData = {
+                        id: authData.user.id,
+                        name: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
+                        email: document.getElementById('email').value,
+                        phone: document.getElementById('phone').value,
+                        date_of_birth: document.getElementById('dob').value,
+                        gender: document.getElementById('gender').value,
+                        class: document.getElementById('class').value,
+                        school_name: document.getElementById('schoolName').value,
+                        school_id: schoolId || null,
+                        board_name: document.getElementById('boardName').value,
+                        state_board_name: document.getElementById('stateBoardName').value || null,
+                        parent_name: document.getElementById('parentName').value,
+                        parent_phone: document.getElementById('parentPhone').value,
+                        city: document.getElementById('city').value,
+                        state: document.getElementById('state').value,
+                        study_city: document.getElementById('studyCity').value || document.getElementById('city').value,
+                        study_state: document.getElementById('studyState').value || document.getElementById('state').value,
+                        status: 'active',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    const { error: profileError } = await supabaseClient
+                        .from('students')
+                        .insert([studentData]);
+                    
+                    if (profileError) {
+                        // If profile creation fails, delete the auth user
+                        await supabaseClient.auth.admin.deleteUser(authData.user.id);
+                        throw new Error('Failed to create student profile: ' + profileError.message);
+                    }
+                    
+                    showAlert('Account created successfully! Please check your email to verify your account.', 'success');
+                    e.target.reset();
+                    
+                    // Redirect to login after a delay
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+                } else {
+                    throw new Error('Failed to create account');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert(error.message || 'Registration failed. Please try again.', 'error');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitText.textContent = 'Create Student Account';
+                submitSpinner.classList.add('hidden');
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alertClass = type === 'success' ? 'alert-success' : type === 'info' ? 'alert-info' : 'alert-error';
+            
+            alertContainer.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Registration - tution.app</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="tution.app">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/jpeg" href="images/tution.app_emblem.jpg">
+    <link rel="apple-touch-icon" href="images/tution.app_emblem.jpg">
+    
+    <!-- Load Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(to bottom, #eff6ff, #fef3c7);
+            color: #1f2937;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1f2937;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtitle {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .form-footer p {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .school-info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .school-info h4 {
+            color: #0c4a6e;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .school-info p {
+            color: #0369a1;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="logo">
+                    <div class="logo-icon">👨‍🏫</div>
+                    <span class="logo-text">tution.app</span>
+                </div>
+                <h1 class="card-title">Teacher Registration</h1>
+                <p class="card-subtitle">Join a school and start teaching with AI assistance</p>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <form id="teacherRegistrationForm">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <input type="text" id="firstName" class="form-input" placeholder="Enter first name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" id="lastName" class="form-input" placeholder="Enter last name" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" id="phone" class="form-input" placeholder="Enter your phone number" required>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Subject</label>
+                        <select id="subject" class="form-select" required>
+                            <option value="">Select Subject</option>
+                            <option value="mathematics">Mathematics</option>
+                            <option value="science">Science</option>
+                            <option value="english">English</option>
+                            <option value="hindi">Hindi</option>
+                            <option value="social_studies">Social Studies</option>
+                            <option value="computer_science">Computer Science</option>
+                            <option value="physics">Physics</option>
+                            <option value="chemistry">Chemistry</option>
+                            <option value="biology">Biology</option>
+                            <option value="history">History</option>
+                            <option value="geography">Geography</option>
+                            <option value="economics">Economics</option>
+                            <option value="commerce">Commerce</option>
+                            <option value="accountancy">Accountancy</option>
+                            <option value="business_studies">Business Studies</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Qualification</label>
+                        <select id="qualification" class="form-select" required>
+                            <option value="">Select Qualification</option>
+                            <option value="bachelor">Bachelor's Degree</option>
+                            <option value="master">Master's Degree</option>
+                            <option value="phd">Ph.D.</option>
+                            <option value="b_ed">B.Ed</option>
+                            <option value="m_ed">M.Ed</option>
+                            <option value="diploma">Diploma</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">School Registration Code</label>
+                    <input type="text" id="schoolCode" class="form-input" placeholder="Enter your school's registration code" required>
+                    <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                        Ask your school administrator for the registration code
+                    </small>
+                </div>
+                
+                <div id="schoolInfo" class="school-info hidden">
+                    <h4>School Details</h4>
+                    <p id="schoolName">School Name: <span></span></p>
+                    <p id="schoolLocation">Location: <span></span></p>
+                    <p id="schoolBoard">Board: <span></span></p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Create a password" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span id="submitText">Register as Teacher</span>
+                    <span id="submitSpinner" class="spinner hidden"></span>
+                </button>
+            </form>
+
+            <div class="form-footer">
+                <p>Already have an account?</p>
+                <a href="login.html" class="btn btn-secondary">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use the existing Supabase client from supabaseClient.js
+        // Wait for the client to be initialized
+        async function getSupabaseClient() {
+            // Wait for the client to be available
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (window.supabaseClient) {
+                return window.supabaseClient;
+            } else {
+                throw new Error('Supabase client not available');
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await getSupabaseClient();
+                console.log('✅ Supabase client ready for teacher registration');
+            } catch (error) {
+                console.error('Error initializing Supabase:', error);
+                showAlert('Failed to initialize application. Please refresh the page.', 'error');
+            }
+        });
+
+        // School code validation
+        document.getElementById('schoolCode').addEventListener('blur', async function() {
+            const schoolCode = this.value.trim();
+            if (schoolCode.length > 0) {
+                await validateSchoolCode(schoolCode);
+            }
+        });
+
+        async function validateSchoolCode(schoolCode) {
+            try {
+                const response = await fetch('/api/school-management', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'validate_school_code',
+                        data: { school_code: schoolCode }
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    const schoolInfo = result.data;
+                    displaySchoolInfo(schoolInfo);
+                    showAlert('School found! Please verify the details above.', 'success');
+                } else {
+                    hideSchoolInfo();
+                    showAlert('Invalid school registration code. Please check with your school administrator.', 'error');
+                }
+            } catch (error) {
+                console.error('Error validating school code:', error);
+                hideSchoolInfo();
+                showAlert('Error validating school code. Please try again.', 'error');
+            }
+        }
+
+        function displaySchoolInfo(schoolInfo) {
+            const schoolInfoDiv = document.getElementById('schoolInfo');
+            const schoolName = document.querySelector('#schoolInfo #schoolName span');
+            const schoolLocation = document.querySelector('#schoolInfo #schoolLocation span');
+            const schoolBoard = document.querySelector('#schoolInfo #schoolBoard span');
+
+            schoolName.textContent = schoolInfo.name;
+            schoolLocation.textContent = `${schoolInfo.city}, ${schoolInfo.state}`;
+            schoolBoard.textContent = schoolInfo.board.toUpperCase();
+
+            schoolInfoDiv.classList.remove('hidden');
+        }
+
+        function hideSchoolInfo() {
+            const schoolInfoDiv = document.getElementById('schoolInfo');
+            schoolInfoDiv.classList.add('hidden');
+        }
+
+        document.getElementById('teacherRegistrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            
+            // Validate passwords match
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'error');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.textContent = 'Registering...';
+            submitSpinner.classList.remove('hidden');
+            
+            try {
+                const formData = {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    subject: document.getElementById('subject').value,
+                    qualification: document.getElementById('qualification').value,
+                    schoolCode: document.getElementById('schoolCode').value,
+                    password: password,
+                    role: 'teacher'
+                };
+
+                const response = await fetch('/api/school-management', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'create_teacher',
+                        data: formData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Teacher registration successful! Please wait for school admin approval.', 'success');
+                    e.target.reset();
+                    hideSchoolInfo();
+                } else {
+                    throw new Error(result.error || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert(error.message || 'Registration failed. Please try again.', 'error');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitText.textContent = 'Register as Teacher';
+                submitSpinner.classList.add('hidden');
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            
+            alertContainer.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

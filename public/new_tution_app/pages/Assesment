@@ -1,0 +1,670 @@
+import React, { useState, useEffect } from "react";
+import { InvokeLLM } from "@/integrations/Core";
+import { User } from "@/entities/User";
+import { UserProfile } from "@/entities/UserProfile";
+import { Assessment as AssessmentEntity } from "@/entities/Assessment";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Target,
+  Clock,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  Award,
+  BookOpen,
+  Lightbulb,
+  BarChart3
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+export default function Assessment() {
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [currentAssessment, setCurrentAssessment] = useState(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [assessmentType, setAssessmentType] = useState("diagnostic");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [results, setResults] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [recentAssessments, setRecentAssessments] = useState([]);
+
+  const subjects = [
+    "Math", "Science", "English", "Hindi", "Social Studies", 
+    "Physics", "Chemistry", "Biology", "History", "Geography"
+  ];
+
+  const assessmentTypes = [
+    { value: "diagnostic", label: "Diagnostic Test", description: "Identify your strengths and weaknesses" },
+    { value: "practice_test", label: "Practice Test", description: "Test your knowledge on specific topics" },
+    { value: "daily_challenge", label: "Daily Challenge", description: "Quick daily quiz to earn points" }
+  ];
+
+  useEffect(() => {
+    loadUserData();
+    loadRecentAssessments();
+  }, []);
+
+  useEffect(() => {
+    let timer;
+    if (currentAssessment && timeRemaining > 0 && !isCompleted) {
+      timer = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            handleCompleteAssessment();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [currentAssessment, timeRemaining, isCompleted]);
+
+  const loadUserData = async () => {
+    try {
+      const currentUser = await User.me();
+      setUser(currentUser);
+      
+      const profiles = await UserProfile.filter({ created_by: currentUser.email });
+      if (profiles.length > 0) {
+        setProfile(profiles[0]);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
+
+  const loadRecentAssessments = async () => {
+    try {
+      const assessments = await AssessmentEntity.list("-created_date", 5);
+      setRecentAssessments(assessments);
+    } catch (error) {
+      console.error("Error loading assessments:", error);
+    }
+  };
+
+  const generateAssessment = async () => {
+    if (!selectedSubject || !profile) {
+      alert("Please select a subject and complete your profile first");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const prompt = `
+        Generate a ${assessmentType} assessment for an Indian student:
+        - Class: ${profile.class_level}
+        - Board: ${profile.board}
+        - Subject: ${selectedSubject}
+        - Assessment Type: ${assessmentType}
+        
+        Requirements:
+        - Create ${assessmentType === 'daily_challenge' ? '5' : '10'} multiple choice questions
+        - Questions should be appropriate for Class ${profile.class_level} ${profile.board} curriculum
+        - Include a mix of difficulty levels (easy, medium, hard)
+        - Questions should be in simple English suitable for Indian students
+        - Each question should have 4 options with only one correct answer
+        - Cover different concepts within the subject
+        - Make questions practical and relatable to Indian context when possible
+        
+        Return ONLY a valid JSON object with this structure:
+        {
+          "questions": [
+            {
+              "question": "Question text here",
+              "options": ["Option A", "Option B", "Option C", "Option D"],
+              "correct_answer": "Option A",
+              "difficulty": "easy/medium/hard",
+              "concept": "concept name"
+            }
+          ]
+        }
+      `;
+
+      const response = await InvokeLLM({
+        prompt: prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            questions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  question: { type: "string" },
+                  options: { type: "array", items: { type: "string" } },
+                  correct_answer: { type: "string" },
+                  difficulty: { type: "string" },
+                  concept: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const assessmentData = {
+        assessment_type: assessmentType,
+        subject: selectedSubject,
+        questions: response.questions,
+        student_answers: new Array(response.questions.length).fill(""),
+        score: 0,
+        time_taken: 0,
+        strengths: [],
+        weaknesses: [],
+        recommendations: [],
+        points_earned: 0
+      };
+
+      const newAssessment = await AssessmentEntity.create(assessmentData);
+      setCurrentAssessment(newAssessment);
+      setSelectedAnswers(new Array(response.questions.length).fill(""));
+      setCurrentQuestionIndex(0);
+      setTimeRemaining(assessmentType === 'daily_challenge' ? 300 : 900); // 5 or 15 minutes
+      setIsCompleted(false);
+      setResults(null);
+
+    } catch (error) {
+      console.error("Error generating assessment:", error);
+      alert("Failed to generate assessment. Please try again.");
+    }
+    setIsGenerating(false);
+  };
+
+  const handleAnswerSelect = (answer) => {
+    const newAnswers = [...selectedAnswers];
+    newAnswers[currentQuestionIndex] = answer;
+    setSelectedAnswers(newAnswers);
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < currentAssessment.questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
+
+  const handleCompleteAssessment = async () => {
+    if (!currentAssessment) return;
+
+    const timeTaken = assessmentType === 'daily_challenge' ? 
+      Math.round((300 - timeRemaining) / 60) : 
+      Math.round((900 - timeRemaining) / 60);
+
+    // Calculate score and analyze results
+    let correctAnswers = 0;
+    const strengths = [];
+    const weaknesses = [];
+
+    selectedAnswers.forEach((answer, index) => {
+      const question = currentAssessment.questions[index];
+      if (answer === question.correct_answer) {
+        correctAnswers++;
+        if (!strengths.includes(question.concept)) {
+          strengths.push(question.concept);
+        }
+      } else {
+        if (!weaknesses.includes(question.concept)) {
+          weaknesses.push(question.concept);
+        }
+      }
+    });
+
+    const score = Math.round((correctAnswers / currentAssessment.questions.length) * 100);
+    const pointsEarned = assessmentType === 'daily_challenge' ? 
+      correctAnswers * 2 : 
+      Math.round(score / 10);
+
+    // Generate recommendations
+    const recommendations = [];
+    if (score < 60) {
+      recommendations.push(`Focus on strengthening your ${selectedSubject} fundamentals`);
+      recommendations.push("Practice more basic concepts before attempting advanced questions");
+    } else if (score < 80) {
+      recommendations.push("Good progress! Work on the weak areas identified");
+      recommendations.push("Try more practice questions in challenging topics");
+    } else {
+      recommendations.push("Excellent performance! You have a strong grasp of the subject");
+      recommendations.push("Consider tackling more advanced topics or different subjects");
+    }
+
+    const updatedAssessment = {
+      ...currentAssessment,
+      student_answers: selectedAnswers,
+      score: score,
+      time_taken: timeTaken,
+      strengths: strengths,
+      weaknesses: weaknesses,
+      recommendations: recommendations,
+      points_earned: pointsEarned
+    };
+
+    try {
+      await AssessmentEntity.update(currentAssessment.id, updatedAssessment);
+      
+      // Update user points and streak
+      if (profile) {
+        await UserProfile.update(profile.id, {
+          total_points: (profile.total_points || 0) + pointsEarned,
+          daily_streak: assessmentType === 'daily_challenge' ? 
+            (profile.daily_streak || 0) + 1 : profile.daily_streak,
+          last_activity: new Date().toISOString().split('T')[0]
+        });
+      }
+
+      setResults({
+        score,
+        correctAnswers,
+        totalQuestions: currentAssessment.questions.length,
+        timeTaken,
+        pointsEarned,
+        strengths,
+        weaknesses,
+        recommendations
+      });
+      setIsCompleted(true);
+      await loadRecentAssessments();
+      await loadUserData();
+
+    } catch (error) {
+      console.error("Error saving assessment results:", error);
+      alert("Error saving results. Please try again.");
+    }
+  };
+
+  const startNewAssessment = () => {
+    setCurrentAssessment(null);
+    setSelectedAnswers([]);
+    setCurrentQuestionIndex(0);
+    setIsCompleted(false);
+    setResults(null);
+    setTimeRemaining(0);
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  if (isCompleted && results) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center mb-8"
+          >
+            <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
+              <Award className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Assessment Complete!</h1>
+            <p className="text-gray-600">Here are your results</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Your Performance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-green-600 mb-2">
+                    {results.score}%
+                  </div>
+                  <p className="text-gray-600">
+                    {results.correctAnswers} out of {results.totalQuestions} correct
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <Clock className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+                    <p className="text-sm text-gray-600">Time Taken</p>
+                    <p className="font-semibold">{results.timeTaken} min</p>
+                  </div>
+                  <div className="p-3 bg-orange-50 rounded-lg">
+                    <Target className="w-5 h-5 text-orange-500 mx-auto mb-1" />
+                    <p className="text-sm text-gray-600">Points Earned</p>
+                    <p className="font-semibold">{results.pointsEarned}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lightbulb className="w-5 h-5" />
+                  Analysis & Recommendations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {results.strengths.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-green-700 mb-2 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Strengths
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {results.strengths.map((strength, index) => (
+                        <Badge key={index} className="bg-green-100 text-green-700">
+                          {strength}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {results.weaknesses.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-orange-700 mb-2 flex items-center gap-2">
+                      <XCircle className="w-4 h-4" />
+                      Areas to Improve
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {results.weaknesses.map((weakness, index) => (
+                        <Badge key={index} variant="outline" className="border-orange-300 text-orange-700">
+                          {weakness}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <h4 className="font-semibold text-blue-700 mb-2">Recommendations</h4>
+                  <ul className="text-sm space-y-1">
+                    {results.recommendations.map((rec, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                        {rec}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-8">
+            <Button 
+              onClick={startNewAssessment}
+              className="bg-gradient-to-r from-blue-500 to-blue-600"
+            >
+              Take Another Assessment
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentAssessment && !isCompleted) {
+    const currentQuestion = currentAssessment.questions[currentQuestionIndex];
+    const progress = ((currentQuestionIndex + 1) / currentAssessment.questions.length) * 100;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
+        <div className="max-w-3xl mx-auto">
+          {/* Progress Header */}
+          <Card className="mb-6 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {selectedSubject} {assessmentType === 'daily_challenge' ? 'Daily Challenge' : 'Assessment'}
+                  </h2>
+                  <p className="text-gray-600">
+                    Question {currentQuestionIndex + 1} of {currentAssessment.questions.length}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-2 text-orange-600 font-semibold">
+                    <Clock className="w-4 h-4" />
+                    {formatTime(timeRemaining)}
+                  </div>
+                </div>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </CardContent>
+          </Card>
+
+          {/* Question Card */}
+          <Card className="mb-6 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-8">
+              <div className="mb-6">
+                <Badge variant="outline" className="mb-4">
+                  {currentQuestion.difficulty}
+                </Badge>
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">
+                  {currentQuestion.question}
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {currentQuestion.options.map((option, index) => (
+                  <motion.button
+                    key={index}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleAnswerSelect(option)}
+                    className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
+                      selectedAnswers[currentQuestionIndex] === option
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        selectedAnswers[currentQuestionIndex] === option
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedAnswers[currentQuestionIndex] === option && (
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        )}
+                      </div>
+                      <span className="font-medium">{option}</span>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Navigation */}
+          <div className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={handlePreviousQuestion}
+              disabled={currentQuestionIndex === 0}
+            >
+              Previous
+            </Button>
+            
+            {currentQuestionIndex === currentAssessment.questions.length - 1 ? (
+              <Button
+                onClick={handleCompleteAssessment}
+                disabled={!selectedAnswers[currentQuestionIndex]}
+                className="bg-gradient-to-r from-green-500 to-green-600"
+              >
+                Complete Assessment
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNextQuestion}
+                disabled={!selectedAnswers[currentQuestionIndex]}
+                className="bg-gradient-to-r from-blue-500 to-blue-600"
+              >
+                Next Question
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Assessments</h1>
+          <p className="text-gray-600">Test your knowledge and track your progress</p>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Assessment Setup */}
+          <div className="lg:col-span-2">
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Start New Assessment
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Subject</label>
+                    <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select subject" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subjects.map(subject => (
+                          <SelectItem key={subject} value={subject}>
+                            {subject}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Assessment Type</label>
+                    <Select value={assessmentType} onValueChange={setAssessmentType}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {assessmentTypes.map(type => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-semibold text-blue-900 mb-2">
+                    {assessmentTypes.find(t => t.value === assessmentType)?.label}
+                  </h4>
+                  <p className="text-sm text-blue-700">
+                    {assessmentTypes.find(t => t.value === assessmentType)?.description}
+                  </p>
+                  <div className="mt-3 text-sm text-blue-600">
+                    <p>• {assessmentType === 'daily_challenge' ? '5 questions' : '10 questions'}</p>
+                    <p>• {assessmentType === 'daily_challenge' ? '5 minutes' : '15 minutes'} time limit</p>
+                    <p>• Earn {assessmentType === 'daily_challenge' ? '2 points per correct answer' : 'up to 10 points'}</p>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={generateAssessment}
+                  disabled={!selectedSubject || !profile || isGenerating}
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600"
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Generating Assessment...
+                    </>
+                  ) : (
+                    <>
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Start Assessment
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Assessments */}
+          <div>
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Recent Results
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {recentAssessments.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentAssessments.map((assessment) => (
+                      <div
+                        key={assessment.id}
+                        className="p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {assessment.subject}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(assessment.created_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge 
+                            variant={assessment.score >= 80 ? "default" : 
+                                   assessment.score >= 60 ? "secondary" : "destructive"}
+                          >
+                            {assessment.score}%
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <span>{assessment.assessment_type.replace('_', ' ')}</span>
+                          <span>•</span>
+                          <span>{assessment.points_earned} points</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">
+                    No assessments taken yet
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

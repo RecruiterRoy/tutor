@@ -1,0 +1,95 @@
+{
+  "name": "Assessment",
+  "type": "object",
+  "properties": {
+    "assessment_type": {
+      "type": "string",
+      "enum": [
+        "diagnostic",
+        "daily_challenge",
+        "practice_test"
+      ],
+      "description": "Type of assessment"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Subject being assessed"
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "correct_answer": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ]
+          },
+          "concept": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "student_answers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "score": {
+      "type": "number",
+      "description": "Score achieved (out of 100)"
+    },
+    "time_taken": {
+      "type": "number",
+      "description": "Time taken in minutes"
+    },
+    "strengths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Identified strength areas"
+    },
+    "weaknesses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Areas needing improvement"
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Personalized learning recommendations"
+    },
+    "points_earned": {
+      "type": "number",
+      "default": 0,
+      "description": "Gamification points earned"
+    }
+  },
+  "required": [
+    "assessment_type",
+    "subject",
+    "questions"
+  ]
+}

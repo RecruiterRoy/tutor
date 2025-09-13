@@ -1,0 +1,125 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserProfile } from "@/entities/UserProfile";
+import { User } from "@/entities/User";
+import { CheckCircle, Star, Zap, BarChart3, MessageCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const premiumFeatures = [
+    { icon: Zap, text: "5 Daily GPT-4o Requests for Complex Queries" },
+    { icon: BarChart3, text: "Advanced Progress Analytics & Reports" },
+    { icon: MessageCircle, text: "Priority Support from our Team" },
+    { icon: Star, text: "Completely Ad-Free Learning Experience" },
+];
+
+export default function PremiumPage() {
+    const [profile, setProfile] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const user = await User.me();
+                const profiles = await UserProfile.filter({ created_by: user.email });
+                if (profiles.length > 0) {
+                    setProfile(profiles[0]);
+                }
+            } catch (error) {
+                console.error("Error loading user profile:", error);
+            }
+        };
+        loadProfile();
+    }, []);
+    
+    const handleUpgrade = async () => {
+        setIsLoading(true);
+        alert("This would open the Razorpay payment gateway. Since this is a demo, we will simulate a successful payment and upgrade your account.");
+        
+        try {
+            const expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + 1);
+
+            const updatedProfileData = {
+                ...profile,
+                subscription_status: 'premium',
+                subscription_expires: expiryDate.toISOString().split('T')[0],
+                razorpay_order_id: `demo_order_${Date.now()}`
+            };
+
+            await UserProfile.update(profile.id, updatedProfileData);
+            setProfile(updatedProfileData);
+            alert("Congratulations! Your account has been upgraded to Premium.");
+        } catch (error) {
+            console.error("Failed to upgrade account:", error);
+            alert("There was an error upgrading your account. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    return (
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-orange-50 p-4 md:p-8">
+            <div className="max-w-4xl mx-auto">
+                <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
+                    <h1 className="text-4xl font-bold text-gray-900 mb-3">Supercharge Your Learning</h1>
+                    <p className="text-lg text-gray-600">Unlock the full power of tution.app with a Premium subscription.</p>
+                </motion.div>
+                
+                <div className="grid md:grid-cols-2 gap-8 items-center">
+                    <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle>Free Plan</CardTitle>
+                            <p className="text-gray-500">Your current plan</p>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                           <p className="text-3xl font-bold">₹0 <span className="text-lg font-normal text-gray-500">/month</span></p>
+                           <ul className="space-y-2 text-gray-600">
+                               <li className="flex items-center gap-2"><CheckCircle className="w-5 h-5 text-green-500"/>Standard AI Tutoring</li>
+                               <li className="flex items-center gap-2"><CheckCircle className="w-5 h-5 text-green-500"/>Basic Assessments</li>
+                               <li className="flex items-center gap-2"><CheckCircle className="w-5 h-5 text-green-500"/>Daily Challenges</li>
+                               <li className="flex items-center gap-2"><CheckCircle className="w-5 h-5 text-green-500"/>Video Library Access</li>
+                           </ul>
+                           <Button variant="outline" className="w-full mt-4" disabled>Currently Active</Button>
+                        </CardContent>
+                    </Card>
+
+                    <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} transition={{ duration: 0.5 }}>
+                        <Card className="border-2 border-blue-500 shadow-2xl bg-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold py-1 px-4 rounded-bl-lg">BEST VALUE</div>
+                            <CardHeader>
+                                <CardTitle>Premium Plan</CardTitle>
+                                <p className="text-blue-600">Unlock all features</p>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                               <p className="text-3xl font-bold">₹99 <span className="text-lg font-normal text-gray-500">/month</span></p>
+                               <ul className="space-y-3 text-gray-700">
+                                   {premiumFeatures.map(feature => (
+                                       <li key={feature.text} className="flex items-start gap-3">
+                                           <feature.icon className="w-5 h-5 text-blue-500 mt-1 flex-shrink-0"/>
+                                           <span>{feature.text}</span>
+                                       </li>
+                                   ))}
+                               </ul>
+                               {profile?.subscription_status === 'premium' ? (
+                                   <Button variant="default" className="w-full mt-4 bg-green-500 hover:bg-green-600" disabled>
+                                      <CheckCircle className="w-5 h-5 mr-2"/> Premium Active
+                                   </Button>
+                               ) : (
+                                   <Button onClick={handleUpgrade} disabled={isLoading} className="w-full mt-4 bg-gradient-to-r from-blue-500 to-purple-600">
+                                       {isLoading ? 'Processing...' : 'Upgrade to Premium'}
+                                   </Button>
+                               )}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                </div>
+
+                <div className="text-center mt-12 text-sm text-gray-500">
+                    <p>Payments are processed securely. You can cancel your subscription anytime.</p>
+                    <p>For a real implementation, this would integrate with Razorpay.</p>
+                </div>
+            </div>
+        </div>
+    );
+}

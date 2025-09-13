@@ -1,0 +1,60 @@
+{
+  "name": "ChatSession",
+  "type": "object",
+  "properties": {
+    "subject": {
+      "type": "string",
+      "description": "Subject being discussed"
+    },
+    "topic": {
+      "type": "string",
+      "description": "Specific topic or concept"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "student",
+              "tutor"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "Conversation history"
+    },
+    "session_duration": {
+      "type": "number",
+      "description": "Duration in minutes"
+    },
+    "concepts_covered": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Concepts discussed in this session"
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "description": "Difficulty level of the session"
+    }
+  },
+  "required": [
+    "subject"
+  ]
+}

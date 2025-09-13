@@ -1,0 +1,80 @@
+{
+  "name": "EducationalVideo",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Video title"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Subject category"
+    },
+    "topic": {
+      "type": "string",
+      "description": "Specific topic covered"
+    },
+    "class_levels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Suitable class levels"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "Video URL or embed code"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Video thumbnail image"
+    },
+    "duration": {
+      "type": "string",
+      "description": "Video duration"
+    },
+    "description": {
+      "type": "string",
+      "description": "Video description"
+    },
+    "channel": {
+      "type": "string",
+      "description": "Source channel or creator"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "description": "Difficulty level"
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "English",
+        "Hindi",
+        "Both"
+      ],
+      "description": "Video language"
+    },
+    "views": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of views"
+    },
+    "rating": {
+      "type": "number",
+      "default": 0,
+      "description": "Average user rating"
+    }
+  },
+  "required": [
+    "title",
+    "subject",
+    "topic",
+    "class_levels",
+    "video_url"
+  ]
+}

@@ -1,0 +1,134 @@
+
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge"; // Added this import
+import { User } from "@/entities/User";
+import { createPageUrl } from '@/utils';
+import { motion } from 'framer-motion';
+import { Users, Target, Video, Trophy, BarChart3, GraduationCap, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const features = [
+  {
+    icon: Users,
+    title: "AI Classroom",
+    description: "Chat with AI teachers in Hindi or English, get voice responses, and even snap photos of questions."
+  },
+  {
+    icon: Target,
+    title: "Adaptive Assessments",
+    description: "Take diagnostic tests that adjust to your level, identifying your strengths and weaknesses."
+  },
+  {
+    icon: Video,
+    title: "Curated Videos",
+    description: "Watch educational videos from trusted sources, perfectly matched to your class and subjects."
+  },
+  {
+    icon: Trophy,
+    title: "Daily Challenges",
+    description: "Earn points, build your learning streak, and compete on leaderboards with fun daily quizzes."
+  },
+  {
+    icon: BarChart3,
+    title: "Progress Analytics",
+    description: "Track your growth over time with insightful analytics on your performance and engagement."
+  }
+];
+
+export default function HomePage() {
+  const handleGetStarted = async () => {
+    try {
+      await User.loginWithRedirect(window.location.origin + createPageUrl('Classroom'));
+    } catch (error) {
+      console.error("Login failed", error);
+    }
+  };
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-orange-50 text-gray-800">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50">
+        <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <Link to={createPageUrl('Home')} className="flex items-center gap-2">
+            <GraduationCap className="w-8 h-8 text-blue-600" />
+            <span className="text-2xl font-bold text-gray-900">tution.app</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={handleGetStarted}>Log In</Button>
+            <Button onClick={handleGetStarted} className="bg-blue-600 hover:bg-blue-700">Get Started</Button>
+          </div>
+        </nav>
+      </header>
+
+      <main>
+        {/* Hero Section */}
+        <section className="pt-32 pb-20 text-center container mx-auto px-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700 mb-4 text-sm py-1 px-3">Your Personal AI Learning Companion</Badge>
+            <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
+              Unlock Your Potential with AI-Powered Tutoring
+            </h1>
+            <p className="max-w-3xl mx-auto text-lg text-gray-600 mb-8">
+              Tution.app provides personalized learning experiences for students across India. From interactive classrooms to daily challenges, we make learning effective and fun.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button onClick={handleGetStarted} size="lg" className="bg-blue-600 hover:bg-blue-700 shadow-lg">
+                Start Learning for Free
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          </motion.div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900">Everything You Need to Succeed</h2>
+              <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
+                A complete learning ecosystem designed for the modern Indian student.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {features.map((feature, index) => (
+                <motion.div key={feature.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: index * 0.1 }} viewport={{ once: true }}>
+                  <Card className="text-center p-8 border-0 shadow-lg hover:shadow-2xl transition-shadow duration-300 h-full bg-white/80 backdrop-blur-sm">
+                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-6">
+                      <feature.icon className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                    <p className="text-gray-600">{feature.description}</p>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+        
+        {/* Call to Action Section */}
+        <section className="py-20">
+          <div className="container mx-auto px-6 text-center">
+             <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} viewport={{ once: true }}>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Ready to Start Your Journey?</h2>
+              <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">Join thousands of students across India who are learning smarter with tution.app.</p>
+              <Button onClick={handleGetStarted} size="lg" className="bg-blue-600 hover:bg-blue-700 shadow-lg">
+                Sign Up Now
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </motion.div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200">
+        <div className="container mx-auto px-6 py-8 text-center text-gray-600">
+          <p>&copy; {new Date().getFullYear()} tution.app. All Rights Reserved.</p>
+          <p className="text-sm mt-2">Empowering the next generation of learners in India.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}

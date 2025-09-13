@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Quiz Test - tution.app</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-2xl w-full">
+        <h1 class="text-2xl font-bold text-center mb-6">Daily Quiz Test</h1>
+        
+        <div class="space-y-6">
+            <!-- Quiz Card -->
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200 p-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-xl">🎯</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Today's Quiz</h3>
+                        <p class="text-gray-600">Test your knowledge and earn points!</p>
+                    </div>
+                </div>
+                
+                <!-- Quiz Question -->
+                <div id="quizQuestion" class="mb-6">
+                    <div class="bg-white rounded-lg p-4 border border-purple-200">
+                        <h4 class="font-semibold text-gray-900 mb-3">Question:</h4>
+                        <p id="questionText" class="text-gray-700 mb-4">What is the capital of India?</p>
+                        
+                        <div id="quizOptions" class="space-y-3">
+                            <button onclick="checkAnswer('A')" class="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors quiz-option" data-answer="A">
+                                <span class="font-medium text-gray-900">A.</span> Mumbai
+                            </button>
+                            <button onclick="checkAnswer('B')" class="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors quiz-option" data-answer="B">
+                                <span class="font-medium text-gray-900">B.</span> New Delhi
+                            </button>
+                            <button onclick="checkAnswer('C')" class="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors quiz-option" data-answer="C">
+                                <span class="font-medium text-gray-900">C.</span> Kolkata
+                            </button>
+                            <button onclick="checkAnswer('D')" class="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors quiz-option" data-answer="D">
+                                <span class="font-medium text-gray-900">D.</span> Chennai
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quiz Result (Hidden by default) -->
+                <div id="quizResult" class="hidden">
+                    <div class="bg-white rounded-lg p-4 border border-purple-200 text-center">
+                        <div id="resultIcon" class="text-4xl mb-3">🎉</div>
+                        <h4 id="resultTitle" class="text-xl font-bold text-gray-900 mb-2">Correct!</h4>
+                        <p id="resultMessage" class="text-gray-600 mb-4">Great job! You earned 10 points!</p>
+                        <button onclick="loadNewQuiz()" class="bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                            Next Question
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Points Display -->
+                <div class="flex items-center justify-between text-sm text-gray-600">
+                    <span>Reward: <span class="font-semibold text-purple-600">10 points</span></span>
+                    <span>Difficulty: <span class="font-semibold text-orange-600">Easy</span></span>
+                </div>
+            </div>
+            
+            <!-- Test Controls -->
+            <div class="flex space-x-4">
+                <button onclick="testPointsUpdate()" class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700">
+                    Test Points Update
+                </button>
+                <button onclick="testLeaderboard()" class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700">
+                    Test Leaderboard
+                </button>
+            </div>
+            
+            <!-- Status -->
+            <div id="status" class="p-4 rounded-lg bg-gray-50">
+                Ready to test daily quiz functionality...
+            </div>
+            
+            <!-- Logs -->
+            <div id="logs" class="p-4 bg-gray-100 rounded-lg max-h-64 overflow-y-auto">
+                <div class="text-sm font-mono">
+                    <div>Waiting for tests...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://vfqdjpiyaabufpaofysz.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcWRqcGl5YWFidWZwYW9meXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDkzMDEsImV4cCI6MjA2OTE4NTMwMX0.SVY1Kf7D1nbXssuxCnnHcvaDAIintOpCLfhxV6rHvjo';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        let currentQuiz = {
+            question: "What is the capital of India?",
+            options: ["Mumbai", "New Delhi", "Kolkata", "Chennai"],
+            correctAnswer: "B",
+            points: 10
+        };
+        
+        let userPoints = 0;
+        let userStreak = 0;
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `text-sm font-mono ${type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-gray-800'}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `p-4 rounded-lg ${
+                type === 'error' ? 'bg-red-50 text-red-800' : 
+                type === 'success' ? 'bg-green-50 text-green-800' : 
+                'bg-blue-50 text-blue-800'
+            }`;
+        }
+        
+        // Quiz Functions
+        function checkAnswer(selectedAnswer) {
+            log(`Checking answer: ${selectedAnswer}`);
+            
+            const options = document.querySelectorAll('.quiz-option');
+            const quizQuestion = document.getElementById('quizQuestion');
+            const quizResult = document.getElementById('quizResult');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            
+            // Disable all options
+            options.forEach(option => {
+                option.disabled = true;
+                option.style.pointerEvents = 'none';
+            });
+            
+            if (selectedAnswer === currentQuiz.correctAnswer) {
+                // Correct answer
+                log('✅ Correct answer!', 'success');
+                options.forEach(option => {
+                    if (option.dataset.answer === selectedAnswer) {
+                        option.classList.add('bg-green-100', 'border-green-500');
+                    }
+                });
+                
+                // Add points
+                userPoints += currentQuiz.points;
+                userStreak += 1;
+                
+                // Update UI
+                resultIcon.textContent = '🎉';
+                resultTitle.textContent = 'Correct!';
+                resultMessage.textContent = `Great job! You earned ${currentQuiz.points} points!`;
+                
+                // Show balloon animation
+                showBalloonAnimation();
+                
+                // Update points in Supabase
+                updateUserPoints(userPoints, userStreak);
+                
+            } else {
+                // Wrong answer
+                log('❌ Wrong answer!', 'error');
+                options.forEach(option => {
+                    if (option.dataset.answer === selectedAnswer) {
+                        option.classList.add('bg-red-100', 'border-red-500');
+                    }
+                    if (option.dataset.answer === currentQuiz.correctAnswer) {
+                        option.classList.add('bg-green-100', 'border-green-500');
+                    }
+                });
+                
+                // Reset streak
+                userStreak = 0;
+                
+                // Update UI
+                resultIcon.textContent = '😔';
+                resultTitle.textContent = 'Incorrect';
+                resultMessage.textContent = `The correct answer was: ${currentQuiz.options[currentQuiz.correctAnswer.charCodeAt(0) - 65]}`;
+                
+                // Update points in Supabase
+                updateUserPoints(userPoints, userStreak);
+            }
+            
+            // Show result
+            quizQuestion.classList.add('hidden');
+            quizResult.classList.remove('hidden');
+        }
+        
+        function loadNewQuiz() {
+            log('Loading new quiz...');
+            
+            // Sample quiz questions
+            const quizQuestions = [
+                {
+                    question: "What is the largest planet in our solar system?",
+                    options: ["Mars", "Jupiter", "Saturn", "Neptune"],
+                    correctAnswer: "B",
+                    points: 10
+                },
+                {
+                    question: "Which is the national flower of India?",
+                    options: ["Rose", "Lotus", "Sunflower", "Tulip"],
+                    correctAnswer: "B",
+                    points: 10
+                },
+                {
+                    question: "What is 15 + 27?",
+                    options: ["40", "42", "43", "41"],
+                    correctAnswer: "B",
+                    points: 10
+                },
+                {
+                    question: "Which river is known as the lifeline of India?",
+                    options: ["Yamuna", "Ganga", "Brahmaputra", "Godavari"],
+                    correctAnswer: "B",
+                    points: 10
+                },
+                {
+                    question: "What is the chemical symbol for gold?",
+                    options: ["Ag", "Au", "Fe", "Cu"],
+                    correctAnswer: "B",
+                    points: 10
+                }
+            ];
+            
+            // Get random question
+            currentQuiz = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+            
+            // Update UI
+            document.getElementById('questionText').textContent = currentQuiz.question;
+            
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach((option, index) => {
+                option.classList.remove('bg-green-100', 'bg-red-100', 'border-green-500', 'border-red-500');
+                option.disabled = false;
+                option.style.pointerEvents = 'auto';
+                
+                const optionText = option.querySelector('span:last-child');
+                if (optionText) {
+                    optionText.textContent = currentQuiz.options[index];
+                }
+            });
+            
+            // Hide result and show question
+            document.getElementById('quizQuestion').classList.remove('hidden');
+            document.getElementById('quizResult').classList.add('hidden');
+            
+            log(`New quiz loaded: ${currentQuiz.question}`, 'success');
+        }
+        
+        // Balloon Animation
+        function showBalloonAnimation() {
+            log('🎈 Showing balloon animation...', 'success');
+            
+            const animationContainer = document.createElement('div');
+            animationContainer.className = 'fixed inset-0 pointer-events-none z-50';
+            animationContainer.id = 'balloonAnimation';
+            
+            for (let i = 0; i < 10; i++) {
+                const balloon = document.createElement('div');
+                balloon.className = 'absolute text-4xl animate-bounce';
+                balloon.textContent = '🎈';
+                balloon.style.left = Math.random() * 100 + '%';
+                balloon.style.top = '100%';
+                balloon.style.animationDelay = Math.random() * 2 + 's';
+                balloon.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                
+                animationContainer.appendChild(balloon);
+            }
+            
+            document.body.appendChild(animationContainer);
+            
+            // Remove animation after 5 seconds
+            setTimeout(() => {
+                if (animationContainer.parentNode) {
+                    animationContainer.parentNode.removeChild(animationContainer);
+                }
+            }, 5000);
+        }
+        
+        // Update user points in Supabase
+        async function updateUserPoints(points, streak) {
+            try {
+                log('Updating points in Supabase...');
+                
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    log('❌ No session found', 'error');
+                    return;
+                }
+                
+                const { error } = await supabase
+                    .from('user_statistics')
+                    .upsert({
+                        user_id: session.user.id,
+                        total_points: points,
+                        current_streak: streak,
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (error) {
+                    log(`❌ Error updating points: ${error.message}`, 'error');
+                } else {
+                    log(`✅ Points updated successfully: ${points} points, ${streak} streak`, 'success');
+                }
+            } catch (error) {
+                log(`❌ Failed to update points: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testPointsUpdate() {
+            log('Testing points update...');
+            await updateUserPoints(userPoints, userStreak);
+        }
+        
+        async function testLeaderboard() {
+            try {
+                log('Testing leaderboard...');
+                
+                const { data, error } = await supabase
+                    .from('user_statistics')
+                    .select(`
+                        total_points,
+                        user_profiles!inner(full_name, city, state)
+                    `)
+                    .order('total_points', { ascending: false })
+                    .limit(5);
+                
+                if (error) {
+                    log(`❌ Leaderboard error: ${error.message}`, 'error');
+                } else {
+                    log(`✅ Leaderboard loaded: ${data.length} users`, 'success');
+                    data.forEach((item, index) => {
+                        log(`${index + 1}. ${item.user_profiles.full_name} - ${item.total_points} points`);
+                    });
+                }
+            } catch (error) {
+                log(`❌ Leaderboard test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Daily Quiz Test Page Loaded');
+            updateStatus('Ready to test daily quiz functionality');
+        });
+    </script>
+</body>
+</html>

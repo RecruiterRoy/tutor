@@ -1,0 +1,375 @@
+import React, { useState, useEffect } from "react";
+import { User } from "@/entities/User";
+import { UserProfile } from "@/entities/UserProfile";
+import { InvokeLLM } from "@/integrations/Core";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Trophy,
+  BarChart3,
+  Flame,
+  Globe,
+  Star,
+  Heart,
+  Sparkles,
+  Loader2,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// --- Sub-components (kept in the same file for simplicity) ---
+
+const Confetti = ({ isCorrect }) => {
+  const particles = Array.from({ length: isCorrect ? 50 : 20 });
+  const icons = isCorrect ? [Heart, Star, Sparkles] : [() => <span className="text-xl">😭</span>];
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((_, i) => {
+        const Icon = isCorrect ? icons[i % icons.length] : icons[0];
+        const style = {
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          animation: `confetti-fall ${1 + Math.random() * 2}s ease-out ${Math.random() * 1}s forwards`,
+          opacity: 0,
+        };
+        return (
+          <div key={i} className="absolute" style={style}>
+            <Icon
+              className={isCorrect ? "w-4 h-4 text-yellow-400" : "w-6 h-6"}
+              style={{
+                color: isCorrect
+                  ? `hsl(${Math.random() * 360}, 100%, 75%)`
+                  : "#000",
+              }}
+            />
+          </div>
+        );
+      })}
+      <style>{`
+        @keyframes confetti-fall {
+          0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(${Math.random() * 720}deg); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+const Balloon = ({ streak, dayOfMonth, isCorrect, showResult }) => {
+  if (!showResult) return null;
+  const size = 50 + streak * 5 + dayOfMonth * 2;
+  
+  const balloonVariants = {
+    initial: { scale: 0, opacity: 0 },
+    animate: { 
+      scale: isCorrect ? [1, 1.2, 1] : 1, 
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 200, damping: 10 }
+    },
+    exit: { 
+      scale: isCorrect ? 1 : 2, 
+      opacity: 0,
+      transition: { duration: 0.5, ease: 'easeIn' }
+    }
+  };
+
+  const message = isCorrect ? "Streak Extended!" : "Streak Lost!";
+  const sound = isCorrect ? "Crowd cheers! 🎉" : "Awww... 😥";
+
+  return (
+    <div className="relative flex flex-col items-center justify-center p-8 rounded-lg bg-blue-50 overflow-hidden">
+      <AnimatePresence>
+        <motion.div
+          key={streak}
+          variants={balloonVariants}
+          initial="initial"
+          animate="animate"
+          className="relative"
+          style={{ width: `${size}px`, height: `${size * 1.2}px` }}
+        >
+          <div
+            className={`w-full h-full rounded-full ${isCorrect ? 'bg-gradient-to-br from-green-400 to-teal-500' : 'bg-gradient-to-br from-red-400 to-orange-500'} shadow-xl flex items-center justify-center`}
+          >
+            <Flame className="w-1/3 h-1/3 text-white/50" />
+          </div>
+          <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 ${isCorrect ? 'bg-green-600' : 'bg-red-600'} transform rotate-45`}></div>
+        </motion.div>
+      </AnimatePresence>
+      <h3 className={`mt-4 text-2xl font-bold ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>{message}</h3>
+      <p className="text-gray-500">{sound}</p>
+      <Confetti isCorrect={isCorrect} />
+    </div>
+  );
+};
+
+const Leaderboard = ({ profiles, currentUserEmail }) => {
+  const sortedProfiles = [...profiles].sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
+
+  return (
+    <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-yellow-500" />
+          Leaderboard
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {sortedProfiles.slice(0, 5).map((p, index) => (
+            <div
+              key={p.id}
+              className={`flex items-center justify-between p-3 rounded-lg ${p.created_by === currentUserEmail ? 'bg-blue-100 border border-blue-200' : 'bg-gray-50'}`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-gray-500 w-6 text-center">{index + 1}</span>
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                  {p.student_name?.[0]?.toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-medium text-sm">{p.student_name}</p>
+                  <p className="text-xs text-gray-500">{p.city || 'Unknown'}</p>
+                </div>
+              </div>
+              <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+                {p.total_points || 0} pts
+              </Badge>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+
+// --- Main Page Component ---
+
+export default function DailyChallenges() {
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [profiles, setProfiles] = useState([]);
+  const [challenge, setChallenge] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState("");
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+
+  const subjects = ["Math", "Science", "Geography", "History"];
+
+  useEffect(() => {
+    const initialize = async () => {
+      setIsLoading(true);
+      try {
+        const currentUser = await User.me();
+        setUser(currentUser);
+        
+        const allProfiles = await UserProfile.list();
+        setProfiles(allProfiles);
+
+        const userProfile = allProfiles.find(p => p.created_by === currentUser.email);
+        if (userProfile) {
+          setProfile(userProfile);
+          const today = new Date().toISOString().split('T')[0];
+          if (userProfile.last_challenge_date === today) {
+            setIsCompleted(true);
+          }
+        }
+      } catch (error) {
+        console.error("Initialization error:", error);
+      }
+      setIsLoading(false);
+    };
+    initialize();
+  }, []);
+
+  const startChallenge = async () => {
+    setIsLoading(true);
+    try {
+      const subject = subjects[Math.floor(Math.random() * subjects.length)];
+      const prompt = `
+        Generate a single multiple choice question for a daily challenge for an Indian student.
+        - Class: ${profile.class_level || '8'}
+        - Subject: ${subject}
+        - The question should be challenging but solvable.
+        - The question should have 4 options, with only one correct answer.
+        - The topic should be something interesting from the subject.
+        Return ONLY a valid JSON object with this structure:
+        {
+          "question": "The question text.",
+          "options": ["A", "B", "C", "D"],
+          "correct_answer": "The correct option text.",
+          "explanation": "A short explanation for the correct answer."
+        }
+      `;
+      const response = await InvokeLLM({
+        prompt: prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            question: { type: "string" },
+            options: { type: "array", items: { type: "string" } },
+            correct_answer: { type: "string" },
+            explanation: { type: "string" },
+          },
+        },
+      });
+      setChallenge(response);
+    } catch (error) {
+      console.error("Failed to generate challenge:", error);
+      // Fallback question
+      setChallenge({
+        question: "What is the capital of India?",
+        options: ["Mumbai", "New Delhi", "Kolkata", "Chennai"],
+        correct_answer: "New Delhi",
+        explanation: "New Delhi is the capital of India, located in the National Capital Territory of Delhi."
+      });
+    }
+    setIsLoading(false);
+  };
+  
+  const handleAnswerSubmit = async () => {
+    const correct = selectedAnswer === challenge.correct_answer;
+    setIsCorrect(correct);
+    setShowResult(true);
+
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const lastChallengeDate = profile.last_challenge_date ? new Date(profile.last_challenge_date) : null;
+    let newStreak = profile.daily_streak || 0;
+
+    if (correct) {
+      if (lastChallengeDate && lastChallengeDate.toDateString() === yesterday.toDateString()) {
+        newStreak++;
+      } else {
+        newStreak = 1; // Start a new streak
+      }
+    } else {
+      newStreak = 0; // Streak lost
+    }
+
+    const updatedProfileData = {
+      ...profile,
+      total_points: (profile.total_points || 0) + (correct ? 10 : 0),
+      daily_streak: newStreak,
+      last_challenge_date: today.toISOString().split('T')[0],
+      last_activity: today.toISOString().split('T')[0]
+    };
+    
+    try {
+      const updatedProfile = await UserProfile.update(profile.id, updatedProfileData);
+      setProfile(updatedProfile);
+      // Refresh leaderboard data
+      const allProfiles = await UserProfile.list();
+      setProfiles(allProfiles);
+    } catch(error) {
+      console.error("Error updating profile:", error)
+    }
+
+    setTimeout(() => {
+      setShowResult(false);
+      setIsCompleted(true);
+      setChallenge(null);
+      setSelectedAnswer("");
+    }, 4000); // Show result for 4 seconds
+  };
+
+  const dayOfMonth = new Date().getDate();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Daily Challenge</h1>
+          <p className="text-gray-600">Test your knowledge, earn points, and build your streak!</p>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <Card className="flex items-center justify-center h-96 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                  <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+                </Card>
+              ) : isCompleted ? (
+                <Card className="h-96 flex flex-col items-center justify-center text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                  <CheckCircle className="w-20 h-20 text-green-500 mb-4" />
+                  <h2 className="text-2xl font-bold text-gray-800">Challenge Complete!</h2>
+                  <p className="text-gray-600 mt-2">Great job! Come back tomorrow for a new challenge.</p>
+                  <div className="mt-6 flex gap-4">
+                    <div className="p-4 bg-orange-100 rounded-lg">
+                      <p className="text-sm font-semibold text-orange-800">Current Streak</p>
+                      <p className="text-2xl font-bold text-orange-600 flex items-center justify-center gap-1">
+                        <Flame /> {profile?.daily_streak || 0}
+                      </p>
+                    </div>
+                     <div className="p-4 bg-yellow-100 rounded-lg">
+                      <p className="text-sm font-semibold text-yellow-800">Total Points</p>
+                      <p className="text-2xl font-bold text-yellow-600 flex items-center justify-center gap-1">
+                        <Star /> {profile?.total_points || 0}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ) : showResult ? (
+                 <Balloon streak={profile?.daily_streak} dayOfMonth={dayOfMonth} isCorrect={isCorrect} showResult={showResult} />
+              ) : challenge ? (
+                <motion.div key="challenge" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
+                  <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle>{challenge.question}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {challenge.options.map((option, index) => (
+                          <Button
+                            key={index}
+                            variant={selectedAnswer === option ? 'default' : 'outline'}
+                            onClick={() => setSelectedAnswer(option)}
+                            className={`h-auto py-3 text-left justify-start ${selectedAnswer === option ? 'bg-blue-600' : 'bg-white/70'}`}
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button onClick={handleAnswerSubmit} disabled={!selectedAnswer} className="w-full mt-4 bg-gradient-to-r from-blue-500 to-blue-600">
+                        Submit Answer
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  {isCorrect !== null && (
+                    <div className={`mt-4 p-4 rounded-lg ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      <h4 className="font-bold">{isCorrect ? 'Correct!' : 'Incorrect'}</h4>
+                      <p>{challenge.explanation}</p>
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <Card className="h-96 flex flex-col items-center justify-center text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                  <h2 className="text-2xl font-bold text-gray-800">Ready for your daily challenge?</h2>
+                  <p className="text-gray-600 mt-2 max-w-md">A new question every day to keep your mind sharp. Let's see what you've got!</p>
+                  <Button onClick={startChallenge} className="mt-6 bg-gradient-to-r from-blue-500 to-blue-600" size="lg">
+                    Start Today's Challenge
+                  </Button>
+                </Card>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          <div className="space-y-6">
+            <Leaderboard profiles={profiles} currentUserEmail={user?.email} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

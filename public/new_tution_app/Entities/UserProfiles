@@ -1,0 +1,140 @@
+{
+  "name": "UserProfile",
+  "type": "object",
+  "properties": {
+    "student_name": {
+      "type": "string",
+      "description": "Full name of the student"
+    },
+    "class_level": {
+      "type": "string",
+      "enum": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "description": "Current class/grade level"
+    },
+    "board": {
+      "type": "string",
+      "enum": [
+        "CBSE",
+        "ICSE",
+        "State Board",
+        "Other"
+      ],
+      "description": "Educational board"
+    },
+    "preferred_subjects": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Math",
+          "Science",
+          "English",
+          "Hindi",
+          "Social Studies",
+          "Physics",
+          "Chemistry",
+          "Biology",
+          "History",
+          "Geography"
+        ]
+      },
+      "description": "Subjects the student is interested in"
+    },
+    "learning_style": {
+      "type": "string",
+      "enum": [
+        "Visual",
+        "Auditory",
+        "Kinesthetic",
+        "Reading/Writing",
+        "Not Identified"
+      ],
+      "default": "Not Identified",
+      "description": "Identified learning style"
+    },
+    "preferred_language": {
+      "type": "string",
+      "enum": [
+        "English",
+        "Hindi",
+        "Both"
+      ],
+      "default": "English",
+      "description": "Preferred language for learning"
+    },
+    "teacher_avatar": {
+      "type": "string",
+      "enum": [
+        "Miss Sapna",
+        "Roy Sir"
+      ],
+      "default": "Miss Sapna",
+      "description": "Selected teacher avatar"
+    },
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "free",
+        "premium"
+      ],
+      "default": "free",
+      "description": "Current subscription status"
+    },
+    "subscription_expires": {
+      "type": "string",
+      "format": "date",
+      "description": "Premium subscription expiry date"
+    },
+    "razorpay_order_id": {
+      "type": "string",
+      "description": "The order ID from a successful Razorpay transaction"
+    },
+    "total_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Total gamification points earned"
+    },
+    "daily_streak": {
+      "type": "number",
+      "default": 0,
+      "description": "Current daily learning streak"
+    },
+    "last_activity": {
+      "type": "string",
+      "format": "date",
+      "description": "Last learning activity date"
+    },
+    "city": {
+      "type": "string",
+      "description": "Student's city for leaderboards"
+    },
+    "country": {
+      "type": "string",
+      "default": "India",
+      "description": "Student's country for leaderboards"
+    },
+    "last_challenge_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the last completed daily challenge"
+    }
+  },
+  "required": [
+    "student_name",
+    "class_level",
+    "board"
+  ]
+}

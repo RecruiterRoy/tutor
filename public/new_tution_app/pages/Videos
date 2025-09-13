@@ -1,0 +1,424 @@
+import React, { useState, useEffect } from "react";
+import { User } from "@/entities/User";
+import { UserProfile } from "@/entities/UserProfile";
+import { EducationalVideo } from "@/entities/EducationalVideo";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Video,
+  Search,
+  Filter,
+  Play,
+  Clock,
+  Star,
+  Eye,
+  BookOpen,
+  Globe
+} from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function Videos() {
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [videos, setVideos] = useState([]);
+  const [filteredVideos, setFilteredVideos] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("all");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("all");
+  const [selectedLanguage, setSelectedLanguage] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+
+  const subjects = [
+    "Math", "Science", "English", "Hindi", "Social Studies", 
+    "Physics", "Chemistry", "Biology", "History", "Geography"
+  ];
+
+  const difficulties = ["beginner", "intermediate", "advanced"];
+  const languages = ["English", "Hindi", "Both"];
+
+  useEffect(() => {
+    loadUserData();
+    loadVideos();
+  }, []);
+
+  useEffect(() => {
+    filterVideos();
+  }, [videos, searchQuery, selectedSubject, selectedDifficulty, selectedLanguage, profile]);
+
+  const loadUserData = async () => {
+    try {
+      const currentUser = await User.me();
+      setUser(currentUser);
+      
+      const profiles = await UserProfile.filter({ created_by: currentUser.email });
+      if (profiles.length > 0) {
+        setProfile(profiles[0]);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
+
+  const loadVideos = async () => {
+    try {
+      const videoList = await EducationalVideo.list("-rating", 50);
+      setVideos(videoList);
+    } catch (error) {
+      console.error("Error loading videos:", error);
+    }
+    setIsLoading(false);
+  };
+
+  const filterVideos = () => {
+    let filtered = videos;
+
+    // Filter by student's class level
+    if (profile?.class_level) {
+      filtered = filtered.filter(video => 
+        video.class_levels.includes(profile.class_level)
+      );
+    }
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(video =>
+        video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        video.topic.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        video.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by subject
+    if (selectedSubject !== "all") {
+      filtered = filtered.filter(video => video.subject === selectedSubject);
+    }
+
+    // Filter by difficulty
+    if (selectedDifficulty !== "all") {
+      filtered = filtered.filter(video => video.difficulty === selectedDifficulty);
+    }
+
+    // Filter by language
+    if (selectedLanguage !== "all") {
+      filtered = filtered.filter(video => 
+        video.language === selectedLanguage || video.language === "Both"
+      );
+    }
+
+    setFilteredVideos(filtered);
+  };
+
+  const handleVideoClick = async (video) => {
+    setSelectedVideo(video);
+    // Increment view count
+    try {
+      await EducationalVideo.update(video.id, {
+        ...video,
+        views: (video.views || 0) + 1
+      });
+      // Reload videos to reflect updated view count
+      loadVideos();
+    } catch (error) {
+      console.error("Error updating video views:", error);
+    }
+  };
+
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case 'beginner': return 'bg-green-100 text-green-700';
+      case 'intermediate': return 'bg-yellow-100 text-yellow-700';
+      case 'advanced': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getSubjectColor = (subject) => {
+    const colors = {
+      'Math': 'bg-blue-100 text-blue-700',
+      'Science': 'bg-purple-100 text-purple-700',
+      'English': 'bg-pink-100 text-pink-700',
+      'Hindi': 'bg-orange-100 text-orange-700',
+      'Social Studies': 'bg-indigo-100 text-indigo-700',
+      'Physics': 'bg-cyan-100 text-cyan-700',
+      'Chemistry': 'bg-emerald-100 text-emerald-700',
+      'Biology': 'bg-lime-100 text-lime-700',
+      'History': 'bg-amber-100 text-amber-700',
+      'Geography': 'bg-teal-100 text-teal-700'
+    };
+    return colors[subject] || 'bg-gray-100 text-gray-700';
+  };
+
+  if (selectedVideo) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
+        <div className="max-w-5xl mx-auto">
+          <Button 
+            variant="outline" 
+            onClick={() => setSelectedVideo(null)}
+            className="mb-6"
+          >
+            ← Back to Videos
+          </Button>
+
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardContent className="p-0">
+                  <div className="aspect-video bg-black rounded-t-lg flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <Play className="w-16 h-16 mx-auto mb-4 opacity-60" />
+                      <p className="text-sm opacity-80">Video Player</p>
+                      <p className="text-xs opacity-60">{selectedVideo.video_url}</p>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                      {selectedVideo.title}
+                    </h1>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Badge className={getDifficultyColor(selectedVideo.difficulty)}>
+                        {selectedVideo.difficulty}
+                      </Badge>
+                      <Badge className={getSubjectColor(selectedVideo.subject)}>
+                        {selectedVideo.subject}
+                      </Badge>
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Globe className="w-3 h-3" />
+                        {selectedVideo.language}
+                      </Badge>
+                    </div>
+                    <p className="text-gray-700 mb-6">{selectedVideo.description}</p>
+                    
+                    <div className="grid grid-cols-3 gap-4 text-center text-sm">
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <Eye className="w-5 h-5 text-gray-500 mx-auto mb-1" />
+                        <p className="font-semibold">{selectedVideo.views || 0}</p>
+                        <p className="text-gray-600">Views</p>
+                      </div>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <Clock className="w-5 h-5 text-gray-500 mx-auto mb-1" />
+                        <p className="font-semibold">{selectedVideo.duration}</p>
+                        <p className="text-gray-600">Duration</p>
+                      </div>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <Star className="w-5 h-5 text-gray-500 mx-auto mb-1" />
+                        <p className="font-semibold">{selectedVideo.rating}/5</p>
+                        <p className="text-gray-600">Rating</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle>Video Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">Topic</h4>
+                    <p className="text-gray-700">{selectedVideo.topic}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">Channel</h4>
+                    <p className="text-gray-700">{selectedVideo.channel}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">Suitable for Classes</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedVideo.class_levels.map((level, index) => (
+                        <Badge key={index} variant="outline">
+                          Class {level}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Learning Videos</h1>
+          <p className="text-gray-600">
+            Educational content curated for {profile ? `Class ${profile.class_level}` : 'your learning level'}
+          </p>
+        </motion.div>
+
+        {/* Filters */}
+        <Card className="mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="grid md:grid-cols-5 gap-4">
+              <div className="md:col-span-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search videos..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Subjects" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subjects</SelectItem>
+                  {subjects.map(subject => (
+                    <SelectItem key={subject} value={subject}>
+                      {subject}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Levels" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  {difficulties.map(difficulty => (
+                    <SelectItem key={difficulty} value={difficulty}>
+                      {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Languages" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Languages</SelectItem>
+                  {languages.map(language => (
+                    <SelectItem key={language} value={language}>
+                      {language}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Videos Grid */}
+        {isLoading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array(8).fill(0).map((_, i) => (
+              <Card key={i} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <div className="aspect-video bg-gray-200 rounded-t-lg animate-pulse" />
+                <CardContent className="p-4">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2" />
+                  <div className="h-3 bg-gray-200 rounded animate-pulse mb-4" />
+                  <div className="flex gap-2">
+                    <div className="h-6 w-16 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-6 w-16 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filteredVideos.length === 0 ? (
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-12 text-center">
+              <Video className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No videos found</h3>
+              <p className="text-gray-500">
+                Try adjusting your search criteria or check back later for new content.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          >
+            {filteredVideos.map((video) => (
+              <motion.div
+                key={video.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Card 
+                  className="cursor-pointer border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300"
+                  onClick={() => handleVideoClick(video)}
+                >
+                  <div className="relative">
+                    <div className="aspect-video bg-gradient-to-br from-blue-400 to-purple-500 rounded-t-lg flex items-center justify-center">
+                      <Play className="w-12 h-12 text-white opacity-80" />
+                    </div>
+                    <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      {video.duration}
+                    </div>
+                  </div>
+                  
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                      {video.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      {video.topic}
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <Badge className={getSubjectColor(video.subject)}>
+                        {video.subject}
+                      </Badge>
+                      <Badge className={getDifficultyColor(video.difficulty)}>
+                        {video.difficulty}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        {video.views || 0}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-current text-yellow-400" />
+                        {video.rating}
+                      </div>
+                      <span>{video.channel}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        {filteredVideos.length > 0 && (
+          <div className="text-center mt-8">
+            <p className="text-gray-600">
+              Showing {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''} 
+              {profile && ` for Class ${profile.class_level}`}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
