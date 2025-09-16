@@ -215,7 +215,18 @@ window.showSection = function(sectionName) {
             console.log('✅ Chat container shown');
         }
     } else {
-        console.log('❌ Section not found:', sectionName + 'Section');
+        // Try to find the section with the exact name
+        const exactSection = document.getElementById(sectionName);
+        if (exactSection) {
+            exactSection.classList.remove('hidden');
+            exactSection.style.display = 'block';
+            exactSection.style.zIndex = '10';
+            exactSection.style.position = 'relative';
+            exactSection.style.top = '0';
+            console.log('✅ Section shown:', sectionName);
+        } else {
+            console.log('❌ Section not found:', sectionName);
+        }
     }
     
     // Add active class to nav item based on text content
