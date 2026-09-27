@@ -532,17 +532,21 @@ app.get('/api/supabase-config', (req, res) => {
 // Claude Chat API
 app.post('/api/chat', async (req, res) => {
   try {
-    const { messages, grade, subject, language, userProfile } = req.body;
+    const { messages, message, grade, subject, language, userProfile } = req.body || {};
+    const incomingMessages = messages ?? (typeof message === 'string' ? [{ role: 'user', content: message }] : null);
 
     // Validate input
-    if (!messages || !Array.isArray(messages)) {
+    if (!Array.isArray(incomingMessages)) {
       return res.status(400).json({ error: 'Invalid messages format' });
     }
 
     // Filter out any messages with null/undefined/empty content
-    const filteredMessages = messages.filter(msg =>
-      msg.content && typeof msg.content === 'string' && msg.content.trim() !== ''
+    const filteredMessages = incomingMessages.filter(msg =>
+      msg && ['user', 'assistant', 'system'].includes(msg.role) && typeof msg.content === 'string' && msg.content.trim() !== ''
     );
+    if (!filteredMessages.length) {
+      return res.status(400).json({ error: 'At least one non-empty message is required' });
+    }
 
     // Get relevant book content for context
     let bookContext = '';
@@ -641,8 +645,8 @@ Use natural language without any formatting or special characters.`;
       response: response,
       status: "success",
       usage: {
-        input_tokens: completion.usage.input_tokens,
-        output_tokens: completion.usage.output_tokens
+        input_tokens: chat.usage?.prompt_tokens || 0,
+        output_tokens: chat.usage?.completion_tokens || 0
       }
     });
 
