@@ -1942,7 +1942,7 @@ async function signInWithGoogle() {
         const { error } = await window.supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: 'https://tution.app/dashboard'
+                redirectTo: 'https://tutor-omega-seven.vercel.app/dashboard'
             }
         });
         
@@ -1958,7 +1958,7 @@ async function signInWithGitHub() {
         const { error } = await window.supabaseClient.auth.signInWithOAuth({
             provider: 'github',
             options: {
-                redirectTo: 'https://tution.app/dashboard'
+                redirectTo: 'https://tutor-omega-seven.vercel.app/dashboard'
             }
         });
         

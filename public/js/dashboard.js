@@ -22,9 +22,9 @@ function checkPersistentLogin() {
     }
     
     // Check if we're on login page, if not redirect
-    if (!window.location.href.includes('login.html') && !window.location.href.includes('index.html')) {
+    if (!window.location.href.includes('login.html')) {
         console.log('🔐 No persistent login found, redirecting to login');
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return false;
     }
     
@@ -4167,7 +4167,7 @@ async function signInWithGoogle() {
         const { error } = await window.supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: 'https://tution.app/dashboard'
+                redirectTo: 'https://tutor-omega-seven.vercel.app/dashboard'
             }
         });
         
@@ -4183,7 +4183,7 @@ async function signInWithGitHub() {
         const { error } = await window.supabaseClient.auth.signInWithOAuth({
             provider: 'github',
             options: {
-                redirectTo: 'https://tution.app/dashboard'
+                redirectTo: 'https://tutor-omega-seven.vercel.app/dashboard'
             }
         });
         

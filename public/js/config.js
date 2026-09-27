@@ -9,8 +9,6 @@ window.TUTOR_CONFIG = {
     const hostname = window.location.hostname;
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:3000';
-    } else if (hostname === 'tution.app') {
-      return 'https://tution.app';
     } else if (hostname === 'tutor-omega-seven.vercel.app') {
       return 'https://tutor-omega-seven.vercel.app';
     } else {

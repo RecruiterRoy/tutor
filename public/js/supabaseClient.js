@@ -1,8 +1,8 @@
 // Use the global Supabase client from CDN
-let supabase = null;
+let supabaseClientInstance = null;
 
 async function getSupabaseClient() {
-    if (supabase) return supabase;
+    if (supabaseClientInstance) return supabaseClientInstance;
     
     try {
         // Check if Supabase is loaded globally
@@ -16,16 +16,10 @@ async function getSupabaseClient() {
             throw new Error('Supabase configuration not available');
         }
         
-                // Create the client
-        try {
-            supabase = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY); 
-            console.log('✅ Supabase client initialized successfully');
-        } catch (error) {
-            console.error('❌ Supabase client initialization failed:', error);
-            // Don't crash the dashboard, continue without Supabase
-        }
+                supabaseClientInstance = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+                console.log('✅ Supabase client initialized successfully');
         
-        return supabase;
+                return supabaseClientInstance;
     } catch (error) {
         console.error('Failed to initialize Supabase client:', error);
         throw error;
@@ -36,6 +30,9 @@ async function getSupabaseClient() {
 async function initializeSupabaseClient() {
     try {
         const client = await getSupabaseClient();
+        if (!client) {
+            throw new Error('Supabase client initialization returned no client');
+        }
         window.supabaseClient = client;
         console.log('✅ Supabase client exposed to window.supabaseClient');
         return client;

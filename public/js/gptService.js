@@ -33,7 +33,7 @@ class GPTService {
         return temp.innerHTML;
     }
 
-    async sendMessage(userMessage, userProfile = null, retries = 2) {
+    async sendMessage(userMessage, userProfile = null, retries = 1) {
         try {
             // Validate input
             if (!userMessage || typeof userMessage !== 'string' || !userMessage.trim()) {
@@ -66,7 +66,7 @@ class GPTService {
 
             // Now add current message to history
             this.chatHistory.push({ role: 'user', content: trimmedMessage });
-            this.onMessageSent(trimmedMessage);
+            if (retries === 1) this.onMessageSent(trimmedMessage);
 
             // Determine avatar / teacher
             const currentAvatar = userProfile?.ai_avatar || window.userData?.ai_avatar || window.selectedAvatar || 'roy-sir';
@@ -116,7 +116,9 @@ class GPTService {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('❌ API Error:', errorText);
-                throw new Error(`HTTP ${response.status} - ${errorText}`);
+                const apiError = new Error(`HTTP ${response.status} - ${errorText}`);
+                apiError.status = response.status;
+                throw apiError;
             }
 
             const data = await response.json();
@@ -140,13 +142,19 @@ class GPTService {
 
         } catch (error) {
             console.error('💥 GPT Service Error:', error);
-            this.onError(error);
+            const errorMessage = String(error?.message || error || '');
+            const status = error?.status || Number(errorMessage.match(/HTTP (\d{3})/)?.[1]);
+            const quotaFailure = status === 402 || status === 429 || /quota|billing|payment required|credits? exhausted|rate limit/i.test(errorMessage);
+            const transientFailure = status >= 500 || error?.name === 'TypeError' || error?.name === 'AbortError';
 
-            if (retries > 0) {
+            if (retries > 0 && transientFailure && !quotaFailure) {
+                const previous = this.chatHistory[this.chatHistory.length - 1];
+                if (previous?.role === 'user' && previous.content === userMessage.trim()) this.chatHistory.pop();
                 console.warn(`Retrying... (${retries} retries left)`);
                 return this.sendMessage(userMessage, userProfile, retries - 1);
             }
 
+            this.onError(error);
             return `⚠️ I'm having trouble connecting right now. ${error.message || 'Please try again later.'}`;
         }
     }

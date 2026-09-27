@@ -22,7 +22,7 @@ class PaymentSystem {
         try {
             console.log('Creating payment for plan:', planType);
             
-            const apiBase = (window.location.protocol === 'file:') ? 'https://tution.app' : '';
+            const apiBase = (window.location.protocol === 'file:') ? 'https://tutor-omega-seven.vercel.app' : '';
             const response = await fetch(apiBase + '/api/create-payment', {
                 method: 'POST',
                 headers: {
@@ -98,7 +98,7 @@ class PaymentSystem {
             console.log('Payment success response:', response);
 
             // Verify payment on server
-            const apiBase = (window.location.protocol === 'file:') ? 'https://tution.app' : '';
+            const apiBase = (window.location.protocol === 'file:') ? 'https://tutor-omega-seven.vercel.app' : '';
             const verifyResponse = await fetch(apiBase + '/api/verify-payment', {
                 method: 'POST',
                 headers: {

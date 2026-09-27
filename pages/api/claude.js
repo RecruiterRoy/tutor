@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     // Get knowledge bank context
     let knowledgeContext = '';
     try {
-      const knowledgeResponse = await fetch(`${req.headers.host ? `https://${req.headers.host}` : 'https://tution.app'}/api/knowledge-search`, {
+      const knowledgeResponse = await fetch(`${req.headers.host ? `https://${req.headers.host}` : 'https://tutor-omega-seven.vercel.app'}/api/knowledge-search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: message, grade: `class${grade}`, subject })

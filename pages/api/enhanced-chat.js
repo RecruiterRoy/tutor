@@ -8,7 +8,7 @@ const cors = Cors({
   methods: ['POST'],
   origin: process.env.NODE_ENV === 'development' 
     ? '*' 
-    : ['https://tution.app', 'https://*.vercel.app']
+    : ['https://tutor-omega-seven.vercel.app']
 });
 
 // Helper to run middleware
@@ -31,10 +31,9 @@ console.log('🔧 OPENAI_API_KEY length:', OPENAI_API_KEY ? OPENAI_API_KEY.lengt
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-const supabase = createClient(
-  'https://vfqdjpiyaabufpaofysz.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY
-);
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vfqdjpiyaabufpaofysz.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 // Usage tracking for cost monitoring
 const logUsage = (usage) => {
@@ -369,6 +368,31 @@ export default async function handler(req, res) {
     console.log('🔧 Enhanced API received avatar:', avatar);
     console.log('🔧 Enhanced API received userProfile:', userProfile);
 
+    if (action === 'structuredAssessment') {
+      const questionCount = Math.min(25, Math.max(1, Number(req.body.questionCount) || 5));
+      const topic = String(req.body.topic || subject || 'General').slice(0, 120);
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        temperature: 0.3,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content: 'Create educational multiple-choice assessment questions. Return a JSON object with one key "questions", an array of objects using exactly these English fields: question (string), options (array of exactly four strings), answer (one-based integer 1 through 4), explanation (string). Write only in English. Do not include markdown.'
+          },
+          {
+            role: 'user',
+            content: `Create ${questionCount} ${req.body.difficulty || 'mixed'} questions about ${topic} for class ${grade || '6'} in ${subject || 'General'}.`
+          }
+        ]
+      });
+      const result = JSON.parse(completion.choices[0]?.message?.content || '{}');
+      if (!Array.isArray(result.questions) || !result.questions.length) {
+        throw new Error('AI returned no assessment questions');
+      }
+      return res.status(200).json({ success: true, questions: result.questions, usage: completion.usage || {} });
+    }
+
     let response = '';
     let additionalData = {};
 
@@ -683,7 +707,7 @@ ${teacherPersona.name === 'Roy Sir' ? `SPECIAL INSTRUCTION FOR ROY SIR:
         // Load syllabus guidelines for user's board/class (broad guidance only)
         let syllabusGuidelines = '';
         try {
-          const origin = (req.headers.origin) || (req.headers.host ? `https://${req.headers.host}` : 'https://tution.app');
+          const origin = (req.headers.origin) || (req.headers.host ? `https://${req.headers.host}` : 'https://tutor-omega-seven.vercel.app');
           const userBoard = (userProfile?.board || '').toString().toUpperCase();
           const preferredBoard = userBoard.includes('CBSE') ? 'CBSE' : userBoard.includes('ICSE') ? 'ICSE' : '';
           const classNum = parseInt((grade || '').toString().replace(/\D/g, '')) || null;

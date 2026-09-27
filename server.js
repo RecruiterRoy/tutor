@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 // import { PDFProcessor } from './utils/pdfExtractor.js';
 import rateLimit from 'express-rate-limit';
 import fs from 'fs';
+import { randomUUID } from 'node:crypto';
 
 dotenv.config();
 
@@ -49,6 +50,22 @@ function getSupabase() {
     return supabase;
 }
 
+let supabaseAdmin = null;
+function getSupabaseAdmin() {
+    if (!supabaseAdmin) {
+        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+        if (!supabaseUrl || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            throw new Error('A Supabase URL and SUPABASE_SERVICE_ROLE_KEY are required');
+        }
+        supabaseAdmin = createClient(
+            supabaseUrl,
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
+            { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+    }
+    return supabaseAdmin;
+}
+
 // Initialize PDF Processor lazily to avoid Vercel deployment issues
 let pdfProcessor = null;
 
@@ -74,7 +91,200 @@ async function getPDFProcessor() {
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+const studentRegistrationLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });
+app.post('/api/register-student', studentRegistrationLimiter, async (req, res) => {
+    const { userId, email, registrationNonce, profile } = req.body || {};
+
+    if (!userId || !email || !registrationNonce || !profile || typeof profile !== 'object' || Array.isArray(profile)) {
+        return res.status(400).json({ error: 'A new Supabase account and student profile are required' });
+    }
+
+    try {
+        const admin = getSupabaseAdmin();
+        const { data: authData, error: authError } = await admin.auth.admin.getUserById(userId);
+        if (authError || !authData.user || authData.user.email?.toLowerCase() !== String(email).toLowerCase()) {
+            return res.status(401).json({ error: 'Supabase could not verify the new account' });
+        }
+        const userCreatedAt = new Date(authData.user.created_at).getTime();
+        const recentSignup = Number.isFinite(userCreatedAt) && Date.now() - userCreatedAt <= 15 * 60 * 1000;
+        if (!recentSignup || authData.user.user_metadata?.registration_nonce !== registrationNonce) {
+            return res.status(403).json({ error: 'This registration request could not be verified' });
+        }
+
+        const studentProfile = {
+            id: authData.user.id,
+            email: authData.user.email,
+            name: String(profile.name || '').trim(),
+            phone: String(profile.phone || '').trim(),
+            date_of_birth: profile.date_of_birth || null,
+            gender: profile.gender || null,
+            class: profile.class || null,
+            board_name: profile.board_name || null,
+            state_board_name: profile.state_board_name || null,
+            state: profile.state || null,
+            study_city: profile.study_city || null,
+            study_state: profile.study_state || null,
+            school_name: String(profile.school_name || '').trim(),
+            school_id: profile.school_id || null,
+            parent_name: String(profile.parent_name || '').trim(),
+            parent_phone: String(profile.parent_phone || '').trim(),
+            city: String(profile.city || '').trim(),
+            status: 'pending',
+            created_at: new Date().toISOString(),
+            password_hash: 'managed-by-supabase-auth'
+        };
+        if (!studentProfile.name || !studentProfile.phone) {
+            return res.status(400).json({ error: 'Student name and phone are required' });
+        }
+
+        const { error: profileError } = await admin
+            .from('students')
+            .insert([studentProfile]);
+
+        if (profileError) {
+            return res.status(422).json({ error: `Failed to create student profile: ${profileError.message}` });
+        }
+        return res.status(201).json({ success: true, user: { id: authData.user.id, email: authData.user.email } });
+    } catch (error) {
+        console.error('Student registration failed:', error);
+        return res.status(500).json({ error: 'Student registration is currently unavailable' });
+    }
+});
+
+app.get('/api/educational-videos', async (req, res) => {
+    try {
+        const { subject = 'mathematics', classLevel = '6' } = req.query;
+        const { getAllVideosForSubject } = await import('./pages/api/educational-video-database.js');
+        return res.json({ success: true, videos: getAllVideosForSubject(subject, classLevel) });
+    } catch (error) {
+        console.error('Educational video lookup failed:', error);
+        return res.status(500).json({ success: false, error: 'Unable to load educational videos' });
+    }
+});
+
+app.post('/api/azure-ocr', async (req, res) => {
+    try {
+        const handler = (await import('./pages/api/azure-ocr.js')).default;
+        await handler(req, res);
+    } catch (error) {
+        console.error('OCR route failed:', error);
+        return res.status(500).json({ success: false, error: 'OCR service is unavailable' });
+    }
+});
+
+app.post('/api/report-video-failure', async (req, res) => {
+    try {
+        const handler = (await import('./pages/api/report-video-failure.js')).default;
+        await handler(req, res);
+    } catch (error) {
+        console.error('Video failure report route failed:', error);
+        return res.status(500).json({ success: false, error: 'Unable to record video failure' });
+    }
+});
+
+const studentDashboardLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
+app.post('/api/student-dashboard', studentDashboardLimiter, async (req, res) => {
+    const token = req.headers.authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+    if (!token) return res.status(401).json({ error: 'Authentication is required' });
+
+    try {
+        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !anonKey) throw new Error('Supabase public configuration is missing');
+        const authClient = createClient(supabaseUrl, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
+        const { data: authData, error: authError } = await authClient.auth.getUser(token);
+        if (authError || !authData.user) return res.status(401).json({ error: 'Session is invalid or expired' });
+
+        const admin = getSupabaseAdmin();
+        const { action } = req.body || {};
+        if (action === 'update_profile') {
+            const allowedFields = ['name', 'date_of_birth', 'gender', 'city', 'class', 'board_name', 'state_board_name', 'state', 'study_city', 'study_state', 'school_name', 'roll_number'];
+            const profile = Object.fromEntries(allowedFields
+                .filter(field => Object.hasOwn(req.body.profile || {}, field))
+                .map(field => [field, req.body.profile[field] || null]));
+            if (!Object.keys(profile).length) return res.status(400).json({ error: 'No profile fields were provided' });
+            profile.updated_at = new Date().toISOString();
+            const { data, error } = await admin.from('students').update(profile).eq('id', authData.user.id).select('id').maybeSingle();
+            if (error) return res.status(422).json({ error: error.message });
+            if (!data) return res.status(404).json({ error: 'Student profile not found' });
+            return res.json({ success: true });
+        }
+
+        if (action === 'increment_points') {
+            const { category, points } = req.body;
+            const field = category === 'quiz' ? 'monthly_quiz_points' : category === 'assessment' ? 'monthly_assessment_points' : null;
+            if (!field || !Number.isInteger(points) || points < 0 || points > 60) {
+                return res.status(400).json({ error: 'Invalid points update' });
+            }
+            const { data: student, error: readError } = await admin.from('students')
+                .select('monthly_quiz_points, monthly_assessment_points, monthly_total_points')
+                .eq('id', authData.user.id).maybeSingle();
+            if (readError || !student) return res.status(404).json({ error: 'Student profile not found' });
+            const { error } = await admin.from('students').update({
+                [field]: (student[field] || 0) + points,
+                monthly_total_points: (student.monthly_total_points || 0) + points,
+                updated_at: new Date().toISOString()
+            }).eq('id', authData.user.id);
+            if (error) return res.status(422).json({ error: error.message });
+            return res.json({ success: true });
+        }
+
+        if (action === 'reset_progress') {
+            const [assessmentDelete, challengeDelete] = await Promise.all([
+                admin.from('assessment_results').delete().eq('user_id', authData.user.id),
+                admin.from('daily_challenge_progress').delete().eq('user_id', authData.user.id)
+            ]);
+            const deleteError = assessmentDelete.error || challengeDelete.error;
+            if (deleteError) return res.status(422).json({ error: deleteError.message });
+            const { error: studentError } = await admin.from('students').update({
+                monthly_quiz_points: 0,
+                monthly_assessment_points: 0,
+                monthly_total_points: 0,
+                updated_at: new Date().toISOString()
+            }).eq('id', authData.user.id);
+            if (studentError) return res.status(422).json({ error: studentError.message });
+            return res.json({ success: true });
+        }
+
+        if (action === 'complete_assessment') {
+            const { subject, topic, assessmentType, classLevel, totalQuestions, correctAnswers, timeTakenMinutes } = req.body;
+            if (!subject || !Number.isInteger(totalQuestions) || totalQuestions < 1 || totalQuestions > 25 || !Number.isInteger(correctAnswers) || correctAnswers < 0 || correctAnswers > totalQuestions) {
+                return res.status(400).json({ error: 'Invalid assessment result' });
+            }
+            const points = 5 + correctAnswers * 2;
+            const { error: insertError } = await admin.from('assessment_results').insert({
+                id: randomUUID(),
+                user_id: authData.user.id,
+                assessment_type: assessmentType || 'custom',
+                subject,
+                topic: String(topic || '').slice(0, 120),
+                class_level: String(classLevel || ''),
+                total_questions: totalQuestions,
+                correct_answers: correctAnswers,
+                score_percentage: Math.round(correctAnswers / totalQuestions * 100),
+                points_earned: points,
+                time_taken_minutes: Math.min(240, Math.max(1, Number(timeTakenMinutes) || 1)),
+                completed_at: new Date().toISOString()
+            });
+            if (insertError) return res.status(422).json({ error: insertError.message });
+            const { data: student } = await admin.from('students').select('monthly_assessment_points, monthly_total_points').eq('id', authData.user.id).maybeSingle();
+            const { error: pointsError } = await admin.from('students').update({
+                monthly_assessment_points: (student?.monthly_assessment_points || 0) + points,
+                monthly_total_points: (student?.monthly_total_points || 0) + points,
+                updated_at: new Date().toISOString()
+            }).eq('id', authData.user.id);
+            if (pointsError) return res.status(422).json({ error: pointsError.message });
+            return res.json({ success: true, points });
+        }
+
+        return res.status(400).json({ error: 'Unsupported dashboard action' });
+    } catch (error) {
+        console.error('Student dashboard API failed:', error);
+        return res.status(500).json({ error: 'Dashboard update is temporarily unavailable' });
+    }
+});
 
 // Serve static files
 app.use('/js', express.static(path.join(__dirname, 'public', 'js')));

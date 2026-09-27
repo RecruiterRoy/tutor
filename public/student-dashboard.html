@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard - tution.app</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/gptService.js"></script>
+    <script src="js/enhancedAIService.js"></script>
     <style>
         /* Mobile responsive styles */
         @media (max-width: 1023px) {
@@ -147,6 +152,40 @@
             pointer-events: none;
             animation: floatUp 5s ease-in-out forwards;
         }
+
+        body[data-dashboard-theme="dark"] {
+            background-image: none !important;
+            background-color: #111827 !important;
+            color: #f3f4f6;
+        }
+
+        body[data-dashboard-theme="dark"] .bg-white,
+        body[data-dashboard-theme="dark"] .bg-white\/80,
+        body[data-dashboard-theme="dark"] .bg-white\/90,
+        body[data-dashboard-theme="dark"] .bg-gray-50 {
+            background-color: #1f2937 !important;
+            color: #f3f4f6;
+        }
+
+        body[data-dashboard-theme="dark"] .text-gray-800,
+        body[data-dashboard-theme="dark"] .text-gray-700,
+        body[data-dashboard-theme="dark"] .text-gray-600 {
+            color: #e5e7eb !important;
+        }
+
+        body[data-dashboard-theme="dark"] .border-gray-200 {
+            border-color: #374151 !important;
+        }
+
+        body[data-dashboard-color="purple"] .bg-blue-500,
+        body[data-dashboard-color="purple"] .bg-blue-600 {
+            background-color: #7c3aed !important;
+        }
+
+        body[data-dashboard-color="green"] .bg-blue-500,
+        body[data-dashboard-color="green"] .bg-blue-600 {
+            background-color: #16a34a !important;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
@@ -223,9 +262,10 @@
                     <div class="flex items-center space-x-4">
                         <div class="hidden md:flex items-center space-x-2 bg-blue-50 px-3 py-1 rounded-full">
                             <span class="text-blue-600">⭐</span>
-                            <span class="text-blue-800 font-medium" id="headerPoints">125</span>
+                            <span class="text-blue-800 font-medium" id="headerPoints">0</span>
                             <span class="text-blue-600">Points</span>
                         </div>
+                        <button id="logoutBtn" class="text-sm text-gray-600 hover:text-red-600">Log out</button>
                         <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm" id="headerAvatar">S</div>
                     </div>
                 </div>
@@ -296,7 +336,7 @@
                         <div class="mt-4 bg-white/80 backdrop-blur-xl rounded-lg p-4 border border-gray-200">
                             <div class="flex items-center justify-between mb-3">
                                 <span class="text-gray-800 font-semibold">Select Subject</span>
-                                <button class="text-blue-600 hover:text-blue-800 text-sm">⚙️ Manage</button>
+                                <button id="manageSubjectsBtn" class="text-blue-600 hover:text-blue-800 text-sm">⚙️ Manage</button>
                             </div>
                             <div class="flex flex-wrap gap-2">
                                 <button class="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200" onclick="selectSubject('General')">General</button>
@@ -314,12 +354,8 @@
                 <div id="homeworkSection" class="section">
                     <div class="max-w-4xl mx-auto">
                         <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 Homework</h2>
-                        <div class="bg-yellow-100 border border-yellow-300 rounded-lg p-6">
-                            <div class="flex items-center space-x-3 mb-4">
-                                <span class="text-2xl">⚠️</span>
-                                <h3 class="text-lg font-semibold text-gray-800">School Registration Required</h3>
-                            </div>
-                            <p class="text-gray-700">You will see your homework here once your school is registered with us.</p>
+                        <div id="homeworkContainer" class="space-y-4">
+                            <div class="bg-white/80 border border-gray-200 rounded-lg p-6 text-gray-600">Loading assigned homework...</div>
                         </div>
                     </div>
                 </div>
@@ -400,42 +436,7 @@
                         <div class="bg-white/80 rounded-lg p-6 border border-gray-200">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Recent Tests</h3>
                             <div id="testHistory" class="space-y-3">
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <h4 class="text-gray-800 font-medium">Mathematics Quiz</h4>
-                                            <p class="text-gray-600 text-sm">Completed 2 days ago</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <span class="text-green-600 font-bold">85%</span>
-                                            <p class="text-gray-600 text-sm">17/20 • 39 points</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <h4 class="text-gray-800 font-medium">Science Test</h4>
-                                            <p class="text-gray-600 text-sm">Completed 1 week ago</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <span class="text-yellow-600 font-bold">72%</span>
-                                            <p class="text-gray-600 text-sm">18/25 • 41 points</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <h4 class="text-gray-800 font-medium">English Grammar</h4>
-                                            <p class="text-gray-600 text-sm">Completed 2 weeks ago</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <span class="text-green-600 font-bold">90%</span>
-                                            <p class="text-gray-600 text-sm">9/10 • 23 points</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                <p class="text-gray-500">Loading your assessment history...</p>
                             </div>
                         </div>
                         
@@ -444,15 +445,15 @@
                             <h3 class="text-lg font-semibold mb-2">🏆 Your Points</h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="text-center">
-                                    <div class="text-2xl font-bold">103</div>
+                                    <div class="text-2xl font-bold" id="summaryPoints">0</div>
                                     <div class="text-blue-100">Total Points</div>
                                 </div>
                                 <div class="text-center">
-                                    <div class="text-2xl font-bold">15</div>
+                                    <div class="text-2xl font-bold" id="summaryTests">0</div>
                                     <div class="text-blue-100">Tests Taken</div>
                                 </div>
                                 <div class="text-center">
-                                    <div class="text-2xl font-bold">78%</div>
+                                    <div class="text-2xl font-bold" id="summaryAverage">0%</div>
                                     <div class="text-blue-100">Average Score</div>
                                 </div>
                             </div>
@@ -473,21 +474,21 @@
                                     <p class="text-purple-100">New question available at 5:00 PM daily</p>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-3xl font-bold" id="dailyStreak">5</div>
+                                    <div class="text-3xl font-bold" id="dailyStreak">0</div>
                                     <div class="text-purple-100">Day Streak</div>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                                 <div>
-                                    <div class="text-2xl font-bold" id="quizPoints">42</div>
+                                    <div class="text-2xl font-bold" id="quizPoints">0</div>
                                     <div class="text-purple-100">Quiz Points</div>
                                 </div>
                                 <div>
-                                    <div class="text-2xl font-bold" id="totalPoints">125</div>
+                                    <div class="text-2xl font-bold" id="totalPoints">0</div>
                                     <div class="text-purple-100">Total Points</div>
                                 </div>
                                 <div>
-                                    <div class="text-2xl font-bold" id="rankPosition">15</div>
+                                    <div class="text-2xl font-bold" id="rankPosition">-</div>
                                     <div class="text-purple-100">Your Rank</div>
                                 </div>
                             </div>
@@ -531,40 +532,9 @@
                         
                         <!-- Question History -->
                         <div class="bg-white/80 rounded-lg p-6 border border-gray-200 mb-6">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">📚 Recent Questions</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">📚 Daily Quiz Activity</h3>
                             <div id="questionHistory" class="space-y-3">
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                    <div class="flex justify-between items-start">
-                                        <div class="flex-1">
-                                            <div class="flex items-center space-x-2 mb-2">
-                                                <span class="text-sm font-medium text-gray-600">Mathematics</span>
-                                                <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">Correct</span>
-                                            </div>
-                                            <div class="text-gray-800 text-sm mb-2">What is 15 + 27?</div>
-                                            <div class="text-xs text-gray-500">2 days ago</div>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-lg font-bold text-green-600">+10</div>
-                                            <div class="text-xs text-gray-500">points</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                    <div class="flex justify-between items-start">
-                                        <div class="flex-1">
-                                            <div class="flex items-center space-x-2 mb-2">
-                                                <span class="text-sm font-medium text-gray-600">Science</span>
-                                                <span class="text-xs px-2 py-1 rounded bg-red-100 text-red-800">Wrong</span>
-                                            </div>
-                                            <div class="text-gray-800 text-sm mb-2">What is the chemical symbol for gold?</div>
-                                            <div class="text-xs text-gray-500">3 days ago</div>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-lg font-bold text-gray-400">0</div>
-                                            <div class="text-xs text-gray-500">points</div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <p class="text-gray-500">Loading your daily quiz activity...</p>
                             </div>
                         </div>
                         
@@ -580,48 +550,7 @@
                                 </button>
                             </div>
                             <div id="leaderboardContent" class="space-y-3">
-                                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-sm">R</div>
-                                        <div>
-                                            <div class="font-medium text-gray-800">Rahul Sharma</div>
-                                            <div class="text-sm text-gray-500">Class 2 • Mumbai</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-lg font-bold text-yellow-600">210</div>
-                                        <div class="text-xs text-gray-500">points</div>
-                                    </div>
-                                    <div class="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-sm">1</div>
-                                </div>
-                                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-200">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">P</div>
-                                        <div>
-                                            <div class="font-medium text-gray-800">Priya Patel</div>
-                                            <div class="text-sm text-gray-500">Class 2 • Delhi</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-lg font-bold text-blue-600">195</div>
-                                        <div class="text-xs text-gray-500">points</div>
-                                    </div>
-                                    <div class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold text-sm">2</div>
-                                </div>
-                                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">A</div>
-                                        <div>
-                                            <div class="font-medium text-gray-800">Amit Kumar</div>
-                                            <div class="text-sm text-gray-500">Class 2 • Bangalore</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-lg font-bold text-orange-600">180</div>
-                                        <div class="text-xs text-gray-500">points</div>
-                                    </div>
-                                    <div class="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-white font-bold text-sm">3</div>
-                                </div>
+                                <p class="text-gray-500">Loading leaderboard...</p>
                             </div>
                         </div>
                     </div>
@@ -635,51 +564,14 @@
                         <!-- Books Section -->
                         <div class="bg-white/80 rounded-lg p-6 border border-gray-200 mb-6">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">📖 Books</h3>
-                            <div class="text-center py-12">
-                                <div class="text-6xl mb-4">📚</div>
-                                <h4 class="text-xl font-semibold text-gray-700 mb-2">Coming Soon!</h4>
-                                <p class="text-gray-500">We're working on bringing you a comprehensive collection of textbooks and study materials.</p>
-                            </div>
+                            <div id="booksContainer" class="space-y-3 text-gray-600">Loading books for your class...</div>
                         </div>
                         
                         <!-- Videos Section -->
                         <div class="bg-white/80 rounded-lg p-6 border border-gray-200">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">🎥 Educational Videos</h3>
                             <div id="videosContainer" class="space-y-4">
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                    <div class="flex items-start space-x-4">
-                                        <div class="flex-shrink-0">
-                                            <div class="w-16 h-12 bg-red-500 rounded flex items-center justify-center text-white text-sm font-bold">
-                                                ▶️
-                                            </div>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h4 class="font-semibold text-gray-800 mb-1">Introduction to Algebra</h4>
-                                            <p class="text-sm text-gray-600 mb-2">Mathematics • Class 2</p>
-                                            <p class="text-sm text-gray-500 mb-3">Learn the basics of algebraic expressions and equations</p>
-                                            <button class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">
-                                                Watch Video
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                    <div class="flex items-start space-x-4">
-                                        <div class="flex-shrink-0">
-                                            <div class="w-16 h-12 bg-blue-500 rounded flex items-center justify-center text-white text-sm font-bold">
-                                                ▶️
-                                            </div>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h4 class="font-semibold text-gray-800 mb-1">The Solar System</h4>
-                                            <p class="text-sm text-gray-600 mb-2">Science • Class 2</p>
-                                            <p class="text-sm text-gray-500 mb-3">Explore the planets and other celestial bodies in our solar system</p>
-                                            <button class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
-                                                Watch Video
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <p class="text-gray-600">Loading videos for your class...</p>
                             </div>
                         </div>
                     </div>
@@ -1104,6 +996,7 @@
     <script>
         // Global variables
         let currentUser = null;
+        let supabaseClient = null;
         let currentSection = 'classroomSection';
         let currentSubject = 'General';
         let currentTeacher = 'roy_sir';
@@ -1113,30 +1006,69 @@
         let cameraStream = null;
         let speechSynthesis = window.speechSynthesis;
         let currentUtterance = null;
+        let activeTest = null;
+        let dailyProgressRecord = null;
+        let inactivityTimer = null;
+        let autoLogoutListenersReady = false;
+        let currentDailyQuestion = null;
+        let leaderboardScope = 'global';
+        const dailyQuestionBank = [
+            { question: 'What is the capital of India?', options: ['Mumbai', 'New Delhi', 'Kolkata', 'Chennai'], answer: 1 },
+            { question: 'What is 15 + 27?', options: ['32', '40', '42', '44'], answer: 2 },
+            { question: 'What is the chemical symbol for gold?', options: ['Ag', 'Au', 'Fe', 'Go'], answer: 1 },
+            { question: 'Who wrote the Indian National Anthem?', options: ['Bankim Chandra Chatterjee', 'Rabindranath Tagore', 'Sarojini Naidu', 'Subramania Bharati'], answer: 1 },
+            { question: 'Which is the largest planet in our solar system?', options: ['Earth', 'Saturn', 'Jupiter', 'Neptune'], answer: 2 }
+        ];
         
         // User points and data
         const userData = {
-            points: 125,
-            streak: 5,
-            rank: 15,
-            quizPoints: 42,
-            testsTaken: 15,
-            averageScore: 78
+            points: 0,
+            streak: 0,
+            rank: '-',
+            quizPoints: 0,
+            testsTaken: 0,
+            averageScore: 0
         };
 
         // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Initializing Student Dashboard...');
-            initializeDashboard();
+            try {
+                await initializeDashboard();
+            } catch (error) {
+                console.error('Dashboard initialization failed:', error);
+                window.location.href = 'login.html';
+            }
         });
 
         // Initialize dashboard components
-        function initializeDashboard() {
+        async function initializeDashboard() {
+            supabaseClient = await window.initializeSupabaseClient();
+            const { data: { user }, error } = await supabaseClient.auth.getUser();
+            if (error || !user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
             // Setup mobile sidebar
             setupMobileSidebar();
             
             // Load user data
-            loadUserData();
+            await loadUserData(user);
+            await Promise.all([
+                loadDashboardProgress(),
+                loadTeacherPreferences(),
+                loadChatHistory(),
+                loadAssessmentHistory(),
+                loadHomework(),
+                loadBooks(),
+                loadEducationalVideos(),
+                loadUserSubjects()
+            ]);
+            loadDashboardSettings();
+
+            const logoutButton = document.getElementById('logoutBtn');
+            logoutButton?.addEventListener('click', logout);
             
             // Initialize AI services
             initializeAIServices();
@@ -1146,7 +1078,6 @@
             initializeDailyQuiz();
             initializeAssessment();
             initializeStudyMaterials();
-            initializeHomework();
             initializeProfile();
             initializeSettings();
             
@@ -1197,8 +1128,8 @@
         function initializeAIServices() {
             try {
                 // Initialize GPT Service
-                if (typeof GPTService !== 'undefined') {
-                    gptService = new GPTService();
+                if (window.gptService || typeof GPTService !== 'undefined') {
+                    gptService = window.gptService || new GPTService();
                     console.log('✅ GPT Service initialized');
                     
                     // Set up event hooks
@@ -1248,6 +1179,51 @@
             }
         }
 
+        async function loadChatHistory() {
+            if (!currentUser?.id || !supabaseClient) return;
+            const { data, error } = await supabaseClient
+                .from('subject_chat_history')
+                .select('role, content, created_at')
+                .eq('user_id', currentUser.id)
+                .eq('subject', currentSubject)
+                .order('created_at', { ascending: true })
+                .limit(50);
+
+            if (error) {
+                console.warn('Unable to load saved chat history:', error.message);
+                return;
+            }
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+            if (gptService) gptService.chatHistory = [];
+            if (!data?.length) {
+                addAIMessageToChat(`Hello ${currentUser.name}! I'm ${currentTeacher === 'miss_sapna' ? 'Miss Sapna' : 'Roy Sir'}, your AI teacher. How can I help you with ${currentSubject}?`);
+                return;
+            }
+            if (gptService) {
+                gptService.chatHistory = data.map(item => ({
+                    role: item.role === 'ai' ? 'assistant' : item.role,
+                    content: item.content
+                }));
+            }
+            data.forEach(item => {
+                if (item.role === 'user') addUserMessageToChat(item.content);
+                else addAIMessageToChat(item.content);
+            });
+        }
+
+        async function saveChatExchange(question, answer) {
+            if (!currentUser?.id || !supabaseClient || !answer) return;
+            const timestamp = new Date().toISOString();
+            const { error } = await supabaseClient
+                .from('subject_chat_history')
+                .insert([
+                    { user_id: currentUser.id, subject: currentSubject, role: 'user', content: question, created_at: timestamp },
+                    { user_id: currentUser.id, subject: currentSubject, role: 'ai', content: answer, created_at: timestamp }
+                ]);
+            if (error) console.warn('Unable to save chat history:', error.message);
+        }
+
         // Send message function
         async function sendMessage() {
             const input = document.getElementById('chatInput');
@@ -1263,6 +1239,7 @@
             showTypingIndicator();
             
             try {
+                let answer;
                 // Use GPT Service if available
                 if (gptService) {
                     // Set context if available
@@ -1271,7 +1248,7 @@
                     }
                     
                     // Send message
-                    await gptService.sendMessage(message, currentUser);
+                    answer = await gptService.sendMessage(message, currentUser);
                 } else {
                     // Fallback to direct API call
                     const response = await fetch('/api/chat', {
@@ -1290,10 +1267,14 @@
                     
                     if (response.ok) {
                         const data = await response.json();
-                        addAIMessageToChat(data.reply || data.response || 'I understand your question. Let me help you with that.');
+                        answer = data.reply || data.response || 'I understand your question. Let me help you with that.';
+                        addAIMessageToChat(answer);
                     } else {
                         throw new Error('API request failed');
                     }
+                }
+                if (answer && !answer.startsWith('⚠️')) {
+                    await saveChatExchange(message, answer);
                 }
             } catch (error) {
                 console.error('❌ Error sending message:', error);
@@ -1521,50 +1502,31 @@
     async function startCameraScan() {
         try {
             console.log('📷 Starting camera scan...');
-            
-            // Check if camera is already active
             if (cameraStream) {
                 stopCamera();
                 return;
             }
-
-            // Create camera modal
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
             modal.id = 'cameraModal';
-            
             modal.innerHTML = `
                 <div class="bg-white rounded-lg max-w-2xl w-full p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-xl font-bold text-gray-800">Camera Scanner</h3>
                         <button onclick="closeCameraModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
                     </div>
-                    
-                    <div class="mb-4">
-                        <video id="cameraVideo" autoplay playsinline class="w-full h-64 bg-gray-100 rounded-lg"></video>
+                    <video id="cameraVideo" autoplay playsinline class="w-full h-64 bg-gray-100 rounded-lg"></video>
+                    <div class="flex gap-3 mt-4">
+                        <button onclick="captureImage()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Capture &amp; Scan</button>
+                        <button onclick="stopCamera()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">Stop Camera</button>
                     </div>
-                    
-                    <div class="flex space-x-3">
-                        <button onclick="captureImage()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                            📸 Capture & Scan
-                        </button>
-                        <button onclick="stopCamera()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
-                            Stop Camera
-                        </button>
-                    </div>
-                    
                     <div id="ocrResult" class="mt-4 p-3 bg-gray-50 rounded-lg hidden">
                         <h4 class="font-semibold text-gray-800 mb-2">OCR Result:</h4>
                         <div id="ocrText" class="text-gray-700"></div>
                     </div>
-                </div>
-            `;
-            
+                </div>`;
             document.body.appendChild(modal);
-            
-            // Start camera
             await startCamera();
-            
         } catch (error) {
             console.error('❌ Error starting camera:', error);
             alert('Could not access camera. Please check permissions.');
@@ -1656,65 +1618,56 @@
     async function processImageFile(file) {
         try {
             console.log('🔍 Processing image for OCR...');
-            
-            // Show loading
             const ocrResult = document.getElementById('ocrResult');
             const ocrText = document.getElementById('ocrText');
-            
             if (ocrResult && ocrText) {
                 ocrResult.classList.remove('hidden');
                 ocrText.textContent = 'Processing image...';
             }
-            
-            // Create FormData for upload
-            const formData = new FormData();
-            formData.append('image', file);
-            
-            // Send to OCR API
-            const response = await fetch('/api/ocr', {
-                method: 'POST',
-                body: formData
+
+            const imageData = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result).split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
             });
-            
-            if (response.ok) {
+            let extractedText = '';
+            try {
+                const response = await fetch('/api/azure-ocr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageData, imageType: file.type || 'image/jpeg' })
+                });
                 const data = await response.json();
-                
-                if (data.success && data.text) {
-                    const extractedText = data.text;
-                    
-                    // Display OCR result
-                    if (ocrText) {
-                        ocrText.textContent = extractedText;
-                    }
-                    
-                    // Add to chat
-                    addAIMessageToChat(`I can see the following text in your image:\n\n"${extractedText}"\n\nHow can I help you with this?`);
-                    
-                    // Close camera modal
-                    closeCameraModal();
-                    
-                } else {
-                    if (ocrText) {
-                        ocrText.textContent = 'No text found in image.';
-                    }
+                if (!response.ok || !data.success) throw new Error(data.error || 'Azure OCR unavailable');
+                extractedText = data.text || '';
+            } catch (ocrError) {
+                if (!window.Tesseract) {
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://unpkg.com/tesseract.js@4/dist/tesseract.min.js';
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
                 }
-            } else {
-                if (ocrText) {
-                    ocrText.textContent = 'Error processing image.';
-                }
+                const result = await window.Tesseract.recognize(file, 'eng');
+                extractedText = result.data.text || '';
             }
-            
+            if (!extractedText.trim()) throw new Error('No text found in image.');
+            if (ocrText) ocrText.textContent = extractedText;
+            closeCameraModal();
+            document.getElementById('chatInput').value = `Please explain or help me solve this: ${extractedText}`;
+            await sendMessage();
         } catch (error) {
             console.error('❌ OCR processing error:', error);
             const ocrText = document.getElementById('ocrText');
-            if (ocrText) {
-                ocrText.textContent = 'Error processing image.';
-            }
+            if (ocrText) ocrText.textContent = error.message || 'Error processing image.';
         }
     }
 
     // Select subject function
-    function selectSubject(subject) {
+    async function selectSubject(subject) {
         currentSubject = subject;
         console.log(`📚 Subject selected: ${subject}`);
         
@@ -1737,6 +1690,7 @@
         if (gptService && currentUser) {
             gptService.setContext(currentUser.class, subject);
         }
+        await loadChatHistory();
     }
 
     // Show section function
@@ -1776,29 +1730,282 @@
     }
 
     // Load user data
-    function loadUserData() {
+    async function loadUserData(authUser = null) {
         console.log('👤 Loading user data...');
-        
-        // Simulated user data - replace with actual data loading
+
+        const storedUser = JSON.parse(localStorage.getItem('userData') || '{}');
+        const user = authUser || (await supabaseClient.auth.getUser()).data.user;
+        const { data: student, error } = await supabaseClient
+            .from('students')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (error) {
+            console.warn('Could not load student profile from Supabase:', error.message);
+        }
+
+        const profile = student || storedUser;
         currentUser = {
-            name: 'Student Name',
-            email: 'student@example.com',
-            class: '2',
-            board: 'CBSE',
-            school: 'School Name',
-            city: 'Mumbai',
-            phone: '+91 9876543210',
-            dob: '2016-05-15',
-            gender: 'male',
-            rollNo: '2023-24-012'
+            id: user.id,
+            name: profile.name || profile.full_name || user.user_metadata?.full_name || user.email,
+            email: user.email,
+            class: profile.class || profile.class_id || '',
+            board: profile.board_name || profile.board || '',
+            school: profile.school_name || profile.school || '',
+            city: profile.city || '',
+            phone: profile.phone || '',
+            dob: profile.date_of_birth || '',
+            gender: profile.gender || '',
+            rollNo: profile.roll_number || profile.rollNo || '',
+            status: profile.status || '',
+            schoolId: profile.school_id || null,
+            classId: profile.class_id || null,
+            monthlyQuizPoints: profile.monthly_quiz_points || 0,
+            monthlyAssessmentPoints: profile.monthly_assessment_points || 0,
+            monthlyTotalPoints: profile.monthly_total_points || 0
         };
         
         updateUserDisplay();
     }
 
+    async function loadDashboardProgress() {
+        if (!currentUser?.id) return;
+
+        const { data: progress, error } = await supabaseClient
+            .from('daily_challenge_progress')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+        if (error) console.warn('Unable to load quiz progress:', error.message);
+        if (progress) {
+            dailyProgressRecord = progress;
+            userData.streak = progress.current_streak || 0;
+            userData.quizPoints = progress.total_points || 0;
+        }
+
+        const { data: results, error: resultsError } = await supabaseClient
+            .from('assessment_results')
+            .select('score_percentage')
+            .eq('user_id', currentUser.id);
+        if (resultsError) console.warn('Unable to load assessment results:', resultsError.message);
+        if (results) {
+            userData.testsTaken = results.length;
+            userData.averageScore = results.length
+                ? Math.round(results.reduce((sum, result) => sum + (result.score_percentage || 0), 0) / results.length)
+                : 0;
+            userData.points = currentUser.monthlyTotalPoints || userData.quizPoints + results.reduce((sum, result) => sum + (result.points_earned || 0), 0);
+        }
+
+        updatePointsDisplay();
+        const streakDisplay = document.getElementById('dailyStreak');
+        const quizPointsDisplay = document.getElementById('quizPoints');
+        const rankDisplay = document.getElementById('rankPosition');
+        if (streakDisplay) streakDisplay.textContent = userData.streak;
+        if (quizPointsDisplay) quizPointsDisplay.textContent = userData.quizPoints;
+        if (rankDisplay) rankDisplay.textContent = userData.rank;
+        const pointsSummary = document.getElementById('summaryPoints');
+        const testsSummary = document.getElementById('summaryTests');
+        const averageSummary = document.getElementById('summaryAverage');
+        if (pointsSummary) pointsSummary.textContent = userData.points;
+        if (testsSummary) testsSummary.textContent = userData.testsTaken;
+        if (averageSummary) averageSummary.textContent = `${userData.averageScore}%`;
+        const questionHistory = document.getElementById('questionHistory');
+        if (questionHistory) {
+            questionHistory.textContent = progress?.total_attempted
+                ? `${progress.total_attempted} daily quizzes attempted · ${progress.total_correct || 0} correct`
+                : 'No daily quiz attempts recorded yet.';
+        }
+        const alreadyPlayed = progress?.last_played_date === new Date().toISOString().slice(0, 10);
+        if (alreadyPlayed) {
+            const submitButton = document.getElementById('submitDailyAnswer');
+            const skipButton = document.getElementById('skipQuestion');
+            if (submitButton) submitButton.disabled = true;
+            if (skipButton) skipButton.disabled = true;
+        }
+    }
+
+    async function loadAssessmentHistory() {
+        if (!currentUser?.id) return;
+        const container = document.getElementById('testHistory');
+        const { data, error } = await supabaseClient
+            .from('assessment_results')
+            .select('assessment_type, subject, total_questions, correct_answers, score_percentage, points_earned, completed_at')
+            .eq('user_id', currentUser.id)
+            .order('completed_at', { ascending: false })
+            .limit(10);
+        if (error) {
+            console.warn('Unable to load assessment history:', error.message);
+            return;
+        }
+        if (!container) return;
+        container.replaceChildren();
+        if (!data?.length) {
+            const empty = document.createElement('p');
+            empty.className = 'text-gray-500';
+            empty.textContent = 'Completed assessments will appear here.';
+            container.appendChild(empty);
+            return;
+        }
+        data.forEach(result => {
+            const item = document.createElement('div');
+            item.className = 'bg-gray-50 rounded-lg p-4 border border-gray-200 flex justify-between items-center';
+            const details = document.createElement('div');
+            const title = document.createElement('h4');
+            title.className = 'text-gray-800 font-medium';
+            title.textContent = `${result.subject || 'General'} ${result.assessment_type || 'Assessment'}`;
+            const date = document.createElement('p');
+            date.className = 'text-gray-600 text-sm';
+            date.textContent = result.completed_at ? new Date(result.completed_at).toLocaleDateString() : 'Completed';
+            details.append(title, date);
+            const score = document.createElement('div');
+            score.className = 'text-right';
+            const percentage = document.createElement('span');
+            percentage.className = 'text-green-600 font-bold';
+            percentage.textContent = `${result.score_percentage || 0}%`;
+            const points = document.createElement('p');
+            points.className = 'text-gray-600 text-sm';
+            points.textContent = `${result.correct_answers || 0}/${result.total_questions || 0} • ${result.points_earned || 0} points`;
+            score.append(percentage, points);
+            item.append(details, score);
+            container.appendChild(item);
+        });
+    }
+
+    async function loadTeacherPreferences() {
+        if (!currentUser?.id) return;
+        const { data, error } = await supabaseClient
+            .from('teacher_preferences')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+        if (error) {
+            console.warn('Unable to load teacher preferences:', error.message);
+            return;
+        }
+        if (data?.preferred_teacher) {
+            currentTeacher = data.preferred_teacher === 'Miss Sapna' || data.preferred_teacher === 'miss_sapna'
+                ? 'miss_sapna'
+                : 'roy_sir';
+            updateTeacherDisplay();
+        }
+    }
+
+    async function saveTeacherPreferences() {
+        if (!currentUser?.id) return;
+        const { error } = await supabaseClient
+            .from('teacher_preferences')
+            .upsert({
+                id: currentUser.id,
+                user_id: currentUser.id,
+                preferred_teacher: currentTeacher === 'miss_sapna' ? 'Miss Sapna' : 'Roy Sir',
+                preferred_language: 'en',
+                voice_enabled: true,
+                tts_enabled: true,
+                stt_enabled: true,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
+        if (error) throw error;
+    }
+
+    async function updateStudentDashboardApi(payload) {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError || !session?.access_token) throw new Error('Your session has expired. Please sign in again.');
+        const response = await fetch('/api/student-dashboard', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || 'Dashboard update failed');
+        return result;
+    }
+
+    function loadDashboardSettings() {
+        const settings = JSON.parse(localStorage.getItem(`dashboardSettings:${currentUser.id}`) || '{}');
+        Object.entries(settings).forEach(([id, value]) => {
+            const control = document.getElementById(id);
+            if (!control) return;
+            if (control.type === 'checkbox') control.checked = Boolean(value);
+            else control.value = value;
+        });
+        document.querySelectorAll('.color-option').forEach(option => {
+            const selected = option.dataset.color === (settings.colorScheme || 'blue');
+            option.classList.toggle('border-blue-500', selected);
+            option.classList.toggle('border-gray-200', !selected);
+        });
+        applyDashboardAppearance(settings);
+        configureAutoLogout(Boolean(document.getElementById('autoLogout')?.checked));
+    }
+
+    function applyDashboardAppearance(settings = {}) {
+        const theme = settings.themeSelector || 'light';
+        const resolvedTheme = theme === 'auto'
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : theme;
+        document.body.dataset.dashboardTheme = resolvedTheme;
+        const fontSizes = { small: '14px', medium: '16px', large: '18px', 'extra-large': '20px' };
+        document.documentElement.style.fontSize = fontSizes[settings.fontSizeSelector || 'medium'];
+        document.body.dataset.dashboardColor = settings.colorScheme || 'blue';
+    }
+
+    function configureAutoLogout(enabled) {
+        if (!enabled) {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = null;
+            return;
+        }
+        const resetTimer = () => {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(logout, 30 * 60 * 1000);
+        };
+        if (!autoLogoutListenersReady) {
+            ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(eventName =>
+                document.addEventListener(eventName, resetTimer, { passive: true })
+            );
+            autoLogoutListenersReady = true;
+        }
+        resetTimer();
+    }
+
+    function updateTeacherDisplay() {
+        const teacherName = currentTeacher === 'miss_sapna' ? 'Miss Sapna' : 'Roy Sir';
+        const avatarId = currentTeacher === 'miss_sapna' ? 'miss-sapna' : 'roy-sir';
+        if (currentUser) currentUser.ai_avatar = avatarId;
+        window.selectedAvatar = avatarId;
+        const avatarName = document.getElementById('avatarName');
+        const currentTeacherName = document.getElementById('currentTeacherName');
+        const avatar = document.getElementById('welcomeTeacherAvatar');
+        if (avatarName) avatarName.textContent = teacherName;
+        if (currentTeacherName) currentTeacherName.textContent = teacherName;
+        if (avatar) avatar.src = currentTeacher === 'miss_sapna' ? 'images/miss_sapna.jpg' : 'images/roy_sir.jpg';
+        document.querySelectorAll('.avatar-option').forEach(option => {
+            const selected = option.dataset.avatar === currentTeacher;
+            option.classList.toggle('border-blue-500', selected);
+            option.classList.toggle('bg-blue-50', selected);
+            option.classList.toggle('border-gray-200', !selected);
+        });
+    }
+
+    async function logout() {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) {
+            showNotification('Unable to log out. Please try again.', 'error');
+            return;
+        }
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userData');
+        window.location.href = 'login.html';
+    }
+
     // Update user display
     function updateUserDisplay() {
         if (!currentUser) return;
+        const classLabel = currentUser.class ? `Class ${currentUser.class}` : 'Class not set';
+        const boardLabel = currentUser.board || 'Board not set';
         
         // Update sidebar user info
         const userName = document.getElementById('userName');
@@ -1812,12 +2019,12 @@
         const profileAvatar = document.getElementById('profileAvatar');
         
         if (userName) userName.textContent = currentUser.name;
-        if (userClass) userClass.textContent = `Class ${currentUser.class} • ${currentUser.board}`;
+        if (userClass) userClass.textContent = `${classLabel} • ${boardLabel}`;
         if (userAvatar) userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
         if (headerAvatar) headerAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
         if (headerPoints) headerPoints.textContent = userData.points;
         if (profileName) profileName.textContent = currentUser.name;
-        if (profileClassDisplay) profileClassDisplay.textContent = `Class ${currentUser.class} • ${currentUser.board}`;
+        if (profileClassDisplay) profileClassDisplay.textContent = `${classLabel} • ${boardLabel}`;
         if (profileSchoolDisplay) profileSchoolDisplay.textContent = currentUser.school;
         if (profileAvatar) profileAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
         
@@ -1846,9 +2053,9 @@
     }
 
     // Refresh profile data
-    function refreshProfileData() {
+    async function refreshProfileData() {
         console.log('🔄 Refreshing profile data...');
-        loadUserData();
+        await loadUserData();
         
         // Show notification
         showNotification('Profile data refreshed successfully!', 'success');
@@ -1886,6 +2093,28 @@
     // Initialize other sections
     function initializeDailyQuiz() {
         console.log('🎯 Initializing Daily Quiz...');
+        const dayIndex = Math.floor(Date.now() / 86400000) % dailyQuestionBank.length;
+        currentDailyQuestion = dailyQuestionBank[dayIndex];
+        const questionContent = document.getElementById('dailyQuestionContent');
+        const optionsContainer = document.getElementById('dailyQuestionOptions');
+        if (questionContent) questionContent.textContent = currentDailyQuestion.question;
+        if (optionsContainer) {
+            optionsContainer.replaceChildren();
+            currentDailyQuestion.options.forEach((option, index) => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50';
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'dailyAnswer';
+                input.value = String(index);
+                input.className = 'text-blue-600';
+                const text = document.createElement('span');
+                text.className = 'text-gray-700';
+                text.textContent = option;
+                label.append(input, text);
+                optionsContainer.appendChild(label);
+            });
+        }
         
         // Add event listeners
         const submitDailyAnswer = document.getElementById('submitDailyAnswer');
@@ -1898,9 +2127,13 @@
         if (skipQuestion) {
             skipQuestion.addEventListener('click', handleSkipQuestion);
         }
+
+        document.getElementById('showGlobalLeaderboard')?.addEventListener('click', () => loadLeaderboard('global'));
+        document.getElementById('showClassLeaderboard')?.addEventListener('click', () => loadLeaderboard('class'));
+        loadLeaderboard('global');
     }
 
-    function handleDailyAnswerSubmission() {
+    async function handleDailyAnswerSubmission() {
         const selectedAnswer = document.querySelector('input[name="dailyAnswer"]:checked');
         
         if (!selectedAnswer) {
@@ -1909,9 +2142,7 @@
         }
         
         const answer = parseInt(selectedAnswer.value);
-        const correctAnswer = 1; // New Delhi is the correct answer (index 1)
-        
-        const isCorrect = answer === correctAnswer;
+        const isCorrect = answer === currentDailyQuestion.answer;
         const pointsEarned = isCorrect ? 10 : 0;
         
         // Update user points
@@ -1930,19 +2161,104 @@
         
         // Update display
         updatePointsDisplay();
+        await saveDailyChallengeResult(isCorrect, pointsEarned);
         
         // Disable buttons after submission
         document.getElementById('submitDailyAnswer').disabled = true;
         document.getElementById('skipQuestion').disabled = true;
     }
 
-    function handleSkipQuestion() {
+    async function handleSkipQuestion() {
         userData.streak = 0;
+        await saveDailyChallengeResult(false, 0);
         showNotification('Question skipped. Your streak has been reset.', 'info');
         
         // Disable buttons after skipping
         document.getElementById('submitDailyAnswer').disabled = true;
         document.getElementById('skipQuestion').disabled = true;
+    }
+
+    async function saveDailyChallengeResult(isCorrect, pointsEarned) {
+        if (!currentUser?.id) return;
+        const today = new Date().toISOString().slice(0, 10);
+        if (dailyProgressRecord?.last_played_date === today) {
+            showNotification("Today's quiz has already been submitted.", 'error');
+            return;
+        }
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        const nextProgress = {
+            id: dailyProgressRecord?.id || crypto.randomUUID(),
+            user_id: currentUser.id,
+            current_streak: isCorrect ? (dailyProgressRecord?.last_played_date === yesterday ? (dailyProgressRecord.current_streak || 0) + 1 : 1) : 0,
+            last_played_date: today,
+            total_points: (dailyProgressRecord?.total_points || 0) + pointsEarned,
+            total_correct: (dailyProgressRecord?.total_correct || 0) + (isCorrect ? 1 : 0),
+            total_attempted: (dailyProgressRecord?.total_attempted || 0) + 1,
+            monthly_correct: (dailyProgressRecord?.monthly_correct || 0) + (isCorrect ? 1 : 0),
+            monthly_attempted: (dailyProgressRecord?.monthly_attempted || 0) + 1,
+            monthly_reset_date: dailyProgressRecord?.monthly_reset_date || today,
+            updated_at: new Date().toISOString()
+        };
+        const query = dailyProgressRecord?.id
+            ? supabaseClient.from('daily_challenge_progress').update(nextProgress).eq('id', dailyProgressRecord.id)
+            : supabaseClient.from('daily_challenge_progress').insert({ ...nextProgress, created_at: new Date().toISOString() });
+        const { data, error } = await query.select().maybeSingle();
+        if (error) {
+            console.error('Could not save quiz progress:', error);
+            showNotification(`Quiz progress could not be saved: ${error.message}`, 'error');
+            return;
+        }
+        if (isCorrect && pointsEarned) {
+            try {
+                await updateStudentDashboardApi({ action: 'increment_points', category: 'quiz', points: pointsEarned });
+                currentUser.monthlyQuizPoints += pointsEarned;
+                currentUser.monthlyTotalPoints += pointsEarned;
+            } catch (pointsError) {
+                console.warn('Quiz progress saved, but monthly totals were not updated:', pointsError.message);
+            }
+        }
+        dailyProgressRecord = data || nextProgress;
+        await loadDashboardProgress();
+        await loadLeaderboard(leaderboardScope);
+    }
+
+    async function loadLeaderboard(scope) {
+        leaderboardScope = scope;
+        const container = document.getElementById('leaderboardContent');
+        if (!container || !supabaseClient) return;
+        container.textContent = 'Loading leaderboard...';
+        const query = supabaseClient
+            .from('students')
+            .select('id, name, class, city, monthly_total_points')
+            .order('monthly_total_points', { ascending: false })
+            .limit(10);
+        if (scope === 'class' && currentUser?.class) query.eq('class', currentUser.class);
+        const { data, error } = await query;
+        if (error) {
+            console.warn('Leaderboard is unavailable:', error.message);
+            container.textContent = 'Leaderboard is temporarily unavailable.';
+            return;
+        }
+        container.replaceChildren();
+        (data || []).forEach((student, index) => {
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200';
+            const identity = document.createElement('div');
+            identity.className = 'flex items-center gap-3';
+            const initial = document.createElement('span');
+            initial.className = 'w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold';
+            initial.textContent = (student.name || 'S').charAt(0).toUpperCase();
+            const name = document.createElement('span');
+            name.className = 'font-medium text-gray-800';
+            name.textContent = student.name || 'Student';
+            identity.append(initial, name);
+            const score = document.createElement('span');
+            score.className = 'font-bold text-blue-700';
+            score.textContent = `${student.monthly_total_points || 0} points · #${index + 1}`;
+            item.append(identity, score);
+            container.appendChild(item);
+        });
+        if (!data?.length) container.textContent = 'No leaderboard scores available yet.';
     }
 
     function updatePointsDisplay() {
@@ -1998,7 +2314,7 @@
         }
     }
 
-    function handleQuickTestStart() {
+    async function handleQuickTestStart() {
         const subject = document.getElementById('testSubject').value;
         const duration = document.getElementById('testDuration').value;
         const difficulty = document.getElementById('testDifficulty').value;
@@ -2008,14 +2324,10 @@
             return;
         }
         
-        console.log('🚀 Starting quick test:', { subject, duration, difficulty });
-        showNotification(`Starting ${subject} test (${duration} minutes, ${difficulty} difficulty)`, 'success');
-        
-        // Simulate test creation
-        simulateTestCreation('quick');
+        await createAssessment({ type: 'quick', subject, duration: Number(duration), difficulty, topic: subject, questionCount: 5 });
     }
 
-    function handleCustomTestCreation() {
+    async function handleCustomTestCreation() {
         const topic = document.getElementById('customTestTopic').value.trim();
         const questions = document.getElementById('customTestQuestions').value;
         
@@ -2024,74 +2336,154 @@
             return;
         }
         
-        console.log('🎯 Creating custom test:', { topic, questions });
-        showNotification(`Creating custom test on "${topic}" with ${questions} questions`, 'success');
-        
-        // Simulate test creation
-        simulateTestCreation('custom');
+        await createAssessment({
+            type: 'custom',
+            subject: document.getElementById('testSubject').value || currentSubject,
+            duration: 20,
+            difficulty: 'mixed',
+            topic,
+            questionCount: Number(questions)
+        });
     }
 
-    function simulateTestCreation(type) {
-        // Show loading state
-        const button = type === 'quick' ? document.getElementById('startQuickTest') : document.getElementById('createCustomTest');
+    async function createAssessment(config) {
+        const button = document.getElementById(config.type === 'quick' ? 'startQuickTest' : 'createCustomTest');
         const originalText = button.textContent;
-        button.textContent = type === 'quick' ? 'Generating...' : 'Creating...';
         button.disabled = true;
-        
-        // Simulate API call delay
-        setTimeout(() => {
-            // Restore button state
-            button.textContent = originalText;
+        button.textContent = 'Generating...';
+
+        try {
+            const response = await fetch('/api/enhanced-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'structuredAssessment',
+                    topic: config.topic,
+                    questionCount: config.questionCount,
+                    difficulty: config.difficulty,
+                    message: `Write in English. Create ${config.questionCount} multiple-choice questions for ${config.topic}, appropriate for class ${currentUser.class}. Return only a JSON array with no markdown. Each item must use these exact English keys: question, options (exactly 4 strings), answer (one-based correct option number from 1 to 4), and explanation.`,
+                    grade: currentUser.class || '6',
+                    subject: config.subject,
+                    userProfile: { ...currentUser, class: currentUser.class || '6', board: currentUser.board || 'CBSE' }
+                })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Question generation failed');
+            const rawText = result.response || result.reply || '';
+            const jsonText = rawText.slice(rawText.indexOf('['), rawText.lastIndexOf(']') + 1);
+            const rawQuestions = result.questions || JSON.parse(jsonText || '[]');
+            const questions = Array.isArray(rawQuestions) ? rawQuestions.map(question => {
+                const prompt = question.question || question.Question || question['प्रश्न'];
+                const options = question.options || question.Options || question['विकल्प'];
+                const rawAnswer = question.answer ?? question.correct_answer ?? question.correctAnswer ?? question['उत्तर'];
+                let answerIndex = Number(rawAnswer);
+                if (!Number.isInteger(answerIndex)) {
+                    answerIndex = options?.findIndex(option => String(option).trim().toLowerCase() === String(rawAnswer).trim().toLowerCase());
+                } else {
+                    answerIndex -= 1;
+                }
+                return {
+                    question: prompt,
+                    options,
+                    answer: answerIndex,
+                    explanation: question.explanation || question.Explanation || question['स्पष्टीकरण'] || ''
+                };
+            }) : [];
+            if (!questions.length || questions.some(question => !question.question || !Array.isArray(question.options) || question.options.length !== 4 || !Number.isInteger(question.answer) || question.answer < 0 || question.answer > 3)) {
+                throw new Error('The generated test did not contain valid multiple-choice questions');
+            }
+            activeTest = { ...config, questions, startedAt: Date.now() };
+            showTestPopup();
+        } catch (error) {
+            console.error('Assessment generation failed:', error);
+            showNotification(`Could not generate test: ${error.message}`, 'error');
+        } finally {
             button.disabled = false;
-            
-            // Show test popup
-            showTestPopup(type);
-        }, 2000);
+            button.textContent = originalText;
+        }
     }
 
-    function showTestPopup(type) {
+    function showTestPopup() {
         const popup = document.createElement('div');
-        popup.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        popup.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
         popup.id = 'testPopup';
-        
-        const testType = type === 'quick' ? 'Quick Test' : 'Custom Test';
-        const testSubject = type === 'quick' ? document.getElementById('testSubject').value : document.getElementById('customTestTopic').value;
-        
-        popup.innerHTML = `
-            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">${testType} Created!</h2>
-                <p class="text-gray-600 mb-6">Your ${testType.toLowerCase()} on <span class="font-semibold">${testSubject}</span> is ready to start.</p>
-                <div class="flex space-x-4">
-                    <button onclick="startTest('${type}')" class="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors">
-                        Start Test
-                    </button>
-                    <button onclick="closeTestPopup()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition-colors">
-                        Later
-                    </button>
-                </div>
-            </div>
-        `;
-        
+        const panel = document.createElement('div');
+        panel.className = 'bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto';
+        const title = document.createElement('h2');
+        title.className = 'text-2xl font-bold text-gray-800 mb-4';
+        title.textContent = `${activeTest.topic} Assessment`;
+        panel.appendChild(title);
+        activeTest.questions.forEach((question, index) => {
+            const questionBlock = document.createElement('fieldset');
+            questionBlock.className = 'mb-5';
+            const legend = document.createElement('legend');
+            legend.className = 'font-semibold text-gray-800 mb-2';
+            legend.textContent = `${index + 1}. ${question.question}`;
+            questionBlock.appendChild(legend);
+            question.options.forEach((option, optionIndex) => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center gap-2 py-2 text-gray-700';
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = `testQuestion${index}`;
+                radio.value = String(optionIndex);
+                label.append(radio, document.createTextNode(option));
+                questionBlock.appendChild(label);
+            });
+            panel.appendChild(questionBlock);
+        });
+        const submit = document.createElement('button');
+        submit.className = 'bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700';
+        submit.textContent = 'Submit Assessment';
+        submit.addEventListener('click', submitAssessment);
+        const cancel = document.createElement('button');
+        cancel.className = 'ml-3 bg-gray-200 text-gray-700 px-5 py-3 rounded-lg hover:bg-gray-300';
+        cancel.textContent = 'Close';
+        cancel.addEventListener('click', closeTestPopup);
+        panel.append(submit, cancel);
+        popup.appendChild(panel);
         document.body.appendChild(popup);
     }
 
-    function startTest(type) {
+    async function submitAssessment() {
+        const answers = activeTest.questions.map((_, index) => document.querySelector(`input[name="testQuestion${index}"]:checked`));
+        if (answers.some(answer => !answer)) {
+            showNotification('Please answer every question before submitting.', 'error');
+            return;
+        }
+        const correctAnswers = answers.reduce((count, answer, index) => count + (Number(answer.value) === activeTest.questions[index].answer ? 1 : 0), 0);
+        const percentage = Math.round(correctAnswers / activeTest.questions.length * 100);
+        const pointsEarned = 5 + correctAnswers * 2;
+        const durationSeconds = Math.round((Date.now() - activeTest.startedAt) / 1000);
+        try {
+            await updateStudentDashboardApi({
+                action: 'complete_assessment',
+                assessmentType: activeTest.type,
+                subject: activeTest.subject,
+                topic: activeTest.topic,
+                classLevel: currentUser.class,
+                totalQuestions: activeTest.questions.length,
+                correctAnswers,
+                timeTakenMinutes: Math.max(1, Math.round(durationSeconds / 60))
+            });
+        } catch (error) {
+            showNotification(`Assessment result could not be saved: ${error.message}`, 'error');
+            return;
+        }
+        currentUser.monthlyAssessmentPoints += pointsEarned;
+        currentUser.monthlyTotalPoints += pointsEarned;
+        userData.points += pointsEarned;
+        userData.testsTaken += 1;
+        updatePointsDisplay();
         closeTestPopup();
-        showNotification('Test started! Good luck!', 'success');
-        
-        // Simulate test completion after a delay
-        setTimeout(() => {
-            // Award points
-            const pointsEarned = 5 + Math.floor(Math.random() * 20);
-            userData.points += pointsEarned;
-            userData.testsTaken += 1;
-            
-            // Update display
-            updatePointsDisplay();
-            
-            // Show results
-            showNotification(`Test completed! You earned ${pointsEarned} points!`, 'success');
-        }, 5000);
+        showNotification(`Assessment complete: ${correctAnswers}/${activeTest.questions.length} correct (${percentage}%).`, 'success');
+        activeTest = null;
+        await Promise.all([loadDashboardProgress(), loadAssessmentHistory()]);
+    }
+
+    function startTest() {
+        closeTestPopup();
+        showNotification('Select an assessment to begin.', 'info');
     }
 
     function closeTestPopup() {
@@ -2106,9 +2498,214 @@
         // Additional initialization for study materials can be added here
     }
 
-    function initializeHomework() {
-        console.log('📝 Initializing Homework...');
-        // Additional initialization for homework can be added here
+    async function loadHomework() {
+        const container = document.getElementById('homeworkContainer');
+        if (!container) return;
+        if (!currentUser?.schoolId) {
+            container.innerHTML = '<div class="bg-yellow-100 border border-yellow-300 rounded-lg p-6 text-gray-700">No school is linked to your profile yet. Your school can assign homework after your account is linked.</div>';
+            return;
+        }
+
+        const { data: assignments, error } = await supabaseClient
+            .from('homework')
+            .select('id, title, description, due_date, subject_id, created_at')
+            .eq('school_id', currentUser.schoolId)
+            .order('due_date', { ascending: true });
+        if (error) {
+            console.warn('Unable to load homework:', error.message);
+            container.textContent = 'Homework is temporarily unavailable.';
+            return;
+        }
+        if (!assignments?.length) {
+            container.textContent = 'No homework has been assigned yet.';
+            return;
+        }
+
+        const { data: submissions } = await supabaseClient
+            .from('homework_submissions')
+            .select('homework_id, status, grade, feedback')
+            .eq('student_id', currentUser.id);
+        const submissionMap = new Map((submissions || []).map(item => [item.homework_id, item]));
+        container.replaceChildren();
+        assignments.forEach(assignment => {
+            const card = document.createElement('article');
+            card.className = 'bg-white/80 rounded-lg p-6 border border-gray-200';
+            const title = document.createElement('h3');
+            title.className = 'text-lg font-semibold text-gray-800';
+            title.textContent = assignment.title;
+            const description = document.createElement('p');
+            description.className = 'text-gray-600 mt-2';
+            description.textContent = assignment.description || '';
+            const status = submissionMap.get(assignment.id);
+            const meta = document.createElement('p');
+            meta.className = 'text-sm text-gray-500 mt-3';
+            meta.textContent = `Due ${assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'date not set'} · ${status?.status || 'Not submitted'}`;
+            card.append(title, description, meta);
+            if (!status || status.status !== 'submitted') {
+                const submitButton = document.createElement('button');
+                submitButton.className = 'mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700';
+                submitButton.textContent = 'Submit homework';
+                submitButton.addEventListener('click', () => submitHomework(assignment.id));
+                card.appendChild(submitButton);
+            } else if (status.feedback) {
+                const feedback = document.createElement('p');
+                feedback.className = 'mt-3 text-sm text-gray-700';
+                feedback.textContent = `Teacher feedback: ${status.feedback}`;
+                card.appendChild(feedback);
+            }
+            container.appendChild(card);
+        });
+    }
+
+    async function submitHomework(homeworkId) {
+        const submissionText = prompt('Enter your homework answer or submission notes:');
+        if (!submissionText?.trim()) return;
+        const { error } = await supabaseClient.from('homework_submissions').insert({
+            id: crypto.randomUUID(),
+            homework_id: homeworkId,
+            student_id: currentUser.id,
+            submission_text: submissionText.trim(),
+            status: 'submitted',
+            submitted_at: new Date().toISOString()
+        });
+        if (error) {
+            showNotification(`Homework could not be submitted: ${error.message}`, 'error');
+            return;
+        }
+        showNotification('Homework submitted.', 'success');
+        await loadHomework();
+    }
+
+    async function loadBooks() {
+        const container = document.getElementById('booksContainer');
+        if (!container) return;
+        try {
+            const grade = String(currentUser?.class || '').replace(/\D/g, '');
+            const response = await fetch(`/api/fs/books?grade=${encodeURIComponent(grade)}`);
+            if (!response.ok) throw new Error('Books are temporarily unavailable');
+            const books = await response.json();
+            container.replaceChildren();
+            if (!books.length) {
+                container.textContent = 'No books are available for your class yet.';
+                return;
+            }
+            books.forEach(book => {
+                const link = document.createElement('a');
+                link.className = 'block bg-white rounded-lg border border-gray-200 p-4 text-blue-700 hover:bg-blue-50';
+                link.href = `/api/fs/books/${encodeURIComponent(book.id)}`;
+                link.target = '_blank';
+                link.rel = 'noopener';
+                link.textContent = book.name;
+                container.appendChild(link);
+            });
+        } catch (error) {
+            console.warn('Unable to load books:', error.message);
+            container.textContent = 'Books are temporarily unavailable.';
+        }
+    }
+
+    async function loadEducationalVideos() {
+        const container = document.getElementById('videosContainer');
+        if (!container) return;
+        let videos = [];
+        const { data, error } = await supabaseClient
+            .from('videos')
+            .select('video_id, title, description, channel, subject, class_level, duration, video_url')
+            .eq('is_validated', true)
+            .limit(8);
+        if (!error && data?.length) videos = data;
+        if (!videos.length) {
+            const classLevel = String(currentUser?.class || '6');
+            const subjects = ['mathematics', 'science', 'english', 'social studies'];
+            const responses = await Promise.all(subjects.map(subject =>
+                fetch(`/api/educational-videos?subject=${encodeURIComponent(subject)}&classLevel=${encodeURIComponent(classLevel)}`)
+                    .then(response => response.ok ? response.json() : { videos: [] })
+                    .catch(() => ({ videos: [] }))
+            ));
+            videos = responses.flatMap(result => result.videos || []);
+        }
+        container.replaceChildren();
+        const uniqueVideos = [...new Map(videos.map(video => [video.video_id || video.videoId, video])).values()];
+        if (!uniqueVideos.length) {
+            container.textContent = 'No validated videos are available for your class yet.';
+            return;
+        }
+        uniqueVideos.slice(0, 8).forEach(video => {
+            const videoId = video.video_id || video.videoId;
+            const card = document.createElement('article');
+            card.className = 'bg-gray-50 rounded-lg p-4 border border-gray-200';
+            const title = document.createElement('h4');
+            title.className = 'font-semibold text-gray-800 mb-1';
+            title.textContent = video.title;
+            const meta = document.createElement('p');
+            meta.className = 'text-sm text-gray-600 mb-2';
+            meta.textContent = `${video.subject || 'Learning'} · Class ${video.class_level || currentUser.class || ''} · ${video.channel || 'Educational video'}`;
+            const description = document.createElement('p');
+            description.className = 'text-sm text-gray-500 mb-3';
+            description.textContent = video.description || '';
+            const watch = document.createElement('a');
+            watch.className = 'inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700';
+            watch.href = video.video_url || `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
+            watch.target = '_blank';
+            watch.rel = 'noopener';
+            watch.textContent = 'Watch video';
+            const report = document.createElement('button');
+            report.className = 'ml-2 inline-flex items-center px-3 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300';
+            report.textContent = 'Report unavailable';
+            report.addEventListener('click', () => reportVideoUnavailable(videoId, video.title, video.channel));
+            card.append(title, meta, description, watch, report);
+            container.appendChild(card);
+        });
+    }
+
+    async function reportVideoUnavailable(videoId, title, channel) {
+        try {
+            const response = await fetch('/api/report-video-failure', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoId, title, channel, reason: 'student_report', userAgent: navigator.userAgent })
+            });
+            if (!response.ok) throw new Error('Report could not be submitted');
+            showNotification('Thanks. This video has been flagged for review.', 'success');
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    }
+
+    async function loadUserSubjects() {
+        if (!currentUser?.id) return;
+        const { data, error } = await supabaseClient
+            .from('user_subjects')
+            .select('id, subject_name')
+            .eq('user_id', currentUser.id)
+            .eq('is_active', true);
+        if (error) {
+            console.warn('Unable to load custom subjects:', error.message);
+            return;
+        }
+        const container = document.getElementById('subjectsContainer');
+        (data || []).forEach(subject => {
+            const exists = Array.from(container.children).some(item => item.textContent.trim().startsWith(subject.subject_name));
+            if (!exists) appendSubjectElement(subject.subject_name, subject.id);
+        });
+    }
+
+    function appendSubjectElement(subjectName, subjectId) {
+        const container = document.getElementById('subjectsContainer');
+        if (!container) return;
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg';
+        item.dataset.userSubjectId = subjectId || '';
+        item.dataset.subjectName = subjectName;
+        const name = document.createElement('span');
+        name.className = 'text-gray-700 font-medium';
+        name.textContent = subjectName;
+        const remove = document.createElement('button');
+        remove.className = 'text-red-500 hover:text-red-700 text-lg';
+        remove.textContent = '×';
+        remove.addEventListener('click', () => removeSubject(subjectName, subjectId));
+        item.append(name, remove);
+        container.appendChild(item);
     }
 
     function initializeProfile() {
@@ -2118,6 +2715,7 @@
         const saveProfileBtn = document.getElementById('saveProfileBtn');
         const resetProfileBtn = document.getElementById('resetProfileBtn');
         const addSubjectBtn = document.getElementById('addSubjectBtn');
+        const manageSubjectsBtn = document.getElementById('manageSubjectsBtn');
         
         if (saveProfileBtn) {
             saveProfileBtn.addEventListener('click', saveProfile);
@@ -2130,9 +2728,13 @@
         if (addSubjectBtn) {
             addSubjectBtn.addEventListener('click', addCustomSubject);
         }
+        manageSubjectsBtn?.addEventListener('click', () => {
+            showSection('profileSection', document.querySelector('[onclick*="profileSection"]'));
+            document.getElementById('newSubject')?.focus();
+        });
     }
 
-    function saveProfile() {
+    async function saveProfile() {
         // Get form values
         const fullName = document.getElementById('profileFullName').value;
         const dob = document.getElementById('profileDOB').value;
@@ -2143,19 +2745,27 @@
         const school = document.getElementById('profileSchool').value;
         const rollNo = document.getElementById('profileRollNo').value;
         
-        // Update user data
-        currentUser.name = fullName;
-        currentUser.dob = dob;
-        currentUser.gender = gender;
-        currentUser.city = city;
-        currentUser.class = studentClass;
-        currentUser.board = board;
-        currentUser.school = school;
-        currentUser.rollNo = rollNo;
-        
-        // Update display
+        try {
+            await updateStudentDashboardApi({
+                action: 'update_profile',
+                profile: {
+                    name: fullName,
+                    date_of_birth: dob || null,
+                    gender,
+                    city,
+                    class: studentClass,
+                    board_name: board,
+                    school_name: school,
+                    roll_number: rollNo
+                }
+            });
+        } catch (error) {
+            console.error('Profile update failed:', error);
+            showNotification(`Profile could not be saved: ${error.message}`, 'error');
+            return;
+        }
+        Object.assign(currentUser, { name: fullName, dob, gender, city, class: studentClass, board, school, rollNo });
         updateUserDisplay();
-        
         showNotification('Profile saved successfully!', 'success');
     }
 
@@ -2167,7 +2777,7 @@
         }
     }
 
-    function addCustomSubject() {
+    async function addCustomSubject() {
         const newSubjectInput = document.getElementById('newSubject');
         const subjectName = newSubjectInput.value.trim();
         
@@ -2176,30 +2786,39 @@
             return;
         }
         
-        // Create new subject element
-        const subjectsContainer = document.getElementById('subjectsContainer');
-        if (subjectsContainer) {
-            const subjectElement = document.createElement('div');
-            subjectElement.className = 'flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg';
-            subjectElement.innerHTML = `
-                <span class="text-gray-700 font-medium">${subjectName}</span>
-                <button onclick="removeSubject('${subjectName}')" class="text-red-500 hover:text-red-700 text-lg">
-                    ×
-                </button>
-            `;
-            
-            subjectsContainer.appendChild(subjectElement);
+        const { data, error } = await supabaseClient.from('user_subjects').insert({
+            id: crypto.randomUUID(),
+            user_id: currentUser.id,
+            subject_name: subjectName,
+            is_active: true,
+            progress: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        }).select('id, subject_name').single();
+        if (error) {
+            showNotification(`Subject could not be added: ${error.message}`, 'error');
+            return;
         }
-        
-        // Clear input
+        appendSubjectElement(data.subject_name, data.id);
         newSubjectInput.value = '';
-        
         showNotification(`Subject "${subjectName}" added successfully!`, 'success');
     }
 
-    function removeSubject(subjectName) {
-        // This would normally remove the subject from the DOM and update the backend
-        showNotification(`Subject "${subjectName}" removed`, 'info');
+    async function removeSubject(subjectName, subjectId = null) {
+        let query = supabaseClient.from('user_subjects').delete().eq('user_id', currentUser.id).eq('subject_name', subjectName);
+        if (subjectId) query = query.eq('id', subjectId);
+        const { error } = await query;
+        if (error) {
+            showNotification(`Subject could not be removed: ${error.message}`, 'error');
+            return;
+        }
+        if (subjectId) {
+            document.querySelector(`[data-user-subject-id="${CSS.escape(subjectId)}"]`)?.remove();
+        } else {
+            const item = Array.from(document.querySelectorAll('#subjectsContainer > div')).find(element => element.dataset.subjectName === subjectName);
+            item?.remove();
+        }
+        showNotification(`Subject "${subjectName}" removed`, 'success');
     }
 
     function initializeSettings() {
@@ -2239,15 +2858,44 @@
                 selectTeacher(this.dataset.avatar);
             });
         });
+
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.color-option').forEach(item => {
+                    item.classList.toggle('border-blue-500', item === option);
+                    item.classList.toggle('border-gray-200', item !== option);
+                });
+                const settings = JSON.parse(localStorage.getItem(`dashboardSettings:${currentUser.id}`) || '{}');
+                settings.colorScheme = option.dataset.color;
+                localStorage.setItem(`dashboardSettings:${currentUser.id}`, JSON.stringify(settings));
+                applyDashboardAppearance(settings);
+            });
+        });
+        document.getElementById('themeSelector')?.addEventListener('change', applyCurrentAppearance);
+        document.getElementById('fontSizeSelector')?.addEventListener('change', applyCurrentAppearance);
+        document.getElementById('autoLogout')?.addEventListener('change', event => configureAutoLogout(event.target.checked));
+    }
+
+    function applyCurrentAppearance() {
+        const settings = JSON.parse(localStorage.getItem(`dashboardSettings:${currentUser.id}`) || '{}');
+        settings.themeSelector = document.getElementById('themeSelector').value;
+        settings.fontSizeSelector = document.getElementById('fontSizeSelector').value;
+        localStorage.setItem(`dashboardSettings:${currentUser.id}`, JSON.stringify(settings));
+        applyDashboardAppearance(settings);
     }
 
     function selectTeacher(teacherId) {
         currentTeacher = teacherId;
         const teacherName = teacherId === 'roy_sir' ? 'Roy Sir' : 'Miss Sapna';
+        const avatarId = teacherId === 'roy_sir' ? 'roy-sir' : 'miss-sapna';
+        if (currentUser) currentUser.ai_avatar = avatarId;
+        window.selectedAvatar = avatarId;
         
         // Update UI
         document.getElementById('currentTeacherName').textContent = teacherName;
         document.getElementById('avatarName').textContent = teacherName;
+        const teacherAvatar = document.getElementById('welcomeTeacherAvatar');
+        if (teacherAvatar) teacherAvatar.src = teacherId === 'roy_sir' ? 'images/roy_sir.jpg' : 'images/miss_sapna.jpg';
         
         // Update avatar selection visual
         const teacherOptions = document.querySelectorAll('.avatar-option');
@@ -2265,29 +2913,78 @@
         showNotification(`Teacher changed to ${teacherName}`, 'success');
     }
 
-    function saveSettings() {
-        // This would save all settings to the backend
-        showNotification('Settings saved successfully!', 'success');
+    async function saveSettings() {
+        const settingIds = [
+            'dailyQuizNotifications', 'assessmentNotifications', 'studyReminders', 'emailNotifications',
+            'themeSelector', 'fontSizeSelector', 'profileVisibility', 'leaderboardVisibility',
+            'dataCollection', 'autoLogout'
+        ];
+        const settings = {};
+        settingIds.forEach(id => {
+            const control = document.getElementById(id);
+            if (control) settings[id] = control.type === 'checkbox' ? control.checked : control.value;
+        });
+        settings.colorScheme = document.body.dataset.dashboardColor || 'blue';
+        localStorage.setItem(`dashboardSettings:${currentUser.id}`, JSON.stringify(settings));
+        configureAutoLogout(Boolean(settings.autoLogout));
+        try {
+            await saveTeacherPreferences();
+            showNotification('Settings saved successfully!', 'success');
+        } catch (error) {
+            console.error('Settings save failed:', error);
+            showNotification(`Settings could not be saved: ${error.message}`, 'error');
+        }
     }
 
     function resetSettings() {
         if (confirm('Are you sure you want to reset all settings to default values?')) {
-            showNotification('Settings reset to default values.', 'info');
+            localStorage.removeItem(`dashboardSettings:${currentUser.id}`);
+            window.location.reload();
         }
     }
 
-    function exportData() {
-        showNotification('Data export started. You will receive an email when it\'s ready.', 'info');
+    async function exportData() {
+        try {
+            const [profile, progress, assessments, chat] = await Promise.all([
+                supabaseClient.from('students').select('*').eq('id', currentUser.id).maybeSingle(),
+                supabaseClient.from('daily_challenge_progress').select('*').eq('user_id', currentUser.id).maybeSingle(),
+                supabaseClient.from('assessment_results').select('*').eq('user_id', currentUser.id),
+                supabaseClient.from('subject_chat_history').select('*').eq('user_id', currentUser.id)
+            ]);
+            const exportData = { profile: profile.data, progress: progress.data, assessments: assessments.data, chat: chat.data, exportedAt: new Date().toISOString() };
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' }));
+            link.download = `learning-data-${new Date().toISOString().slice(0, 10)}.json`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showNotification('Your learning data has been downloaded.', 'success');
+        } catch (error) {
+            console.error('Data export failed:', error);
+            showNotification('Unable to export learning data.', 'error');
+        }
     }
 
-    function resetProgress() {
+    async function resetProgress() {
         if (confirm('Are you sure you want to reset all your progress? This cannot be undone!')) {
-            // Reset user data
+            const [assessmentDelete, challengeDelete, studentUpdate] = await Promise.all([
+                supabaseClient.from('assessment_results').delete().eq('user_id', currentUser.id),
+                supabaseClient.from('daily_challenge_progress').delete().eq('user_id', currentUser.id),
+                supabaseClient.from('students').update({ monthly_quiz_points: 0, monthly_assessment_points: 0, monthly_total_points: 0 }).eq('id', currentUser.id)
+            ]);
+            const error = assessmentDelete.error || challengeDelete.error || studentUpdate.error;
+            if (error) {
+                showNotification(`Progress could not be reset: ${error.message}`, 'error');
+                return;
+            }
             userData.points = 0;
             userData.streak = 0;
             userData.quizPoints = 0;
             userData.testsTaken = 0;
             userData.averageScore = 0;
+            currentUser.monthlyQuizPoints = 0;
+            currentUser.monthlyAssessmentPoints = 0;
+            currentUser.monthlyTotalPoints = 0;
+            dailyProgressRecord = null;
             
             // Update display
             updatePointsDisplay();
@@ -2298,7 +2995,7 @@
 
     function deleteAccount() {
         if (confirm('Are you sure you want to delete your account? This cannot be undone!')) {
-            showNotification('Account deletion request received. You will receive a confirmation email.', 'info');
+            showNotification('For account deletion, contact support so your account and learning records can be securely removed.', 'info');
         }
     }
 

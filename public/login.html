@@ -260,6 +260,17 @@
         // Use the existing Supabase client from supabaseClient.js
         // Wait for the client to be initialized
         async function getSupabaseClient() {
+            if (window.supabaseClient) {
+                return window.supabaseClient;
+            }
+
+            if (typeof window.initializeSupabaseClient === 'function') {
+                const client = await window.initializeSupabaseClient();
+                if (client) {
+                    return client;
+                }
+            }
+
             // Wait for the client to be available
             let attempts = 0;
             while (!window.supabaseClient && attempts < 50) {
