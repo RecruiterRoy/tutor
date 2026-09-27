@@ -39,6 +39,27 @@ Reference: https://supabase.com/docs/guides/auth/redirect-urls
 
 Run: node --test tests/student-flow.test.js
 
+## Email confirmation and password recovery
+
+Login provides Resend confirmation email and Forgot password buttons, using
+the entered email address. Both call Supabase Auth directly and show provider
+errors rather than claiming success when Supabase rejects a request.
+Signup already requests its initial confirmation email through auth.signUp;
+resend uses auth.resend with type signup and does not create another account.
+
+Recovery emails return to the same allowed /login.html URL. Supabase consumes
+the recovery tokens; the page checks the session before displaying a new-password
+form. Matching passwords are sent to auth.updateUser, then the page returns to
+sign-in. Invalid or expired links leave the email-request controls available.
+All login and registration password fields have accessible Show/Hide buttons.
+
+Run both suites: node --test tests/student-flow.test.js tests/account-recovery.test.js
+
+Delivery is separate from API acceptance. If no mail arrives, check Supabase
+Auth logs, SMTP configuration, provider delivery logs, and spam folders.
+Supabase's default SMTP is limited to project-team recipients and has restrictive
+rate limits: https://supabase.com/docs/guides/auth/auth-smtp
+
 Tests cover script parsing, client helper collisions, missing sessions,
 temporary auth outages, optional section failures, and Vercel routing.
 These are isolated tests with mocked Supabase, not live account tests.

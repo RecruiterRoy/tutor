@@ -219,7 +219,7 @@
                 <p class="card-subtitle">Sign in to your account to continue</p>
             </div>
 
-            <div id="alert-container"></div>
+            <div id="alert-container" role="status" aria-live="polite"></div>
 
             <form id="loginForm">
             <div class="form-group">
@@ -236,6 +236,25 @@
                     <span id="loginText">Sign In</span>
                     <span id="loginSpinner" class="spinner hidden"></span>
             </button>
+            </form>
+
+            <div id="accountHelp" class="form-footer">
+                <button type="button" class="btn btn-outline" id="forgotPasswordBtn">Forgot password?</button>
+                <button type="button" class="btn btn-outline" id="resendConfirmationBtn">Resend confirmation email</button>
+                <p>Enter your registered email address above, then choose an option.</p>
+            </div>
+
+            <form id="resetPasswordForm" class="hidden">
+                <h2 class="card-title">Choose a new password</h2>
+                <div class="form-group">
+                    <label for="newPassword" class="form-label">New password</label>
+                    <input type="password" id="newPassword" class="form-input" autocomplete="new-password" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPassword" class="form-label">Confirm new password</label>
+                    <input type="password" id="confirmNewPassword" class="form-input" autocomplete="new-password" minlength="6" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="resetPasswordBtn">Save new password</button>
             </form>
 
             <div class="form-footer">
@@ -256,6 +275,8 @@
     <script src="js/config.js"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/accountRecovery.js"></script>
+    <script src="js/passwordVisibility.js"></script>
 
     <script>
         // Use the existing Supabase client from supabaseClient.js
@@ -427,11 +448,10 @@
                 console.error('❌ Login error:', error);
                 
                 // Show error message
-                alertContainer.innerHTML = `
-                    <div class="alert alert-error">
-                        ${error.message || 'Login failed. Please check your credentials and try again.'}
-                    </div>
-                `;
+                const errorMessage = /email not confirmed/i.test(error.message || '')
+                    ? 'Your email is not confirmed yet. Click Resend confirmation email below, then check your inbox and spam folder.'
+                    : error.message || 'Login failed. Please check your credentials and try again.';
+                accountMessage(errorMessage);
                 
                 // Reset button state
                 loginBtn.disabled = false;
