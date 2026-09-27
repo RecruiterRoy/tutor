@@ -54,12 +54,13 @@ let supabaseAdmin = null;
 function getSupabaseAdmin() {
     if (!supabaseAdmin) {
         const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-        if (!supabaseUrl || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+        if (!supabaseUrl || !serviceKey) {
             throw new Error('A Supabase URL and SUPABASE_SERVICE_ROLE_KEY are required');
         }
         supabaseAdmin = createClient(
             supabaseUrl,
-            process.env.SUPABASE_SERVICE_ROLE_KEY,
+            serviceKey,
             { auth: { autoRefreshToken: false, persistSession: false } }
         );
     }
