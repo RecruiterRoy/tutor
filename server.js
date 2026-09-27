@@ -296,6 +296,8 @@ app.use(express.static(path.join(__dirname)));
 
 // API Key middleware
 app.use('/api', (req, res, next) => {
+  // Public authentication configuration does not depend on the AI provider.
+  if (req.path === '/config' || req.path === '/supabase-config') return next();
   if (!process.env.OPENAI_API_KEY) {
     return res.status(500).json({ error: 'Server misconfigured' });
   }
@@ -1066,13 +1068,17 @@ app.get('/login', (req, res) => {
     }
 });
 
-app.get('/register', (req, res) => {
-    const registerPath = path.join(__dirname, 'public', 'register.html');
+app.get(['/register', '/register.html', '/student-register'], (req, res) => {
+    const registerPath = path.join(__dirname, 'public', 'student-register.html');
     if (fs.existsSync(registerPath)) {
         res.sendFile(registerPath);
     } else {
         res.status(404).send('register.html not found');
     }
+});
+
+app.get('/student-dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'student-dashboard.html'));
 });
 
 app.get('/admin', (req, res) => {

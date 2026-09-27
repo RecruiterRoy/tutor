@@ -1,7 +1,7 @@
 // Use the global Supabase client from CDN
 let supabaseClientInstance = null;
 
-async function getSupabaseClient() {
+async function getOrCreateSupabaseClient() {
     if (supabaseClientInstance) return supabaseClientInstance;
     
     try {
@@ -26,10 +26,16 @@ async function getSupabaseClient() {
     }
 }
 
+// Keep the public helper compatible with existing pages. Initialization uses
+// the private name because some pages declare their own getSupabaseClient.
+async function getSupabaseClient() {
+    return getOrCreateSupabaseClient();
+}
+
 // Initialize immediately and expose to window
 async function initializeSupabaseClient() {
     try {
-        const client = await getSupabaseClient();
+        const client = await getOrCreateSupabaseClient();
         if (!client) {
             throw new Error('Supabase client initialization returned no client');
         }

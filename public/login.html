@@ -252,6 +252,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Configuration and Client Scripts -->
+    <script src="js/loginCallback.js"></script>
     <script src="js/config.js"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/auth.js"></script>
@@ -288,7 +289,7 @@
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const loginBtn = document.getElementById('loginBtn');
             const loginText = document.getElementById('loginText');
@@ -305,12 +306,10 @@
             
             try {
                 console.log('🔐 Attempting login for:', email);
-                console.log('🔍 Current URL:', window.location.href);
                 console.log('🔍 Current origin:', window.location.origin);
                 
                 // Get the Supabase client
                 const supabaseClient = await getSupabaseClient();
-                console.log('✅ Supabase client obtained:', supabaseClient);
                 
                 // Use Supabase authentication
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -393,6 +392,8 @@
                     // Store user data in localStorage for session management
                     const userDataToStore = {
                         ...userData,
+                        id: data.user.id,
+                        email: data.user.email,
                         role: userRole
                     };
                     
@@ -404,11 +405,10 @@
                     // Redirect based on user role
                     setTimeout(() => {
                         console.log('🚀 Redirecting to:', userRole);
-                        console.log('🚀 Current location before redirect:', window.location.href);
                         
                         let redirectUrl = '';
                         if (userRole === 'school_admin') {
-                            redirectUrl = 'admin-dashboard.html';
+                            redirectUrl = 'school-admin.html';
                         } else if (userRole === 'teacher') {
                             redirectUrl = 'teacher-dashboard.html';
                         } else {

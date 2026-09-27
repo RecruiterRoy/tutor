@@ -1037,7 +1037,7 @@
                 await initializeDashboard();
             } catch (error) {
                 console.error('Dashboard initialization failed:', error);
-                window.location.href = 'login.html';
+                showNotification('The dashboard could not finish loading. Please refresh to try again.', 'error');
             }
         });
 
@@ -1045,6 +1045,9 @@
         async function initializeDashboard() {
             supabaseClient = await window.initializeSupabaseClient();
             const { data: { user }, error } = await supabaseClient.auth.getUser();
+            if (error && error.status !== 401 && error.status !== 403 && error.name !== 'AuthSessionMissingError') {
+                throw error;
+            }
             if (error || !user) {
                 window.location.href = 'login.html';
                 return;
@@ -1055,7 +1058,7 @@
             
             // Load user data
             await loadUserData(user);
-            await Promise.all([
+            const sections = await Promise.allSettled([
                 loadDashboardProgress(),
                 loadTeacherPreferences(),
                 loadChatHistory(),
@@ -1065,6 +1068,10 @@
                 loadEducationalVideos(),
                 loadUserSubjects()
             ]);
+            if (sections.some(result => result.status === 'rejected')) {
+                console.warn('Some dashboard sections could not load:', sections.filter(result => result.status === 'rejected'));
+                showNotification('Some learning data could not load. Please refresh to try again.', 'error');
+            }
             loadDashboardSettings();
 
             const logoutButton = document.getElementById('logoutBtn');
@@ -1733,8 +1740,14 @@
     async function loadUserData(authUser = null) {
         console.log('👤 Loading user data...');
 
-        const storedUser = JSON.parse(localStorage.getItem('userData') || '{}');
+        let storedUser = {};
+        try {
+            storedUser = JSON.parse(localStorage.getItem('userData') || '{}') || {};
+        } catch {
+            localStorage.removeItem('userData');
+        }
         const user = authUser || (await supabaseClient.auth.getUser()).data.user;
+        if (storedUser.id !== user.id) storedUser = {};
         const { data: student, error } = await supabaseClient
             .from('students')
             .select('*')
@@ -1925,7 +1938,12 @@
     }
 
     function loadDashboardSettings() {
-        const settings = JSON.parse(localStorage.getItem(`dashboardSettings:${currentUser.id}`) || '{}');
+        let settings = {};
+        try {
+            settings = JSON.parse(localStorage.getItem(`dashboardSettings:${currentUser.id}`) || '{}') || {};
+        } catch {
+            localStorage.removeItem(`dashboardSettings:${currentUser.id}`);
+        }
         Object.entries(settings).forEach(([id, value]) => {
             const control = document.getElementById(id);
             if (!control) return;

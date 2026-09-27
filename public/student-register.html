@@ -657,6 +657,9 @@
         // Use the existing Supabase client from supabaseClient.js
         // Wait for the client to be initialized
         async function getSupabaseClient() {
+            if (typeof window.initializeSupabaseClient === 'function') {
+                return window.initializeSupabaseClient();
+            }
             // Wait for the client to be available
             let attempts = 0;
             while (!window.supabaseClient && attempts < 50) {
@@ -799,7 +802,7 @@
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/login.html`,
+                        emailRedirectTo: window.TUTOR_CONFIG.authRedirectUrl,
                         data: { full_name: fullName, role: 'student', registration_nonce: registrationNonce }
                     }
                 });
@@ -843,7 +846,9 @@
                     throw new Error(result.error || 'Registration failed');
                 }
 
-                showAlert('Account created successfully! Please check your email to verify your account.', 'success');
+                showAlert(authData.session
+                    ? 'Account created successfully! You can now sign in.'
+                    : 'Account created successfully! Please check your email to verify your account.', 'success');
                 e.target.reset();
 
                 setTimeout(() => {
